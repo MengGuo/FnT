@@ -1,0 +1,630 @@
+
+\section{Task Relaxation and Adaptation in Partially Known Workspaces}
+\label{sec:task_relaxation_adaptation}
+
+The synthesis framework in Chapter~\ref{chap:preliminaries} presumes that the
+weighted transition system is available before execution and remains fixed.
+This assumption is restrictive in partially known workspaces, where blocked
+passages, newly discovered traversable regions, or revised semantic labels may
+appear only after the robot starts moving. Under such uncertainty, a local LTL
+specification may be infeasible over the current abstraction even when the
+physical task is achievable in the actual workspace. At the same time,
+safety-critical requirements must remain enforceable throughout execution.
+
+This section addresses that setting for a single robot. The local task is split
+into a hard component, which must always be satisfied, and a soft component,
+which should be satisfied to the largest possible extent. The first part of the
+section develops a relaxed synthesis mechanism for the case in which exact
+satisfaction is not currently available. The second part introduces a
+history-aware adaptation rule that revises the remaining plan whenever the
+workspace abstraction is updated. The construction is related to specification
+relaxation and automata-based replanning
+\cite{kim2012approximate,guo2013revising,livingston2012backtracking}, but is
+presented here in notation consistent with
+Chapter~\ref{chap:preliminaries}.
+
+\subsection{Problem Setting}
+\label{subsec:problem_setting_relaxation}
+
+Let the initial abstraction of the workspace be denoted by
+$\mathcal{T}^{0} \triangleq
+(S,S_{0},\rightarrow^{0},\mathsf{AP},L^{0},w^{0})$, where the components
+follow \eqref{eq:transition-system}. During execution, newly acquired
+information induces a family of updated abstractions
+$\{\mathcal{T}^{t}\}_{t\geq 0}$ with the same state set $S$ and alphabet
+$\mathsf{AP}$, but possibly revised transition relation, labeling function,
+and transition weights.
+
+The local task is decomposed as
+\begin{equation}
+\varphi \triangleq
+\varphi^{\mathrm{soft}} \wedge \varphi^{\mathrm{hard}},
+\label{eq:task_split_partial}
+\end{equation}
+where $\varphi^{\mathrm{hard}}$ collects safety and mission-preserving
+requirements that may not be violated, and
+$\varphi^{\mathrm{soft}}$ collects liveness or performance goals that may be
+temporarily unattainable over the current model. The planning problem is thus
+not only to determine whether \eqref{eq:task_split_partial} is feasible over
+$\mathcal{T}^{0}$, but also to synthesize a run that always satisfies the hard
+component and minimizes the violation of the soft component whenever exact
+satisfaction is unavailable.
+
+Let $\mathcal{B}_{\mathrm{s}} \triangleq
+(Q_{\mathrm{s}},Q_{\mathrm{s},0},2^{\mathsf{AP}},
+\delta_{\mathrm{s}},F_{\mathrm{s}})$ and
+$\mathcal{B}_{\mathrm{h}} \triangleq
+(Q_{\mathrm{h}},Q_{\mathrm{h},0},2^{\mathsf{AP}},
+\delta_{\mathrm{h}},F_{\mathrm{h}})$ be B\"uchi automata for
+$\varphi^{\mathrm{soft}}$ and $\varphi^{\mathrm{hard}}$, respectively
+\cite{baier2008principles,vardi1986automata,gastin2001fast}. The symbols
+$\rho$, $\varrho$, and the projection notation are used exactly as in
+Chapter~\ref{chap:preliminaries}: $\rho$ denotes a run of the transition
+system, while $\varrho$ denotes a run of a product automaton.
+
+\subsection{Relaxed Intersection of Hard and Soft Tasks}
+\label{subsec:relaxed_intersection}
+
+The task split in \eqref{eq:task_split_partial} suggests that the hard and soft
+components should be treated asymmetrically. The hard component must be checked
+exactly, whereas the soft component may be advanced even when its transition
+guard is not perfectly matched by the current workspace label. This asymmetry is
+captured by a relaxed intersection automaton.
+
+\begin{definition}
+\label{def:relaxed_intersection}
+The \emph{relaxed intersection automaton} associated with
+$\varphi^{\mathrm{soft}}$ and $\varphi^{\mathrm{hard}}$ is the B\"uchi
+automaton
+\begin{equation}
+\widetilde{\mathcal{B}}_{\varphi} \triangleq
+\bigl(\widetilde{Q},\widetilde{Q}_{0},2^{\mathsf{AP}},
+\widetilde{\delta},\widetilde{F}\bigr),
+\label{eq:relaxed_intersection_automaton}
+\end{equation}
+where
+$\widetilde{Q} \triangleq
+Q_{\mathrm{s}} \times Q_{\mathrm{h}} \times \{1,2\}$,
+$\widetilde{Q}_{0} \triangleq
+Q_{\mathrm{s},0} \times Q_{\mathrm{h},0} \times \{1\}$, and
+\(\widetilde{F} \triangleq
+(Q_{\mathrm{s}} \times F_{\mathrm{h}} \times \{1\})
+\cup (F_{\mathrm{s}} \times Q_{\mathrm{h}} \times \{2\})\).
+For any label $\ell \in 2^{\mathsf{AP}}$, a transition from
+$\widetilde{q}=(q_{\mathrm{s}},q_{\mathrm{h}},\iota)$ to
+$\widetilde{q}'=(q'_{\mathrm{s}},q'_{\mathrm{h}},\iota')$ belongs to
+$\widetilde{\delta}(\widetilde{q},\ell)$ if and only if three conditions are
+satisfied. First, the hard component advances exactly, namely
+$q'_{\mathrm{h}} \in \delta_{\mathrm{h}}(q_{\mathrm{h}},\ell)$. Second, the
+soft successor is admissible in the sense that there exists at least one label
+$\ell' \in 2^{\mathsf{AP}}$ such that
+$q'_{\mathrm{s}} \in \delta_{\mathrm{s}}(q_{\mathrm{s}},\ell')$. Third, the
+phase variable updates according to the alternating acceptance discipline:
+$\iota' = 2$ if $\iota = 1$ and $q'_{\mathrm{h}} \in F_{\mathrm{h}}$,
+$\iota' = 1$ if $\iota = 2$ and $q'_{\mathrm{s}} \in F_{\mathrm{s}}$, and
+$\iota' = \iota$ otherwise.
+\end{definition}
+
+Definition~\ref{def:relaxed_intersection} preserves the hard component exactly,
+since every transition must satisfy the hard guard under the current label.
+Only the soft component is relaxed, and even there the relaxation is limited to
+transitions that are logically available in the soft automaton. The resulting
+construction therefore enlarges the feasible search space only along the soft
+dimension, while retaining the exact safety structure of the hard component.
+
+For any two soft-automaton states $q,q' \in Q_{\mathrm{s}}$, define the
+admissible soft label set by
+$\Lambda_{\mathrm{s}}(q,q') \triangleq
+\{\ell \in 2^{\mathsf{AP}} \mid q' \in \delta_{\mathrm{s}}(q,\ell)\}$.
+For a current workspace label $\ell \in 2^{\mathsf{AP}}$, define the mismatch
+measure
+\begin{equation}
+d_{\mathrm{s}}(\ell,q,q') \triangleq
+\min_{\ell' \in \Lambda_{\mathrm{s}}(q,q')} |\ell \triangle \ell'|,
+\label{eq:soft_distance}
+\end{equation}
+where $\triangle$ denotes symmetric difference.
+Equation~\eqref{eq:soft_distance} is well defined whenever
+$\Lambda_{\mathrm{s}}(q,q') \neq \varnothing$, which is already enforced in
+Definition~\ref{def:relaxed_intersection}. The value of
+\eqref{eq:soft_distance} is zero if and only if the current label enables the
+soft transition exactly. Accordingly, the transition relation in
+\eqref{eq:relaxed_intersection_automaton} can be computed by first enumerating
+all hard transitions enabled by the current label and then, for each admissible
+soft successor, assigning the mismatch value from
+\eqref{eq:soft_distance}. The phase update is purely combinatorial and does not
+introduce any additional optimization variable.
+
+The resulting computation is finite because both B\"uchi automata and the
+alphabet are finite. It is also modular: the hard transition relation, the soft
+admissible label sets, and the phase update rule can all be precomputed before
+the relaxed product is constructed. This separation becomes useful when the
+workspace model changes on-line, because the automata-side preprocessing does
+not need to be repeated.
+
+\begin{algorithm}[t]
+\caption{Construction of the relaxed intersection automaton}
+\label{alg:relaxed_intersection}
+\DontPrintSemicolon
+\KwIn{$\mathcal{B}_{\mathrm{s}}$, $\mathcal{B}_{\mathrm{h}}$}
+\KwOut{$\widetilde{\mathcal{B}}_{\varphi}$ and mismatch table
+$ d_{\mathrm{s}}(\ell,q,q') $}
+Initialize $\widetilde{Q}$, $\widetilde{Q}_{0}$, and $\widetilde{F}$ according
+to \eqref{eq:relaxed_intersection_automaton}\;
+Set $\widetilde{\delta} \leftarrow \varnothing$\;
+\ForEach{$(q_{\mathrm{s}},q_{\mathrm{h}},\iota) \in \widetilde{Q}$}{
+  \ForEach{$\ell \in 2^{\mathsf{AP}}$}{
+    Compute the enabled hard successors
+    $\delta_{\mathrm{h}}(q_{\mathrm{h}},\ell)$\;
+    \ForEach{$q'_{\mathrm{h}} \in \delta_{\mathrm{h}}(q_{\mathrm{h}},\ell)$}{
+      \ForEach{$q'_{\mathrm{s}} \in Q_{\mathrm{s}}$}{
+        Compute
+        $\Lambda_{\mathrm{s}}(q_{\mathrm{s}},q'_{\mathrm{s}})$\;
+        \If{$\Lambda_{\mathrm{s}}(q_{\mathrm{s}},q'_{\mathrm{s}})
+        \neq \varnothing$}{
+          Compute
+          $d_{\mathrm{s}}(\ell,q_{\mathrm{s}},q'_{\mathrm{s}})$ by
+          \eqref{eq:soft_distance}\;
+          Update the phase variable $\iota'$ by
+          Definition~\ref{def:relaxed_intersection}\;
+          Insert the transition
+          $(q_{\mathrm{s}},q_{\mathrm{h}},\iota)
+          \xrightarrow{\ell}
+          (q'_{\mathrm{s}},q'_{\mathrm{h}},\iota')$ into
+          $\widetilde{\delta}$\;
+        }
+      }
+    }
+  }
+}
+\Return{$\widetilde{\mathcal{B}}_{\varphi}$ and the mismatch table}\;
+\end{algorithm}
+
+Algorithm~\ref{alg:relaxed_intersection} makes the computational role of the
+relaxed intersection explicit. The output is not only the automaton
+$\widetilde{\mathcal{B}}_{\varphi}$ itself, but also the mismatch table from
+\eqref{eq:soft_distance}, which will later enter the product-edge weights. In
+this sense, the relaxed intersection construction serves simultaneously as a
+logical relaxation mechanism and as a preprocessing stage for quantitative
+planning.
+
+The accepting condition in
+\eqref{eq:relaxed_intersection_automaton} alternates between the hard and soft
+accepting sets. As a consequence, every accepting run of
+$\widetilde{\mathcal{B}}_{\varphi}$ induces infinitely many visits to the hard
+accepting set while maintaining synchronization with the soft component.
+Hard-task correctness is stated formally after the relaxed product is
+introduced, since that property concerns the product run and its projection onto
+$\mathcal{T}^{t}$.
+
+\subsection{Relaxed Product and Balanced Synthesis}
+\label{subsec:relaxed_product_balanced}
+
+The relaxed intersection automaton must now be coupled with the robot model.
+This yields a product construction that preserves the transition-system
+semantics from Chapter~\ref{chap:preliminaries}, while attaching an additional
+penalty to each product edge whenever the soft transition is not exactly matched
+by the current workspace label.
+
+\begin{definition}
+\label{def:relaxed_product}
+For any workspace abstraction
+$\mathcal{T}^{t}=(S,S_{0},\rightarrow^{t},\mathsf{AP},L^{t},w^{t})$, the
+\emph{relaxed product automaton} is defined by
+\begin{equation}
+\widetilde{\mathcal{P}}^{t} \triangleq
+\mathcal{T}^{t} \otimes \widetilde{\mathcal{B}}_{\varphi}
+=
+\bigl(\widetilde{X}^{t},\widetilde{X}_{0}^{t},
+\rightarrow_{\widetilde{\mathcal{P}}^{t}},
+\widetilde{F}^{t},\widetilde{w}^{t}\bigr),
+\label{eq:relaxed_product_automaton}
+\end{equation}
+where
+$\widetilde{X}^{t} \triangleq S \times \widetilde{Q}$,
+$\widetilde{X}_{0}^{t} \triangleq S_{0} \times \widetilde{Q}_{0}$, and
+$\widetilde{F}^{t} \triangleq S \times \widetilde{F}$.
+A product transition from
+$x=(s,q_{\mathrm{s}},q_{\mathrm{h}},\iota)$ to
+$x'=(s',q'_{\mathrm{s}},q'_{\mathrm{h}},\iota')$ belongs to
+$\rightarrow_{\widetilde{\mathcal{P}}^{t}}$ if and only if
+$s \rightarrow^{t} s'$ and
+$(q'_{\mathrm{s}},q'_{\mathrm{h}},\iota')
+\in \widetilde{\delta}((q_{\mathrm{s}},q_{\mathrm{h}},\iota),L^{t}(s))$.
+\end{definition}
+
+Definition~\ref{def:relaxed_product} differs from the standard product in
+Chapter~\ref{chap:preliminaries} only through the use of the relaxed
+intersection automaton. The state projection of every run of
+$\widetilde{\mathcal{P}}^{t}$ is therefore a valid run of $\mathcal{T}^{t}$.
+The distinction between exact and relaxed planning is thus encoded entirely in
+the automaton component and in the edge weights, not in the semantics of the
+transition-system projection.
+
+For each enabled product transition in
+\eqref{eq:relaxed_product_automaton}, define its weight by
+\begin{equation}
+\widetilde{w}^{t}(x,x') \triangleq
+w^{t}(s,s') + \alpha \,
+ d_{\mathrm{s}}\bigl(L^{t}(s),q_{\mathrm{s}},q'_{\mathrm{s}}\bigr),
+\label{eq:relaxed_product_weight}
+\end{equation}
+where $\alpha \geq 0$ is a design parameter.
+Equation~\eqref{eq:relaxed_product_weight} separates implementation cost from
+soft-task mismatch. The first term is inherited from the weighted transition
+system. The second term is zero when the soft transition is exactly enabled, and
+positive otherwise. The parameter $\alpha$ therefore adjusts the tradeoff
+between motion efficiency and tolerance for temporary soft-task violation.
+
+As in Chapter~\ref{chap:preliminaries}, accepting runs are considered in
+prefix--suffix form. For
+$\varrho=x_{0}x_{1}\cdots x_{K}(x_{K+1}\cdots x_{N}x_{K})^{\omega}$ with
+$x_{0} \in \widetilde{X}_{0}^{t}$ and $x_{K} \in \widetilde{F}^{t}$, define
+\begin{equation}
+J_{\mathrm{bal}}^{t}(\varrho) \triangleq
+\Bigl(\sum_{k=0}^{K-1} + \gamma \sum_{k=K}^{N}\Bigr)
+\widetilde{w}^{t}(x_{k},x_{k+1}),
+\label{eq:balanced_cost_relaxed}
+\end{equation}
+where $x_{N+1} \triangleq x_{K}$ and $\gamma \geq 0$ weights the suffix
+relative to the prefix. By substituting
+\eqref{eq:relaxed_product_weight} into
+\eqref{eq:balanced_cost_relaxed}, the total cost decomposes into a motion term
+and a cumulative soft-violation term. The search problem on the relaxed product
+therefore remains structurally identical to the one in
+Chapter~\ref{chap:preliminaries}, while its objective now reflects both motion
+quality and logical relaxation.
+
+The computation proceeds in three steps. First,
+$\widetilde{\mathcal{P}}^{t}$ is constructed by
+Definition~\ref{def:relaxed_product}. Second, every enabled edge is assigned a
+weight through \eqref{eq:relaxed_product_weight}. Third, the standard
+accepting-run search over a weighted product graph is applied with objective
+\eqref{eq:balanced_cost_relaxed}
+\cite{smith2011optimal,schuppan2005shortest}. The resulting minimizer is
+denoted by $\varrho^{t,\star}$, and the associated motion plan is
+$\rho^{t,\star} \triangleq \mathrm{proj}_{S}(\varrho^{t,\star})$.
+
+The next result states the structural safety guarantee of the relaxation.
+
+\begin{theorem}
+\label{thm:hard_task_preservation}
+Let $\varrho$ be an accepting run of $\widetilde{\mathcal{P}}^{t}$ and let
+$\rho \triangleq \mathrm{proj}_{S}(\varrho)$. Then $\rho$ is a valid run of
+$\mathcal{T}^{t}$ and $\rho \models \varphi^{\mathrm{hard}}$.
+\end{theorem}
+
+\begin{proof}
+Validity follows from Definition~\ref{def:relaxed_product}, since every product
+edge projects to an enabled transition of $\mathcal{T}^{t}$. For the hard task,
+Definition~\ref{def:relaxed_intersection} requires every product edge to follow
+an actual transition of $\mathcal{B}_{\mathrm{h}}$ under the current label.
+Hence the trace of $\rho$ induces a run of $\mathcal{B}_{\mathrm{h}}$.
+Because the phase variable in
+\eqref{eq:relaxed_intersection_automaton} enforces infinitely many visits to
+$F_{\mathrm{h}}$, that induced run is accepting. Therefore
+$\rho \models \varphi^{\mathrm{hard}}$.
+\end{proof}
+
+Theorem~\ref{thm:hard_task_preservation} shows that the relaxation never acts
+on the hard component. The next lemma identifies the case in which the relaxed
+solution recovers exact satisfaction of the full task.
+
+\begin{lemma}
+\label{lem:zero_soft_violation}
+Let $\varrho^{t,\star}$ be a minimizer of
+\eqref{eq:balanced_cost_relaxed}, and let
+$\rho^{t,\star} \triangleq \mathrm{proj}_{S}(\varrho^{t,\star})$.
+If every edge of $\varrho^{t,\star}$ has zero mismatch in
+\eqref{eq:relaxed_product_weight}, then
+$\rho^{t,\star} \models
+\varphi^{\mathrm{soft}} \wedge \varphi^{\mathrm{hard}}$.
+\end{lemma}
+
+\begin{proof}
+Zero mismatch on every edge means that each traversed soft transition is enabled
+by the actual workspace label. Consequently, the trace of $\rho^{t,\star}$
+induces an accepting run of $\mathcal{B}_{\mathrm{s}}$. The hard part follows
+from Theorem~\ref{thm:hard_task_preservation}. Therefore the complete formula in
+\eqref{eq:task_split_partial} is satisfied.
+\end{proof}
+
+Lemma~\ref{lem:zero_soft_violation} confirms that the relaxed construction is a
+strict extension of the exact one. Whenever the current abstraction already
+supports exact satisfaction, the mismatch term in
+\eqref{eq:relaxed_product_weight} vanishes along the optimal run. The relaxed
+product should therefore be viewed as a conservative extension of the exact
+product rather than as a different synthesis problem.
+
+\subsection{On-line Plan Adaptation with History Consistency}
+\label{subsec:online_update_and_revision}
+
+The initial plan is synthesized on $\widetilde{\mathcal{P}}^{0}$. During
+execution, new information may update the abstraction from
+$\mathcal{T}^{t^-}$ to $\mathcal{T}^{t^+}$. The current plan must then be
+validated against the updated model before execution proceeds. This validation
+step is necessary because a previously feasible path may become blocked, and a
+previously admissible label may cease to support the hard-automaton transition
+required by the current product run.
+
+Let $\varrho^{t}$ be the product run currently selected for execution, and let
+$\rho^{\mathrm{past}}_{t}$ be the finite portion of its state projection already
+executed when the update occurs. An edge of $\varrho^{t}$ is called
+\emph{invalid} if its state projection is not a transition of
+$\mathcal{T}^{t^+}$. It is called \emph{unsafe} if the updated source label no
+longer enables its hard-automaton transition. If no edge in the unexecuted part
+of $\varrho^{t}$ is invalid or unsafe, the current plan remains admissible.
+Otherwise, replanning is necessary. This distinction between invalidity and
+unsafety is useful because the first concerns motion feasibility, whereas the
+second concerns preservation of the hard temporal requirement.
+
+Since the B\"uchi components may be nondeterministic, the current workspace
+state alone is insufficient to determine the current product state. The
+executed history must therefore be retained. Define the set of
+history-consistent product states by
+\begin{equation}
+\widetilde{X}^{t}_{\mathrm{past}} \triangleq
+\Bigl\{x \in \widetilde{X}^{t^+} \, \Big| \,
+\exists\text{ a finite run of } \widetilde{\mathcal{P}}^{t^+}
+\text{ ending at } x
+\text{ whose state projection is }
+\rho^{\mathrm{past}}_{t}\Bigr\},
+\label{eq:history_consistent_states}
+\end{equation}
+where $\widetilde{X}^{t^+}$ denotes the state set of the updated relaxed
+product. Equation~\eqref{eq:history_consistent_states} is the consistency
+constraint that links the future plan to the executed trace. It guarantees that
+replanning resumes from a product state compatible with the history already
+realized by the robot, rather than from an arbitrary state sharing only the same
+workspace position.
+
+The computation after an update is therefore conceptually simple, although it
+must be carried out at the product level. The remaining part of the current plan
+is checked for invalid or unsafe edges. If none are found, the current plan is
+retained. Otherwise, the updated relaxed product is rebuilt, the initial state
+set is replaced by the history-consistent set in
+\eqref{eq:history_consistent_states}, and the balanced synthesis problem in
+\eqref{eq:balanced_cost_relaxed} is solved again. The new accepting suffix is
+then concatenated with the already executed prefix through the corresponding
+product-state history.
+
+\begin{algorithm}[t]
+\caption{History-aware revision under workspace updates}
+\label{alg:history_revision}
+\DontPrintSemicolon
+\KwIn{$\mathcal{T}^{t^+}$, current run $\varrho^{t}$, executed prefix
+$\rho^{\mathrm{past}}_{t}$}
+\KwOut{Updated accepting run}
+Inspect the unexecuted part of $\varrho^{t}$ on $\mathcal{T}^{t^+}$\;
+\If{no remaining edge is invalid or unsafe}{
+  \Return{$\varrho^{t}$}\;
+}
+Construct $\widetilde{\mathcal{P}}^{t^+}$ by
+Definition~\ref{def:relaxed_product}\;
+Compute the history-consistent state set
+$\widetilde{X}^{t}_{\mathrm{past}}$ by
+\eqref{eq:history_consistent_states}\;
+Replace the initial state set of $\widetilde{\mathcal{P}}^{t^+}$ by
+$\widetilde{X}^{t}_{\mathrm{past}}$\;
+Assign all edge weights by \eqref{eq:relaxed_product_weight}\;
+Solve the accepting-run search with objective
+\eqref{eq:balanced_cost_relaxed}\;
+Let the optimizer be $\varrho^{\mathrm{new}}_{t}$\;
+\Return{$\varrho^{\mathrm{new}}_{t}$}\;
+\end{algorithm}
+
+Algorithm~\ref{alg:history_revision} emphasizes that replanning is triggered
+only when the previously synthesized continuation is no longer admissible under
+the updated abstraction. In particular, the method does not discard a valid plan
+merely because a potentially better one might exist after the update. This
+choice reduces unnecessary recomputation and preserves consistency with the
+executed trace whenever the original continuation remains sound.
+
+The following statement formalizes the correctness of the revision step.
+
+\begin{theorem}
+\label{thm:history_aware_revision}
+Let $\varrho^{\mathrm{new}}_{t}$ be an accepting run of
+$\widetilde{\mathcal{P}}^{t^+}$ whose initial state belongs to
+$\widetilde{X}^{t}_{\mathrm{past}}$, and let
+$\rho^{\mathrm{new}}_{t} \triangleq
+\mathrm{proj}_{S}(\varrho^{\mathrm{new}}_{t})$.
+Then the concatenated trajectory
+$\rho^{\mathrm{comp}}_{t} \triangleq
+\rho^{\mathrm{past}}_{t} + \rho^{\mathrm{new}}_{t}$ is a valid run of
+$\mathcal{T}^{t^+}$ and satisfies $\varphi^{\mathrm{hard}}$.
+\end{theorem}
+
+\begin{proof}
+By \eqref{eq:history_consistent_states}, the initial state of
+$\varrho^{\mathrm{new}}_{t}$ is reachable in
+$\widetilde{\mathcal{P}}^{t^+}$ through a finite run whose state projection is
+exactly $\rho^{\mathrm{past}}_{t}$. Concatenating that finite run with
+$\varrho^{\mathrm{new}}_{t}$ yields an accepting run of the updated relaxed
+product whose state projection is $\rho^{\mathrm{comp}}_{t}$. The validity of
+$\rho^{\mathrm{comp}}_{t}$ follows from
+Definition~\ref{def:relaxed_product}, and hard-task satisfaction follows from
+Theorem~\ref{thm:hard_task_preservation}.
+\end{proof}
+
+Theorem~\ref{thm:history_aware_revision} clarifies the role of history in
+partially known workspaces. The revision mechanism does not merely reconnect the
+current workspace state to a new goal. Instead, it reconstructs a product-level
+continuation that is compatible with the trace already produced by the robot,
+while preserving the hard component of the original specification and improving
+soft-task satisfaction whenever the updated model permits it.
+
+\subsection{Task-Driven Collaborative Knowledge Transfer}
+\label{subsec:task_driven_transfer}
+
+The single-robot mechanism in
+Subsection~\ref{subsec:online_update_and_revision} extends naturally to a team
+of robots whose local tasks are independent, but whose workspace knowledge is
+not. Consider a finite index set
+$\mathcal{N} \triangleq \{1,\ldots,N\}$. For each robot $i \in \mathcal{N}$,
+let
+\begin{equation}
+\mathcal{T}_{i}^{t} \triangleq
+\bigl(S_{i},S_{i,0},\rightarrow_{i}^{t},\mathsf{AP}_{i},L_{i}^{t},w_{i}^{t}
+\bigr),
+\label{eq:local_team_ts}
+\end{equation}
+where the components follow the notation of
+Chapter~\ref{chap:preliminaries}. The local task of robot $i$ is
+$\varphi_{i} \triangleq
+\varphi_{i}^{\mathrm{soft}} \wedge \varphi_{i}^{\mathrm{hard}}$, and the
+associated relaxed product automaton
+$\widetilde{\mathcal{P}}_{i}^{t}$ is constructed exactly as in
+Definition~\ref{def:relaxed_product}. The independence assumption means that
+no synchronous team product is introduced: each robot plans over its own
+abstraction, while communication is used only to improve the information on
+which that abstraction is built. Related distributed viewpoints appear in
+\cite{durfee2006distributed,filippidis2012decentralized,guo2014distributed}.
+
+The communication layer is modeled by a time-varying directed graph
+$\mathcal{G}^{t} \triangleq (\mathcal{N},\mathcal{E}^{t})$, where
+$(i,j) \in \mathcal{E}^{t}$ means that robot $i$ can transmit to robot $j$ at
+time $t$. Denote by $\mathcal{N}_{i}^{t}$ the outgoing neighbors of robot $i$.
+For each robot $i$, define the set of task-relevant propositions by
+$\mathsf{AP}_{i}^{\varphi} \triangleq
+\{\alpha \in \mathsf{AP}_{i} \mid \alpha \text{ appears in } \varphi_{i}\}$.
+Only propositions in $\mathsf{AP}_{i}^{\varphi}$ can influence the automata
+for $\varphi_{i}$ and, consequently, only those propositions are worth
+requesting from other robots. This observation motivates a task-driven
+subscriber--publisher protocol in which each robot advertises only its
+task-relevant proposition set and each outgoing reply is filtered accordingly.
+
+Suppose robot $i$ acquires at time $t$ a sensing packet
+$\mathbf{Sense}_{i}^{t}$ consisting of tuples
+$(s,\Sigma^{+},\Sigma^{-})$, where
+$s \in S_{i}$ and $\Sigma^{+},\Sigma^{-} \subseteq \mathsf{AP}_{i}$ denote,
+respectively, propositions newly confirmed and newly excluded at state $s$.
+If robot $j$ has previously subscribed to robot $i$ by sending the request
+$\mathbf{Req}_{j \rightarrow i} \triangleq (j,\mathsf{AP}_{j}^{\varphi})$,
+then the reply generated by robot $i$ is
+\begin{equation}
+\mathbf{Reply}_{i \rightarrow j}^{t} \triangleq
+\Bigl\{ \bigl(s,\Sigma^{+}\!\cap\!\mathsf{AP}_{j}^{\varphi},
+\Sigma^{-}\!\cap\!\mathsf{AP}_{j}^{\varphi}\bigr) \,\Big|\,
+(s,\Sigma^{+},\Sigma^{-}) \in \mathbf{Sense}_{i}^{t},\
+(\Sigma^{+}\!\cup\!\Sigma^{-}) \cap \mathsf{AP}_{j}^{\varphi}
+\neq \varnothing \Bigr\},
+\label{eq:task_driven_reply}
+\end{equation}
+where the set in \eqref{eq:task_driven_reply} is transmitted only if
+$j \in \mathcal{N}_{i}^{t}$.
+Equation~\eqref{eq:task_driven_reply} is the key filtering step. It removes all
+propositions that cannot affect the recipient's local task and therefore keeps
+the communication load aligned with the actual planning objective. Since the
+filtered packet has the same tuple structure as a local sensing update, it can
+be incorporated into the transition-system update rule without introducing any
+new planning machinery.
+
+The computation induced by \eqref{eq:task_driven_reply} is straightforward and
+fully local. Each robot stores the subscription requests it has received, checks
+which subscribers are currently reachable in $\mathcal{G}^{t}$, and filters
+every fresh sensing tuple through the corresponding task vocabulary. Once the
+resulting replies are delivered, the receiving robot updates its current
+abstraction and invokes the history-aware revision step from
+Algorithm~\ref{alg:history_revision} whenever the current continuation becomes
+invalid or unsafe. Hence collaborative knowledge transfer does not replace the
+single-robot adaptation mechanism; it supplies additional evidence that enters
+that mechanism in exactly the same format as local perception.
+
+\begin{algorithm}[t]
+\caption{Task-driven transfer and local revision at robot $i$}
+\label{alg:task_driven_transfer}
+\DontPrintSemicolon
+\KwIn{Current abstraction $\mathcal{T}_{i}^{t}$, current run $\varrho_{i}^{t}$,
+local packet $\mathbf{Sense}_{i}^{t}$, received packets
+$\{\mathbf{Reply}_{k \rightarrow i}^{t}\}_{k \in \mathcal{N}_{i}^{t}}$}
+\KwOut{Updated run $\varrho_{i}^{t^{+}}$}
+Identify the current neighbor set $\mathcal{N}_{i}^{t}$ from
+$\mathcal{G}^{t}$\;
+\ForEach{$j \in \mathcal{N}_{i}^{t}$ that has not been contacted before}{
+  send the subscription request
+  $\mathbf{Req}_{i \rightarrow j} = (i,\mathsf{AP}_{i}^{\varphi})$\;
+}
+\ForEach{stored subscriber $(j,\mathsf{AP}_{j}^{\varphi})$ with
+$j \in \mathcal{N}_{i}^{t}$}{
+  compute $\mathbf{Reply}_{i \rightarrow j}^{t}$ by
+  \eqref{eq:task_driven_reply}\;
+  \If{$\mathbf{Reply}_{i \rightarrow j}^{t} \neq \varnothing$}{
+    transmit $\mathbf{Reply}_{i \rightarrow j}^{t}$ to robot $j$\;
+  }
+}
+Update $\mathcal{T}_{i}^{t}$ using $\mathbf{Sense}_{i}^{t}$ and all received
+packets $\mathbf{Reply}_{k \rightarrow i}^{t}$\;
+Set $\varrho_{i}^{t^{+}} \leftarrow$
+Algorithm~\ref{alg:history_revision} applied to the updated abstraction\;
+\Return{$\varrho_{i}^{t^{+}}$}\;
+\end{algorithm}
+
+Algorithm~\ref{alg:task_driven_transfer} has two structural advantages. First,
+subscription is persistent, so the task vocabulary of a recipient is announced
+only once unless the communication graph disconnects and reconnects in a way
+that requires re-subscription. Second, every transmitted reply is already
+filtered by the recipient's specification. This prevents irrelevant semantic
+information from propagating through the network and allows heterogeneous robots
+to exchange only the facts that may alter their local automata or their local
+workspace labels.
+
+The following statement records the relevance property of the communication
+scheme.
+
+\begin{lemma}
+\label{lem:task_relevance_transfer}
+For any robots $i,j \in \mathcal{N}$ and any time $t$, every proposition
+contained in a tuple of $\mathbf{Reply}_{i \rightarrow j}^{t}$ belongs to
+$\mathsf{AP}_{j}^{\varphi}$.
+\end{lemma}
+
+\begin{proof}
+By \eqref{eq:task_driven_reply}, every positive or negative proposition in
+$\mathbf{Reply}_{i \rightarrow j}^{t}$ is obtained by intersecting the raw
+sensing sets $\Sigma^{+}$ and $\Sigma^{-}$ with
+$\mathsf{AP}_{j}^{\varphi}$. No proposition outside
+$\mathsf{AP}_{j}^{\varphi}$ can therefore appear in the transmitted packet.
+\end{proof}
+
+Lemma~\ref{lem:task_relevance_transfer} shows that the protocol is
+task-driven in a precise sense: communication is restricted to information that
+may affect the recipient's local temporal task. This property is important
+because the communication graph can be sparse or time-varying, and the planning
+architecture should not consume bandwidth on semantic facts that are irrelevant
+to the current specification.
+
+The next statement connects collaborative transfer to the correctness guarantee
+already established for single-robot revision.
+
+\begin{theorem}
+\label{thm:collaborative_transfer_correctness}
+Fix a robot $i \in \mathcal{N}$. Suppose every received packet
+$\mathbf{Reply}_{k \rightarrow i}^{t}$ is sound with respect to the true
+workspace semantics. Let $\mathcal{T}_{i}^{t^{+}}$ be the abstraction obtained
+after incorporating local sensing and all received packets at time $t$, and let
+$\varrho_{i}^{t^{+}}$ be the run returned by
+Algorithm~\ref{alg:task_driven_transfer}. Then the projected run
+$\rho_{i}^{t^{+}} \triangleq \mathrm{proj}_{S_{i}}(\varrho_{i}^{t^{+}})$ is
+valid on $\mathcal{T}_{i}^{t^{+}}$ and satisfies
+$\varphi_{i}^{\mathrm{hard}}$.
+\end{theorem}
+
+\begin{proof}
+The received packets have the same logical form as local sensing updates and
+therefore induce the same type of modification of the local abstraction. After
+all updates are incorporated, Algorithm~\ref{alg:task_driven_transfer} invokes
+Algorithm~\ref{alg:history_revision} on the updated model. The conclusion then
+follows directly from Theorem~\ref{thm:history_aware_revision}.
+\end{proof}
+
+Theorem~\ref{thm:collaborative_transfer_correctness} clarifies the role of
+collaboration in the present setting. Knowledge transfer does not couple the
+robots through a joint temporal task, nor does it alter the hard-safety
+guarantee established for the single-robot case. Its purpose is narrower and
+more practical: it accelerates the refinement of each local abstraction by
+routing task-relevant information to the robots for which that information can
+change the current balanced plan.
+
+%==============================
+%==============================

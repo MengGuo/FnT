@@ -8,12 +8,7 @@
 \usepackage{bm}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
-\SetAlFnt{\small}
-\SetAlCapFnt{\small}
-\SetAlCapNameFnt{\small}
-\SetKwInOut{Input}{Input}
-\SetKwInOut{Output}{Output}
+
 \usepackage{array}
 \usepackage{enumitem}
 \usepackage{xcolor}
@@ -21,6 +16,20 @@
 \usepackage[nameinlink,noabbrev]{cleveref}
 \usepackage{fancyhdr}
 \usepackage[numbers,sort&compress]{natbib}
+
+
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\SetAlFnt{\small}
+\SetAlCapFnt{\small}
+\SetAlCapNameFnt{\small}
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+\makeatletter
+\@addtoreset{algocf}{chapter}
+\renewcommand{\thealgocf}{\thechapter.\arabic{algocf}}
+\makeatother
+\crefname{algocf}{Algorithm}{Algorithms}
+\Crefname{algocf}{Algorithm}{Algorithms}
 
 \hypersetup{
   colorlinks=true,
