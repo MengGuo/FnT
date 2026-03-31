@@ -8,17 +8,17 @@
 \label{sec:system_abstraction_task_specification}
 
 A single robot is considered in a bounded workspace together with a local
- temporal task. The purpose of this section is to construct a finite transition
- model that captures the robot motion at the planning layer and to define the
- task specification over that model. The resulting abstraction separates
- continuous control from symbolic reasoning while preserving a precise notion of
- task satisfaction.
+ temporal task. The purpose of this section is to introduce the formal objects
+ used throughout the chapter, namely the robot motion abstraction and the task
+ language interpreted over that abstraction. The development proceeds from the
+ continuous robot dynamics to a finite transition model and then to the temporal
+ specification imposed on its runs.
 
 \subsection{Continuous robot model}
 \label{sssec:continuous_robot_model}
 
 Let $x(t) \in \mathbb{R}^{n}$ denote the robot state and
-$u(t) \in \mathbb{R}^{m}$ denote the control input. The robot dynamics are
+ $u(t) \in \mathbb{R}^{m}$ denote the control input. The robot dynamics are
  described by
 \begin{equation}
 \dot{x}(t) = f\bigl(x(t),u(t)\bigr),
@@ -28,60 +28,57 @@ where $f : \mathbb{R}^{n} \times \mathbb{R}^{m} \to \mathbb{R}^{n}$ is
  assumed to be locally Lipschitz. Under this regularity condition, every
  admissible control signal induces a unique state trajectory for each initial
  condition. The development below does not depend on a particular robot model.
- The only requirement is the availability of feedback controllers that can
- realize transitions among suitable regions of the workspace.
+ The only structural requirement is the availability of feedback controllers
+ that can realize transitions among suitable regions of the workspace.
 
-\subsection{Workspace partition and propositions}
-\label{sssec:workspace_partition_propositions}
+\subsection{Finite transition abstraction}
+\label{sssec:finite_transition_abstraction}
 
 Let $\mathcal{W} \triangleq$ a bounded workspace in $\mathbb{R}^{d}$, where
  $d \geq 2$ denotes the dimension of the environment. A finite partition of
  $\mathcal{W}$ is introduced as
-$\mathcal{R} \triangleq \{R_{1},\ldots,R_{M}\}$, with
-$\bigcup_{i=1}^{M} R_i = \mathcal{W}$ and
-$R_i \cap R_j = \varnothing$ for all $i \neq j$. Each $R_i \subseteq
-\mathcal{W}$ is interpreted as a region of interest. The partition provides
- the geometric basis for the discrete planning model.
-
-To encode task-relevant facts over the workspace, let
-$\mathsf{AP} \triangleq
-\mathsf{AP}_{\mathrm{reg}} \cup \mathsf{AP}_{\mathrm{prop}}$, where
-$\mathsf{AP}_{\mathrm{reg}}$ contains region propositions and
-$\mathsf{AP}_{\mathrm{prop}}$ contains semantic propositions such as pickup
+ $\mathcal{R} \triangleq \{R_{1},\ldots,R_{M}\}$, with
+ $\bigcup_{i=1}^{M} R_i = \mathcal{W}$ and
+ $R_i \cap R_j = \varnothing$ for all $i \neq j$. Each $R_i \subseteq
+ \mathcal{W}$ is interpreted as a region of interest. To encode task-relevant
+ facts over the workspace, let
+ $\mathsf{AP} \triangleq
+ \mathsf{AP}_{\mathrm{reg}} \cup \mathsf{AP}_{\mathrm{prop}}$, where
+ $\mathsf{AP}_{\mathrm{reg}}$ contains region propositions and
+ $\mathsf{AP}_{\mathrm{prop}}$ contains semantic propositions such as pickup
  locations, delivery locations, or surveillance targets. A labeling function
-$L : \mathcal{R} \to 2^{\mathsf{AP}}$ assigns to each region $R_i$ the set
-$L(R_i)$ of atomic propositions that hold whenever the robot occupies that
+ $L : \mathcal{R} \to 2^{\mathsf{AP}}$ assigns to each region $R_i$ the set
+ $L(R_i)$ of atomic propositions that hold whenever the robot occupies that
  region. In particular, $L(R_i)$ contains the region proposition associated with
- $R_i$. This alphabet and its labeling map provide the symbolic vocabulary of
- the planning problem.
+ $R_i$. This abstraction is standard in formal methods and robot motion
+ planning \cite{belta2007symbolic,kloetzer2008fully,baier2008principles}.
 
-\subsection{Weighted transition system}
-\label{sssec:weighted_transition_system}
-
-The abstract transition structure must reflect motion executability rather than
- mere geometric adjacency. For two regions $R_i,R_j \in \mathcal{R}$, a
- transition is introduced only when there exists an admissible feedback law that
- drives the robot from $R_i$ to $R_j$ in finite time while respecting the
- relevant motion constraints. Denoting by $s_i$ the abstract state associated
- with $R_i$, the robot motion is represented by the weighted transition system
+\begin{definition}[Weighted finite transition system]
+The motion abstraction of the robot is the weighted finite transition system
 \begin{equation}
 \mathcal{T} \triangleq
 \bigl(S,S_{0},\rightarrow,\mathsf{AP},L_{\mathcal{T}},w\bigr),
 \label{eq:transition-system}
 \end{equation}
 where $S \triangleq \{s_{1},\ldots,s_{M}\}$ is the set of abstract states,
-$S_{0} \subseteq S$ is the set of admissible initial states,
-$\rightarrow \subseteq S \times S$ is the transition relation induced by the
+ $S_{0} \subseteq S$ is the set of admissible initial states,
+ $\rightarrow \subseteq S \times S$ is the transition relation induced by the
  executable motions, $L_{\mathcal{T}} : S \to 2^{\mathsf{AP}}$ is the
  induced labeling map, and $w : S \times S \to \mathbb{R}_{\geq 0}$ assigns
  a nonnegative cost to each enabled transition. The correspondence between
  regions and states is one-to-one, and
-$L_{\mathcal{T}}(s_i) \triangleq L(R_i)$. The weight $w(s_i,s_j)$ may
- represent travel time, motion length, or control effort.
+ $L_{\mathcal{T}}(s_i) \triangleq L(R_i)$ for each state $s_i$ associated with
+ region $R_i$.
+\end{definition}
 
-An infinite run of the transition system in \eqref{eq:transition-system} is a
- sequence $\rho \triangleq s_0 s_1 s_2 \cdots$, where $s_0 \in S_0$ and
-$s_k \rightarrow s_{k+1}$ for all $k \in \mathbb{N}$. The run $\rho$
+The transition relation in \eqref{eq:transition-system} is control-driven
+ rather than purely geometric. In particular, $s_i \rightarrow s_j$ is enabled
+ only when there exists an admissible feedback law that drives the robot from
+ region $R_i$ to region $R_j$ in finite time while respecting the relevant
+ motion constraints. An infinite run of the transition system in
+ \eqref{eq:transition-system} is a sequence
+ $\rho \triangleq s_0 s_1 s_2 \cdots$, where $s_0 \in S_0$ and
+ $s_k \rightarrow s_{k+1}$ for all $k \in \mathbb{N}$. The run $\rho$
  induces the trace
 \begin{equation}
 \mathrm{trace}(\rho) \triangleq
@@ -91,23 +88,28 @@ L_{\mathcal{T}}(s_0)L_{\mathcal{T}}(s_1)L_{\mathcal{T}}(s_2)\cdots,
 where each symbol belongs to the alphabet $2^{\mathsf{AP}}$. The word in
  \eqref{eq:trace} is the object on which the temporal task is interpreted.
 
-\subsection{Local temporal task}
-\label{sssec:local_temporal_task}
+\subsection{Temporal task specification}
+\label{sssec:temporal_task_specification}
 
-The local task assigned to the robot is specified in linear temporal logic.
- Let $\varphi$ denote an LTL formula generated by
-$\varphi ::= \top \mid p \mid \neg \varphi \mid
+The local task assigned to the robot is specified in linear temporal logic
+ \cite{baier2008principles,fainekos2009temporal,kress2009temporal}. Let
+ $\varphi$ denote an LTL formula generated by
+\begin{equation}
+\varphi ::= \top \mid p \mid \neg \varphi \mid
 \varphi_1 \wedge \varphi_2 \mid \bigcirc \varphi \mid
-\varphi_1 \,\mathsf{U}\, \varphi_2$, where $p \in \mathsf{AP}$,
-$\bigcirc$ denotes the next operator, and $\mathsf{U}$ denotes the until
- operator. The derived operators $\vee$, $\Diamond$, $\Box$, and
-$\Rightarrow$ retain their standard meanings. This syntax is expressive enough
- to capture reachability, repeated visitation, ordering constraints, and
- response rules.
+\varphi_1 \,\mathsf{U}\, \varphi_2,
+\label{eq:ltl-syntax}
+\end{equation}
+where $p \in \mathsf{AP}$, $\bigcirc$ denotes the next operator, and
+ $\mathsf{U}$ denotes the until operator. The derived operators
+ $\vee$, $\Diamond$, $\Box$, and $\Rightarrow$ retain their standard
+ meanings. This syntax is expressive enough to capture reachability, repeated
+ visitation, ordering constraints, and response rules.
 
+\begin{definition}[Task satisfaction]
 Let $\sigma \triangleq \sigma_0 \sigma_1 \sigma_2 \cdots$ be an infinite
- word over $2^{\mathsf{AP}}$. The satisfaction relation for the above syntax is
- defined recursively by
+ word over $2^{\mathsf{AP}}$. The satisfaction relation for the syntax in
+ \eqref{eq:ltl-syntax} is defined recursively by
 \begin{equation}
 \begin{aligned}
 (\sigma,k) \models p
@@ -129,43 +131,46 @@ Let $\sigma \triangleq \sigma_0 \sigma_1 \sigma_2 \cdots$ be an infinite
 \end{equation}
 where $\sigma_k$ denotes the set of propositions true at position $k$. The
  semantics in \eqref{eq:ltl-semantics} are evaluated at the initial position by
-$\sigma \models \varphi$ if and only if $(\sigma,0) \models \varphi$.
- Accordingly, a run of $\mathcal{T}$ satisfies $\varphi$ whenever its trace
- does, namely $\rho \models \varphi$ if and only if
-$\mathrm{trace}(\rho) \models \varphi$.
+ $\sigma \models \varphi$ if and only if $(\sigma,0) \models \varphi$.
+ Accordingly, a run $\rho$ of the transition system in
+ \eqref{eq:transition-system} satisfies $\varphi$ if and only if
+ $\mathrm{trace}(\rho) \models \varphi$.
+\end{definition}
 
-The system abstraction developed in
-Subsubsection~\ref{sssec:weighted_transition_system} and the temporal semantics
- introduced in Subsubsection~\ref{sssec:local_temporal_task} lead to the
+The system abstraction in
+ Subsubsection~\ref{sssec:finite_transition_abstraction} and the temporal
+ semantics in Subsubsection~\ref{sssec:temporal_task_specification} lead to the
  symbolic planning problem
 \begin{equation}
 \text{find a run } \rho \text{ of } \mathcal{T}
 \text{ such that } \rho \models \varphi.
 \label{eq:planning-problem}
 \end{equation}
-The next section converts \eqref{eq:planning-problem} into an automata-based
- synthesis procedure and then couples the resulting symbolic plan with a hybrid
- execution law.
+The next section introduces the corresponding automata-theoretic constructions,
+ explains how the required product model is computed, and then describes the
+ algorithmic synthesis of a hybrid control strategy.
 
 %==============================
 \section{Automata-Based Synthesis and Hybrid Control}
 \label{sec:automata_synthesis_hybrid_control}
 
 Given the weighted transition system $\mathcal{T}$ in
-\eqref{eq:transition-system} and a local LTL formula $\varphi$, the synthesis
+ \eqref{eq:transition-system} and a local LTL formula $\varphi$, the planning
  problem in \eqref{eq:planning-problem} is converted into an
- automata-theoretic search problem. The standard idea is to represent the
- temporal specification by a B\"uchi automaton that accepts exactly the words
- satisfying $\varphi$, and then to combine that automaton with the robot
- transition system. This construction follows the classical automata-theoretic
+ automata-theoretic search problem. The presentation below follows the logic of
+ this chapter: formal definitions are introduced first, then the relevant
+ product model is computed, and finally the synthesis and execution algorithms
+ are described. This construction follows the classical automata-theoretic
  approach to model checking and temporal-logic planning; see, for instance,
- Baier and Katoen (2008), Vardi and Wolper (1986), Gastin and Oddoux (2001),
- Kloetzer and Belta (2008), and Kress-Gazit et al. (2009).
+ \cite{baier2008principles,vardi1986automata,gastin2001fast,
+ kloetzer2008fully,kress2009temporal}.
 
-\subsection{B\"uchi automaton and product construction}
-\label{sssec:buchi_and_product}
+\subsection{Nondeterministic B\"uchi automaton}
+\label{sssec:nba_definition}
 
-Let the B\"uchi automaton associated with $\varphi$ be defined by
+\begin{definition}[Nondeterministic B\"uchi automaton]
+The automaton associated with the LTL formula $\varphi$ is the nondeterministic
+ B\"uchi automaton
 \begin{equation}
 \mathcal{B}_{\varphi} \triangleq
 \bigl(Q,Q_{0},2^{\mathsf{AP}},\delta,F\bigr),
@@ -173,17 +178,27 @@ Let the B\"uchi automaton associated with $\varphi$ be defined by
 \end{equation}
 where $Q$ is the finite set of automaton states, $Q_{0} \subseteq Q$ is the
  set of initial states, $\delta : Q \times 2^{\mathsf{AP}} \to 2^{Q}$ is the
- transition map, and $F \subseteq Q$ is the accepting set. An infinite run of
-$\mathcal{B}_{\varphi}$ over a word $\sigma$ is a sequence
-$q_{0}q_{1}q_{2}\cdots$ such that $q_{0} \in Q_{0}$ and
-$q_{k+1} \in \delta(q_{k},\sigma_{k})$ for all $k \in \mathbb{N}$. Such a
- run is accepting when it visits $F$ infinitely often. The accepted language of
-$\mathcal{B}_{\varphi}$ coincides with the set of words satisfying
-$\varphi$. Therefore, the search for a run of $\mathcal{T}$ that satisfies
-$\varphi$ can be reformulated as the search for an accepting run of a suitable
- product automaton.
+ transition map, and $F \subseteq Q$ is the accepting set.
 
-The weighted product automaton is defined by
+An infinite run of $\mathcal{B}_{\varphi}$ over a word
+ $\sigma = \sigma_0\sigma_1\sigma_2\cdots$ is a sequence
+ $q_{0}q_{1}q_{2}\cdots$ such that $q_{0} \in Q_{0}$ and
+ $q_{k+1} \in \delta(q_{k},\sigma_{k})$ for all $k \in \mathbb{N}$. Such a
+ run is accepting when it visits $F$ infinitely often. The accepted language of
+ the automaton in \eqref{eq:buchi-automaton} is denoted by
+ $\mathcal{L}_{\omega}(\mathcal{B}_{\varphi})$ and coincides with the set of
+ words satisfying $\varphi$ \cite{baier2008principles,vardi1986automata,
+ gastin2001fast}. Therefore, the search for a run of $\mathcal{T}$ that
+ satisfies $\varphi$ can be reformulated as the search for an accepting run of
+ a suitable product automaton.
+\end{definition}
+
+\subsection{Computation of the product automaton}
+\label{sssec:product_automaton_computation}
+
+\begin{definition}[Weighted product B\"uchi automaton]
+The weighted product B\"uchi automaton induced by
+ $\mathcal{T}$ and $\mathcal{B}_{\varphi}$ is
 \begin{equation}
 \mathcal{P} \triangleq \mathcal{T} \otimes \mathcal{B}_{\varphi}
 =
@@ -191,7 +206,7 @@ The weighted product automaton is defined by
 \label{eq:product-automaton}
 \end{equation}
 where $X \triangleq S \times Q$ is the product state space,
-$X_{0} \triangleq S_{0} \times Q_{0}$ is the set of product initial states,
+ $X_{0} \triangleq S_{0} \times Q_{0}$ is the set of product initial states,
  and $F_{\mathcal{P}} \triangleq S \times F$ is the product accepting set.
  The transition relation of the product automaton in
  \eqref{eq:product-automaton} is specified by
@@ -204,19 +219,30 @@ $X_{0} \triangleq S_{0} \times Q_{0}$ is the set of product initial states,
 \label{eq:product-transition}
 \end{equation}
 where the first condition enforces motion feasibility in
-\eqref{eq:transition-system}, while the second condition advances the automaton
+ \eqref{eq:transition-system}, and the second condition updates the automaton
  state according to the current robot label. The transition cost is inherited
  from the transition system by
-$w_{\mathcal{P}}\bigl((s,q),(s',q')\bigr) \triangleq w(s,s')$ whenever the
- product transition in \eqref{eq:product-transition} is enabled. In view of
- \eqref{eq:product-transition}, the product automaton encodes both robot motion
- and logical evolution in a single finite structure.
+ $w_{\mathcal{P}}\bigl((s,q),(s',q')\bigr) \triangleq w(s,s')$ whenever the
+ product transition in \eqref{eq:product-transition} is enabled.
+\end{definition}
 
-\subsection{Prefix--suffix plan synthesis}
-\label{sssec:prefix_suffix_synthesis}
+The product automaton in \eqref{eq:product-automaton} is computed by combining
+ each abstract motion state with each automaton state, and then retaining only
+ those pairs whose outgoing transitions satisfy \eqref{eq:product-transition}.
+ In this way, the product graph records both the feasible motion evolution in
+ $\mathcal{T}$ and the logical progress of the specification automaton.
+ Consequently, accepting runs of $\mathcal{P}$ encode exactly the robot
+ behaviors that satisfy the local task formula \cite{kloetzer2008fully,
+ kress2009temporal,baier2008principles}.
+
+\subsection{Plan-synthesis algorithm}
+\label{sssec:plan_synthesis_algorithm}
 
 Since an infinite accepting run is not convenient to manipulate directly, a
- prefix--suffix representation is adopted. Let
+ prefix--suffix representation is adopted.
+
+\begin{definition}[Prefix--suffix accepting run]
+An accepting run of the product automaton is sought in the form
 \begin{equation}
 \varrho \triangleq
 \varrho^{\mathrm{pre}}
@@ -226,11 +252,12 @@ Since an infinite accepting run is not convenient to manipulate directly, a
 where $\varrho^{\mathrm{pre}}$ is a finite path from an initial product state
  to an accepting product state, and $\varrho^{\mathrm{suf}}$ is a finite cycle
  that starts from that accepting state and returns to it. More explicitly,
-$\varrho^{\mathrm{pre}} \triangleq x_{0}x_{1}\cdots x_{K}$ and
-$\varrho^{\mathrm{suf}} \triangleq x_{K}x_{K+1}\cdots x_{N}x_{K}$, where
-$x_{0} \in X_{0}$ and $x_{K} \in F_{\mathcal{P}}$. The representation in
-\eqref{eq:prefix-suffix-run} is sufficient for B\"uchi acceptance, because
+ $\varrho^{\mathrm{pre}} \triangleq x_{0}x_{1}\cdots x_{K}$ and
+ $\varrho^{\mathrm{suf}} \triangleq x_{K}x_{K+1}\cdots x_{N}x_{K}$, where
+ $x_{0} \in X_{0}$ and $x_{K} \in F_{\mathcal{P}}$. The representation in
+ \eqref{eq:prefix-suffix-run} is sufficient for B\"uchi acceptance, because
  the suffix cycle revisits an accepting state infinitely often.
+ \end{definition}
 
 The quality of an accepting run is measured by
 \begin{equation}
@@ -242,25 +269,22 @@ J(\varrho) \triangleq
 \end{equation}
 where $\gamma \geq 0$ is a design parameter that balances the transient cost
  along the prefix and the steady-state cost along the suffix, with the
- convention $x_{N+1} \triangleq x_{K}$. The synthesis problem is thus reduced
- to finding an accepting run of the form \eqref{eq:prefix-suffix-run} that
- minimizes \eqref{eq:run-cost}. This prefix--suffix optimization is closely
- related to the constructions used in optimal temporal-logic path planning; see
- Smith et al. (2011).
+ convention $x_{N+1} \triangleq x_{K}$. The synthesis problem is therefore to
+ find an accepting run of the form \eqref{eq:prefix-suffix-run} that minimizes
+ \eqref{eq:run-cost}. This prefix--suffix optimization is closely related to
+ the constructions used in optimal temporal-logic path planning; see
+ \cite{smith2011optimal,schuppan2005shortest}.
 
-The optimization induced by \eqref{eq:run-cost} can be solved by graph search
- over the product automaton in \eqref{eq:product-automaton}. For each accepting
- product state, one shortest path from an initial product state and one shortest
- cycle through that accepting state are computed. The optimal accepting run is
- then obtained by selecting the pair that minimizes the total cost in
- \eqref{eq:run-cost}. In static environments, the full product automaton may be
- constructed beforehand. In larger or partially explored environments, the same
- search can be carried out on-the-fly, so that states and transitions are
- generated only when they are requested by the shortest-path procedure.
 
-Let the resulting optimal accepting run be denoted by
-$\varrho^{\star} \triangleq
-\varrho^{\star,\mathrm{pre}}\bigl(\varrho^{\star,\mathrm{suf}}\bigr)^{\omega}$.
+Algorithmically, the synthesis procedure has three stages. First,
+ $\mathcal{B}_{\varphi}$ is computed from the specification and then combined
+ with $\mathcal{T}$ to obtain the product model \eqref{eq:product-automaton}.
+ Second, for each candidate accepting state, one shortest path from an initial
+ product state and one shortest accepting cycle are computed in the product
+ graph. Third, the pair that minimizes the cost in \eqref{eq:run-cost} is
+ selected, yielding the optimal accepting run
+ $\varrho^{\star} \triangleq
+ \varrho^{\star,\mathrm{pre}}\bigl(\varrho^{\star,\mathrm{suf}}\bigr)^{\omega}$.
  The corresponding discrete robot plan is obtained by projecting
  $\varrho^{\star}$ onto the transition-system component, namely
 \begin{equation}
@@ -271,19 +295,48 @@ s_{0}s_{1}s_{2}\cdots,
 \label{eq:optimal-discrete-plan}
 \end{equation}
 where each consecutive pair $(s_{k},s_{k+1})$ is an enabled transition in
-$\mathcal{T}$. By \eqref{eq:product-transition}, the plan in
-\eqref{eq:optimal-discrete-plan} is feasible in the sense of
-\eqref{eq:transition-system}, and its trace satisfies $\varphi$.
+ $\mathcal{T}$. By \eqref{eq:product-transition}, the plan in
+ \eqref{eq:optimal-discrete-plan} is feasible in the sense of
+ \eqref{eq:transition-system}, and its trace satisfies $\varphi$.
+ Algorithm~\ref{alg:optimal_accepting_run} summarizes the synthesis procedure
+ described above.
 
-\subsection{Hybrid execution law}
-\label{sssec:hybrid_execution_law}
+
+ %==============================
+ \begin{algorithm}[t]
+\caption{Optimal accepting-run synthesis}
+\label{alg:optimal_accepting_run}
+\Input{Weighted transition system $\mathcal{T}$, LTL formula $\varphi$}
+\Output{Optimal accepting run $\varrho^\star$ and projected plan $\rho^\star$}
+
+Construct the B\"uchi automaton $\mathcal{B}_\varphi$ from $\varphi$\;
+Construct the product automaton $\mathcal{P}=\mathcal{T}\otimes\mathcal{B}_\varphi$\;
+Initialize the best cost as $+\infty$\;
+
+\ForEach{accepting state $x_f \in F_{\mathcal{P}}$}{
+  Compute a shortest path from some $x_0 \in X_0$ to $x_f$\;
+  Compute a shortest cycle from $x_f$ back to itself\;
+  Form the prefix--suffix run $\varrho$\;
+  Evaluate its cost $J(\varrho)$ using \eqref{eq:run-cost}\;
+  \If{$J(\varrho)$ is smaller than the current best cost}{
+    Update the best run as $\varrho^\star \leftarrow \varrho$\;
+  }
+}
+Project $\varrho^\star$ onto the transition-system component to obtain
+$\rho^\star = \mathrm{proj}_S(\varrho^\star)$\;
+\Return{$\varrho^\star,\rho^\star$}\;
+ \end{algorithm}
+ %==============================
+
+\subsection{Hybrid execution algorithm}
+\label{sssec:hybrid_execution_algorithm}
 
 The final step is to realize the symbolic plan
-\eqref{eq:optimal-discrete-plan} on the continuous system
-\eqref{eq:continuous-dynamics}. Let
-$\kappa_{s_{k},s_{k+1}} : \mathbb{R}^{n} \to \mathbb{R}^{m}$ denote the
+ \eqref{eq:optimal-discrete-plan} on the continuous system
+ \eqref{eq:continuous-dynamics}. Let
+ $\kappa_{s_{k},s_{k+1}} : \mathbb{R}^{n} \to \mathbb{R}^{m}$ denote the
  feedback controller associated with the abstract transition from $s_{k}$ to
-$s_{k+1}$. The hybrid control law is then given by
+ $s_{k+1}$. The hybrid control law is then given by
 \begin{equation}
 u(t) = \kappa_{s_{k},s_{k+1}}\bigl(x(t)\bigr),
 \label{eq:hybrid-control-law}
@@ -295,7 +348,8 @@ where the controller corresponding to the current symbolic transition is
  \eqref{eq:optimal-discrete-plan}. In this way, the prefix of the optimal run
  is executed once, while its suffix is repeated indefinitely. The resulting
  closed-loop behavior follows the discrete accepting plan at the abstraction
- layer, thereby satisfying the local temporal task.
+ layer. Its formal correctness properties are established in
+ Section~\ref{sec:correctness_complexity}.
 
 %==============================
 \section{Correctness and Complexity}
@@ -342,13 +396,13 @@ $q_{0}q_{1}q_{2}\cdots$ is an accepting run of $\mathcal{B}_{\varphi}$ over
 $\mathcal{B}_{\varphi}$ coincides with the set of words satisfying
 $\varphi$, it follows that $\mathrm{trace}(\rho) \models \varphi$. The
  claim then follows from the trace-based satisfaction semantics introduced in
- Subsubsection~\ref{sssec:local_temporal_task}.
+ Subsubsection~\ref{sssec:temporal_task_specification}.
 \end{proof}
 
 Lemma~\ref{lem:projection-correctness} shows that an accepting product run is
  sufficient to obtain a correct symbolic plan. The next result connects this
  symbolic plan to the continuous execution generated by the hybrid control law
- in Subsubsection~\ref{sssec:hybrid_execution_law}.
+ in Subsubsection~\ref{sssec:hybrid_execution_algorithm}.
 
 \subsection{Correctness of hybrid execution}
 \label{sssec:correctness_hybrid_execution}
@@ -386,9 +440,9 @@ Lemmas~\ref{lem:projection-correctness} and
  realize the abstract transitions, then the accepting run synthesized in the
  product automaton induces a continuous execution that satisfies the local task
  formula. This type of automata-based correctness argument is standard in formal
- methods and temporal-logic motion planning; see, for instance, Baier and
- Katoen (2008), Vardi and Wolper (1986), Belta et al. (2007), Fainekos et al.
- (2009), and Kress-Gazit et al. (2009).
+ methods and temporal-logic motion planning; see, for instance,
+ \cite{baier2008principles,vardi1986automata,belta2007symbolic,
+ fainekos2009temporal,kress2009temporal}.
 
 \subsection{Complexity under on-the-fly construction}
 \label{sssec:complexity_on_the_fly}
@@ -397,6 +451,7 @@ The complexity analysis is divided into two cases. The first concerns the
  single-robot synthesis problem under on-the-fly product construction. Let
 $n_{\varphi} \triangleq |\varphi|$, where $n_{\varphi}$ denotes the size of
  the LTL formula. Standard translation from LTL to B\"uchi automata yields
+ \cite{baier2008principles,gastin2001fast}.
 \begin{equation}
 |Q| = 2^{\mathcal{O}(n_{\varphi})}, \qquad
 |\delta| = 2^{\mathcal{O}(n_{\varphi})},
@@ -485,8 +540,8 @@ The implications are immediate. Even when the local models are modest, the
  coordination mechanisms in order to avoid the full centralized blow-up in
  \eqref{eq:team-product-cardinality}. Related scalability issues have also been
  noted in the literature on multi-robot temporal-logic planning and deployment;
- see, for example, Kloetzer and Belta (2010), Ding et al. (2012), Kloetzer
- et al. (2011), and Guo and Dimarogonas (2015).
+ see, for example, \cite{kloetzer2010automatic,chen2012formal,
+ kloetzer2011multi,guo2015multi}.
 
 %==============================
 \section{Case Study}
@@ -497,7 +552,9 @@ This section illustrates the proposed single-robot framework on a TIAGo-based
  transition model of the robot motion, an LTL planner that synthesizes a
  satisfying symbolic plan, and a FlexBE execution layer that dispatches the
  corresponding navigation and manipulation behaviors. The example is adapted
- from the publicly available \texttt{tiago\_ltl\_flexbe} implementation.
+ from the publicly available \texttt{tiago\_ltl\_flexbe} implementation,
+ which builds on the P\_MAS\_TG planner and related LTL-based robotic
+ planning tools \cite{package,LTLfirst,guo2013motion}.
 
 \subsection{Workspace and abstract model}
 \label{sssec:case_study_workspace_model}
@@ -583,7 +640,7 @@ where \eqref{eq:case-study-task} is the symbolic counterpart of the task
 $\mathcal{T}_{\mathrm{cs}}$ and \eqref{eq:case-study-task} yields a product
  automaton of the form \eqref{eq:product-automaton}, and the corresponding
  optimal accepting run is obtained in prefix--suffix form as in
- Subsubsection~\ref{sssec:prefix_suffix_synthesis}.
+ Subsubsection~\ref{sssec:plan_synthesis_algorithm}.
 
 For the present instance, the optimal discrete prefix is
 \begin{equation}
