@@ -1,0 +1,465 @@
+\section{Dependent Local Tasks with Collaborative Actions}
+\label{sec:dep-local-collab}
+
+This section considers a heterogeneous multi-robot system indexed by
+$i \in \mathcal{N} \triangleq \{1,\cdots,N\}$. Each robot is assigned a
+local task, yet the execution of some task-relevant actions may require
+real-time assistance from neighboring robots. The goal is to retain the
+local-task viewpoint developed earlier, while introducing an explicit
+model for action dependence and an online coordination mechanism that
+resolves such dependence during execution.
+
+The main distinction from the setting of independent local tasks is that
+feasibility is no longer determined solely by a single robot model.
+Instead, a local plan may contain collaborative actions whose completion
+depends on assisting actions provided by nearby robots. This section
+formalizes that dependence at the action level, derives an offline local
+plan for each robot, and then introduces an online protocol that
+requests, assigns, and repairs collaborations in a distributed manner.
+The presentation follows the order of definition, computation,
+algorithmic realization, and analysis.
+
+\subsection{Robot models and dependent actions}
+\label{subsec:dep-model}
+
+The workspace is partitioned into a finite set of regions
+$\Pi \triangleq \{\pi_1,\cdots,\pi_M\}$. For each robot $i$, mobility is
+described by a weighted transition system
+\begin{equation}
+\mathcal{M}_i \triangleq
+\left(
+\Pi,\,
+\rightarrow_{\mathcal{M}}^i,\,
+\pi_{\mathcal{M},0}^i,\,
+\Psi_{\mathcal{M}}^i,\,
+L_{\mathcal{M}}^i,\,
+T_{\mathcal{M}}^i
+\right),
+\label{eq:dep-mobility}
+\end{equation}
+where $\rightarrow_{\mathcal{M}}^i \subseteq \Pi \times \Pi$ is the
+motion relation, $\pi_{\mathcal{M},0}^i \in \Pi$ is the initial region,
+$L_{\mathcal{M}}^i$ labels each region by relevant propositions, and
+$T_{\mathcal{M}}^i$ assigns a positive transition time. The set
+$\mathcal{N}_i \subseteq \mathcal{N}$ denotes the neighbors of robot
+$i$, namely the robots with which direct communication is available.
+
+\begin{definition}[Action model]
+\label{def:dep-action-model}
+Robot $i$ is associated with three action sets. The set $\Sigma_l^i$
+contains local actions that can be completed by robot $i$ alone. The set
+$\Sigma_c^i$ contains collaborative actions that are initiated by robot
+$i$ but require external assistance. The set $\Sigma_h^i$ contains
+assisting actions that robot $i$ can provide to others. Define
+$\Sigma_a^i \triangleq \Sigma_l^i \cup \Sigma_c^i$ and
+$\Sigma_i \triangleq \Sigma_a^i \cup \Sigma_h^i$. The idle action
+$\sigma_0 \triangleq \texttt{None}$ belongs to $\Sigma_l^i$.
+
+The action model of robot $i$ is the tuple
+\begin{equation}
+\mathcal{B}_i \triangleq
+\left(
+\Sigma_i,\,
+\Psi_{\Sigma}^i,\,
+L_{\Sigma}^i,\,
+\texttt{Cond}_i,\,
+\texttt{Dura}_i,\,
+\texttt{Depd}_i
+\right),
+\label{eq:dep-action-model}
+\end{equation}
+where $L_{\Sigma}^i$ labels active actions, $\texttt{Cond}_i$ encodes
+region conditions for action execution, $\texttt{Dura}_i$ gives the
+action duration, and $\texttt{Depd}_i$ specifies external assistance.
+More precisely, $\texttt{Depd}_i(\sigma)=\emptyset$ for all
+$\sigma \in \Sigma_l^i \cup \Sigma_h^i$, while
+$\texttt{Depd}_i(\sigma_c) \subseteq \Sigma_h^{\sim i}$ for every
+$\sigma_c \in \Sigma_c^i$, where
+$\Sigma_h^{\sim i} \subseteq \bigcup_{j \in \mathcal{N}_i} \Sigma_h^j$
+collects the assisting actions that may be supplied by the neighbors of
+robot $i$.
+\end{definition}
+
+Definition~\ref{def:dep-action-model} places dependence between actions,
+not between robot identities. This choice is important. A collaborative
+action does not require a prescribed robot, but only the availability of
+the required assisting actions. The resulting model is therefore more
+robust to team reconfiguration and robot failures.
+
+\begin{definition}[Completion of actions]
+\label{def:dep-action-done}
+Let $\pi \in \Pi$. A local or assisting action
+$\sigma \in \Sigma_l^i \cup \Sigma_h^i$ is said to be completed at
+region $\pi$ if
+$\texttt{Cond}_i(\sigma,L_{\mathcal{M}}^i(\pi))=\top$ and the action is
+maintained for $\texttt{Dura}_i(\sigma)$ time units. A collaborative
+action $\sigma_c \in \Sigma_c^i$ is completed at region $\pi$ if the
+same two conditions hold and, in addition, every assisting action in
+$\texttt{Depd}_i(\sigma_c)$ is completed at the same region by other
+robots.
+\end{definition}
+
+\begin{definition}[Complete robot model]
+\label{def:dep-complete-model}
+Given $\mathcal{M}_i$ and $\mathcal{B}_i$, the complete model of robot
+$i$ is the weighted transition system
+\begin{equation}
+\mathcal{R}_i \triangleq
+\left(
+\Pi_{\mathcal{R}}^i,\,
+\rightarrow_{\mathcal{R}}^i,\,
+\pi_{\mathcal{R},0}^i,\,
+\Psi_{\mathcal{R}}^i,\,
+L_{\mathcal{R}}^i,\,
+T_{\mathcal{R}}^i
+\right),
+\label{eq:dep-complete-model}
+\end{equation}
+where $\Pi_{\mathcal{R}}^i \triangleq \Pi \times \Sigma_i$,
+$\pi_{\mathcal{R},0}^i \triangleq \langle \pi_{\mathcal{M},0}^i,
+\sigma_0 \rangle$, and
+$\Psi_{\mathcal{R}}^i \triangleq
+\Psi_{\mathcal{M}}^i \cup \Psi_{\Sigma}^i$. A transition in
+$\rightarrow_{\mathcal{R}}^i$ has one of the following forms.
+
+First, motion is allowed from
+$\langle \pi,\sigma_0 \rangle$ to
+$\langle \pi',\sigma_0 \rangle$ whenever
+$\pi \rightarrow_{\mathcal{M}}^i \pi'$. Second, an admissible action
+$\sigma \neq \sigma_0$ may be activated at a fixed region $\pi$ from
+$\langle \pi,\sigma_0 \rangle$ to $\langle \pi,\sigma \rangle$ whenever
+$\texttt{Cond}_i(\sigma,L_{\mathcal{M}}^i(\pi))=\top$. Third, after an
+action is executed, the model returns from
+$\langle \pi,\sigma \rangle$ to $\langle \pi,\sigma_0 \rangle$. The
+weight function $T_{\mathcal{R}}^i$ assigns the corresponding motion
+time or action duration.
+\end{definition}
+
+The task of robot $i$ is an sc-LTL formula
+$\varphi_i$ over $\Psi_{\mathcal{R}}^i$. As in Chapter~2, such a task
+admits satisfaction by a finite prefix and can therefore be handled by a
+finite accepting path construction \citep{baier2008principles,
+gastin2001fast}. The problem addressed in this section is stated next.
+
+\begin{problem}
+\label{prob:dep-local-tasks}
+For each robot $i \in \mathcal{N}$, given the complete model
+$\mathcal{R}_i$ and the local task $\varphi_i$, design a distributed
+coordination and control scheme such that every task $\varphi_i$ is
+satisfied, even when some task-relevant actions require online
+collaboration.
+\end{problem}
+
+\subsection{Offline local synthesis}
+\label{subsec:dep-offline}
+
+The first computation is purely local. For each robot $i$, construct the
+automaton $\mathcal{A}_{\varphi_i}$ associated with $\varphi_i$ and form
+the product automaton
+\begin{equation}
+\mathcal{A}_{p,i} \triangleq
+\mathcal{R}_i \otimes \mathcal{A}_{\varphi_i},
+\label{eq:dep-product}
+\end{equation}
+where the product is defined exactly as in the finite-prefix synthesis
+machinery introduced earlier. Accepting paths of
+$\mathcal{A}_{p,i}$ correspond bijectively to finite executions of
+$\mathcal{R}_i$ whose traces satisfy $\varphi_i$
+\citep{baier2008principles,guo2013motion}.
+
+Let $\mathfrak{R}_{p,i}^{\mathrm{acc}}$ denote the set of finite
+accepting runs of $\mathcal{A}_{p,i}$. The local planning problem is
+\begin{equation}
+R_{p,i}^{\star} \in
+\arg\min_{R \in \mathfrak{R}_{p,i}^{\mathrm{acc}}}
+\texttt{Cost}_i(R),
+\label{eq:dep-offline-opt}
+\end{equation}
+where $\texttt{Cost}_i(R)$ is the total accumulated weight along the
+run. The projection of $R_{p,i}^{\star}$ onto
+$\Pi_{\mathcal{R}}^i$ yields the initial motion-action plan
+$\tau_{i,\mathrm{init}}$. This local synthesis is standard shortest-path
+search on the product graph and can be implemented with Dijkstra-type
+methods \citep{lavalle2006planning,guo2013motion}.
+
+The plan $\tau_{i,\mathrm{init}}$ is task-correct with respect to
+$\varphi_i$, but it is not yet execution-ready when collaborative
+actions appear in the plan. The remaining computations must therefore be
+performed online.
+
+\subsection{Finite-horizon coordination}
+\label{subsec:dep-online}
+
+At execution time $t$, let the current state of robot $i$ belong to the
+plan $\tau_i$. The notation $\tau_i$ refers to the current plan, which
+is initialized as $\tau_{i,\mathrm{init}}$ and later updated by online
+repair. Let $\ell_i(t)$ be the current index of robot $i$ in $\tau_i$.
+Given a planning horizon $H_i>0$, define
+\begin{equation}
+k_i(t) \triangleq
+\min
+\left\{
+k \ge \ell_i(t)\, \middle|\,
+\sum_{s=\ell_i(t)}^{k-1}
+T_{\mathcal{R}}^i\bigl(\tau_i[s],\tau_i[s+1]\bigr) \ge H_i
+\right\},
+\label{eq:dep-horizon-index}
+\end{equation}
+where $k_i(t)$ is set to the last plan index if the set in
+\eqref{eq:dep-horizon-index} is empty.
+
+The segment $\tau_i[\ell_i(t):k_i(t)]$ is the predicted execution within
+the horizon. If this segment contains no collaborative action, robot $i$
+simply executes the next motion or local action. Otherwise, let
+$\langle \pi_i^{\star}(t),\sigma_i^{\star}(t)\rangle$ be the first state
+in the horizon such that $\sigma_i^{\star}(t) \in \Sigma_c^i$. Its
+predicted execution time, measured from the current instant, is denoted
+by $T_i^{\star}(t)$.
+
+The corresponding request message is
+\begin{equation}
+\mathbf{Req}_i(t) \triangleq
+\left\{
+\bigl(\sigma,\pi_i^{\star}(t),T_i^{\star}(t)\bigr)
+\,\middle|\,
+\sigma \in \texttt{Depd}_i\bigl(\sigma_i^{\star}(t)\bigr)
+\right\},
+\label{eq:dep-request}
+\end{equation}
+which is broadcast to all robots in $\mathcal{N}_i$. Only the first
+collaborative action in the horizon is considered, since the outcome of
+the current coordination step may alter all subsequent timing.
+
+\subsubsection{Reply computation}
+\label{subsubsec:dep-reply}
+
+Suppose robot $j \in \mathcal{N}_i$ receives a request for assisting
+action $\sigma$ at region $\pi_i^{\star}(t)$. If robot $j$ is already
+committed to another collaboration, it returns an infeasible reply.
+Otherwise, it evaluates whether its current accepting suffix can be
+modified so as to visit the state
+$\langle \pi_i^{\star}(t),\sigma \rangle$ and still terminate at an
+accepting state.
+
+Let $\widehat{R}_{p,j}^{-}$ denote the current product suffix of robot
+$j$ from its present state to its accepting state, and let
+$\bar{c}_j \triangleq \texttt{Cost}_j(\widehat{R}_{p,j}^{-})$. For each
+candidate state $q$ in the product automaton whose projection equals
+$\langle \pi_i^{\star}(t),\sigma \rangle$, define
+\begin{equation}
+J_{j,\sigma}(q) \triangleq
+\left|c_{j,\rightarrow}(q)-T_i^{\star}(t)\right|
++
+\alpha_j
+\Bigl(
+c_{j,\rightarrow}(q)+c_{j,\leftarrow}(q)-\bar{c}_j
+\Bigr),
+\label{eq:dep-balanced-cost}
+\end{equation}
+where $c_{j,\rightarrow}(q)$ is the shortest-path cost from the current
+product state of robot $j$ to $q$, computed while avoiding intermediate
+collaborative and assisting actions, and $c_{j,\leftarrow}(q)$ is the
+shortest-path cost from $q$ to the accepting product state in the
+reversed graph. The scalar $\alpha_j>0$ balances temporal matching
+against additional local cost.
+
+The reply of robot $j$ is generated by minimizing
+\eqref{eq:dep-balanced-cost}. If the minimum is attained, robot $j$
+stores the corresponding revised suffix and returns feasibility together
+with the candidate assisting time
+$t_{j,\sigma} \triangleq c_{j,\rightarrow}(q^{\star})$. Otherwise, it
+returns infeasibility. This computation is a pair of shortest-path
+searches on the product graph and its reverse
+\citep{lavalle2006planning,baier2008principles}.
+
+\begin{lemma}
+\label{lem:dep-helper}
+If robot $j$ returns a feasible reply for assisting action $\sigma$,
+then the revised suffix constructed by the reply computation reaches
+$\langle \pi_i^{\star}(t),\sigma \rangle$ at time $t_{j,\sigma}$ and
+still terminates at an accepting state of $\mathcal{A}_{p,j}$.
+\end{lemma}
+
+\begin{proof}
+The forward shortest path ends at a state projecting to
+$\langle \pi_i^{\star}(t),\sigma \rangle$. The backward shortest path in
+the reversed product graph certifies reachability from that state to the
+accepting state in the original graph. Their concatenation is therefore
+a valid accepting suffix. The stated arrival time equals the weight of
+its forward part by construction.
+\end{proof}
+
+\subsubsection{Assignment and confirmation}
+\label{subsubsec:dep-assign}
+
+Once all replies are collected, robot $i$ assigns one helper to each
+requested assisting action. Introduce a binary variable $x_{j,\sigma}$
+that is equal to $1$ if robot $j$ is chosen to provide assisting action
+$\sigma$, and equal to $0$ otherwise. The completion time of the
+collaborative action is denoted by $f_i(t)$ and is obtained from
+\begin{equation}
+\begin{aligned}
+\min_{x_{j,\sigma},\, f_i(t)} \quad & f_i(t) \\
+\text{s.t.} \quad
+& f_i(t) \ge T_i^{\star}(t), \\
+& f_i(t) \ge t_{j,\sigma} - M\bigl(1-x_{j,\sigma}\bigr),
+\quad \forall j \in \mathcal{N}_i,\ \forall \sigma, \\
+& \sum_{j \in \mathcal{N}_i} x_{j,\sigma} = 1,
+\quad \forall
+\sigma \in \texttt{Depd}_i\bigl(\sigma_i^{\star}(t)\bigr), \\
+& \sum_{\sigma \in \texttt{Depd}_i(\sigma_i^{\star}(t))}
+x_{j,\sigma} \le 1,
+\quad \forall j \in \mathcal{N}_i, \\
+& x_{j,\sigma} \in \{0,1\},
+\end{aligned}
+\label{eq:dep-assignment}
+\end{equation}
+where $M$ is a sufficiently large constant
+\citep{wolsey1998integer}. Equation~\eqref{eq:dep-assignment} enforces
+that every required assisting action is assigned exactly once, while
+each helper serves at most one role in the same collaboration.
+
+If \eqref{eq:dep-assignment} is feasible, robot $i$ sends confirmation
+messages to the selected helpers and preserves its own current suffix.
+Each confirmed helper replaces its current suffix by the revised suffix
+computed in the reply stage. If \eqref{eq:dep-assignment} is infeasible,
+the collaborative action is delayed and the local suffix of robot $i$ is
+recomputed.
+
+\begin{algorithm}[t]
+\caption{Online coordination and repair for robot $i$}
+\label{alg:dep-online}
+\DontPrintSemicolon
+\KwIn{$\tau_i$, current state index $\ell_i(t)$, $H_i$, $D_i$}
+\KwOut{Updated plan $\tau_i$}
+
+Compute $k_i(t)$ from \eqref{eq:dep-horizon-index}\;
+Locate the first collaborative action in $\tau_i[\ell_i(t):k_i(t)]$\;
+
+\If{no collaborative action appears}{
+  execute the next motion or local action and \textbf{return}\;
+}
+
+Construct and broadcast $\mathbf{Req}_i(t)$ from
+\eqref{eq:dep-request}\;
+
+\ForEach{reply from robot $j \in \mathcal{N}_i$}{
+  evaluate candidate insertions by minimizing
+  \eqref{eq:dep-balanced-cost}\;
+}
+
+Solve the assignment problem \eqref{eq:dep-assignment}\;
+
+\If{\eqref{eq:dep-assignment} is feasible}{
+  confirm the selected helpers and update their plan suffixes\;
+}
+\Else{
+  delay the collaborative action by $D_i$ and recompute the local suffix
+  of robot $i$\;
+}
+
+Execute the updated plan prefix\;
+Monitor acknowledgments from confirmed helpers until the collaborative
+action is completed\;
+
+\If{a confirmed helper fails}{
+  reassign the missing assisting action by
+  \eqref{eq:dep-reassign}\;
+}
+\end{algorithm}
+
+\subsection{Plan revision and failure recovery}
+\label{subsec:dep-repair}
+
+If the assignment problem \eqref{eq:dep-assignment} is infeasible,
+robot $i$ postpones the collaborative action by a delay parameter
+$D_i>0$ and recomputes only the remaining suffix of its local plan. The
+revised suffix still starts from the current product state and still
+terminates at an accepting state. The modification therefore preserves
+local task correctness while moving the collaborative action to a later
+time. This repair is repeated only when necessary.
+
+Failure handling is equally local. Suppose that robot $i$ has already
+confirmed a helper for an assisting action $\sigma$, but the helper no
+longer acknowledges status inquiries. Robot $i$ treats that helper as
+failed, requests the missing assisting action again, and selects the new
+helper by
+\begin{equation}
+\hat{\jmath} \triangleq
+\arg\min_{j \in \mathcal{N}_i^{\mathrm{avail}}}
+\left| t_{j,\sigma} - f_i(t) \right|,
+\label{eq:dep-reassign}
+\end{equation}
+where $\mathcal{N}_i^{\mathrm{avail}}$ is the set of neighbors that
+return feasible replies for $\sigma$. The selected robot is then
+confirmed and executes the corresponding revised suffix. This repair
+keeps the original collaborative completion time whenever that remains
+possible, and otherwise perturbs the schedule minimally.
+
+\subsection{Analysis}
+\label{subsec:dep-analysis}
+
+The proposed protocol is intended for loosely coupled teams, in which
+collaborations are local and occur only intermittently relative to the
+full execution horizon.
+
+\begin{assumption}
+\label{ass:dep-loose}
+There exists a finite constant $\overline{T}>0$ such that, whenever a
+robot requests a collaborative action at time $t$, either the assignment
+problem \eqref{eq:dep-assignment} is immediately feasible or it becomes
+feasible after finitely many delay-and-repair iterations and within
+$t+\overline{T}$.
+\end{assumption}
+
+Assumption~\ref{ass:dep-loose} does not require permanent availability
+of assistance. It only requires eventual availability within a bounded
+time window. This is the natural condition under which bottom-up
+coordination remains compatible with finite local-task satisfaction.
+
+\begin{theorem}
+\label{thm:dep-correctness}
+Under Assumption~\ref{ass:dep-loose}, the coordination scheme described
+in Algorithm~\ref{alg:dep-online} solves
+Problem~\ref{prob:dep-local-tasks}. In particular, each robot completes
+its local task $\varphi_i$ in finite time.
+\end{theorem}
+
+\begin{proof}
+The offline plan $\tau_{i,\mathrm{init}}$ is the projection of an
+accepting run of $\mathcal{A}_{p,i}$, hence it satisfies $\varphi_i$.
+Every motion transition and every local action in that plan requires
+only local execution and therefore completes in finite time.
+
+Consider a collaborative action encountered during execution. If
+\eqref{eq:dep-assignment} is feasible, the selected helpers can realize
+their assisting actions at the confirmed times by
+Lemma~\ref{lem:dep-helper}, and the collaborative action therefore
+completes at time $f_i(t)$. If \eqref{eq:dep-assignment} is infeasible,
+the action is delayed and the local suffix is repaired without leaving
+the accepting set of the product automaton. By
+Assumption~\ref{ass:dep-loose}, this delay-repair process yields a
+feasible assignment after finitely many repetitions and within finite
+time.
+
+The same argument applies after a helper failure, because the failed
+assisting action is simply converted into a new local request and is
+reassigned by \eqref{eq:dep-reassign}. Since every local plan contains
+only finitely many actions, and each collaborative action becomes
+feasible after finitely many repairs, the total execution time is
+finite. Hence every task $\varphi_i$ is satisfied in finite time.
+\end{proof}
+
+The online computation is also modest. The reply stage for one helper
+requires two shortest-path computations on the local product automaton,
+with complexity of Dijkstra type
+$\mathcal{O}(|\delta_{p,i}|\log|Q_{p,i}|)$
+\citep{lavalle2006planning}. The assignment stage involves
+$|\mathcal{N}_i| \cdot
+|\texttt{Depd}_i(\sigma_i^{\star}(t))|$ binary variables and is solved
+locally by the requesting robot \citep{wolsey1998integer}. This
+confirms that the proposed mechanism scales with local neighborhood size
+and local action dependence, rather than with the size of the entire
+team. Compared with centralized or cluster-level formulations
+\citep{chen2012formal,guo2012infeasible}, the computation remains
+bottom-up and execution-driven.

@@ -480,7 +480,27 @@ abstraction, while communication is used only to improve the information on
 which that abstraction is built. Related distributed viewpoints appear in
 \cite{durfee2006distributed,filippidis2012decentralized,guo2014distributed}.
 
-The communication layer is modeled by a time-varying directed graph
+
+\begin{problem}[Collaborative local planning under shared workspace knowledge]
+\label{prob:collaborative_local_planning}
+Consider a team of robots indexed by
+$\mathcal{N} \triangleq \{1,\ldots,N\}$. For each robot $i \in \mathcal{N}$,
+let $\mathcal{T}_{i}^{t}$ be the current local transition system in
+\eqref{eq:local_team_ts}, and let the local task be
+$\varphi_{i} \triangleq
+\varphi_{i}^{\mathrm{soft}} \wedge \varphi_{i}^{\mathrm{hard}}$.
+Given the time-varying communication graph $\mathcal{G}^{t}$ and the local
+relaxed product automaton $\widetilde{\mathcal{P}}_{i}^{t}$ for each robot,
+determine, for every $i \in \mathcal{N}$, an accepting product run
+$\varrho_{i}^{t}$ and its projection
+$\rho_{i}^{t} \triangleq \mathrm{proj}_{S_{i}}(\varrho_{i}^{t})$ such that
+$\rho_{i}^{t}$ is executable on $\mathcal{T}_{i}^{t}$, satisfies the hard
+task $\varphi_{i}^{\mathrm{hard}}$, and minimizes the balanced cost induced by
+the local relaxed product construction.
+\end{problem}
+
+To address Problem~\ref{prob:collaborative_local_planning},
+the communication layer is modeled by a time-varying directed graph
 $\mathcal{G}^{t} \triangleq (\mathcal{N},\mathcal{E}^{t})$, where
 $(i,j) \in \mathcal{E}^{t}$ means that robot $i$ can transmit to robot $j$ at
 time $t$. Denote by $\mathcal{N}_{i}^{t}$ the outgoing neighbors of robot $i$.
@@ -518,9 +538,26 @@ the communication load aligned with the actual planning objective. Since the
 filtered packet has the same tuple structure as a local sensing update, it can
 be incorporated into the transition-system update rule without introducing any
 new planning machinery.
+This communication objective is stated formally in
+Problem~\ref{prob:task_driven_transfer}.
 
-The computation induced by \eqref{eq:task_driven_reply} is straightforward and
-fully local. Each robot stores the subscription requests it has received, checks
+\begin{problem}[Task-driven collaborative knowledge transfer]
+\label{prob:task_driven_transfer}
+For each robot $i \in \mathcal{N}$, let $\mathbf{Sense}_{i}^{t}$ denote the
+newly acquired semantic information at time $t$, and let
+$\mathcal{N}_{i}^{t}$ be the set of robots that are reachable from $i$ in
+$\mathcal{G}^{t}$. For every neighbor $j \in \mathcal{N}_{i}^{t}$ that has
+announced the task-relevant proposition set
+$\mathsf{AP}_{j}^{\varphi}$, determine a transmitted packet
+$\mathbf{Reply}_{i \rightarrow j}^{t}$ such that only semantic facts relevant
+to $\varphi_{j}$ are communicated, and such that the received information can
+be incorporated into the updated local abstraction of robot $j$ without
+changing the structure of the local revision procedure.
+\end{problem}
+
+The computation associated with
+Problem~\ref{prob:task_driven_transfer} is fully local and straightforward.
+Each robot stores the subscription requests it has received, checks
 which subscribers are currently reachable in $\mathcal{G}^{t}$, and filters
 every fresh sensing tuple through the corresponding task vocabulary. Once the
 resulting replies are delivered, the receiving robot updates its current
@@ -529,6 +566,10 @@ Algorithm~\ref{alg:history_revision} whenever the current continuation becomes
 invalid or unsafe. Hence collaborative knowledge transfer does not replace the
 single-robot adaptation mechanism; it supplies additional evidence that enters
 that mechanism in exactly the same format as local perception.
+Algorithm~\ref{alg:task_driven_transfer} addresses
+Problem~\ref{prob:task_driven_transfer} and provides the communication and
+revision mechanism required by
+Problem~\ref{prob:collaborative_local_planning}.
 
 \begin{algorithm}[t]
 \caption{Task-driven transfer and local revision at robot $i$}
@@ -593,8 +634,9 @@ because the communication graph can be sparse or time-varying, and the planning
 architecture should not consume bandwidth on semantic facts that are irrelevant
 to the current specification.
 
-The next statement connects collaborative transfer to the correctness guarantee
-already established for single-robot revision.
+The next result shows that the collaborative mechanism yields a correct solution
+to Problem~\ref{prob:collaborative_local_planning} under sound exchanged
+semantic information.
 
 \begin{theorem}
 \label{thm:collaborative_transfer_correctness}
