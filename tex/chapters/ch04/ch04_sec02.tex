@@ -1,0 +1,372 @@
+\section{Hierarchical Coordination of Large-Scale Fleets under Temporal Tasks}
+\label{sec:hierarchical_coordination}
+
+Large-scale temporal-task coordination for heterogeneous fleets faces two
+coupled sources of complexity. The first source is logical. Temporal missions
+must be decomposed into admissible task sequences that satisfy ordering,
+concurrency, and completion requirements. The second source is combinatorial.
+Concrete robots with different capabilities must be grouped into teams and
+dispatched over the workspace with bounded response time. Direct formulations
+that synchronize temporal automata with all robot models can provide strong
+correctness guarantees, but their size grows rapidly with the fleet cardinality
+and the mission complexity
+\cite{schillinger2018simultaneous,kantaros2020stylus,luo2021temporal,
+leahy2021scalable}. Recent advances have improved scalability by sampling,
+decision-tree expansion, partial-order reduction, and hierarchical task
+abstractions
+\cite{chen2025real,liu2024time,luo2025simultaneous,gosrich2025online,
+luo2025hulk}. Nevertheless, large fleets still require a sharper separation
+between temporal decomposition, team formation, and execution-level
+realization.
+
+This section develops such a separation. The emphasis is the coordination
+backbone that connects temporal specifications to executable team plans. The
+presentation deliberately suppresses interface-level supervision and keeps
+re-optimization details to a minimum. Those aspects are deferred to the next
+section. The resulting architecture contains three tightly coupled layers. The
+fleet level reasons over temporal tasks and constructs abstract team plans. The
+intermediate level instantiates these abstract plans by assigning concrete
+robots to capability profiles. The execution level converts each team plan into
+robot-level plans $\tau_i$, which have been defined previously as timed action
+sequences.
+
+\subsection{Hierarchical coordination model}
+\label{subsec:hierarchical_model}
+
+Let $\mathcal{N}\triangleq\{1,\cdots,N\}$ denote the fleet and let
+$\Phi_t\triangleq\{\varphi_1,\cdots,\varphi_M\}$ denote the set of temporal
+missions known at time $t$. Each mission $\varphi_\ell$ is interpreted as a
+syntactically co-safe temporal formula over collaborative tasks. This modeling
+choice is natural for finite-horizon missions in which completion can be
+certified after a finite trace, and it is consistent with automata-based
+planning for temporal logic \cite{baier2008principles}. The task abstraction
+must capture both capability requirements and the spatial support over which
+collaboration is executed.
+
+\begin{definition}[Collaborative task]
+\label{def:collaborative_task}
+A collaborative task is a tuple
+\[
+\omega \triangleq \big(S_\omega,\eta_\omega,\mathcal{J}_\omega\big),
+\]
+where $S_\omega\subseteq\mathcal{W}$ is the execution region,
+$\eta_\omega$ is a duration map, and
+$\mathcal{J}_\omega\triangleq\{(n_j,a_j,s_j)\}_{j=1}^{J_\omega}$ is the set
+of subtasks. For each subtask, $n_j$ is the required number of robots,
+$a_j$ is the required action, and $s_j\in S_\omega$ is the service location.
+\end{definition}
+
+Definition~\ref{def:collaborative_task} extends purely counting-based task
+descriptions by retaining the spatial support and the dependence of execution
+time on the assigned team. This distinction is important in large-scale fleets,
+because the same cardinality requirement may induce very different response
+times when the available robots differ in location and capability
+\cite{sahin2019multirobot,cardona2024planning}. It is also convenient for
+hierarchical coordination, since the fleet level only needs abstract task
+information, while the execution level resolves robot trajectories.
+
+The intermediate objects of the hierarchy are task sequences assigned to teams
+and the associated capacity profiles.
+
+\begin{definition}[Abstract team plan and capacity profile]
+\label{def:team_profile}
+For team index $k\in\mathcal{K}$, an abstract team plan is a finite sequence
+\[
+\Gamma_k \triangleq \omega_k^1\omega_k^2\cdots\omega_k^{L_k}.
+\]
+The capacity profile induced by $\Gamma_k$ is the map
+$\beta_k:\mathcal{A}\rightarrow\mathbb{N}$ defined by
+\begin{equation}
+\label{eq:cap_profile_ch4}
+\beta_k(a) \triangleq
+\max_{\omega\in\Gamma_k}
+\max_{\substack{(n_j,a_j,s_j)\in\mathcal{J}_\omega\\ a_j=a}}
+n_j,
+\end{equation}
+where $\beta_k(a)$ is taken as zero when action $a$ does not appear in
+$\Gamma_k$.
+\end{definition}
+
+Equation~\eqref{eq:cap_profile_ch4} records the largest instantaneous demand
+for each action along the team sequence. It deliberately does not identify
+which robots realize that demand. This abstraction is the key mechanism that
+decouples fleet-level temporal decomposition from concrete robot assignment.
+
+\subsection{Automaton-guided fleet-level assignment}
+\label{subsec:automaton_assignment}
+
+For each mission $\varphi_\ell\in\Phi_t$, let
+\[
+\mathcal{B}_{\varphi_\ell}
+\triangleq
+\big(Q_\ell,Q_\ell^0,\Sigma_\ell,\delta_\ell,F_\ell\big)
+\]
+denote the corresponding nondeterministic B\"uchi or finite-word acceptor,
+depending on the exact temporal fragment introduced previously. The fleet-level
+coordination problem is to construct a set of abstract team plans
+$\{\Gamma_k\}_{k\in\mathcal{K}}$ and an admissible number of teams $K$ such
+that the induced trace satisfies all mission automata and the aggregate
+capability demand remains feasible.
+
+\begin{problem}
+\label{prob:fleet_level_coordination}
+Given the mission set $\Phi_t$ and the fleet capability model
+$\{\mathcal{A}_i\}_{i\in\mathcal{N}}$, determine the number of teams $K$, the
+abstract team plans $\{\Gamma_k\}_{k\in\mathcal{K}}$, and the associated
+capacity profiles $\{\beta_k\}_{k\in\mathcal{K}}$ such that all missions are
+accepted by their automata and the fleet response time is minimized.
+\end{problem}
+
+A direct synchronization of all robot models with all mission automata is
+avoided. Instead, the search is carried out over partial team plans together
+with the currently reachable automaton states.
+
+\begin{definition}[Assignment node]
+\label{def:assignment_node}
+Let $\mathcal{M}\triangleq\{1,\cdots,M\}$. An assignment node is a tuple
+\[
+\nu \triangleq
+\big(\{\Gamma_k\}_{k\in\mathcal{K}},\{\widehat{Q}_\ell\}_{\ell\in\mathcal{M}}\big),
+\]
+where $\Gamma_k$ is the current task sequence of team $k$ and
+$\widehat{Q}_\ell\subseteq Q_\ell$ is the set of automaton states reachable in
+$\mathcal{B}_{\varphi_\ell}$ after executing the task symbols already assigned
+in the node.
+\end{definition}
+
+The root node contains empty team plans and the initial reachable-state sets.
+Each expansion appends one enabled task symbol to one existing team, or to a
+newly created team, and updates the reachable-state sets accordingly. A task
+symbol is enabled at node $\nu$ if it appears on at least one outgoing
+transition of some state in $\widehat{Q}_\ell$ for at least one mission
+$\ell\in\mathcal{M}$. This rule allows temporal decomposition and team
+assignment to proceed simultaneously.
+
+To rank candidate nodes, a multi-term value function is introduced:
+\begin{equation}
+\label{eq:node_value_ch4}
+\chi(\nu) \triangleq
+\max_{k\in\mathcal{K}} T_k
++ \lambda_c \sum_{k\in\mathcal{K}} C_k
++ \lambda_p \sum_{\ell\in\mathcal{M}}
+w_\ell \min_{q\in\widehat{Q}_\ell}\psi_\ell(q,F_\ell),
+\end{equation}
+where $T_k$ is the estimated completion time of $\Gamma_k$, $C_k$ is the
+estimated travel-and-service cost of $\Gamma_k$, $w_\ell$ is the prescribed
+importance weight of mission $\varphi_\ell$, and
+$\psi_\ell(q,F_\ell)$ is the shortest graph distance from $q$ to the accepting
+set $F_\ell$,
+where $\lambda_c>0$ and $\lambda_p>0$ are regularization weights.
+
+Equation~\eqref{eq:node_value_ch4} has a clear interpretation. The first term
+controls the makespan of the current partial assignment. The second term
+penalizes unnecessarily expensive team sequences. The third term favors nodes
+that are logically closer to acceptance. A purely makespan-driven expansion is
+therefore avoided, which improves search stability when many nodes share the
+same temporal depth.
+
+Every node must also satisfy a fleet-level capability test. Using the capacity
+profiles defined in Definition~\ref{def:team_profile}, feasibility requires
+\begin{equation}
+\label{eq:global_capacity_ch4}
+\sum_{k\in\mathcal{K}} \beta_k(a)
+\leq
+\sum_{i\in\mathcal{N}}\mathds{1}\big(a\in\mathcal{A}_i\big),
+\quad \forall a\in\mathcal{A},
+\end{equation}
+where the left-hand side is the total demand for action $a$ induced by the
+current abstract team plans, and the right-hand side is the number of robots in
+the fleet that can perform action $a$.
+
+A further reduction is obtained through dominance pruning. For each node,
+define the profile
+\begin{equation}
+\label{eq:node_profile_ch4}
+\rho(\nu) \triangleq
+\Big[
+\{T_k\}_{k\in\mathcal{K}},
+\{C_k\}_{k\in\mathcal{K}},
+\Big\{
+\min_{q\in\widehat{Q}_\ell}\psi_\ell(q,F_\ell)
+\Big\}_{\ell\in\mathcal{M}}
+\Big].
+\end{equation}
+Node $\nu_1$ dominates node $\nu_2$ when
+$\rho(\nu_1)\leq\rho(\nu_2)$ componentwise and at least one inequality is
+strict. Only non-dominated nodes are retained on the frontier. The search thus
+progresses over a compressed representation of the assignment space instead of a
+full synchronous product.
+
+\begin{algorithm}[t]
+\caption{Automaton-guided Hierarchical Task Assignment}
+\label{alg:hierarchical_assignment}
+\SetAlgoLined
+\KwIn{Mission set $\Phi_t$, automata $\{\mathcal{B}_{\varphi_\ell}\}$,
+fleet $\mathcal{N}$, horizon $H$.}
+\KwOut{Number of teams $K$, abstract team plans $\{\Gamma_k\}$,
+capacity profiles $\{\beta_k\}$.}
+
+Initialize the root node
+$\nu_0 \gets (\{\emptyset\},\{Q_\ell^0\}_{\ell\in\mathcal{M}})$\;
+Initialize the frontier $\mathscr{F}\gets\{\nu_0\}$\;
+
+\While{the budget is not exhausted}{
+  Select a batch of frontier nodes with smallest
+  $\chi(\nu)$ in~\eqref{eq:node_value_ch4}\;
+
+  \ForEach{selected node $\nu$}{
+    compute the enabled task-symbol set from
+    $\{\widehat{Q}_\ell\}_{\ell\in\mathcal{M}}$\;
+
+    \ForEach{enabled symbol $\omega$}{
+      \ForEach{existing team $k$ and the option of creating one new team}{
+        append $\omega$ to $\Gamma_k$\;
+        update the reachable-state sets
+        $\{\widehat{Q}_\ell\}_{\ell\in\mathcal{M}}$\;
+        update $T_k$, $C_k$, and $\beta_k(\cdot)$\;
+        \lIf{\eqref{eq:global_capacity_ch4} is violated}{discard the node}
+        \lIf{the number of newly committed tasks exceeds $H$}{pause expansion}
+      }
+    }
+  }
+
+  prune dominated nodes using~\eqref{eq:node_profile_ch4}\;
+  update the frontier with the non-dominated surviving nodes\;
+}
+
+return the complete frontier node with minimum
+$\chi(\nu)$ in~\eqref{eq:node_value_ch4}\;
+\end{algorithm}
+
+Algorithm~\ref{alg:hierarchical_assignment} summarizes the fleet-level
+backbone. The role of the horizon $H$ is purely computational in the present
+section. It bounds the number of future task commitments in one optimization
+cycle and prevents the assignment layer from becoming excessively myopic or
+excessively rigid. Detailed event-triggered replanning policies are omitted
+here and are addressed separately later.
+
+The logical correctness of the fleet-level layer follows directly from the node
+semantics and the acceptance condition of the mission automata.
+
+\begin{proposition}
+\label{prop:fleet_correctness}
+Assume that the search horizon contains all admissible task symbols for the
+current planning instance. If Algorithm~\ref{alg:hierarchical_assignment}
+returns a complete feasible node, then the resulting abstract team plans
+$\{\Gamma_k\}_{k\in\mathcal{K}}$ satisfy all mission formulas and all aggregate
+capability constraints in~\eqref{eq:global_capacity_ch4}.
+\end{proposition}
+
+The proof is immediate. Each node expansion follows valid automaton
+transitions, and completeness requires that every mission automaton reaches an
+accepting set. Capability feasibility is enforced explicitly through
+\eqref{eq:global_capacity_ch4}. Hence any complete feasible node corresponds to
+a temporally valid fleet-level decomposition.
+
+\subsection{Capacity-aware team formation}
+\label{subsec:capacity_team_formation}
+
+The fleet-level layer determines what each team must be able to do, but it does
+not determine which robots belong to which team. The next layer instantiates
+each abstract team plan by assigning concrete robots to the induced capacity
+profile. This assignment must preserve disjoint team membership and may include
+limited redundancy to absorb uncertainty in workload or travel time.
+
+\begin{problem}
+\label{prob:team_formation}
+Given the abstract team plans $\{\Gamma_k\}_{k\in\mathcal{K}}$ returned by
+Algorithm~\ref{alg:hierarchical_assignment}, determine the concrete teams
+$\{\mathcal{N}_k\}_{k\in\mathcal{K}}$ such that each team can realize the
+capacity profile induced by its plan and the worst team completion time is
+minimized.
+\end{problem}
+
+Introduce binary variables $b_{ik}\in\{0,1\}$, where $b_{ik}=1$ means that
+robot $i$ is assigned to team $k$. Let $\alpha_a\geq 1$ denote the redundancy
+margin associated with action $a$. The formation constraints are
+\begin{equation}
+\label{eq:team_formation_constraints_ch4}
+\beta_k(a)
+\leq
+\sum_{i\in\mathcal{N}} b_{ik}\mathds{1}\big(a\in\mathcal{A}_i\big)
+\leq
+\alpha_a\,\beta_k(a),
+\quad
+\sum_{k\in\mathcal{K}} b_{ik}\leq 1,
+\end{equation}
+where the first inequality enforces the minimum and maximum staffing level of
+team $k$ for action $a$, and the second inequality guarantees disjoint team
+membership.
+
+The lower bound in~\eqref{eq:team_formation_constraints_ch4} guarantees that a
+team can execute every task in its abstract plan. The upper bound prevents
+excessive concentration of resources in one team. This redundancy window is
+especially useful when some tasks contain partially revealed subtasks or when
+travel-time estimates are conservative. The abstraction remains much smaller
+than direct robot-to-subtask assignment, because the binary variables appear at
+the level of teams rather than at the level of all subtasks.
+
+Let $S_k^1$ denote the first region in $\Gamma_k$. For each robot $i$ and team
+$k$, define the estimated arrival time
+$t_{ik}^{\mathrm{arr}}\triangleq
+\widehat{t}_i+T_{\mathrm{nav}}(\widehat{x}_i,S_k^1)$, where $\widehat{t}_i$
+and $\widehat{x}_i$ are the current availability time and current position of
+robot $i$. The completion cost of team $k$ is then modeled by
+\begin{equation}
+\label{eq:team_completion_cost_ch4}
+J_k \triangleq
+\max_{i\,:\,b_{ik}=1} t_{ik}^{\mathrm{arr}}
++
+\sum_{\omega\in\Gamma_k} T_{\mathrm{exec}}(\omega),
+\end{equation}
+where the first term captures the synchronization delay of the slowest assigned
+robot and the second term is the total service time of the team plan.
+
+The team-formation layer minimizes the worst team completion time, namely
+$\min \max_{k\in\mathcal{K}} J_k$, subject to
+\eqref{eq:team_formation_constraints_ch4}. Once the binary solution is
+obtained, the concrete team is recovered by
+$\mathcal{N}_k\triangleq\{i\in\mathcal{N}\mid b_{ik}=1\}$. The outcome of this
+layer is therefore a physically realizable partition of the fleet that remains
+fully consistent with the abstract temporal decomposition.
+
+\subsection{Execution-level realization of team plans}
+\label{subsec:execution_realization}
+
+After concrete teams have been formed, each abstract team plan is converted into
+a rollout over regions and tasks:
+\begin{equation}
+\label{eq:team_rollout_ch4}
+\Xi_k \triangleq
+(S_k^1,\omega_k^1)\cdots(S_k^{L_k},\omega_k^{L_k}),
+\end{equation}
+where $S_k^\ell$ is the execution region of task $\omega_k^\ell$.
+Equation~\eqref{eq:team_rollout_ch4} is the interface between the upper
+coordination layers and the robot-level layer. It specifies what each team must
+execute and in which temporal order, but it does not prescribe detailed robot
+motions.
+
+The execution layer resolves this remaining degree of freedom inside each team.
+Given $\Xi_k$ and the team $\mathcal{N}_k$, a local coordinator generates the
+robot-level plans $\tau_i$ and the associated trajectories. At this level,
+motion feasibility, synchronization among robots of the same team, and the
+internal assignment of subtasks are handled locally. The exact local mechanism
+depends on the task family. Static known subtasks lead to routing and
+trajectory-optimization problems. Partially revealed subtasks require
+exploration-aware insertion policies. Dynamic subtasks require coalition updates
+inside the team. These mechanisms are essential for realization, yet they do not
+alter the logic of the hierarchy itself. Their role is to refine the team plan,
+not to redefine it.
+
+This separation yields the main structural advantage of the proposed framework.
+Temporal satisfaction is decided at the fleet level through automaton-guided
+search. Concrete resource instantiation is handled at the team-formation level
+through a compact capacity-based assignment. Motion planning and local
+collaboration are confined to the execution layer. Compared with monolithic
+temporal-task formulations, the computational burden is therefore distributed
+over smaller and better structured subproblems
+\cite{kantaros2020stylus,leahy2021scalable,chen2025real,
+luo2025simultaneous,gosrich2025online,luo2025hulk}. This hierarchical
+decomposition is the essential reason why large fleets can be coordinated under
+rich temporal tasks without explicitly constructing the full synchronous product
+of all robot models and all mission automata.

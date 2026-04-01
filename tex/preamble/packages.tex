@@ -5,6 +5,8 @@
 \usepackage[a4paper,margin=1in]{geometry}
 
 \usepackage{amsmath,amssymb,amsthm,mathtools,thmtools}
+\usepackage{dsfont}
+\usepackage{mathrsfs}
 \usepackage{bm}
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -74,19 +76,23 @@
 \declaretheorem[
   style=definition,
   sibling=theorem,
-  qed=\ensuremath{\blacklozenge},
+  qed=\ensuremath{\blacksquare},
   name=Problem
 ]{problem}
 
 \declaretheorem[
   style=definition,
   sibling=theorem,
-  qed=\ensuremath{\diamond},
+  qed=\ensuremath{\blacksquare},
   name=Assumption
 ]{assumption}
 
+\declaretheorem[
+  style=definition,
+  sibling=theorem,
+  qed=\ensuremath{\blacksquare},
+  name=Remark
+]{remark}
+
 \theoremstyle{definition}
 \newtheorem{example}[theorem]{Example}
-
-\theoremstyle{remark}
-\newtheorem{remark}[theorem]{Remark}
