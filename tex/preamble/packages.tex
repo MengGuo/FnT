@@ -96,3 +96,18 @@
 
 \theoremstyle{definition}
 \newtheorem{example}[theorem]{Example}
+
+\usepackage{titlesec}
+\usepackage{titlecaps}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries}
+  {\thesubsection}
+  {1em}
+  {\titlecap}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries}
+  {\thesubsubsection}
+  {1em}
+  {\titlecap}
