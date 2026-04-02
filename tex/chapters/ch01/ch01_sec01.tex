@@ -1,0 +1,67 @@
+%==============================
+\section{Background}
+\label{sec:ch01_background}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%================%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Motion and task planning}\label{sec:robot-motion}
+
+To begin with, the term ``robot'' used in this thesis generally refers to the physical machine that can move around in its workspace, sense the workspace and perform various actions.
+Robot motion planning is the problem of finding the appropriate actuation signals as the control inputs that can drive the robot from an initial state to a goal state, e.g., move from one location to another, grasp an object of interest or operate a machine.
+It is also called {planning in the continuous statespace}~\cite{lavalle2006planning} or a control problem~\cite{doyle1992feedback}.
+Despite the fact that the objective of motion planning is  easy to specify, it is not trivial to solve due to the existence of dynamic and kinematic constraints, external disturbances, and execution or measurement noises~\cite{latombe2012robot}.
+Model-based methods have attracted lots of attention where the robot's motion is abstracted and modeled by ordinary differential or difference equations. Given these models, analytic solutions with provable correctness can be found such as the navigation function  for sphere workspace and obstacles~\cite{koditschek1990robot}, the potential-field-based control algorithm for workspace with triangular partitions~\cite{lindemann2006real}, the sampling-based motion planning techniques like probabilistic roadmap (PRM) method~\cite{kavraki1996probabilistic} and rapidly-exploring random trees (RRT)~\cite{lavalle1998rapidly, lavalle2000rapidly, karaman2011sampling}.
+
+
+On the other hand, robot task planning is the problem of finding a sequence of robot {actions} that the robot can follow to accomplish a complex task.
+For instance,  suppose the robot is asked to make a cup of coffee:  first it needs to figure out  a plan as to find a cup, operate the coffee machine, and pour the coffee; then it needs to execute the plan by successfully accomplish each part of the plan in the desired sequence.
+As proposed in~\cite{ghallab2004automated}, each action can be described by (1) the {precondition} that has to be fulfilled before this action can be performed; (2) the {effect} on the system state after performing this action.
+The system under consideration such as a robot is traditionally modeled as discrete {state-transition systems}~\cite{dean1991planning}. By activating one action, the system state can be changed to one or several states.
+Consequently, the planning problem is transformed to finding the desired sequence of actions or essentially a path that leads the system from the initial state to the goal state.
+Different representations of the system states may result in various complexities when solving the planning problem~\cite{ghallab2004automated}.
+Logic-based representation is currently one of the most popular formalisms used by many planning tools, like STRIPS~\cite{fikes1972strips} and PDDL~\cite{mcdermott1998pddl}. The solving process is similar to human deliberation that chooses actions by anticipating their outcomes.
+Besides, learning has also emerged as a power tool~\cite{krizhevsky2012imagenet}  nowadays due to the abundance of measurement data and computing resources. The robot can figure out the solution through trial and error, collecting data from previous examples or watching human demonstrations.
+Another interesting solution is proposed in the form of behavior trees~\cite{ogren2012increasing, marzinotto2014towards}.
+Unlike finite-state machines, a behavior tree controls the flow of the robot's decision making by considering real-time measurements and the accumulated information about the current status of the robot.
+
+
+The greatest distinction between robot motion and task planning is that the state space for motion planning is typically continuous and possibly unbounded, thus yielding it impossible to enumerate all the states explicitly as in the task planning. Furthermore, the set of allowed actions is also normally infinite due to the continuous input space, of which the notions of condition and effect are not well defined since a dynamical system may evolve differently under the same input.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%================%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Verification and synthesis based on formal methods}\label{sec:formal}
+
+Formal methods are a particular kind of mathematical techniques that are used in software and hardware engineering for specifying and verifying system properties, as part of a more reliable, secure and robust system design~\cite{clarke1996formal}.
+One of the well-known verification techniques is model checking, also called property checking, which exhaustively and automatically checks whether a system model satisfies a given specification that contains the desired system properties~\cite{clarke1999model, baier2008principles, mcmillan1993symbolic}. The model can be an actual hardware or software system or its mathematical abstraction as a finite transition system. The specification normally involves desired system properties or security requirements such as absence of bad states, deadlocks or livelocks. The  model-checking algorithm returns either success indicating that all possible system behaviors satisfy the property, or a counterexample as one possible behavior that fails the property. Temporal logic languages such as Linear Temporal Logic (LTL) and Computation Tree Logic (CTL) provide a concise and formal way to specify both propositional and temporal requirements on the system behavior.
+A method for approximate model checking of stochastic hybrid systems with provable approximation guarantees is proposed in~\cite{abate2010approximate}. The stochastic hybrid system is first approximated by a finite state Markov chain, which is then model checked for probabilistic invariance.
+
+Model-checking algorithms have also attracted much interest for the purpose of synthesis rather than verification. In particular, many recent work integrates classic motion planning algorithms with model-checking techniques to treat complex motion tasks specified by temporal logics~\cite{tabuada2003model, belta2007symbolic, fainekos2009temporal, bhatia2010sampling} such as LTL and CTL mentioned above.
+Compared with the traditional  objective of point-to-point navigation, other  control tasks such as reachability, safety and liveness can be described directly by the above logic formulas.
+Stochastic dynamical systems are considered in~\cite{zamani2014symbolic} by first constructing a finite-state abstraction  with a given precision, based on which a control strategy is then synthesized to satisfy LTL specifications.
+When applying model-checking algorithms for synthesis rather than verification, the desired outcome is distinctively different:  the purpose of verification is to find any system behavior that \emph{violates} the property, which can be then used as counter-example to guide the system modification to achieve the desired property;  for synthesis purpose we are only interested in the system behavior that \emph{satisfies} the property and mostly is optimized regarding certain cost functions.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%================%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Multi-robot systems}\label{sec:multi-robot}
+
+It is seldom that one autonomous robot is a stand-alone system, but it often coexists and interacts with other robots within the same workspace. A multi-robot team under proper coordination can achieve much more complex tasks than a collection of independent single robots, e.g., several robots can collaborate on one task that cannot be done by one robot alone; two robots can switch parts of their tasks to improve mutual efficiency.  However, this also introduces some limitations: one robot's behavior is constrained  by other robots, e.g., it needs to avoid collision with others while moving around; the common resources in the workspace are shared among all robots.
+Thus both motion coordination and task coordination are crucial for the performance and functionality of multi-robot systems.
+Any solution for the above aspects can lie along the spectrum between being centralized and fully decoupled. Centralized solutions typically treat the multi-robot system as a large single system by composing the configuration spaces of all individual robots, while in the fully-decoupled case plans or motion decisions  are generated locally based on local communication and coordination with nearby robots during run time.
+
+Regarding the motion coordination of multi-robot systems, many related work can be found on designing motion control strategies to avoid inter-robot collisions when each robot is moving and executing its own plan within the same workspace.
+Three different motion coordination schemes are proposed in~\cite{lavalle1998optimal} given different assumptions on the robots' initial paths, while at the same optimizing each robot's local performance function.
+The concept of ``reciprocal velocity obstacle'' is proposed in~\cite{van2008reciprocal} to avoid inter-robot collisions while navigating a large number of robots within clustered environments, without the need for explicit communication.
+\cite{dimarogonas2007decentralized} derives a closed-form feedback control law that ensures collision-free paths while navigating each robot to its goal point.
+In addition, there has been an increasing interest on designing distributed control strategies for system-level goals, like alignment with a team leader~\cite{egerstedt2001control}, relative formation~\cite{egerstedt2001formation} and target containment~\cite{ji2008containment}.
+
+
+On the other hand, regarding the task coordination problem, multi-robot systems are often deployed for the purpose of {distributed problem solving}~\cite{durfee2006distributed}, where a global task is decomposed into smaller subtasks and then assigned to each robot. This formulation favors a {tightly-coupled} and {top-down} approach, where each robot receives commands from the central planner and executes them in a synchronized manner~\cite{kok2006collaborative}.
+There is another type of problem formulation assuming  that each robot is assigned a local task independently and there is no global task. As a result, each robot acts according to its plan in order to accomplish its  own task, and meanwhile it interacts with other robots when necessary, in terms of information exchange and collaborations. This formalism favors {loosely-coupled} and {bottom-up} approaches, which resembles many practical systems where each robot has a clear job assignment.
+%A centralized solution normally requires a central unit monitoring the whole team and sending out control commands to every robot. On the contrary, a decentralized approach requires only local interaction among robots that are nearby; allows flexible membership such that robots can join and leave the team freely; respects local privacy that an robot need not reveal all its data to others.

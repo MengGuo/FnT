@@ -1,0 +1,188 @@
+\section{Related Work}\label{subsec:intro-related}
+
+\subsection{Task Planning for Robotic Fleets}
+Task planning in robotic fleets addresses the decomposition of missions into
+subtasks and their allocation across robots or teams. Surveys on multi-robot
+task allocation (MRTA)~\cite{gini2017multi, torreno2017cooperative}
+have established taxonomies of problem structures, including vehicle routing,
+scheduling, and coalition formation~\cite{dai2024dynamic}.
+Centralized optimization methods such as MILP and heuristic
+search~\cite{ji2021multi} generate globally near-optimal
+solutions and allow precise encoding of resource and time constraints, but the
+combinatorial complexity makes them unsuitable for large fleets or missions with
+dynamic updates. Decentralized approaches improve scalability and resilience by
+distributing decision-making, such as market-based auctions
+\cite{zhao2021market} that trade computational effort for speed, and distributed
+optimization frameworks~\cite{fioretto2018distributed} that enable concurrent
+negotiation among agents. Approximate methods, including evolutionary
+algorithms~\cite{liu2019multi} and genetic search~\cite{martin2021mrta}, reduce
+computational overhead and can adapt to heterogeneous capabilities, but they
+often sacrifice guarantees of feasibility or temporal optimality.
+\improve{Recent efforts emphasize hierarchical decomposition and reactive
+coordination to improve scalability under dynamic task streams,
+including decomposition-based hierarchical planning~\cite{luo2024decomposition,leahy2021scalable}
+and real-time reactive allocation under temporal logic~\cite{chen2025real}.}
+Despite these advances, most approaches assume static and fully known tasks at the planning
+stage. Efficient solutions that adapt to the continual online task generation,
+uncertainties in subtask number and distribution,
+and online operator interventions remain open.
+
+
+\subsection{Complex Tasks as Temporal Logic Formulas}
+Temporal logic has emerged as a principled way to specify robotic missions that
+combine safety, temporal order, and collaboration requirements. Probabilistic
+temporal logics (PCTL)~\cite{lahijanian2015temporal} enable reasoning about
+uncertainty in outcomes, while LTL provides a rich language for describing
+sequential objectives such as repeated patrolling, collaborative capture, or
+persistent surveillance~\cite{kantaros2020stylus,  leahy2021scalable, schillinger2018simultaneous,
+luo2021temporal}. Counting LTL (cLTL)~\cite{sahin2019multirobot}
+extends this by capturing quantitative requirements, for instance requiring a
+minimum number of robots at specific subtasks.
+Capability LTL~\cite{li2025task,cardona2024planning} address the time-dependent capabilities of robots
+during execution.
+Hierarchical LTL is proposed in~\cite{luo2024decomposition} \improve{to
+further introduce structured analyses and synthesis to improve efficiency}.
+Centralized formulations ensure completeness and optimality through sampling-based search
+\cite{kantaros2020stylus}, automaton–system synchronization
+\cite{schillinger2018simultaneous}, and MILP encoding of task constraints
+\cite{leahy2021scalable, luo2021temporal, sahin2019multirobot, kurtz2021more}, but they face
+double-exponential growth with task and fleet size. Decentralized methods
+address scalability through local coordination~\cite{lindemann2019coupled},
+decision trees~\cite{chen2025real}, partial-order analyses~\cite{liu2024time},
+reactive synthesis~\cite{kantaros2022perception}, and hierarchical decoupling~\cite{luo2025simultaneous}.
+More recent works emphasize dynamic reactivity by combining logic
+specifications with scalable heuristics~\cite{leahy2021scalable,chen2025real, cardona2024planning}.
+\improve{As summarized in Table~\ref{table:rw_comparison},
+  scalability in complex missions has been addressed through mechanisms
+  such as sampling~\cite{kantaros2020stylus}, capacity-based optimization~\cite{leahy2021scalable},
+  counting constraints~\cite{sahin2019multirobot}, decision tree~\cite{chen2025real},
+  and flow-based construction~\cite{gosrich2025online}.
+Nevertheless, most aforementioned work overlook the online interaction with human operators,
+and different types of local tasks contained within the temporal mission,
+which in itself requires coordination and adaptation.}
+Such nested coordination raises key challenges in retaining tractable
+computational complexity while enabling coherent adaptation across multiple
+spatial, temporal and organizational scales.
+
+\improve{As the most relevant to this work, HULK~\cite{luo2025hulk} facilitates continual task
+planning by modeling missions constraints as posets. However, this approach necessitates
+reconstruction whenever missions are modified online, limiting its online responsiveness.
+Furthermore, it fails to account for the interplay between
+high-level coordination and low-level motion feasibility, as well as the
+integration of human supervision during execution. The proposed method addresses these
+shortcomings by incorporating a human interaction protocol and an online adaptation
+algorithm, further integrating dynamic constraints into motion feasibility. Additionally,
+it enhances computational efficiency by eliminating the need for poset reconstruction
+and employing an automata-guided search instead.}
+
+%======================================
+\begin{table}[t!]
+  \centering
+  \improve{
+\caption{\textbf{Comparison with Related Work}}
+\label{table:rw_comparison}
+\vspace{-0.05in}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.5}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l|ccccccc}
+\toprule
+\textbf{Method} &
+\makecell[c]{\scriptsize Task \\ \scriptsize Specification} &
+\makecell[c]{\scriptsize Online \\ \scriptsize Task} &
+\makecell[c]{\scriptsize Uncertain/ \\ \scriptsize Unknown \\ \scriptsize Subtasks} &
+\makecell[c]{\scriptsize Human \\ \scriptsize Interaction} &
+\makecell[c]{\scriptsize Dynamic \\ \scriptsize Constraints} &
+\makecell[c]{\scriptsize Local \\ \scriptsize Coordination} \\
+\midrule
+STyLuS*~\cite{kantaros2020stylus} &
+\makecell[c]{\small LTL} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} \\
+ScRATCHeS~\cite{leahy2021scalable} &
+\makecell[c]{\small CaTL} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} \\
+DecTree~\cite{chen2025real} &
+\makecell[c]{\small LTL} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} \\
+cLTL$+$~\cite{sahin2019multirobot} &
+\makecell[c]{\small cLTL} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} \\
+HieraTL~\cite{luo2025simultaneous} &
+\makecell[c]{\small hLTL} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} \\
+Flow-based~\cite{gosrich2025online} &
+\makecell[c]{\small Ordered} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} \\
+HULK~\cite{luo2025hulk} &
+\makecell[c]{\small LTL} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\surd$} \\
+\midrule
+\textbf{HECTOR (Ours)} &
+\makecell[c]{\small LTL} &
+\makecell[c]{\small \textbf{$\surd$}} &
+\makecell[c]{\small \textbf{$\surd$}} &
+\makecell[c]{\small \textbf{$\surd$}} &
+\makecell[c]{\small \textbf{$\surd$}} &
+\makecell[c]{\small \textbf{$\surd$}} \\
+\bottomrule
+\end{tabular}%
+}}
+\vspace{-3mm}
+\end{table}
+%======================================
+
+
+\subsection{Human-fleet Interaction}
+\improve{Beyond automated task planning, effective human-swarm collaboration under
+uncertainty remains a central bottleneck, especially in deciding when and how
+operators should validate and intervene online~\cite{ferreira2021survey,dahiya2023survey}.
+In practice, no universal metric reliably predicts
+whether an autonomous plan will remain operationally
+sound once execution begins, so human expertise is essential for validating
+reasoning quality and mission viability.
+Human–swarm interaction emphasizes interface design, situational awareness, and
+scalable mechanisms for directing collectives~\cite{kolling2016human}.
+Mixed-initiative approaches~\cite{gombolay2017computational} dynamically shift
+decision authority between humans and autonomy, supporting conflict resolution
+and efficient replanning in uncertain missions.
+Similar approaches are proposed in~\cite{tumova2014maximally,ulusoy2013optimality}
+to compute least violating plans.
+Scaled-autonomy frameworks~\cite{swamy2020scaledautonomy} extend this by allowing
+robots to modulate the
+level of assistance provided to the operator based on task load.
+Interactive fleet learning~\cite{hoque2022fleetdagger} integrates demonstration,
+online supervision, and data aggregation to refine fleet policies over time.
+However, many existing paradigms provide limited support for online
+validation and intervention, often restricting operators to static displays or
+post-hoc plans. In dynamic settings, this can force a fallback to teleoperation, which scales
+poorly with the fleet size due to increasing workload and latency. Consequently,
+interaction protocols that enable sparse and high-level oversight while preserving
+scalable autonomy remain insufficiently addressed.}

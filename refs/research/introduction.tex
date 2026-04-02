@@ -1,0 +1,201 @@
+\section{Introduction}
+%1 第一段 多智能体planning  价值 意义
+%2 常用的几套方法，引用大论文
+%3 nature science servery
+%4 对比后 用ltl的优势，所以用ltl描述任务是很重要的部分，
+
+Recent advances in computation, perception and communication
+allow the deployment of autonomous robots in large, remote and hazardous environments,
+e.g., to assist service staff in hospitals~\cite{jemal2015multi},
+to maintain offshore drilling platforms~\cite{cliff2015online},
+to monitor and assist construction sites~\cite{zhang2009collaborative}.
+Furthermore, fleets of heterogeneous robots,
+such as unmanned ground vehicles and unmanned aerial vehicles,
+are deployed to accomplish tasks that are otherwise too inefficient
+or even infeasible for a single robot~\cite{arai2002advances}.
+Not only the overall efficiency of the team can be significantly improved
+by allowing the robots to move and act concurrently~\cite{toth2002overview};
+but also the capabilities of the team can be greatly extended by
+enabling multiple robots to directly collaborate on a task~\cite{fink2008multi}.
+Recent works have demonstrated such potentials preliminary for simple
+tasks such as collaborative exploration~\cite{doi:10.1126/scirobotics.ade9548}, formation control~\cite{varava2017herding},
+object transportation~\cite{doi:10.1126/scirobotics.abf1628} and pursuer-evader games \cite{doi:10.34133/research.0246}.
+The task planning problem for multi-robot systems is in general NP-hard~\cite{1997Task},
+due to the inherent combinatorial nature of robot-task assignment and various constraints such as capabilities and deadlines.
+The standard approach is to formulate a mixed integer linear programs (MILP)
+over the integer variables and constraints~\cite{agrawal2016scalable}.
+Whereas being sound and optimal, these methods are applicable to only small-scale systems.
+Thus, extensive work can be found on designing meta-heuristic algorithms for finding
+sufficiently good solutions in a reasonable time,
+e.g., genetic algorithms~\cite{KESHANCHI20171}, colony optimization~\cite{li2017multi,doi:10.34133/2020/1762107},
+particle swarm optimization~\cite{yan2021task,8280872},
+learning-based algorithms~\cite{wells2019learning,pmlr-v70-omidshafiei17a,liu2019task},
+or large language models~\cite{}.\todo{add references}
+However, these methods often lack a formal guarantee on the correctness and quality of the planning
+results.
+
+
+% Temporal tasks as LTL formulas
+Moreover, to specify more complex tasks,
+many recent works propose to use formal languages
+such as Linear Temporal Logic (LTL)~\cite{Katoen2008Principles}, Computation Tree Logic (CTL)~\cite{koymans1990specifying},
+and Signal Temporal Logic (STL)~\cite{maler2004monitoring}, as an intuitive yet
+powerful way to describe both spatial and temporal requirements on
+global~\cite{luo2021abstraction} or local~\cite{guo2016task} behaviors.
+Notably, the works in~\cite{luo2021temporal, sahin2019multirobot, jones2019scratchs}
+formulate MILP by a central planning unit given different system models and task constraints;
+the works in~\cite{2016Decomposition,schillinger2018simultaneous,kantaros2020stylus}
+instead propose various search algorithms over the state or solution space of the whole system.
+However, the aforementioned planning methods are often executed {offline}
+for a set of predefined {static} tasks.
+A particularly challenging scenario is when the system operates indefinitely,
+i.e., new tasks are released or canceled \emph{dynamically} and \emph{continually}
+by external demand \cite{7306591};
+or certain target features related to the tasks can change location
+during run time~\cite{doi:10.34133/research.0246}.
+This would require the fleet to adaptively change their task plans online to modify
+existing assignments and incorporate new tasks.
+Thus, the aforementioned methods become inadequate as the sequence of tasks is infinite
+and their specifications are unknown beforehand.
+Recursive application of the centralized methods in a naive way leads to
+not only intractable computation complexity,
+but also inconsistent or even oscillatory assignments.
+Thus, an efficient and adaptive planning scheme is essential for multi-robot systems
+that collaborate in a dynamic environment \cite{8901075,10102342,choudhury2022dynamic}
+or an unknown environment \cite{9884983}.
+
+
+%==============================
+\subsection{Related Work} \label{related-work}
+The standard framework for planning under temporal tasks is based on the model-checking algorithm~\cite{Katoen2008Principles}:
+First, the task formulas are converted to a Deterministic Robin Automaton (DRA)
+or Nondeterministic B\"uchi Automaton (NBA),
+via off-the-shelf tools such as~\texttt{SPIN}~\cite{ben2010primer} and~\texttt{LTL2BA}~\cite{10.1007/3-540-44585-4_6}.
+Second, a product automaton is created between the automaton of formula and the models of all agents,
+such as weighted finite transition systems (wFTS)~\cite{Katoen2008Principles}, Markov decision processes~\cite{6702421}
+or Petri nets~\cite{7294096}.
+Last, certain graph search or optimization procedures are applied to find a valid and accepting plan
+within the product automaton, such as nested-Dijkstra search~\cite{schillinger2018simultaneous}, integer programs~\cite{9663414},
+auction~\cite{schillinger2019hierarchical} or sampling-based~\cite{kantaros2020stylus}.
+
+Thus, the fundamental step of all aforementioned methods is to translate the task formula into
+the associated automaton.
+This translation may lead a double-exponential size
+in terms of the formula length as shown in~\cite{10.1007/3-540-44585-4_6}.
+The only exceptions are GR(1) formulas~\cite{10.1007/11609773_24}, of which the associated automaton
+can be derived in polynomial time but only for limited cases.
+%\todo{This is what I know. You can not say every type of LTL formula has double exponential complexity.}
+In fact, for general LTL formulas with length more than~$25$,
+it takes more than~$2$ hours and $13 GB$ memory to compute the associated NBA via~\texttt{LTL2BA}.
+%目前最先进的几类方法和原始方法相比降低了很大的复杂度。但是他们的仿真算例使用的还是收到了NBA的限制。
+Although recent methods have greatly reduced the planning complexity in other aspects,
+the complexity of considered task specifications are still limited by this translation process.
+%解释sampling 和 simultaneous， 规划的
+For instance, the sampling-based method~\cite{kantaros2020stylus}
+avoids creating the complete product automaton via sampling,
+of which the largest simulated case has $400$ agents and
+the task formula has a maximum length of $14$.
+The planning method~\cite{schillinger2018simultaneous} decomposes the resulting task automaton
+into independent sub-tasks for parallel execution.
+The simulated case scales up to~$100$ robots and a task formula of length~$18$.
+% 其他算法的平均表现
+Moreover, other existing works such
+as~\cite{2021Reactive,2018Multi,6942756,7487762} mostly
+{consider} task formulas of length around~$6-10$.
+% 因此，这个限制了在物理世界的应用
+This limitation hinders greatly its application to more complex robotic missions.
+%where the planning process has the time budget of several seconds.
+%\todo{I think you can add more detailed comprisons with other work,  as this part is quite short.}
+
+
+%==============================
+
+This drawback becomes even more apparent for dynamic scenes,
+where contingent tasks specified as LTL formulas are triggered by external observations
+and released to the whole team online.
+In such cases, most existing approaches compute
+the automaton associated with the new task, of which the synchronized
+{\emph{product} with the current automaton is derived, see e.g.,~\cite{6942756, 7487762}}.
+Thus, the size of the resulting automaton equals to the product
+of \emph{all} automata associated with the contingent tasks,
+which is clearly a combinatorial blow-up.
+%真找不到了，所有相关的算法只有15,16.人家也不说自己的复杂度爆炸的事情
+Consequently, the amount of contingent tasks that can be
+handled by the aforementioned
+approaches is limited to hand-picked examples.
+
+\subsection{Our Contribution}
+To overcome this curse of dimensionality in the size of tasks and agents,
+we propose a new paradigm that is \emph{fundamentally} different from
+the model-checking-based methods.
+First, for a LTL formula that consists of numerous sub-formulas of smaller size,
+we calculate the R-posets of each sub-formula as a set of subtasks and
+their partial temporal constraints.
+Then, an efficient algorithm is proposed to compute the product of
+R-posets associated with each sub-formula.
+{The resulting product of R-posets is complete in the sense}
+that it retains all subtasks from each R-poset along with their partial orderings
+and resolves potential conflicts.
+Given this product,
+a task assignment algorithm called the time-bound contract net (TBCN) is proposed to
+assign collaborative subtasks to the agents,
+subject to the partial ordering constraints.
+Last but not least, the same algorithm is applied online to dynamic scenes
+where contingent tasks are
+triggered and released by online observations.
+It is shown formally that the proposed method has a polynomial time
+and memory complexity to derive the first valid plan
+w.r.t. the system size and formula length.
+Extensive large-scale simulations and experiments are conducted
+for a hospital environment where service robots react
+to online requests such as collaborative transportation,
+cleaning and monitoring.
+
+%具体介绍方法，有哪些贡献 特点 更技术一点
+
+
+%上段技术细节
+%下端单纯讲效果  效果1 能处理大系统 2 考虑interactive objects 3 能反应环境特征
+Main contribution of this work is three-fold:
+(i) a systematic method is proposed to tackle task formulas with length more than~$400$,
+which overcomes the limitation of existing translation tools that can only process
+formulas of length less than~$25$ in reasonable time;
+(ii) an efficient algorithm is proposed to decompose and integrate
+contingent tasks that are released online,
+which not only avoids a complete re-computation of the task automaton
+but also ensures a polynomial complexity to derive the first valid plan;
+(iii) the proposed task assignment algorithm, TBCN, is fully compatible with
+both static and dynamic scenarios with interactive objects.
+
+%==============================
+\subsection{Problem Statement}
+{Consider a multi-agent system with heterogeneous capabilities,
+  a series of LTL formulas that are released online,
+  and a set of interactive objects in the dynamic environment.
+  The objective is to generate a trajectory plan for the system such that
+  these tasks are satisfied with high efficiency.}
+
+
+{For instance as shown in Sec.~\ref{simulation},
+  a fleet of heterogeneous service robots is deployed in the hospital environment.
+  Different tasks such as transportation of goods or patients, cleaning and maintenance
+  are released online continuously.
+  Many of such tasks contain numerous subtasks  with ordering constraints
+  that require direct collaboration of different robots.
+  An efficient coordination algorithm is proposed such that these subtasks
+  are assigned and fulfilled online in a timely manner.
+}
+
+
+
+%% Our approach is based on a temporal logic, called Linear Temporal Logic(LTL), which provides an
+%% accurate, expressive and easily understandable way to specify and tasks (e.g. "take the vomit illness into
+%% operating room) and safety requirement ("do not enter vomiting area until it is disinfected"),
+%% and the potential prior knowledge ("facts that the operation cannot be executed before the patient is taken
+%% to the operating room."). We converted each formula into an R-poset, which contains the sutbasks and the
+%% temporal order between them, and proposed a Product method between R-posets that can get a sub-optimal solution
+%%  in linear complexity. Then, the action sequences are generated by operation research algorithm to satisfy both
+%%  tasks and objects requirement.
+%%  \todo{I do not see the purpose of this paragraph.
+%%    Isn't the description of method already introduced in the second last paragraph of the introduction?
+%%  I would have to repeat the same thing here?}

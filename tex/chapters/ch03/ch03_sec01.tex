@@ -1,5 +1,5 @@
 \section{Task Relaxation and Adaptation in Unknown Workspaces}
-\label{sec:task_relaxation_adaptation}
+\label{ch03:sec:task_relaxation_adaptation}
 
 The synthesis framework in Chapter~\ref{chap:preliminaries} presumes that the
 weighted transition system is available before execution and remains fixed.
@@ -22,650 +22,980 @@ relaxation and automata-based replanning
 presented here in notation consistent with
 Chapter~\ref{chap:preliminaries}.
 
-\subsection{Problem Setting}
-\label{subsec:problem_setting_relaxation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Let the initial abstraction of the workspace be denoted by
-$\mathcal{T}^{0} \triangleq
-(S,S_{0},\rightarrow^{0},\mathsf{AP},L^{0},w^{0})$, where the components
-follow \eqref{eq:transition-system}. During execution, newly acquired
-information induces a family of updated abstractions
-$\{\mathcal{T}^{t}\}_{t\geq 0}$ with the same state set $S$ and alphabet
-$\mathsf{AP}$, but possibly revised transition relation, labeling function,
-and transition weights.
+\subsection{Infeasible tasks}\label{ch03:sec:infeasible}
+We follow the same notation as in Chapter~\ref{chapter:single}. The initial task~$\varphi$ assigned to the robot might be infeasible by Definition~\ref{def:feasible}, e.g., either the task is actually infeasible or the task is feasible but the initial workspace model~$\mathcal{T}_c$ is incomplete or incorrect.
+The nominal solution proposed in Chapter~\ref{chapter:single} would simply returns failure. An intriguing question to ask is as follows:
 
-The local task is decomposed as
-\begin{equation}
-\varphi \triangleq
-\varphi^{\mathrm{soft}} \wedge \varphi^{\mathrm{hard}},
-\label{eq:task_split_partial}
-\end{equation}
-where $\varphi^{\mathrm{hard}}$ collects safety and mission-preserving
-requirements that may not be violated, and
-$\varphi^{\mathrm{soft}}$ collects liveness or performance goals that may be
-temporarily unattainable over the current model. The planning problem is thus
-not only to determine whether \eqref{eq:task_split_partial} is feasible over
-$\mathcal{T}^{0}$, but also to synthesize a run that always satisfies the hard
-component and minimizes the violation of the soft component whenever exact
-satisfaction is unavailable.
-
-Let $\mathcal{B}_{\mathrm{s}} \triangleq
-(Q_{\mathrm{s}},Q_{\mathrm{s},0},2^{\mathsf{AP}},
-\delta_{\mathrm{s}},F_{\mathrm{s}})$ and
-$\mathcal{B}_{\mathrm{h}} \triangleq
-(Q_{\mathrm{h}},Q_{\mathrm{h},0},2^{\mathsf{AP}},
-\delta_{\mathrm{h}},F_{\mathrm{h}})$ be B\"uchi automata for
-$\varphi^{\mathrm{soft}}$ and $\varphi^{\mathrm{hard}}$, respectively
-\cite{baier2008principles,vardi1986automata,gastin2001fast}. The symbols
-$\rho$, $\varrho$, and the projection notation are used exactly as in
-Chapter~\ref{chap:preliminaries}: $\rho$ denotes a run of the transition
-system, while $\varrho$ denotes a run of a product automaton.
-
-\subsection{Relaxed Intersection of Hard and Soft Tasks}
-\label{subsec:relaxed_intersection}
-
-The task split in \eqref{eq:task_split_partial} suggests that the hard and soft
-components should be treated asymmetrically. The hard component must be checked
-exactly, whereas the soft component may be advanced even when its transition
-guard is not perfectly matched by the current workspace label. This asymmetry is
-captured by a relaxed intersection automaton.
-
-\begin{definition}
-\label{def:relaxed_intersection}
-The \emph{relaxed intersection automaton} associated with
-$\varphi^{\mathrm{soft}}$ and $\varphi^{\mathrm{hard}}$ is the B\"uchi
-automaton
-\begin{equation}
-\widetilde{\mathcal{B}}_{\varphi} \triangleq
-\bigl(\widetilde{Q},\widetilde{Q}_{0},2^{\mathsf{AP}},
-\widetilde{\delta},\widetilde{F}\bigr),
-\label{eq:relaxed_intersection_automaton}
-\end{equation}
-where
-$\widetilde{Q} \triangleq
-Q_{\mathrm{s}} \times Q_{\mathrm{h}} \times \{1,2\}$,
-$\widetilde{Q}_{0} \triangleq
-Q_{\mathrm{s},0} \times Q_{\mathrm{h},0} \times \{1\}$, and
-\(\widetilde{F} \triangleq
-(Q_{\mathrm{s}} \times F_{\mathrm{h}} \times \{1\})
-\cup (F_{\mathrm{s}} \times Q_{\mathrm{h}} \times \{2\})\).
-For any label $\ell \in 2^{\mathsf{AP}}$, a transition from
-$\widetilde{q}=(q_{\mathrm{s}},q_{\mathrm{h}},\iota)$ to
-$\widetilde{q}'=(q'_{\mathrm{s}},q'_{\mathrm{h}},\iota')$ belongs to
-$\widetilde{\delta}(\widetilde{q},\ell)$ if and only if three conditions are
-satisfied. First, the hard component advances exactly, namely
-$q'_{\mathrm{h}} \in \delta_{\mathrm{h}}(q_{\mathrm{h}},\ell)$. Second, the
-soft successor is admissible in the sense that there exists at least one label
-$\ell' \in 2^{\mathsf{AP}}$ such that
-$q'_{\mathrm{s}} \in \delta_{\mathrm{s}}(q_{\mathrm{s}},\ell')$. Third, the
-phase variable updates according to the alternating acceptance discipline:
-$\iota' = 2$ if $\iota = 1$ and $q'_{\mathrm{h}} \in F_{\mathrm{h}}$,
-$\iota' = 1$ if $\iota = 2$ and $q'_{\mathrm{s}} \in F_{\mathrm{s}}$, and
-$\iota' = \iota$ otherwise.
-\end{definition}
-
-Definition~\ref{def:relaxed_intersection} preserves the hard component exactly,
-since every transition must satisfy the hard guard under the current label.
-Only the soft component is relaxed, and even there the relaxation is limited to
-transitions that are logically available in the soft automaton. The resulting
-construction therefore enlarges the feasible search space only along the soft
-dimension, while retaining the exact safety structure of the hard component.
-
-For any two soft-automaton states $q,q' \in Q_{\mathrm{s}}$, define the
-admissible soft label set by
-$\Lambda_{\mathrm{s}}(q,q') \triangleq
-\{\ell \in 2^{\mathsf{AP}} \mid q' \in \delta_{\mathrm{s}}(q,\ell)\}$.
-For a current workspace label $\ell \in 2^{\mathsf{AP}}$, define the mismatch
-measure
-\begin{equation}
-d_{\mathrm{s}}(\ell,q,q') \triangleq
-\min_{\ell' \in \Lambda_{\mathrm{s}}(q,q')} |\ell \triangle \ell'|,
-\label{eq:soft_distance}
-\end{equation}
-where $\triangle$ denotes symmetric difference.
-Equation~\eqref{eq:soft_distance} is well defined whenever
-$\Lambda_{\mathrm{s}}(q,q') \neq \varnothing$, which is already enforced in
-Definition~\ref{def:relaxed_intersection}. The value of
-\eqref{eq:soft_distance} is zero if and only if the current label enables the
-soft transition exactly. Accordingly, the transition relation in
-\eqref{eq:relaxed_intersection_automaton} can be computed by first enumerating
-all hard transitions enabled by the current label and then, for each admissible
-soft successor, assigning the mismatch value from
-\eqref{eq:soft_distance}. The phase update is purely combinatorial and does not
-introduce any additional optimization variable.
-
-The resulting computation is finite because both B\"uchi automata and the
-alphabet are finite. It is also modular: the hard transition relation, the soft
-admissible label sets, and the phase update rule can all be precomputed before
-the relaxed product is constructed. This separation becomes useful when the
-workspace model changes on-line, because the automata-side preprocessing does
-not need to be repeated.
-
-\begin{algorithm}[t]
-\caption{Construction of the relaxed intersection automaton}
-\label{alg:relaxed_intersection}
-\DontPrintSemicolon
-\KwIn{$\mathcal{B}_{\mathrm{s}}$, $\mathcal{B}_{\mathrm{h}}$}
-\KwOut{$\widetilde{\mathcal{B}}_{\varphi}$ and mismatch table
-$ d_{\mathrm{s}}(\ell,q,q') $}
-Initialize $\widetilde{Q}$, $\widetilde{Q}_{0}$, and $\widetilde{F}$ according
-to \eqref{eq:relaxed_intersection_automaton}\;
-Set $\widetilde{\delta} \leftarrow \varnothing$\;
-\ForEach{$(q_{\mathrm{s}},q_{\mathrm{h}},\iota) \in \widetilde{Q}$}{
-  \ForEach{$\ell \in 2^{\mathsf{AP}}$}{
-    Compute the enabled hard successors
-    $\delta_{\mathrm{h}}(q_{\mathrm{h}},\ell)$\;
-    \ForEach{$q'_{\mathrm{h}} \in \delta_{\mathrm{h}}(q_{\mathrm{h}},\ell)$}{
-      \ForEach{$q'_{\mathrm{s}} \in Q_{\mathrm{s}}$}{
-        Compute
-        $\Lambda_{\mathrm{s}}(q_{\mathrm{s}},q'_{\mathrm{s}})$\;
-        \If{$\Lambda_{\mathrm{s}}(q_{\mathrm{s}},q'_{\mathrm{s}})
-        \neq \varnothing$}{
-          Compute
-          $d_{\mathrm{s}}(\ell,q_{\mathrm{s}},q'_{\mathrm{s}})$ by
-          \eqref{eq:soft_distance}\;
-          Update the phase variable $\iota'$ by
-          Definition~\ref{def:relaxed_intersection}\;
-          Insert the transition
-          $(q_{\mathrm{s}},q_{\mathrm{h}},\iota)
-          \xrightarrow{\ell}
-          (q'_{\mathrm{s}},q'_{\mathrm{h}},\iota')$ into
-          $\widetilde{\delta}$\;
-        }
-      }
-    }
-  }
-}
-\Return{$\widetilde{\mathcal{B}}_{\varphi}$ and the mismatch table}\;
-\end{algorithm}
-
-Algorithm~\ref{alg:relaxed_intersection} makes the computational role of the
-relaxed intersection explicit. The output is not only the automaton
-$\widetilde{\mathcal{B}}_{\varphi}$ itself, but also the mismatch table from
-\eqref{eq:soft_distance}, which will later enter the product-edge weights. In
-this sense, the relaxed intersection construction serves simultaneously as a
-logical relaxation mechanism and as a preprocessing stage for quantitative
-planning.
-
-The accepting condition in
-\eqref{eq:relaxed_intersection_automaton} alternates between the hard and soft
-accepting sets. As a consequence, every accepting run of
-$\widetilde{\mathcal{B}}_{\varphi}$ induces infinitely many visits to the hard
-accepting set while maintaining synchronization with the soft component.
-Hard-task correctness is stated formally after the relaxed product is
-introduced, since that property concerns the product run and its projection onto
-$\mathcal{T}^{t}$.
-
-\subsection{Relaxed Product and Balanced Synthesis}
-\label{subsec:relaxed_product_balanced}
-
-The relaxed intersection automaton must now be coupled with the robot model.
-This yields a product construction that preserves the transition-system
-semantics from Chapter~\ref{chap:preliminaries}, while attaching an additional
-penalty to each product edge whenever the soft transition is not exactly matched
-by the current workspace label.
-
-\begin{definition}
-\label{def:relaxed_product}
-For any workspace abstraction
-$\mathcal{T}^{t}=(S,S_{0},\rightarrow^{t},\mathsf{AP},L^{t},w^{t})$, the
-\emph{relaxed product automaton} is defined by
-\begin{equation}
-\widetilde{\mathcal{P}}^{t} \triangleq
-\mathcal{T}^{t} \otimes \widetilde{\mathcal{B}}_{\varphi}
-=
-\bigl(\widetilde{X}^{t},\widetilde{X}_{0}^{t},
-\rightarrow_{\widetilde{\mathcal{P}}^{t}},
-\widetilde{F}^{t},\widetilde{w}^{t}\bigr),
-\label{eq:relaxed_product_automaton}
-\end{equation}
-where
-$\widetilde{X}^{t} \triangleq S \times \widetilde{Q}$,
-$\widetilde{X}_{0}^{t} \triangleq S_{0} \times \widetilde{Q}_{0}$, and
-$\widetilde{F}^{t} \triangleq S \times \widetilde{F}$.
-A product transition from
-$x=(s,q_{\mathrm{s}},q_{\mathrm{h}},\iota)$ to
-$x'=(s',q'_{\mathrm{s}},q'_{\mathrm{h}},\iota')$ belongs to
-$\rightarrow_{\widetilde{\mathcal{P}}^{t}}$ if and only if
-$s \rightarrow^{t} s'$ and
-$(q'_{\mathrm{s}},q'_{\mathrm{h}},\iota')
-\in \widetilde{\delta}((q_{\mathrm{s}},q_{\mathrm{h}},\iota),L^{t}(s))$.
-\end{definition}
-
-Definition~\ref{def:relaxed_product} differs from the standard product in
-Chapter~\ref{chap:preliminaries} only through the use of the relaxed
-intersection automaton. The state projection of every run of
-$\widetilde{\mathcal{P}}^{t}$ is therefore a valid run of $\mathcal{T}^{t}$.
-The distinction between exact and relaxed planning is thus encoded entirely in
-the automaton component and in the edge weights, not in the semantics of the
-transition-system projection.
-
-For each enabled product transition in
-\eqref{eq:relaxed_product_automaton}, define its weight by
-\begin{equation}
-\widetilde{w}^{t}(x,x') \triangleq
-w^{t}(s,s') + \alpha \,
- d_{\mathrm{s}}\bigl(L^{t}(s),q_{\mathrm{s}},q'_{\mathrm{s}}\bigr),
-\label{eq:relaxed_product_weight}
-\end{equation}
-where $\alpha \geq 0$ is a design parameter.
-Equation~\eqref{eq:relaxed_product_weight} separates implementation cost from
-soft-task mismatch. The first term is inherited from the weighted transition
-system. The second term is zero when the soft transition is exactly enabled, and
-positive otherwise. The parameter $\alpha$ therefore adjusts the tradeoff
-between motion efficiency and tolerance for temporary soft-task violation.
-
-As in Chapter~\ref{chap:preliminaries}, accepting runs are considered in
-prefix--suffix form. For
-$\varrho=x_{0}x_{1}\cdots x_{K}(x_{K+1}\cdots x_{N}x_{K})^{\omega}$ with
-$x_{0} \in \widetilde{X}_{0}^{t}$ and $x_{K} \in \widetilde{F}^{t}$, define
-\begin{equation}
-J_{\mathrm{bal}}^{t}(\varrho) \triangleq
-\Bigl(\sum_{k=0}^{K-1} + \gamma \sum_{k=K}^{N}\Bigr)
-\widetilde{w}^{t}(x_{k},x_{k+1}),
-\label{eq:balanced_cost_relaxed}
-\end{equation}
-where $x_{N+1} \triangleq x_{K}$ and $\gamma \geq 0$ weights the suffix
-relative to the prefix. By substituting
-\eqref{eq:relaxed_product_weight} into
-\eqref{eq:balanced_cost_relaxed}, the total cost decomposes into a motion term
-and a cumulative soft-violation term. The search problem on the relaxed product
-therefore remains structurally identical to the one in
-Chapter~\ref{chap:preliminaries}, while its objective now reflects both motion
-quality and logical relaxation.
-
-The computation proceeds in three steps. First,
-$\widetilde{\mathcal{P}}^{t}$ is constructed by
-Definition~\ref{def:relaxed_product}. Second, every enabled edge is assigned a
-weight through \eqref{eq:relaxed_product_weight}. Third, the standard
-accepting-run search over a weighted product graph is applied with objective
-\eqref{eq:balanced_cost_relaxed}
-\cite{smith2011optimal,schuppan2005shortest}. The resulting minimizer is
-denoted by $\varrho^{t,\star}$, and the associated motion plan is
-$\rho^{t,\star} \triangleq \mathrm{proj}_{S}(\varrho^{t,\star})$.
-
-The next result states the structural safety guarantee of the relaxation.
-
-\begin{theorem}
-\label{thm:hard_task_preservation}
-Let $\varrho$ be an accepting run of $\widetilde{\mathcal{P}}^{t}$ and let
-$\rho \triangleq \mathrm{proj}_{S}(\varrho)$. Then $\rho$ is a valid run of
-$\mathcal{T}^{t}$ and $\rho \models \varphi^{\mathrm{hard}}$.
-\end{theorem}
-
-\begin{proof}
-Validity follows from Definition~\ref{def:relaxed_product}, since every product
-edge projects to an enabled transition of $\mathcal{T}^{t}$. For the hard task,
-Definition~\ref{def:relaxed_intersection} requires every product edge to follow
-an actual transition of $\mathcal{B}_{\mathrm{h}}$ under the current label.
-Hence the trace of $\rho$ induces a run of $\mathcal{B}_{\mathrm{h}}$.
-Because the phase variable in
-\eqref{eq:relaxed_intersection_automaton} enforces infinitely many visits to
-$F_{\mathrm{h}}$, that induced run is accepting. Therefore
-$\rho \models \varphi^{\mathrm{hard}}$.
-\end{proof}
-
-Theorem~\ref{thm:hard_task_preservation} shows that the relaxation never acts
-on the hard component. The next lemma identifies the case in which the relaxed
-solution recovers exact satisfaction of the full task.
-
-\begin{lemma}
-\label{lem:zero_soft_violation}
-Let $\varrho^{t,\star}$ be a minimizer of
-\eqref{eq:balanced_cost_relaxed}, and let
-$\rho^{t,\star} \triangleq \mathrm{proj}_{S}(\varrho^{t,\star})$.
-If every edge of $\varrho^{t,\star}$ has zero mismatch in
-\eqref{eq:relaxed_product_weight}, then
-$\rho^{t,\star} \models
-\varphi^{\mathrm{soft}} \wedge \varphi^{\mathrm{hard}}$.
-\end{lemma}
-
-\begin{proof}
-Zero mismatch on every edge means that each traversed soft transition is enabled
-by the actual workspace label. Consequently, the trace of $\rho^{t,\star}$
-induces an accepting run of $\mathcal{B}_{\mathrm{s}}$. The hard part follows
-from Theorem~\ref{thm:hard_task_preservation}. Therefore the complete formula in
-\eqref{eq:task_split_partial} is satisfied.
-\end{proof}
-
-Lemma~\ref{lem:zero_soft_violation} confirms that the relaxed construction is a
-strict extension of the exact one. Whenever the current abstraction already
-supports exact satisfaction, the mismatch term in
-\eqref{eq:relaxed_product_weight} vanishes along the optimal run. The relaxed
-product should therefore be viewed as a conservative extension of the exact
-product rather than as a different synthesis problem.
-
-\subsection{On-line Plan Adaptation with History Consistency}
-\label{subsec:online_update_and_revision}
-
-The initial plan is synthesized on $\widetilde{\mathcal{P}}^{0}$. During
-execution, new information may update the abstraction from
-$\mathcal{T}^{t^-}$ to $\mathcal{T}^{t^+}$. The current plan must then be
-validated against the updated model before execution proceeds. This validation
-step is necessary because a previously feasible path may become blocked, and a
-previously admissible label may cease to support the hard-automaton transition
-required by the current product run.
-
-Let $\varrho^{t}$ be the product run currently selected for execution, and let
-$\rho^{\mathrm{past}}_{t}$ be the finite portion of its state projection already
-executed when the update occurs. An edge of $\varrho^{t}$ is called
-\emph{invalid} if its state projection is not a transition of
-$\mathcal{T}^{t^+}$. It is called \emph{unsafe} if the updated source label no
-longer enables its hard-automaton transition. If no edge in the unexecuted part
-of $\varrho^{t}$ is invalid or unsafe, the current plan remains admissible.
-Otherwise, replanning is necessary. This distinction between invalidity and
-unsafety is useful because the first concerns motion feasibility, whereas the
-second concerns preservation of the hard temporal requirement.
-
-Since the B\"uchi components may be nondeterministic, the current workspace
-state alone is insufficient to determine the current product state. The
-executed history must therefore be retained. Define the set of
-history-consistent product states by
-\begin{equation}
-\widetilde{X}^{t}_{\mathrm{past}} \triangleq
-\Bigl\{x \in \widetilde{X}^{t^+} \, \Big| \,
-\exists\text{ a finite run of } \widetilde{\mathcal{P}}^{t^+}
-\text{ ending at } x
-\text{ whose state projection is }
-\rho^{\mathrm{past}}_{t}\Bigr\},
-\label{eq:history_consistent_states}
-\end{equation}
-where $\widetilde{X}^{t^+}$ denotes the state set of the updated relaxed
-product. Equation~\eqref{eq:history_consistent_states} is the consistency
-constraint that links the future plan to the executed trace. It guarantees that
-replanning resumes from a product state compatible with the history already
-realized by the robot, rather than from an arbitrary state sharing only the same
-workspace position.
-
-The computation after an update is therefore conceptually simple, although it
-must be carried out at the product level. The remaining part of the current plan
-is checked for invalid or unsafe edges. If none are found, the current plan is
-retained. Otherwise, the updated relaxed product is rebuilt, the initial state
-set is replaced by the history-consistent set in
-\eqref{eq:history_consistent_states}, and the balanced synthesis problem in
-\eqref{eq:balanced_cost_relaxed} is solved again. The new accepting suffix is
-then concatenated with the already executed prefix through the corresponding
-product-state history.
-
-\begin{algorithm}[t]
-\caption{History-aware revision under workspace updates}
-\label{alg:history_revision}
-\DontPrintSemicolon
-\KwIn{$\mathcal{T}^{t^+}$, current run $\varrho^{t}$, executed prefix
-$\rho^{\mathrm{past}}_{t}$}
-\KwOut{Updated accepting run}
-Inspect the unexecuted part of $\varrho^{t}$ on $\mathcal{T}^{t^+}$\;
-\If{no remaining edge is invalid or unsafe}{
-  \Return{$\varrho^{t}$}\;
-}
-Construct $\widetilde{\mathcal{P}}^{t^+}$ by
-Definition~\ref{def:relaxed_product}\;
-Compute the history-consistent state set
-$\widetilde{X}^{t}_{\mathrm{past}}$ by
-\eqref{eq:history_consistent_states}\;
-Replace the initial state set of $\widetilde{\mathcal{P}}^{t^+}$ by
-$\widetilde{X}^{t}_{\mathrm{past}}$\;
-Assign all edge weights by \eqref{eq:relaxed_product_weight}\;
-Solve the accepting-run search with objective
-\eqref{eq:balanced_cost_relaxed}\;
-Let the optimizer be $\varrho^{\mathrm{new}}_{t}$\;
-\Return{$\varrho^{\mathrm{new}}_{t}$}\;
-\end{algorithm}
-
-Algorithm~\ref{alg:history_revision} emphasizes that replanning is triggered
-only when the previously synthesized continuation is no longer admissible under
-the updated abstraction. In particular, the method does not discard a valid plan
-merely because a potentially better one might exist after the update. This
-choice reduces unnecessary recomputation and preserves consistency with the
-executed trace whenever the original continuation remains sound.
-
-The following statement formalizes the correctness of the revision step.
-
-\begin{theorem}
-\label{thm:history_aware_revision}
-Let $\varrho^{\mathrm{new}}_{t}$ be an accepting run of
-$\widetilde{\mathcal{P}}^{t^+}$ whose initial state belongs to
-$\widetilde{X}^{t}_{\mathrm{past}}$, and let
-$\rho^{\mathrm{new}}_{t} \triangleq
-\mathrm{proj}_{S}(\varrho^{\mathrm{new}}_{t})$.
-Then the concatenated trajectory
-$\rho^{\mathrm{comp}}_{t} \triangleq
-\rho^{\mathrm{past}}_{t} + \rho^{\mathrm{new}}_{t}$ is a valid run of
-$\mathcal{T}^{t^+}$ and satisfies $\varphi^{\mathrm{hard}}$.
-\end{theorem}
-
-\begin{proof}
-By \eqref{eq:history_consistent_states}, the initial state of
-$\varrho^{\mathrm{new}}_{t}$ is reachable in
-$\widetilde{\mathcal{P}}^{t^+}$ through a finite run whose state projection is
-exactly $\rho^{\mathrm{past}}_{t}$. Concatenating that finite run with
-$\varrho^{\mathrm{new}}_{t}$ yields an accepting run of the updated relaxed
-product whose state projection is $\rho^{\mathrm{comp}}_{t}$. The validity of
-$\rho^{\mathrm{comp}}_{t}$ follows from
-Definition~\ref{def:relaxed_product}, and hard-task satisfaction follows from
-Theorem~\ref{thm:hard_task_preservation}.
-\end{proof}
-
-Theorem~\ref{thm:history_aware_revision} clarifies the role of history in
-partially known workspaces. The revision mechanism does not merely reconnect the
-current workspace state to a new goal. Instead, it reconstructs a product-level
-continuation that is compatible with the trace already produced by the robot,
-while preserving the hard component of the original specification and improving
-soft-task satisfaction whenever the updated model permits it.
-
-\subsection{Task-Driven Collaborative Knowledge Transfer}
-\label{subsec:task_driven_transfer}
-
-The single-robot mechanism in
-Subsection~\ref{subsec:online_update_and_revision} extends naturally to a team
-of robots whose local tasks are independent, but whose workspace knowledge is
-not. Consider a finite index set
-$\mathcal{N} \triangleq \{1,\ldots,N\}$. For each robot $i \in \mathcal{N}$,
-let
-\begin{equation}
-\mathcal{T}_{i}^{t} \triangleq
-\bigl(S_{i},S_{i,0},\rightarrow_{i}^{t},\mathsf{AP}_{i},L_{i}^{t},w_{i}^{t}
-\bigr),
-\label{eq:local_team_ts}
-\end{equation}
-where the components follow the notation of
-Chapter~\ref{chap:preliminaries}. The local task of robot $i$ is
-$\varphi_{i} \triangleq
-\varphi_{i}^{\mathrm{soft}} \wedge \varphi_{i}^{\mathrm{hard}}$, and the
-associated relaxed product automaton
-$\widetilde{\mathcal{P}}_{i}^{t}$ is constructed exactly as in
-Definition~\ref{def:relaxed_product}. The independence assumption means that
-no synchronous team product is introduced: each robot plans over its own
-abstraction, while communication is used only to improve the information on
-which that abstraction is built. Related distributed viewpoints appear in
-\cite{durfee2006distributed,filippidis2012decentralized,guo2014distributed}.
-
-
-\begin{problem}[Collaborative local planning under shared workspace knowledge]
-\label{prob:collaborative_local_planning}
-Consider a team of robots indexed by
-$\mathcal{N} \triangleq \{1,\ldots,N\}$. For each robot $i \in \mathcal{N}$,
-let $\mathcal{T}_{i}^{t}$ be the current local transition system in
-\eqref{eq:local_team_ts}, and let the local task be
-$\varphi_{i} \triangleq
-\varphi_{i}^{\mathrm{soft}} \wedge \varphi_{i}^{\mathrm{hard}}$.
-Given the time-varying communication graph $\mathcal{G}^{t}$ and the local
-relaxed product automaton $\widetilde{\mathcal{P}}_{i}^{t}$ for each robot,
-determine, for every $i \in \mathcal{N}$, an accepting product run
-$\varrho_{i}^{t}$ and its projection
-$\rho_{i}^{t} \triangleq \mathrm{proj}_{S_{i}}(\varrho_{i}^{t})$ such that
-$\rho_{i}^{t}$ is executable on $\mathcal{T}_{i}^{t}$, satisfies the hard
-task $\varphi_{i}^{\mathrm{hard}}$, and minimizes the balanced cost induced by
-the local relaxed product construction.
+\begin{problem}
+Assume the task specification is \textbf{infeasible}, how should the specification be \textbf{relaxed} and more importantly how to synthesize the discrete plan that satisfies the original specification \textbf{as much as possible}?
 \end{problem}
 
-To address Problem~\ref{prob:collaborative_local_planning},
-the communication layer is modeled by a time-varying directed graph
-$\mathcal{G}^{t} \triangleq (\mathcal{N},\mathcal{E}^{t})$, where
-$(i,j) \in \mathcal{E}^{t}$ means that robot $i$ can transmit to robot $j$ at
-time $t$. Denote by $\mathcal{N}_{i}^{t}$ the outgoing neighbors of robot $i$.
-For each robot $i$, define the set of task-relevant propositions by
-$\mathsf{AP}_{i}^{\varphi} \triangleq
-\{\alpha \in \mathsf{AP}_{i} \mid \alpha \text{ appears in } \varphi_{i}\}$.
-Only propositions in $\mathsf{AP}_{i}^{\varphi}$ can influence the automata
-for $\varphi_{i}$ and, consequently, only those propositions are worth
-requesting from other robots. This observation motivates a task-driven
-subscriber--publisher protocol in which each robot advertises only its
-task-relevant proposition set and each outgoing reply is filtered accordingly.
 
-Suppose robot $i$ acquires at time $t$ a sensing packet
-$\mathbf{Sense}_{i}^{t}$ consisting of tuples
-$(s,\Sigma^{+},\Sigma^{-})$, where
-$s \in S_{i}$ and $\Sigma^{+},\Sigma^{-} \subseteq \mathsf{AP}_{i}$ denote,
-respectively, propositions newly confirmed and newly excluded at state $s$.
-If robot $j$ has previously subscribed to robot $i$ by sending the request
-$\mathbf{Req}_{j \rightarrow i} \triangleq (j,\mathsf{AP}_{j}^{\varphi})$,
-then the reply generated by robot $i$ is
-\begin{equation}
-\mathbf{Reply}_{i \rightarrow j}^{t} \triangleq
-\Bigl\{ \bigl(s,\Sigma^{+}\!\cap\!\mathsf{AP}_{j}^{\varphi},
-\Sigma^{-}\!\cap\!\mathsf{AP}_{j}^{\varphi}\bigr) \,\Big|\,
-(s,\Sigma^{+},\Sigma^{-}) \in \mathbf{Sense}_{i}^{t},\
-(\Sigma^{+}\!\cup\!\Sigma^{-}) \cap \mathsf{AP}_{j}^{\varphi}
-\neq \varnothing \Bigr\},
-\label{eq:task_driven_reply}
+%On the other hand, this work complements the topic about revising the motion plan under fixed LTL specifications when the workspace model or robot dynamics are updated, like in the cases of real-time revising~\citep{guo2013revising} and local ``patching''~\cite{livingston2012backtracking}.
+
+The work by~\cite{kim2012approximate} partially answers the above problem. It generates a relaxed specification automaton $\mathcal{A}'_{\varphi}$ which is close to $\mathcal{A}_{\varphi}$ and feasible over $\mathcal{T}_c$, see Section~III-C of~\cite{kim2012approximate}. Then the discrete plan can be synthesized by following the   procedure as described in Section~\ref{sec:solution}.  However there are often more than one accepting run within $\mathcal{T}_c\otimes \mathcal{A}'_{\varphi}$ and they may fulfill the original specification to different extents. Instead we aim to firstly find the discrete plan that fulfills the task \emph{the most} by certain criterion, based on which then the specification automaton is relaxed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Relaxed product automaton}\label{ch03:subsec:relaxed-prod}
+
+By Definition~\ref{def:feasible},  $\varphi$ is infeasible when the standard PBA $\mathcal{A}_p$ does not have an accepting run. Thus we need to relax the constraints imposed by $\mathcal{A}_{\varphi}$ to allow more transitions within $\mathcal{A}_p$, by the relaxed PBA below.
+
+\begin{definition} \label{ch03:def:relaxpro}
+The {relaxed} PBA $\mathcal{A}_r=\mathcal{T}_c  {\times} \mathcal{A}_{\varphi}=(Q',\, 2^{AP},\, \delta', \, Q_0',\, \mathcal{F}',\, W_r)$ is defined as:
+$Q'=\Pi \times Q= \{\langle \pi,\, q \rangle \, |\, \forall \pi\in \Pi,\, \forall q \in Q\}$;
+$2^{AP}$ is the alphabet: $AP=\{a_1,\, a_2,\cdots,\, a_K\}$;
+$\delta': Q' \rightarrow 2^{Q'}$. $\langle \pi_j,\, q_n \rangle \in \delta'(\langle \pi_i,\, q_m \rangle)$ if and only if  $(\pi_i, \, \pi_j)\in \longrightarrow_c$ and $\exists \, l \in 2^{AP}$ such that $q_n \in \delta(q_m,\, l)$;
+$Q_0'=\Pi_0 \times Q_0$ and $\mathcal{F}'=\Pi \times \mathcal{F}$ are the initial and accepting states;
+$W_r: Q'\times Q' \rightarrow \mathbb{R}^+$is the weight function to be defined. \hfill $\blacktriangle$
+\end{definition}
+
+Two differences between $\mathcal{A}_r$ and $\mathcal{A}_p$ from Definition~\ref{def:product} are: (i) the constraint ``$q_n \in \delta(q_m,\,  L_c(\pi_i))$'' when defining $\delta'$ is relaxed to ``$\exists \, l \in 2^{AP}$ such that $q_n\in \delta(q_m,\,  l)$'' here; (ii) the weight function $W_r$ is defined differently from $W_p$. We firstly introduce the evaluation function $\texttt{Eval}: 2^{AP}\rightarrow \{0,\, 1\}^K$:
+\begin{equation}\label{ch03:evaluate}
+\texttt{Eval}(l)=\mathbf{\nu}\Longleftrightarrow [\, \mathbf{\nu}_i \, ] =
+\begin{cases}
+1 & \qquad \text{if $a_i\in l$}, \\
+0 & \qquad \text{if $a_i\notin l$},
+\end{cases}
 \end{equation}
-where the set in \eqref{eq:task_driven_reply} is transmitted only if
-$j \in \mathcal{N}_{i}^{t}$.
-Equation~\eqref{eq:task_driven_reply} is the key filtering step. It removes all
-propositions that cannot affect the recipient's local task and therefore keeps
-the communication load aligned with the actual planning objective. Since the
-filtered packet has the same tuple structure as a local sensing update, it can
-be incorporated into the transition-system update rule without introducing any
-new planning machinery.
-This communication objective is stated formally in
-Problem~\ref{prob:task_driven_transfer}.
+where $i=1,\cdots,K$; $l \in 2^{AP}$ and $\mathbf{\nu}\in \{0,\, 1\}^K$.  Namely, each subset of $2^{AP}$ is mapped to a $K$-dimensional Boolean vector. Then a distance function between two input alphabets $\rho:2^{AP}\times 2^{AP}\rightarrow \mathbb{N}$ is defined as:
+\begin{equation}\label{ch03:dist}
+\rho(l,\,l')=\|\mathbf{\nu}-\mathbf{\nu}'\|_1=\sum_{i=1}^{K}|\, \mathbf{\nu}_i-\mathbf{\nu}'_i\, |,
+\end{equation}
+where  $\mathbf{\nu}=\texttt{Eval}(l)$, $\mathbf{\nu}'=\texttt{Eval}(l')$ and $l,\, l'\in 2^{AP}$. $\|\cdot\|_1$ is the $\ell_1$ norm. Then we could   define the distance between an element $l\in 2^{AP} $ to a set $\chi \subseteq 2^{AP}$($\chi \neq \emptyset$)~\citep{boyd2004convex}:
+\begin{equation}\label{ch03:eq:setdist}
+ \texttt{Dist}(l, \, \chi)=\begin{cases}
+%\quad -\min_{l\in (2^{\Pi} \backslash \omega)}\; \rho(L(q'),\, l) & \text{if} \quad  L(q') \in \omega \\
+\quad 0 & \text{if} \quad  l \in \chi, \\
+\quad \min_{l'\in \chi}\; \rho(l,\,  l')& \text{otherwise}.
+\end{cases}
+\end{equation}
+%%%%%%%%%
+\begin{figure}[t]
+\centering
+\includegraphics[height =3.0cm,  width=9.3cm]{figures/ch03/Dist.pdf}
+\caption{Left: the distance of~$L_c(\pi)$ to a set of input alphabets~$\chi$ (the solid line). Right: the input alphabets are revised by adding more elements.}
+\label{ch03:distexam}
+\end{figure}
+%%%%%%%%
+Note that $\texttt{Dist}(l, \, \chi)$ is not defined for $\chi=\emptyset$. An example of computing  $\texttt{Dist}(\cdot)$  is given in Figure \ref{distexam}. Now we give the formal definition of $W_r$:
+\begin{equation}\label{ch03:eq:WR}
+\begin{split}
+&W_r(\langle \pi_i,\, q_m \rangle, \, \langle \pi_j,\, q_n \rangle)\\
+&=W_c(\pi_i,\, \pi_j) + \alpha \,\cdot \texttt{Dist}(L_c(\pi_i),\, \chi(q_m,\,q_n)),
+\end{split}
+\end{equation}
+where $\langle \pi_j,\, q_n \rangle \in \delta'(\langle \pi_i,\, q_m \rangle)$; $\alpha\geq 0$ is a design parameter;
+\begin{equation}\label{ch03:eq:chi}
+\chi(q_m,\,q_n)=\{l\in 2^{AP}| \, q_n\, \in \delta(q_m,\, l) \}
+\end{equation}
+consists of all input alphabets that enable the transition from $q_m$ to $q_n$ in $\mathcal{A}_{\varphi}$. By Definition~\ref{def:relaxpro} there always exists $l \in 2^{AP}$   that $ q_n \in \delta(q_m, l)$, thus $\chi(q_m,\, q_n) \neq \emptyset$ is ensured. $W_c(\pi_i,\, \pi_j)$ is the  cost of the transition from $\pi_i$ to $\pi_j$ in $\mathcal{T}_c$; $\texttt{Dist}(L_c(\pi_i),\, \chi(q_m,\,q_n) )$ measures how much the transition from $\pi_i$ to $\pi_j$   violates the constraints imposed by the transition from $q_m$ to $q_n$.
+%Being $0$ means that $\mathcal{A}_{\varphi}$ is not violated, while the larger the distance is the more $\mathcal{A}_{\varphi}$ is violated.
+The design parameter~$\alpha$ reflects the relative penalty on violating the original specification,  and also the user's {preference} on a plan that has less  cost or that fulfills the task  more.
+%The penalty on violating $\mathcal{A}_{\varphi}$ is increased when $\alpha$ is larger.
 
-\begin{problem}[Task-driven collaborative knowledge transfer]
-\label{prob:task_driven_transfer}
-For each robot $i \in \mathcal{N}$, let $\mathbf{Sense}_{i}^{t}$ denote the
-newly acquired semantic information at time $t$, and let
-$\mathcal{N}_{i}^{t}$ be the set of robots that are reachable from $i$ in
-$\mathcal{G}^{t}$. For every neighbor $j \in \mathcal{N}_{i}^{t}$ that has
-announced the task-relevant proposition set
-$\mathsf{AP}_{j}^{\varphi}$, determine a transmitted packet
-$\mathbf{Reply}_{i \rightarrow j}^{t}$ such that only semantic facts relevant
-to $\varphi_{j}$ are communicated, and such that the received information can
-be incorporated into the updated local abstraction of robot $j$ without
-changing the structure of the local revision procedure.
+\begin{example}\label{ch03:examp:dist}
+Consider the NBA in Figure~\ref{fig:Buchi} and the  transition from state $q_1$ to $q_3$, $\chi(q_1,\,q_3)=\{\{a_2\},\, \{a_2, \, a_1\}, \, \{a_2, \, a_3\}, \, \{a_2,\, a_1, \, a_3\}\}$. Then
+$\textup{\texttt{Dist}}(\{a_1\}, \chi(q_1,\,q_3))=\rho(\{a_1\}, \, \{a_1,\, a_2\})=1; \;
+\textup{\texttt{Dist}}(\{a_2\}, \chi(q_1,\,q_3))=\rho(\{a_2\}, \, \{a_2\})=0;\;
+\textup{\texttt{Dist}}(\{a_2,\, a_3\},$
+$\chi(q_1,\,q_3))=\rho(\{a_2,\, a_3\}, \, \{a_2, \, a_3\})=0$.
+\hfill $\blacktriangle$
+\end{example}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Balanced accepting run}\label{ch03:subsec:probStatement}
+Since~$\mathcal{A}_p$ does not have an accepting run, we instead search for an accepting run within $\mathcal{A}_r$. However the existence of an accepting run alone is not enough because:  (i) they have different implementation  costs; (ii) we would like to measure how much they violate the original specification. Thus we still consider the accepting runs with the  \emph{prefix-suffix} structure by~\eqref{eq:prod-Apath}:
+\begin{equation} \label{ch03:eq:prod-Apath2}
+\begin{split}
+ R&=q'_0\, q'_1\cdots q'_{f-1}[\,q'_f \, q'_{f+1}\cdots \cdots q_n'\,]^{\omega}\\
+&=\langle \pi_0, q_0\rangle\,\cdots \langle \pi_{f-1}, q_{f-1}\rangle\, \left[\, \langle \pi_f, q_f\rangle\langle \pi_{f+1}, q_{f+1}\rangle \cdots \cdots \langle \pi_n, q_n\rangle\, \right]^{\omega}\, ,
+\end{split}
+\end{equation}
+where $q_0'=\langle \pi_0, q_0\rangle \in Q'_{0}$ and $q_f'=\langle \pi_f, q_f\rangle \in \mathcal{F}'$. Its total cost is calculated differently:
+\begin{equation}\label{ch03:eq:prod-cost2}
+\begin{split}
+\texttt{Cost}(R,\, \mathcal{A}_r)
+%&=\sum_{i=0}^{f-1} \big(W_{c}(\pi_i,\, \pi_{i+1})+\alpha \cdot \texttt{Dist}(L_c(\pi_i), \chi(q_{i},q_{i+1})) \big)\\
+%&\quad +\gamma \sum_{i=f}^{n-1} \big(W_{c}(\pi_i,\, \pi_{i+1})+ \alpha \cdot \,\texttt{Dist}(L_c(\pi_i), \chi(q_{i},q_{i+1}))\big)\\
+&=\texttt{cost}_{\tau}+\alpha\cdot \texttt{dist}_{\varphi}\, ,
+\end{split}
+\end{equation}
+where the accumulated implementation cost of the motion plan $\tau=R|_{\Pi}$ is
+\begin{equation}\label{ch03:eq:cost}
+\texttt{cost}_{\tau}= \big(\sum_{i=0}^{f-1}+\gamma \sum_{i=f}^{n-1}\big)\, W_{c}(\pi_i,\, \pi_{i+1}) ;
+\end{equation}
+the accumulated distance of $\tau$ to $\mathcal{A}_{\varphi}$ is
+\begin{equation}\label{ch03:eq:dist}
+\texttt{dist}_{\varphi}= \big(\sum_{i=0}^{f-1}+\gamma \sum_{i=f}^{n-1}\big)\, \texttt{Dist}(L_c(\pi_i), \chi(q_{i},q_{i+1}));
+\end{equation}
+the design parameter $\gamma\geq 0$ represents the relative weighting on the cost of transient response (the prefix) and steady response (the suffix).
+\begin{problem}\label{ch03:pro:balanced}
+Find the accepting run of $\mathcal{A}_r$ that {minimizes} the cost by~\eqref{eq:prod-cost2}. \hfill $\blacktriangle$
+\end{problem}
+%   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{algorithm}[t]
+% \caption{Validate transitions of relaxed ${\mathcal{A}}_{\varphi}$, \texttt{CheckTranR}( )} \label{ch03:alg:checkEdgeR}
+% %\LinesNumbered
+% \DontPrintSemicolon
+% %\LinesNumbered
+% %\DontPrintSemicolon
+% \KwIn{$(q_m,\, l,\, q_n, \, \mathcal{A}_{\varphi})$, $q_m,\, q_n\in Q$, $l\in 2^{AP}$}
+% \KwOut{distance $d$}
+% %$q_m=\langle q_1,\, q_2, c \rangle$, $q_n=\langle \check{q}_1,\, \check{q}_2, \check{c} \rangle$\;
+% %\If{$L_c(\pi_i)\in \chi_1(q_1,\,\check{q}_1)$}{
+% %add $q'_g$ to $\delta'(q'_s)$\;
+% %compute its weight $W_p(q'_s,\,q'_g)$ by~\eqref{weight}\;
+% %\textbf{return} \texttt{True}
+% %}
+% $d= \texttt{Dist}(l,\, \chi(q_m,\, q_n))$ by~\eqref{eq:setdist}\;
+% \textbf{return} $d$
+% \end{algorithm}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+We call the solution to Problem~\ref{pro:balanced} the \emph{balanced} accepting run of $\mathcal{A}_r$, denoted by $R_{\text{bal}}$. The corresponding balanced plan is $\tau_{\textup{bal}}=R_{\text{bal}}|_{\Pi}$.
+\begin{remark}
+As mentioned in Section~\ref{subsec:NBA}, each transition of the NBA is encoded by a boolean expression accepting all alphabets that enable this transition. This expression can be represented as a binary decision diagram (BBD) such that the distance function by~\eqref{eq:setdist} can be easily integrated. The idea is that for operator ``$\vee$'' it returns the~\emph{minimal} distance of its left and right branches, while for operator ``$\wedge$'' it returns the~\emph{summed} distance of them. Thus it is not necessary to enumerate all input alphabets to evaluate the distance. More details can be found in Section~\ref{chapter:experiment}. \hfill $\blacktriangle$
+\end{remark}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Balanced plan synthesis}\label{ch03:subsec:singleFeedback}
+
+Given the values of $\alpha$ and $\gamma$,  $\mathcal{A}_r$ can be either constructed fully by Definition~\ref{def:relaxpro} or on-the-fly as before. But the weight function is computed based on the distance function from~\eqref{eq:setdist}.
+%where the line~7 should be changed to ``\texttt{If}{$\pi_j \in \texttt{Post} (\pi_i)$ \emph{and} $q_n\in \texttt{Post}(q_m)$}" for the relaxed transition relation; line~9 should be changed according to~\eqref{eq:WR}.  On the other hand, if the on-the-fly construction as introduced in Section~\ref{subsec:alg-imp} is applied, the adjacency relation in Algorithm~\ref{alg:adjacency} remains the same but Algorithm~\ref{alg:checkEdgeP} should be revised as shown in Algorithm~\ref{alg:checkEdgeR}. Then Algorithm~\ref{alg:optimal} could be called, which solves Problem~\ref{pro:balanced} and generates the balanced accepting run $R_{\text{bal}}$.
+Consequently, given the value of $\alpha$, $\gamma$, Algorithm~\ref{alg:optimal} can be called with respect to the full or on-the-fly construction of $\mathcal{A}_r$, to derive the balanced accepting run~$R_{\text{bal}}$.
+Then the corresponding balanced plan is $\tau_{\textup{bal}}=R_{\text{bal}}|_{\Pi}$.
+
+%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{algorithm}[t]
+% \caption{Check potential transition $(q'_s,\, q'_g)$ of ${\mathcal{A}}_{r}$, \texttt{CheckTranR}(~)} \label{ch03:alg:checkEdgeR}
+% \LinesNumbered
+% \DontPrintSemicolon
+% %\LinesNumbered
+% %\DontPrintSemicolon
+% \KwIn{pair of states $(q'_s,\, q'_g)$, ${\mathcal{A}}_{r}$}
+% \KwOut{boolean value to indicate if $q_g'\in \delta'(q'_s)$}
+% $q'_s=\langle \pi_i,\,q_m\rangle$, $q'_g=\langle \pi_j,\,q_n\rangle$\;
+% $W_p(q'_s,\,q'_g)=W_c(\pi_i,\, \pi_j) + \alpha \,\cdot \texttt{Dist}(L_c(\pi_i),\, \chi(q_m,\,q_n))$ by~\eqref{eq:WR}\;
+% \textbf{return} \texttt{True}
+% \end{algorithm}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{remark}
+Although $\mathcal{A}_r$  allows more transitions compared ro $\mathcal{A}_p$, any balanced plan is a valid path of $\mathcal{T}_c$, i.e., the transition relation of $\mathcal{T}_c$ is never relaxed when constructing $\mathcal{A}_r$. Thus $\tau_{\text{bal}}$ is always implementable. \hfill $\blacktriangle$
+\end{remark}
+
+
+
+Furthermore, given $R_{\text{bal}}$, $\mathcal{T}_c$ and $\mathcal{A}_{\varphi}$, we can easliy computes the associated $\texttt{cost}_{\tau}$, $\texttt{dist}_{\varphi}$ and the relaxed specification automaton $\mathcal{A}_{\varphi}'$.
+%In order to compute the implementation cost $\texttt{cost}_{\tau}$, the accumulated distance $\texttt{dist}_{\varphi}$ and the relaxed specification automaton $\mathcal{A}_{\varphi}'$, .
+While iterating through the transitions along $R_{\text{bal}}$,  we can construct $\mathcal{A}'_{\varphi}$ by adding new transitions to $\mathcal{A}_{\varphi}$; compute $\texttt{cost}_{\tau}$ and $\texttt{dist}_{\varphi}$ as defined in~\eqref{eq:cost} and~\eqref{eq:dist}.  It can be verified that the obtained $\mathcal{A}_{\varphi}'$ is a valid relaxation~\cite{kim2012approximate} of $\mathcal{A}_{\varphi}$. Note each $R_{\text{bal}}$ corresponds to a balanced plan $\tau_{\text{bal}}$ and a revised specification automaton~$\mathcal{A}'_{\varphi}$.
+
+%Even though the motion plan $\tau$ may not be  the one that fulfills $\varphi$ the most, it optimizes the balance between the implementation cost and the distance to the given task specification.
+
+
+
+\begin{lemma}\label{ch03:lem:distanceProof}
+If $\textup{\texttt{dist}}_{\varphi}=0$, then $\tau_{\textup{bal}} \models \varphi$.
+\end{lemma}
+\begin{proof}
+Since  $\texttt{Dist}(\cdot)\geq 0$ by~\eqref{eq:setdist}, the accumulated distance $\texttt{dist}_{\varphi}=0$ implies $q_n\in \delta(q_m,L_c(\pi_i))$ for all transitions $(\langle \pi_i,\, q_m \rangle, \langle \pi_j,\, q_n \rangle )$ along $R_{\text{bal}}$.
+Since $\mathcal{A}_p$ and $\mathcal{A}_r$ have the same states with the same sets of initial and accepting states, $R_{ \text{bal}}$ is also an accepting run for $\mathcal{A}_p$ by Definition~\ref{def:product}. Then its corresponding plan $\tau_{\text{bal}}$ satisfies $\varphi$ by Lemma~\ref{lem:satisfy}.
+\end{proof}
+
+%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{algorithm}[t]
+% \caption{Feedback for single robot, \texttt{Singled}(~)} \label{ch03:alg:reviseSA}
+% %\DontPrintSemicolon
+
+% \KwIn{$R_{\text{bal}}$, $\mathcal{T}_c$, $\mathcal{A}_{\varphi}$}
+% \KwOut{$\mathcal{A}_{\varphi}'$, $\texttt{cost}_{\tau}$, $\texttt{dist}_{\varphi}$}
+% 1.  Initialization: $\mathcal{A}_{\varphi}'=\mathcal{A}_{\varphi}$. $\texttt{cost}_{\tau}=\texttt{dist}_{\varphi}=0$.
+
+% 2. For each transition $(q'_i,\, q'_{i+1})\in \texttt{Edge}(R_{\text{bal}})$, perform steps 3-5:
+
+% 3.  Let $q'_i=\langle \pi_i,\, q_m \rangle $ and $q'_{i+1}=\langle \pi_j,\, q_n \rangle$.
+
+% 4. $\texttt{cost}_{\tau}=\texttt{cost}_{\tau}+W_c(\pi_i,\, \pi_j)$.
+
+% 5. $d$ = \texttt{CheckTranR}$(q_m,\,L_c(\pi_i),\,q_n, \mathcal{A}_{\varphi})$. If $d>0$, add $q_n$ to $\delta(q_m,\, L_c(\pi_i))$ of $\mathcal{A}_{\varphi}'$.  $\texttt{dist}_{\varphi}=\texttt{dist}_{\varphi}+  d$.
+
+% \textbf{return} $\mathcal{A}_{\varphi}'$, $\texttt{cost}_{\tau}$, $\texttt{dist}_{\varphi}$
+% \end{algorithm}
+%    %%%%%%%%%%
+However it may not be trivial to determine the appropriate value of~$\alpha$ for the desired balance between the cost and distance to the task. As an extension, Algorithm~\ref{alg:optimal} could be called under different $\alpha$ to generate various balanced accepting runs, among which the unique ones are saved as the candidates. They can be compared regarding the associated $\texttt{cost}_{\tau}$ and $\texttt{dist}_{\varphi}$. The chosen $\tau_{\text{opt}}$ can be executed off-line by constructing the hybrid controller as proposed in~Algorithm~\ref{alg:hybrid}.
+ %for each balanced run,  Algorithm~\ref{alg:reviseSA} is called to compute the corresponding motion plan $\tau$ and  the associated $\texttt{cost}_{\tau}$, $\texttt{dist}_{\varphi}$ as the feedback.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{theorem}
+If $\varphi$ is feasible over $\mathcal{T}_c$, the balanced plan $\tau_{\textup{bal}}$ \textbf{satisfies} $\varphi$ if $\alpha> \underline{\alpha}$, where $\underline{\alpha}$ is given by~\eqref{underalpha}.
+\end{theorem}
+\begin{proof}
+If $\varphi$ is feasible over $\mathcal{T}_c$, Algorithms~\ref{alg:optimal} return the optimal accepting run $R_{\textup{opt}}$ with the total cost (under the same $\gamma$) by~\eqref{eq:prod-cost}:
+\begin{equation}\label{ch03:underalpha}
+\texttt{Cost}(R_{\textup{opt}}, \mathcal{A}_p)=\underline{\alpha}.
+\end{equation}
+Clearly, $R_{\textup{opt}}$ is also a valid accepting run of ${\mathcal{A}}_r$ since $\mathcal{A}_p$ and $\mathcal{A}_r$ have the same states with the same sets of initial and accepting states. Moreover, under the same $\gamma$, $\texttt{Cost}(R_{\textup{opt}}, \mathcal{A}_p)=\texttt{Cost}(R_{\textup{opt}}, {\mathcal{A}}_r)$.
+Assuming that $\tau_{\textup{bal}}$ does not satisfy $\varphi$, then $\texttt{dist}_{\varphi}\geq 1$ by~\eqref{eq:dist}. As a result,  the total cost of $R_{\textup{bal}}$ by~\eqref{eq:prod-cost2} satisfies:
+$
+\texttt{Cost}(R_{\textup{bal}},\, {\mathcal{A}}_r)> \alpha \cdot \texttt{dist}_{\varphi} >\alpha.
+$
+Since $\alpha>\underline{\alpha}=\texttt{Cost}(R_{\textup{opt}}, \mathcal{A}_p)=\texttt{Cost}(R_{\textup{opt}}, {\mathcal{A}}_r)$, it implies
+$
+\texttt{Cost}(R_{\textup{bal}}, {\mathcal{A}}_r)>\texttt{Cost}(R_{\textup{opt}}, {\mathcal{A}}_r).
+$
+However by the definition of the balanced run,~$R_{\textup{bal}}$ is the accepting run of $\mathcal{A}_r$ with the least total cost, i.e.,
+$
+\texttt{Cost}(R_{\textup{bal}}, {\mathcal{A}}_r)\leq \texttt{Cost}(R_{\textup{opt}}, {\mathcal{A}}_r),
+$
+which leads to a contradictory. Thus the proposed method can be applied directly when $\varphi$ is feasible over $\mathcal{T}_c$ but choosing~$\alpha>\underline{\alpha}$. Algorithm~\ref{alg:optimal} will automatically select the accepting run that satisfies $\varphi$, i.e., $\texttt{dist}_{\varphi}=0$.
+\end{proof}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[t]
+\centering
+\includegraphics[height =2.6cm]{figures/ch03/toyExamSingle2}
+\caption{Left: the FTS $\mathcal{T}_c$ with labels and weights. Transitions are labeled by the costs. Right: the NBA $\mathcal{A}_{\varphi}$ associated with $\varphi=\Diamond\square a_1 \wedge \square \neg(a_2 \wedge a_3)$.}
+\label{ch03:fig:toyExamSingle}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{example}\label{ch03:examp:singleRS}
+As shown in Figure~\ref{fig:toyExamSingle}, the robot has to go from region $\pi_0$ to $\pi_3$ and stay there, meanwhile avoid all regions satisfying properties $a_2$ or $a_3$.
+Three alternative  plans are obtained by varying $\alpha$ ($\gamma=5$), as shown in Figure~\ref{fig:singleMot}: (i) when the penalty on violating $\varphi$ is low, $\mathcal{A}_{\varphi}$ is revised by adding $q_1$ to $\delta(q_0,\,\emptyset)$, $q_1$ to $\delta(q_1,\,\emptyset)$ and the balanced plan is $[\pi_0]^{\omega}$ (black hexagram, $\textup{\texttt{cost}}_{\tau}$~30, $\textup{\texttt{dist}}_{\varphi}$~6); (ii) when the penalty is increased, $\mathcal{A}_{\varphi}$ is revised by adding
+$q_1$ to $\delta(q_0,\,\{a_2,\, a_3\})$, where the balanced plan is $\pi_0 \, \pi_1 \, [\pi_3]^{\omega}$ (blue square, $\textup{\texttt{cost}}_{\tau}$~65, $\textup{\texttt{dist}}_{\varphi}$~2); (iii) when the penalty is severe, $\mathcal{A}_{\varphi}$ is revised by adding $q_1$ to $\delta(q_0,\,\{a_2\})$, where the balanced plan is $\pi_0 \, \pi_2  \, [\pi_3]^{\omega}$ (cyan triangle, $\textup{\texttt{cost}}_{\tau}$~85, $\textup{\texttt{dist}}_{\varphi}$~1). Note that in (iii) the robot passes through $\pi_2$ which satisfies only $a_2$, instead of $\pi_1$ which satisfies both~$a_2$ and~$a_3$. \hfill $\blacktriangle$
+\end{example}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[t]
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[height =0.65\textwidth]{figures/ch03/toyExamSingle}
+%\caption{The total cost of the optimal accepting path under different values of $\alpha$.}
+  \end{minipage}
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+    \includegraphics[height =0.65\textwidth]{figures/ch03/singleMot2.pdf}
+\end{minipage}
+\caption{Left: the total cost of the balanced runs when $\gamma=5$ under different $\alpha$. Right: the unique balanced runs, located by their $\texttt{cost}_{\tau}$ ($x$-axis) and $\texttt{dist}_{\varphi}$ ($y$-axis).}
+\label{ch03:fig:singleMot}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Soft and hard specifications}\label{ch03:sec:soft-hard}
+
+The previous section presents how to synthesis a balanced motion and task plan that satisfies the potentially-infeasible task as much as possible. However, sometimes a specification contains two distinctive parts: one part for hard constraints that concerns safety or security and should not be violated for all time; another part for soft constraints and additional achievement that should be satisfied as much as possible. In this section, we propose a solution that meets these requirements.
+%==========
+%==========
+\subsubsection{Problem formulation}\label{ch03:subsec:formulation}
+The robot's finite transition system is still denoted by $\mathcal{T}_c$ from Definition~\ref{def:FTS}. Its {task specification} remains an LTL formula over $AP$, but with the following structure:
+\begin{equation}\label{ch03:eq:spec}
+\varphi=\varphi^{\text{soft}} \, \wedge \, \varphi^{\text{hard}},
+\end{equation}
+where $\varphi^{\text{soft}}$ and $\varphi^{\text{hard}}$ are ``soft'' and ``hard'' sub-formulas;  $\varphi^{\text{hard}}$ could include safety constraints like  collision avoidance: ``avoid all obstacles'' or power-supply guarantee: ``visit the charging station infinitely often'';
+$\varphi^{\text{soft}}$ could include performance requirements like ``collect as many objects'' but the location of some objects is not known. Introducing soft and hard specifications is due to the observation that the partially-known workspace considered in Section~\ref{sec:partial} might render parts of the specification infeasible initially and thus yield the needs for them to be relaxed, while the safety-critical parts should not be relaxed during the process.
+
+\begin{problem}
+Given the task specification by~\eqref{eq:spec}, how to synthesize the motion and task plan such that $\varphi^{\textup{hard}}$ is satisfied \textbf{fully}, while $\varphi^{\textup{soft}}$ is satisfied \textbf{the most}? \hfill $\blacktriangle$
+\end{problem}
+%=======
+
+\subsubsection{Safety-ensured product automaton}\label{ch03:subsec:intersection}
+
+Now there are two levels of specifications by $\varphi^{\text{hard}}$ and $\varphi^{\text{soft}}$, with respect to which the property of a plan can be stated more specifically.
+
+%============
+\begin{definition}\label{ch03:def:vs}
+An finite or infinite path $\tau=\pi_1\pi_2\cdots$ of $\mathcal{T}_c$ is called: (i) \textbf{valid} if $(\pi_i,\, \pi_{i+1})\in \longrightarrow_c$, for $i=1,2,\cdots$; (ii) \textbf{safe} if $\tau \models \varphi^{\textup{hard}}$; (iii) \textbf{satisfying} if $\tau \models \varphi$.     \hfill $\blacktriangle$
+\end{definition}
+
+ Let $\mathcal{A}^{\text{hard}}=(Q_1, \,2^{AP},\, \delta_1,\, Q_{1,0},\, \mathcal{F}_1)$ and $\mathcal{A}^{\text{soft}}=(Q_2, \,2^{AP},\, \delta_2,\, Q_{2,0},\, \mathcal{F}_2)$ be the NBA associated with $\varphi^{\text{hard}}$ and $\varphi^{\text{soft}}$, respectively. Detailed definition can be found in Section~\ref{subsec:NBA}. The functions $\chi_1(\cdot)$ of $\mathcal{A}^{\text{hard}}$ and $\chi_2(\cdot)$ of $\mathcal{A}^{\text{soft}}$  are defined analogously as~\eqref{eq:chi}. Now we propose a way to construct the relaxed but safety-ensured intersection of $\mathcal{A}^{\text{hard}}$ and $\mathcal{A}^{\text{soft}}$.
+
+%============
+\begin{definition}\label{ch03:def:conj}
+The relaxed intersection of $\mathcal{A}^{\textup{hard}}$ and $\mathcal{A}^{\textup{soft}}$ is defined by:
+\begin{equation}\label{ch03:eq:intersect}
+\tilde{\mathcal{A}}_{\varphi}=(Q,\, 2^{AP},\, \delta, \, Q_0,\, \mathcal{F}),
+\end{equation}
+where $Q=Q_1 \times Q_2 \times \{1,2\}$; $Q_{0}=Q_{1,0} \times Q_{2,0} \times \{1\}$; $\mathcal{F}=\mathcal{F}_{1}\times Q_{2} \times \{1\}$;   $\delta: Q \times 2^{AP} \rightarrow 2^Q$, with $ \langle \check{q}_1,\, \check{q}_2,\, \check{t}\rangle \in \delta(\langle q_1,\, q_2,\, t\rangle, \,l)$ when three conditions hold: (1) $l\in \chi_1(q_1,\,\check{q}_1)$; (2) $\chi_2(q_2,\,\check{q}_2)\neq \emptyset$; (3) $q_{t}\notin \mathcal{F}_{t}$ and $\check{t} =t $, \emph{or} $q_{t}\in \mathcal{F}_{t}$ and $\check{t} =\textup{\texttt{mod}}\, (t ,\, 2)+1$, where $t\in\{1,2\}$ and $\textup{\texttt{mod}}$ is the modulo operation. \hfill $\blacktriangle$
+\end{definition}
+
+Algorithm~\ref{alg:relaxedint} constructs $\tilde{\mathcal{A}}_{\varphi}$ by Definition~\ref{def:conj}. Note that $\tilde{\mathcal{A}}_{\varphi}$ remains a B\"uchi automaton. We relax the requirement that there should exist a common input alphabet that enables the transitions from $q_i$ to $\check{q}_i$ for $i\in \{1, 2\}$, compared with the standard definition of B\"uchi automata intersection (see Chapter 4.3 of~\cite{baier2008principles}).  An accepting run $r$ of $\tilde{\mathcal{A}}_{\varphi}$ intersects with the accepting set $\mathcal{F}$ infinitely often. The last component $t\in\{1,2\}$ in $Q$ ensures that $r$ has to intersect with both $\mathcal{F}_1\times Q_2 \times \{1\}$ and ${Q}_1\times \mathcal{F}_2 \times \{2\}$. This fact is used in the proof of Theorem~\ref{theo:saferun} below. Denote by $r|_{Q_1}$ and $r|_{Q_2}$ the projection of $r$ onto the states of $\mathcal{A}^{\text{hard}}$ and $\mathcal{A}^{\text{soft}}$, respectively.
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{algorithm}[t]
+\DontPrintSemicolon
+%\LinesNumbered
+%\DontPrintSemicolon
+%\LinesNumbered
+\caption{Relaxed intersection, \texttt{RelaxInt}( )}
+\label{ch03:alg:relaxedint}
+\KwIn{$\mathcal{A}^{\textup{soft}}$, $\mathcal{A}^{\textup{hard}}$}
+\KwOut{$\tilde{\mathcal{A}}_{\varphi}$}
+\ForEach{$q_1\in Q_1$, $q_2\in Q_2$, $t\in\{1,\,2\}$}{
+  $q_m=\langle q_1,\, q_2, t \rangle\in Q$\;
+
+  If ($q_1\in Q_{1,0}$, $q_2 \in Q_{2,0}$, $t\in\{1\}$), then $q_m \in Q_0$
+
+  If ($q_1\in \mathcal{F}_1$, $t\in\{1\}$), then $q_m \in \mathcal{F}$
+
+%\ForEach(\tcp\star[f]{transition relation $\delta'$}){$q'_s= \langle \pi_j,\, q_n \rangle\in Q'$}{
+\ForEach{$\check{q}_1 \in \textup{\texttt{Post}} (q_1)$, $\check{q}_2\in \textup{\texttt{Post}}(q_2)$, $\check{t}\in \{1,\,2\}$}{
+  $q_n=\langle \check{q}_1,\, \check{q}_2, \check{t} \rangle\in Q$\;
+
+\If{$\left(q_1\notin \mathcal{F}_1,\; t\in\{1\},\; \check{t}\in\{1\}\right)$ or
+$\left(q_2\notin \mathcal{F}_2, \; t\in\{2\}, \; \check{t}\in\{2\}\right)$ or \\
+$\left(q_1 \in \mathcal{F}_1, \; t\in\{1\}, \; \check{t}\in\{2\}\right)$ or
+$\left(q_2 \in \mathcal{F}_2,\; t\in\{2\}, \; \check{t}\in\{1\}\right)$
+}
+{
+%$q_n\in \delta(q_m,\, L_c(\pi_i))$
+$q_n \in \delta(q_m, l)$,\; $\forall l \in \chi_1(q_1,\,\check{q}_1)$\;
+}
+}
+}
+\textbf{return} $\tilde{\mathcal{A}}_{\varphi}$
+\end{algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%==========================
+\begin{theorem}\label{ch03:theo:saferun}
+Given an accepting run $r$ of $\tilde{\mathcal{A}}_{\varphi}$, $r|_{Q_1}$ is an accepting run of $\mathcal{A}^{\textup{hard}}$. Moreover, $\mathcal{L}_{\omega}(\tilde{\mathcal{A}}_{\varphi})\subseteq \mathcal{L}_{\omega}(\mathcal{A}^{\textup{hard}})$.
+\end{theorem}
+\begin{proof}
+By definition, at least one of accepting states in $\mathcal{F}$ should appear in $r$ infinitely often. The projection of $\mathcal{F}$ onto $Q_1$ is $\mathcal{F}_1$, therefore one of the accepting states in $\mathcal{F}_1$ is visited infinitely often by $r|_{Q_1}$. Secondly, since $l\in \chi_1(q_1,\,\check{q}_1)$ is ensured by Definition~\ref{def:conj}, all transitions along $r$ are valid for $\mathcal{A}^{\text{hard}}$. As a result, $r|_{Q_1}$ is an accepting run of $\mathcal{A}^{\text{hard}}$. For the second part, given any infinite word $\sigma\in \mathcal{L}_{\omega}(\tilde{\mathcal{A}}_{\varphi})$, $\sigma$ results in an accepting run of $\tilde{\mathcal{A}}_{\varphi}$ by Definition~\ref{def:cor-run}, denoted by $r_{\sigma}$. It has been proved that $r_{\sigma}|_{Q_1}$ is also an accepting run of  $\mathcal{A}^{\text{hard}}$, which implies that $\sigma \in \mathcal{L}_{\omega}(\mathcal{A}^{\text{hard}})$. Thus for any $\sigma \in \mathcal{L}_{\omega}(\tilde{\mathcal{A}}_{\varphi})$, $\sigma \in \mathcal{L}_{\omega}(\mathcal{A}^{\text{hard}})$ holds, namely $\mathcal{L}_{\omega}(\tilde{\mathcal{A}}_{\varphi})\subseteq \mathcal{L}_{\omega}(\mathcal{A}^{\text{hard}})$.
+%The reason that $\mathcal{L}_{\omega}(\tilde{\mathcal{A}}_{\varphi_k})$ is a subset of $\mathcal{L}_{\omega}(\mathcal{A}_k^{\text{hard}})$ is because $\mathcal{A}_k^{\text{soft}}$ might enforce additional constraints.
+\end{proof}
+
+Since we need to guarantee that $\varphi^{\text{hard}}$ is fulfilled fully and $\varphi^{\text{soft}}$ is satisfied as much as possible, we rely on the relaxed product automaton proposed previously to handle both feasible and potentially infeasible specifications.
+
+
+\begin{definition} \label{ch03:def:safe}
+The safety-ensured and relaxed product B\"uchi automaton $\tilde{\mathcal{A}}_{r}=\mathcal{T}_c \, {\times}\, \tilde{\mathcal{A}}_{\varphi}=(Q',\, \delta', \, Q_0',\, \mathcal{F}',\, W_p)$ is defined as follows:
+$Q'=\Pi \times Q =\{ \langle \pi,\, q \rangle\,|\, \forall \pi\in \Pi,\, \forall q \in Q \}$;
+ $\delta': Q' \rightarrow 2^{Q'}$. $\langle \pi_j,\, q_n \rangle\in \delta'(\langle \pi_i,\, q_m \rangle)$ if and only if $(\pi_i,\pi_j)\in \longrightarrow_c$ and $q_n\in \delta(q_m,\, L_c(\pi_i))$;
+$Q_{0}'= \Pi_{0}\times Q_0$ and $\mathcal{F}'=\Pi \times \mathcal{F}$ are the initial and  accepting states; $W_r:Q'\times Q'\rightarrow \mathbb{R}^+$ is the weight function:
+\begin{equation}\label{ch03:eq:weight-soft}
+\begin{split}
+ \,&W_r(\langle \pi_{i},\,q_m\rangle, \, \langle \pi_{j},\,q_n\rangle)\\
+=\,&W_c(\pi_i, \,  \pi_j)+\alpha \cdot \textup{\texttt{Dist}}(L_c(\pi_i), \, \chi_2(q_2,\, \check{q}_2))
+\end{split}
+\end{equation}
+where $\langle \pi_{j},\,q_n\rangle\in \delta'(\langle \pi_{i},\,q_m\rangle)$; $q_m=\langle q_1,\, q_2, t \rangle$; $q_n=\langle \check{q}_1,\, \check{q}_2, \check{t} \rangle$; $\alpha \geq 0$ is a design parameter; function \textup{\texttt{Dist}($\cdot$)} is defined in~\eqref{eq:setdist}.  \hfill $\blacktriangle$
+\end{definition}
+
+The weight function consists of two parts: $W_c(\pi_i,\,\pi_j)$ measures the implementation cost of the transition from $\pi_i$ to $\pi_j$; $\texttt{Dist}(L_c(\pi_i),\, \chi_2(q_2,\,\check{q}_2))$ measures how much this transition violates the constraints imposed by~$\mathcal{A}^{\text{soft}}$;~$\alpha$ reflects the relative penalty on violating the soft specification.
+%In the following we show that for any accepting run $R_k$ of $\tilde{\mathcal{A}}_{p,k}$ its projection on $\pi$ $\tau_k = R_k|_{\Pi}$ is both valid and safe for $\mathcal{T}_k$ and $\varphi_k^{\text{hard}}$.
+%===========================
+%==========================
+\begin{theorem}\label{ch03:theo:safety}
+Assume $R$ is an accepting run of $\tilde{\mathcal{A}}_{r}$. Its projection on $\Pi$, $\tau=R|_{\Pi}$, is both \textbf{valid} and \textbf{safe} for $\mathcal{T}_c$ and $\varphi$ by Definition~\ref{def:vs}.
+\end{theorem}
+\begin{proof}
+Firstly, $\tau$ is valid since every transition in $\delta'$ corresponds to a valid transition within~$\longrightarrow_c$. Then since $R$ is an accepting run of $\tilde{\mathcal{A}}_{r}=\mathcal{T}_c  {\times} \tilde{\mathcal{A}}_{\varphi}$, then $\texttt{trace}(\tau)\in \mathcal{L}_{\omega}(\tilde{\mathcal{A}}_{\varphi})$, i.e., $\texttt{trace}(\tau)\in \mathcal{L}_{\omega}({\mathcal{A}}^{\text{hard}})$ by Theorem~\ref{theo:saferun}. Since $\texttt{Words}(\varphi^{\text{hard}})= \mathcal{L}_{\omega}({\mathcal{A}}^{\text{hard}})$ by Lemma~\ref{lem:LTL-BA},  $\texttt{trace}(\tau)\in \texttt{Words}(\varphi^{\text{hard}})$, i.e.,~$\tau \models \varphi^{\text{hard}}$, thus $\tau$ is  safe.\end{proof}
+
+%==========================
+%==========================
+%==========================
+%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{algorithm}[t]
+% \caption{Validate transitions of $\tilde{\mathcal{A}}_{\varphi}$, \texttt{CheckTranS}( )} \label{ch03:alg:checkEdgeS}
+% %\LinesNumbered
+% \DontPrintSemicolon
+% %\LinesNumbered
+% %\DontPrintSemicolon
+% \KwIn{$(q_m,\, l,\, q_n, \, \tilde{\mathcal{A}}_{\varphi})$, $q_m,\, q_n\in Q$, $l\in 2^{AP}$}
+% \KwOut{distance $d$}
+% %$q_m=\langle q_1,\, q_2, c \rangle$, $q_n=\langle \check{q}_1,\, \check{q}_2, \check{c} \rangle$\;
+% %\If{$L_c(\pi_i)\in \chi_1(q_1,\,\check{q}_1)$}{
+% %add $q'_g$ to $\delta'(q'_s)$\;
+% %compute its weight $W_p(q'_s,\,q'_g)$ by~\eqref{weight}\;
+% %\textbf{return} \texttt{True}
+% %}
+% $q_m=\langle q_1,\, q_2,\, t \rangle$, $q_n=\langle \check{q}_1,\, \check{q}_2,\, \check{t} \rangle$\;
+% $d=-1$ \;
+% \If{$q_n\in \delta(q_m,\, l)$}
+% {$d= \, \textup{\texttt{Dist}}(l, \, \chi_2(q_2,\, \check{q}_2))$ by~\eqref{eq:setdist}\;
+% }
+% \textbf{return} $d$
+% \end{algorithm}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Same as before, to measure the implementation cost of different accepting runs of $\tilde{\mathcal{A}}_{r}$ and how much they violate the soft specification, we consider the accepting runs with the \emph{prefix-suffix} structure by~\eqref{eq:prod-Apath2}. However its total cost is defined by:
+\begin{equation}\label{ch03:eq:prod-cost3}
+\begin{split}
+\texttt{Cost}(R,\, \tilde{\mathcal{A}}_{r})&=\sum_{i=0}^{f-1} W_{r}(q'_i,\, q'_{i+1})+\gamma \sum_{i=f}^{n-1} W_{r}(q'_i,\, q'_{i+1})=\texttt{cost}_{\tau}+\alpha\cdot \texttt{dist}_{\varphi^{\textup{soft}}}\, ,
+\end{split}
+\end{equation}
+where $\gamma\geq 0$; the implementation cost of $\tau=R|_{\Pi}$ is
+$\texttt{cost}_{\tau}=(\sum_{i=0}^{f-1} \, +\,\gamma \sum_{i=f}^{n-1} )$ $W_{c}(\pi_i,\, \pi_{i+1});$
+the accumulated distance of $\tau$ with respect to $\mathcal{A}_{\varphi^{\text{soft}}}$ is
+$\texttt{dist}_{\varphi^{\text{soft}}}=(\sum_{i=0}^{f-1} \, +\, \gamma \sum_{i=f}^{n-1})$ $\texttt{Dist}(L_c(\pi_i),\, \chi_2(q'_{i}|_{Q_2},q'_{i+1}|_{Q_2})),$ where  $q'_{i}|_{Q_2}$ and $q'_{i+1}|_{Q_2}$ are the projection of $q'_i$ and $q'_{i+1}$ onto $Q_2$.
+%The design parameter $\gamma$ represents the relative weighting on the cost of transient response (the prefix) and steady response (the suffix) to the task specification as defined in~\eqref{eq:prod-cost}.
+
+\begin{problem}\label{ch03:pro:safe}
+Find the accepting run of $\tilde{\mathcal{A}}_{r}$ that \textbf{minimizes} the cost by~\eqref{eq:prod-cost3}. \hfill $\blacktriangle$
 \end{problem}
 
-The computation associated with
-Problem~\ref{prob:task_driven_transfer} is fully local and straightforward.
-Each robot stores the subscription requests it has received, checks
-which subscribers are currently reachable in $\mathcal{G}^{t}$, and filters
-every fresh sensing tuple through the corresponding task vocabulary. Once the
-resulting replies are delivered, the receiving robot updates its current
-abstraction and invokes the history-aware revision step from
-Algorithm~\ref{alg:history_revision} whenever the current continuation becomes
-invalid or unsafe. Hence collaborative knowledge transfer does not replace the
-single-robot adaptation mechanism; it supplies additional evidence that enters
-that mechanism in exactly the same format as local perception.
-Algorithm~\ref{alg:task_driven_transfer} addresses
-Problem~\ref{prob:task_driven_transfer} and provides the communication and
-revision mechanism required by
-Problem~\ref{prob:collaborative_local_planning}.
+We call the solution to Problem~\ref{pro:safe} as the \emph{safe} accepting run of $\tilde{\mathcal{A}}_{r}$, denoted by $R_{\textup{safe}}$. The corresponding \emph{safe} plan is $\tau_{\textup{safe}}=R_{\textup{safe}}|_{\Pi}$.
 
-\begin{algorithm}[t]
-\caption{Task-driven transfer and local revision at robot $i$}
-\label{alg:task_driven_transfer}
-\DontPrintSemicolon
-\KwIn{Current abstraction $\mathcal{T}_{i}^{t}$, current run $\varrho_{i}^{t}$,
-local packet $\mathbf{Sense}_{i}^{t}$, received packets
-$\{\mathbf{Reply}_{k \rightarrow i}^{t}\}_{k \in \mathcal{N}_{i}^{t}}$}
-\KwOut{Updated run $\varrho_{i}^{t^{+}}$}
-Identify the current neighbor set $\mathcal{N}_{i}^{t}$ from
-$\mathcal{G}^{t}$\;
-\ForEach{$j \in \mathcal{N}_{i}^{t}$ that has not been contacted before}{
-  send the subscription request
-  $\mathbf{Req}_{i \rightarrow j} = (i,\mathsf{AP}_{i}^{\varphi})$\;
-}
-\ForEach{stored subscriber $(j,\mathsf{AP}_{j}^{\varphi})$ with
-$j \in \mathcal{N}_{i}^{t}$}{
-  compute $\mathbf{Reply}_{i \rightarrow j}^{t}$ by
-  \eqref{eq:task_driven_reply}\;
-  \If{$\mathbf{Reply}_{i \rightarrow j}^{t} \neq \varnothing$}{
-    transmit $\mathbf{Reply}_{i \rightarrow j}^{t}$ to robot $j$\;
-  }
-}
-Update $\mathcal{T}_{i}^{t}$ using $\mathbf{Sense}_{i}^{t}$ and all received
-packets $\mathbf{Reply}_{k \rightarrow i}^{t}$\;
-Set $\varrho_{i}^{t^{+}} \leftarrow$
-Algorithm~\ref{alg:history_revision} applied to the updated abstraction\;
-\Return{$\varrho_{i}^{t^{+}}$}\;
-\end{algorithm}
 
-Algorithm~\ref{alg:task_driven_transfer} has two structural advantages. First,
-subscription is persistent, so the task vocabulary of a recipient is announced
-only once unless the communication graph disconnects and reconnects in a way
-that requires re-subscription. Second, every transmitted reply is already
-filtered by the recipient's specification. This prevents irrelevant semantic
-information from propagating through the network and allows heterogeneous robots
-to exchange only the facts that may alter their local automata or their local
-workspace labels.
+\subsubsection{Safe plan synthesis}
 
-The following statement records the relevance property of the communication
-scheme.
+Given the values of $\alpha$ and $\gamma$,  $\tilde{\mathcal{A}}_{r}$ can be either constructed fully by Definition~\ref{def:relaxpro} or on-the-fly construction. But now the distance $d$ reflects whether the input alphabet violates the hard specification and the distance to the set of input alphabets for the soft specification. Then the safe accepting run $R_{\text{safe}}$ can be obtained in the prefix-suffix format by calling Algorithm~\ref{alg:optimal} with respect to $\tilde{\mathcal{A}}_{r}$. By Theorem~\ref{theo:safety}, its corresponding plan $\tau_{\text{safe}}$ is always valid and safe no matter how $\alpha$ and $\gamma$ are chosen.
 
-\begin{lemma}
-\label{lem:task_relevance_transfer}
-For any robots $i,j \in \mathcal{N}$ and any time $t$, every proposition
-contained in a tuple of $\mathbf{Reply}_{i \rightarrow j}^{t}$ belongs to
-$\mathsf{AP}_{j}^{\varphi}$.
+
+Same as in Section~\ref{sec:infeasible}, the value of $\alpha$ could be tuned by calling Algorithm~\ref{alg:optimal} under different $\alpha$ to generate candidates of $R_{\textup{safe}}$. The associated $\texttt{cost}_{\tau}$ and $\texttt{dist}_{\varphi^{\textup{soft}}}$ can be computed similarly. After deciding the safe accepting run, its corresponding plan $\tau_{\textup{safe}}$ can be implemented by the hybrid control strategy following Algorithm~\ref{alg:hybrid}.
+
+
+\begin{lemma}\label{ch03:lem:distanceProofsafe}
+If $\textup{\texttt{dist}}_{\varphi^{\textup{soft}}}=0$, then $\tau_{\textup{safe}} \models \varphi$.
 \end{lemma}
-
 \begin{proof}
-By \eqref{eq:task_driven_reply}, every positive or negative proposition in
-$\mathbf{Reply}_{i \rightarrow j}^{t}$ is obtained by intersecting the raw
-sensing sets $\Sigma^{+}$ and $\Sigma^{-}$ with
-$\mathsf{AP}_{j}^{\varphi}$. No proposition outside
-$\mathsf{AP}_{j}^{\varphi}$ can therefore appear in the transmitted packet.
+By Lemma~\ref{lem:distanceProof}, if $\textup{\texttt{dist}}_{\varphi^{\text{soft}}}=0$, $R_{\text{safe}}$ is an accepting run for the un-relaxed product $\mathcal{T}_c\times \mathcal{A}_{\varphi}$ by Definition~\ref{def:relaxpro}, where $\mathcal{A}_{\varphi}$ is the un-relaxed intersection~\citep{baier2008principles} of $\mathcal{A}_{\varphi^{\textup{soft}}}$ and $\mathcal{A}_{\varphi^{\textup{hard}}}$. Thus its corresponding plan $\tau_{\textup{safe}}$ satisfies $\varphi$ by Lemma~\ref{lem:satisfy}.
 \end{proof}
 
-Lemma~\ref{lem:task_relevance_transfer} shows that the protocol is
-task-driven in a precise sense: communication is restricted to information that
-may affect the recipient's local temporal task. This property is important
-because the communication graph can be sparse or time-varying, and the planning
-architecture should not consume bandwidth on semantic facts that are irrelevant
-to the current specification.
+% Given the desired value of $\alpha$ and $\gamma$,  $\tilde{\mathcal{A}}_{r}$ can be fully constructed in a similarly way as Algorithm~\ref{alg:product} where the line~7 should be changed to ``\texttt{If}{$\pi_j \in \texttt{Post} (\pi_i)$ \emph{and} $q_n\in \texttt{Post}(q_m)$}"  and line~9 should be changed according to~\eqref{eq:weight-soft}. Then Algorithm~\ref{alg:optimal} could be called, which solves Problem~\ref{pro:safe} and generates the safe and balanced accepting run $R_{\text{safe}}$. On the other hand, if the on-the-fly construction as introduced in Section~\ref{subsec:alg-imp} is applied, the adjacency relation in Algorithm~\ref{alg:adjacency} remains the same but Algorithm~\ref{alg:checkEdgeP} should be revised as shown in Algorithm~\ref{alg:checkEdgeS}. Since all transitions in $\mathcal{T}_c$ is allowed, Algorithm~\ref{alg:checkEdgeR} always returns true while the weight is computed by~\eqref{eq:weight-soft}.
 
-The next result shows that the collaborative mechanism yields a correct solution
-to Problem~\ref{prob:collaborative_local_planning} under sound exchanged
-semantic information.
+%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{algorithm}[t]
+% \caption{Check potential transition $(q'_s,\, q'_g)$ of $\tilde{\mathcal{A}}_{r}$, \texttt{CheckTranS}(~)} \label{ch03:alg:checkEdgeS}
+% \LinesNumbered
+% \DontPrintSemicolon
+% %\LinesNumbered
+% %\DontPrintSemicolon
+% \KwIn{pair of states $(q'_s,\, q'_g)$, $\tilde{\mathcal{A}}_{r}$}
+% \KwOut{boolean value to indicate if $q_g'\in \delta'(q'_s)$}
+% $q'_s=\langle \pi_i,\,q_m\rangle$, $q'_g=\langle \pi_j,\,q_n\rangle$\;
+% $q_m=\langle q_1,\, q_2, t \rangle$, $q_n=\langle \check{q}_1,\, \check{q}_2, \check{t} \rangle$\;
+% \If{$L_c(\pi_i)\in \chi_1(q_1,\,\check{q}_1)$}{
+% add $q'_g$ to $\delta'(q'_s)$\;
+% $W_p(q'_s,\,q'_g)=W_c(\pi_i,   \pi_j)+\alpha \cdot \textup{\texttt{Dist}}(L_c(\pi_i), \, \chi_2(q_2, \check{q}_2))$ \;
+% \textbf{return} \texttt{True}
+% }
+% \textbf{return} \texttt{False}
+% \end{algorithm}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{theorem}
-\label{thm:collaborative_transfer_correctness}
-Fix a robot $i \in \mathcal{N}$. Suppose every received packet
-$\mathbf{Reply}_{k \rightarrow i}^{t}$ is sound with respect to the true
-workspace semantics. Let $\mathcal{T}_{i}^{t^{+}}$ be the abstraction obtained
-after incorporating local sensing and all received packets at time $t$, and let
-$\varrho_{i}^{t^{+}}$ be the run returned by
-Algorithm~\ref{alg:task_driven_transfer}. Then the projected run
-$\rho_{i}^{t^{+}} \triangleq \mathrm{proj}_{S_{i}}(\varrho_{i}^{t^{+}})$ is
-valid on $\mathcal{T}_{i}^{t^{+}}$ and satisfies
-$\varphi_{i}^{\mathrm{hard}}$.
+
+%=======
+%\subsubsection{Case Study}\label{ch03:subsec:safe-demo}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{On-line plan adaptation}\label{ch03:sec:partial}
+It is rarely the case that the system model, i.e., the transition system, is consistent with the actual workspace and robot dynamics. It means that the motion and task plan synthesized off-line may not be executed as expected. As a result, a real-time on-line control framework is needed, where the planning and execution are interleaved as shown in Figure~\ref{fig:online}.  If the actual workspace is different from the workspace model, it is crucial to put the planner on-line and make it dynamic, such that it can monitor the plan execution, update the system model based on the real-time observation, and validate or revise the current plan.
+
+%%%%%%%%%%%%%%%%%%%
+\begin{figure}[t]
+\centering
+\includegraphics[height =6cm]{figures/ch03/on-line-plan.pdf}
+\caption{Diagram for the on-line planning and execution module.}
+\label{ch03:fig:online}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%
+
+Thus we discuss here how the FTS could be updated based on the robot's observations that come from both its sensing or communication functionality.  We denoted by $\mathcal{T}_c^t$ the transition system at time $t\geq 0$, particularly
+\begin{equation}\label{ch03:eq:t-FTS}
+ \mathcal{T}_c^t=(\Pi,\, \longrightarrow_c^t,\, \Pi_0,\,AP,\, L_c^t,\, W_c^t),
+\end{equation}
+where the superscript indicates the time. Note that (i) the set of regions $\Pi$ is static, meaning that no new regions are added or existing regions are removed; (ii) the set of initial states $\Pi_0$ and the set of known atomic propositions $AP$ are also static as before. Furthermore, its task specification consists of hard and soft parts:
+$
+\varphi=\varphi^{\text{soft}} \, \wedge \, \varphi^{\text{hard}},
+$
+as introduced in~\eqref{eq:spec}, which is invariant after the system starts. Denote by $\tilde{\mathcal{A}}_{\varphi}$ the relaxed intersection automaton from Algorithm~\ref{alg:relaxedint}.
+
+\begin{problem}
+Assume the workspace is partially-known. The following problems are posed: (i) how to \textbf{model} the robot's sensing and communication functionalities; (ii) how to \textbf{update} the transition system accordingly; (iii) how to guarantee the motion and task plan is always \textbf{valid and safe}. \hfill $\blacktriangle$
+\end{problem}
+
+
+\subsubsection{Initial plan synthesis}
+
+At $t=0$, the initial motion and task plan can be obtained by the method proposed in Section~\ref{sec:soft-hard}, given the initial transition system $\mathcal{T}_c^0$ and $\varphi$.  Denote by $R^t$, $\tau^t=R^t|_{\Pi}$, $\tilde{\mathcal{A}}_r^t$ the obtained safe accepting run, the safe plan and the relaxed product automaton at time $t\geq 0$. In this section, we assume that $\tilde{\mathcal{A}}_r^t$ is constructed on-the-fly and $R^t$ is obtained by Algorithm~\ref{alg:optimal} for $\tilde{\mathcal{A}}_r^t$. Note that the soft specification may be infeasible initially but it is guaranteed by Theorem~\ref{theo:safety} that $\tau^0$ is safe and valid for $\mathcal{T}_c^0$.
+
+
+%=============
+\subsubsection{Real-time knowledge update}\label{ch03:subsec:knowledge-update}
+
+The robot we consider has both the sensing ability to discover the workspace and the communication functionality to communicate with external sources. In this section, we discuss how these functionalities can be modeled.
+
+Denote by $\textbf{Sense}^t$ as the set of sensing information obtained at time $t\geq 0$. Note that this information might be gathered when a robot reaches a region or during the transition from one region to another. It has the following format:
+\begin{equation}\label{ch03:eq:sense-info}
+\textbf{Sense}^t =  \{\left((\pi,\,S,\,S_{\neg}),\, E,\, E_{\neg}\right)\},
+\end{equation}
+where $\pi\in \Pi$ stands for a perceived region; $S\subseteq {AP}$ is the set of propositions satisfied by this region; $S_{\neg}\subseteq{AP}$ is the set of propositions not satisfied by this region; $(\pi_i,\, \pi_j,\, w)\in E$ if $(\pi_i,\, \pi_j)$ needs to be added to $\longrightarrow^t_c$ with weight $w$ or its weight is updated to $w$;  $(\pi_i,\, \pi_j)\in E_{\neg}$ if $(\pi_i,\, \pi_j)$ needs to be removed from $\longrightarrow_c^t$.  $\textbf{Sense}^t$ reflects the actual workspace  at time~$t$.
+
+\begin{example}\label{ch03:examp:sense}
+The sensing info $\left((\pi_1, \{a_1,\, a_3\}, \{a_2\}),\, (\pi_1,\, \pi_2,\, 10), \, (\pi_1, \, \pi_3)\right)$ $\in \textup{\textbf{Sense}}^t$ is received if it is observed that region $\pi_1$ satisfies proposition $a_1$  and $a_3$ but not $a_2$; $(\pi_1,\, \pi_2,\, 10)\in E$ if the transition from  $\pi_1$ to $\pi_2$ is allowed with the cost $10$; $(\pi_1, \, \pi_3)\in E_{\neg}$ if the transition from  $\pi_1$ to $\pi_3$ is invalid.  \hfill $\blacktriangle$
+\end{example}
+
+This sensing function can be modeled by assigning a sensing radius $h>0$, such that all regions intersecting with the sphere $\{y \in \mathbb{R}^n\,|\,|y-x(t)|\leq h\}$ are visible, where $x(t)\in \mathbb{R}^n$ is the robot's position at time $t$. Different post-processing techniques might be used to abstract the essential information for~\eqref{eq:sense-info} from  raw sensing data.
+
+Besides, communication with external sources is another important mean to retrieve information. This source can be another robot, a control base station, or even an on-line database.
+Whenever this robot communicates with the external source at time $t$, it sends the following request message:
+\begin{equation}\label{ch03:eq:request-info}
+\textbf{Request}^t= \varphi|_{AP}\, ,
+\end{equation}
+which informs the external  source the set of workspace properties this robot is interested in. The reply message it gets has the following format:
+\begin{equation}\label{ch03:eq:reply-info}
+\textbf{Reply}^t= \{(\pi',\,S',\,S'_{\neg})\},
+\end{equation}
+where $ S' \subseteq (\varphi|_{AP})$ and $ S'_{\neg} \subseteq (\varphi|_{AP})$; $S'$ and $S'_{\neg}$ can not both be empty;  $\pi'\in \Pi$ is the region that satisfies $S'$ but not $S'_{\neg}$. Note that $S'$ and $S'_{\neg}$ only contain propositions that are relevant to the task $\varphi$. Depending on the actual communication protocol, the external source can decide how often it replies to the robot's request.
+
+\begin{example}\label{ch03:examp:commu}
+The reply information $(\pi_1,\, \{a_1\},\, \{a_2\})\in \textup{\textbf{Reply}}^t$ is received if region $\pi_1$ satisfies proposition $a_1$ but not $a_2$.  \hfill $\blacktriangle$
+\end{example}
+
+
+%====================
+\subsubsection{Transition system update}\label{ch03:subsubsec:updateT}
+
+
+Thus at time $t$, the robot might obtain new knowledge from $\textbf{Sense}^t$ and $\textbf{Reply}^t$ as described before, based on which it needs to update its own system model. Denote by  $\mathcal{T}_c^{t^-}$ and  $\mathcal{T}_c^{t^+}$ as the transition system  before and after the update at time $t$. Recall that $(\pi,\, S, \,S_{\neg})\in \textbf{Sense}^t$ or $\textbf{Reply}^t$  indicates that the region $\pi\in \Pi$ satisfies $S$ but not $S_{\neg}$. Then $L_c^{t^+}(\pi)=L_c^{t^-}(\pi)\, \cup\,S\, \setminus \, S_{\neg}$, where $L_c^{t^+}(\pi)$ and $L_c^{t^-}(\pi)$ are the labeling function of $\pi$ before and after the update. Regarding $E, E_{\neg}\in\textbf{Sense}^t$, new transitions are added or some existing transitions' weight is updated based on $E$ while transitions in $E_{\neg}$ are removed.
+For brevity, $\widetilde{\Pi}\subseteq \Pi$ is used to store the set of regions within~$\Pi$ of which the labeling function is changed during the update; $\widehat{\Pi}$ stores the set of regions of which the adjacency relation needs to be reconstructed. Note that if both $\textbf{Sense}^t$ and $\textup{\textbf{Reply}}^t$ are empty,   $\mathcal{T}_c^{t^+}$ remains the same as~$\mathcal{T}_c^{t^-}$.
+%   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{algorithm}[t]
+% \caption{Transition system update, \texttt{UpdaT}(~)} \label{ch03:alg:updateT}
+% %\LinesNumbered
+% \DontPrintSemicolon
+% %\LinesNumbered
+% %\DontPrintSemicolon
+% \KwIn{$\mathcal{T}_c^{t^-}$,\, $\textbf{Sense}^t$,\, $\textbf{Reply}^t$.}
+% \KwOut{$\mathcal{T}_c^{t^+}$,\, $\widetilde{\Pi}$,\, $\widehat{\Pi}$}
+% $\mathcal{T}_c^{t^+}=\mathcal{T}_c^{t^-}$\;
+% \ForEach{$(\pi,\, S, \,S_{\neg})\in \textup{\textbf{Sense}}^t$ or $\textup{\textbf{Reply}}^t$}{
+% \If{$\pi\in \Pi$}{
+% $L_c^{t^+}(\pi_{ })=L_c^{t^-}(\pi)\, \cup\,S\, \setminus \, S_{\neg}$\;
+% \If{$L_c^{t^+}(\pi)\neq L_c^{t^-}(\pi)$}
+% {add $\pi$ to $\widetilde{\Pi}$}
+% }
+% }
+% remove $(\pi_i,\,\pi_j)$ from $\longrightarrow_c^{t^+}$, $\forall(\pi_i,\,\pi_j)\in E_{\neg}$\;
+% add $(\pi_i,\,\pi_j)$ to $\longrightarrow_c^{t^+}$, $W^{t^+}_c(\pi_i,\,\pi_j)=w$,  $\forall(\pi_i,\,\pi_j,\, w)\in E$\;
+% $\widehat{\Pi} = \widetilde{\Pi} \cup \{\pi_i\,|\, (\pi_i,\,\pi_j)\in E, \; or\;  (\pi_i,\,\pi_j,w)\in E_{\neg}\}$\;
+% \textbf{return} $\mathcal{T}_c^{t^+}$,\, $\widetilde{\Pi}$,\, $\widehat{\Pi}$
+% \end{algorithm}
+% %%%
+% %=================
+\subsubsection{Safety-ensured plan revision}\label{ch03:subsec:realtime}
+
+Since $\mathcal{T}_c^t$ might be updated as described in previous part, the motion and task plan from the initial synthesis in Section~\ref{sec:soft-hard} needs to be evaluated regarding their validity, safety and optimality.
+
+\subsubsection{Product automaton update}\label{ch03:subsec:updateA}
+
+Denote by $\tilde{\mathcal{A}}_{r}^{t^-}$ and $\tilde{\mathcal{A}}_{r}^{t^+}$ as the relaxed product automaton corresponding to $\mathcal{T}_c^{t^-}$ and $\mathcal{T}_c^{t^+}$, respectively.
+%Recall that $\widetilde{\Pi}$ is the set of regions whose labeling function has changed, while $E$  and $E_{\neg}$ are two sets of transitions in $\mathcal{T}_c^{t^-}$ that have been  added and removed by Algorithm~\ref{alg:updateT}.
+To update $\tilde{\mathcal{A}}_{r}^t$, a brute-force approach would be to reconstruct the complete $\tilde{\mathcal{A}}_{r}^{t}$ from scratch by Definition~\ref{def:safe} using $\tilde{\mathcal{A}}_{\varphi}$ and  $\mathcal{T}_c^{t^+}$, or to re-evaluate all transitions within $\tilde{\mathcal{A}}_{r}^{t^-}$ that are relevant to the latest changes in $\mathcal{T}_c^{t^+}$ as proposed in~\cite{guo2013revising}. However, both methods have the complexity proportional to the number of transitions within $\mathcal{A}_{\varphi}$ and more importantly most of the updated transitions of $\tilde{\mathcal{A}}_{r}^{t^+}$ might not be used by the plan revision Algorithm~\ref{alg:revise} later.
+%It would be computationally inefficient to reconstruct $\tilde{\mathcal{A}}_{\varphi}$ using either of the above ways, in particular given the existence of the multi-robot knowledge transfer scheme and partially-known workspace.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{algorithm}[t]
+% \caption{Validate the current run, \texttt{ValidRun}(~)} \label{ch03:alg:validateR}
+% %\LinesNumbered
+% \DontPrintSemicolon
+% %\LinesNumbered
+% %\DontPrintSemicolon
+% \KwIn{$\tilde{\mathcal{A}}_{r}^{t^+}$, $R^{t}$, $\widetilde{\Pi}$, $E_{\neg}$}
+% \KwOut{$\Xi$, $\aleph$}
+% $\Xi=\aleph=\emptyset$\;
+% \ForAll{$(q'_s,\, q'_{s+1})\in \textup{\texttt{Edge}}(R^{t})$}
+% {
+% $q'_s= \langle\pi_i,\,q_m\rangle$, $q'_{s+1}=\langle\pi_j,\,q_n\rangle$\;
+% \If{$(\pi_i,\,\pi_j)\in E_{\neg}$}{
+% add $(q'_s,\, q'_{s+1})$ to $\Xi$
+% }
+% \ElseIf{$\pi_i \in \widetilde{\Pi}$}{
+% $d$ = \texttt{CheckTranS}$(q_m,\,L_c^{t^+}(\pi_i),\,q_n,\, \tilde{\mathcal{A}}_{\varphi})$\;
+%  \If{$d<0$}
+%  {
+%  add $(q'_s,\, q'_{s+1})$ to $\aleph$
+%  }
+% }
+% }
+% \textbf{return} $\Xi$, $\aleph$
+% \end{algorithm}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Thus we propose to incorporate the update information including $\widetilde{\Pi}$,  $E$ and  $E_{\neg}$ into the adjacency relation function of $\tilde{\mathcal{A}}_{r}^{t}$.
+For any region $\pi_i \in \widetilde{\Pi}$ whose labels or adjacency relation has been changed, they are stored in a new set $\widehat{\Pi}$, namely
+\begin{equation}\label{ch03:eq:widehat}
+\widehat{\Pi} = \widetilde{\Pi} \cup \{\pi_i\,|\, (\pi_i,\,\pi_j)\in E, \; or\;  (\pi_i,\,\pi_j,w)\in E_{\neg}\}.
+\end{equation}
+Thus all the transitions originated from $q'_s$ whose projection onto $\Pi$ belongs to $\widehat{\Pi}$, i.e., $q'_s|_{\Pi}\in \widehat{\Pi}$, have to be re-constructed.  In this way, the update information is used only when $q'_s$ is revisited by the revision Algorithm~\ref{alg:revise} and then $\delta'(q_s')$ is re-constructed.
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{algorithm}[t]
+% \caption{Update Product Automaton \texttt{UpdProd}(~)} \label{ch03:alg:updateP}
+% \LinesNumbered
+% \DontPrintSemicolon
+% %\LinesNumbered
+% %\DontPrintSemicolon
+% \KwIn{$\tilde{\mathcal{A}}_{r}^{t^-}$, $\widetilde{\Pi}$, $E$, $E_{\neg}$}
+% \KwOut{$\tilde{\mathcal{A}}_{r}^{t^+}$}
+% \ForAll{$\pi_i\in \widetilde{\Pi}$ \textup{and} $(\pi_i,\,\pi_j)\in (E\cup E_{\neg})$}{
+% \ForAll{$q_m \in Q$}
+% {
+% \If{$\langle \pi_i,\, q_m\rangle\in Q'$}{
+% mark $q'_s=\langle \pi_i,\, q_m\rangle$ as ``unvisited''
+% }
+% }
+% }
+% \end{algorithm}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Given the updated transition system $\mathcal{T}_c^{t^+}$ and the current plan $\tau^{t}$, two natural questions arise: (i) is $\tau^{t}$ still valid or safe? (ii) if not, how can we modify $\tau^{t}$ such that it remains valid and safe for ${\mathcal{T}}_c^{t^+}$ and $\varphi$?
+
+
+
+%=========================
+%=========================
+\subsubsection{Verifying validity and safety}\label{ch03:subsec:revising}
+Recall that the current accepting run~$R^t$ has a finite set of transitions appearing in it, i.e.,~$\texttt{Edge}(R^{t})$ by~\eqref{edgeR}. By checking~$\texttt{Edge}(R^{t})$, we could validate if the current plan~$\tau^t$ is still valid or safe.
+%Denote by $\textup{\texttt{Edge}}(R^{t^-})$ the set of transitions appearing in~$R^{t^-}$, which is finite due to the prefix-suffix structure by~\eqref{eq:prefix-suffix}.
+
+\begin{definition}\label{ch03:def:vsTS}
+Given the updated transition system $\mathcal{T}_c^{t^+}$, any transition $(\langle\pi_i,\,q_m\rangle,$ $\,\langle\pi_j,\,q_n\rangle)\in \textup{\texttt{Edge}}(R^{t})$ is called: (i)  \textbf{invalid} if $(\pi_i,\, \pi_{j})\notin \longrightarrow_c^{t^+}$; (ii) \textbf{unsafe} if $L_c^{t^+}(\pi_i)\notin \chi_1(q_m|_{Q_1},\, q_n|_{Q_1})$.\hfill $\blacktriangle$
+\end{definition}
+Recall that~$Q_1$ is the set of states of $\mathcal{A}^{\textup{hard}}$.
+We use~$\Xi$ and~$\aleph$ to store the invalid and unsafe transitions in $R^{t}$, respectively.
+They are obtained by iterating through each transition  $(\langle\pi_i,\,q_m\rangle,\,\langle\pi_j,\,q_n\rangle)$ within $\texttt{Edge}(R^{t})$ and checks if $(\pi_i,\,\pi_j)$ has been removed from $\mathcal{T}_c^{t^+}$ or if the changed label $L_c^{t^+}(\pi_i)$ would make this transition unsafe.
+
+
+
+%%%%%%%%%
+\begin{theorem}\label{ch03:theo:validity}
+Assume $R^{t}$ is an accepting run of $\tilde{\mathcal{A}}_{r}^{t^-}$; $\mathcal{T}_c^{t^-}$ is updated to $\mathcal{T}_c^{t^+}$; $\Xi$, $\aleph$ are the sets of invalid and unsafe transitions from above. Then (i) $\tau^{t}$ remains \textbf{valid} if and only if $\Xi =\emptyset$; (ii) $\tau^{t}$ remains \textbf{safe} if $\aleph=\emptyset$.
 \end{theorem}
-
 \begin{proof}
-The received packets have the same logical form as local sensing updates and
-therefore induce the same type of modification of the local abstraction. After
-all updates are incorporated, Algorithm~\ref{alg:task_driven_transfer} invokes
-Algorithm~\ref{alg:history_revision} on the updated model. The conclusion then
-follows directly from Theorem~\ref{thm:history_aware_revision}.
+Since  $R^{t}$ is an accepting run of $\tilde{\mathcal{A}}_{r}^{t^-}$, $\tau^{t}$ is both valid and safe for $\mathcal{T}_c^{t^-}$ by Theorem~\ref{theo:safety}. If~$\Xi =\emptyset$ and $\aleph =\emptyset$, $\texttt{Edge}(R^{t})$ does not contain any invalid or unsafe transitions. Thus $R^{t}$ remains an accepting run of $\tilde{\mathcal{A}}_{r}^{t^+}$. ``If'' part of (i): by Theorem~\ref{theo:safety}, $\tau^{t}$ is valid since $R^{t}$ remains an accepting run of $\tilde{\mathcal{A}}_{r}^{t^+}$. ``Only if'' part of (i): if $\Xi \neq \emptyset$, $\tau^{t}$ contains at least one invalid transition, thus not valid by Definition~\ref{def:vs}. ``If'' part of (ii):~by Theorem~\ref{theo:safety}, $\tau^{t}$ is safe since $R^{t}$ remains an accepting run of $\tilde{\mathcal{A}}_{r}^{t^+}$.
+\end{proof}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{figure}[t]
+% \begin{minipage}[t]{0.49\linewidth}
+% \centering
+% \includegraphics[width =1.2\textwidth]{figures/ch03/revise1}
+%   \end{minipage}
+% \begin{minipage}[t]{0.49\linewidth}
+% \centering
+%     \includegraphics[width =1\textwidth]{figures/ch03/revise2}
+% \end{minipage}
+%  \caption{Locally revise the invalid transitions in the prefix (left) and suffix (right) of the current accepting run.}
+%  \label{ch03:fig:tworevise}
+% \end{figure}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%========================
+%========================
+\subsubsection{Plan revision}
+
+If $\Xi$ or $\aleph$ are not empty,  $\tau^{t}$ might be invalid or unsafe. A plan revision scheme is needed to guarantee its validity and safety: one straightforward approach could be to  recall Algorithm~\ref{alg:optimal} with respect to $\mathcal{T}_c^{t^+}$ and $\mathcal{A}_\varphi$, but using the robot's current region $\pi_{\textup{cur}}$ from Algorithm~\ref{alg:hybrid} as the initial region. Let the derived accepting run and corresponding plan be $R_{\textup{new}}$ and $\tau_{\textup{new}}$. In the following, we show that even though $\tau_{\textup{new}}$ is valid and safe as proved in Theorem~\ref{theo:safety}, it can not guarantee the actual safety if we  take into account the robot's past trajectory.
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{algorithm}[t]
+% \caption{Possible product states given history, \texttt{CorProd}(~)} \label{ch03:alg:set-past}
+% %\LinesNumbered
+% \DontPrintSemicolon
+% %\LinesNumbered
+% %\DontPrintSemicolon
+% \KwIn{$\tilde{\mathcal{A}}_{r}^{t}$, $\tau_{\textup{past}}$}
+% \KwOut{$Q'_{\tau_{\textup{past}}}$}
+% $S_1=\{\langle \tau_{\textup{past}}[1], q_0\rangle\, |\, q_0 \in Q_0\}$\;
+% \For{$k=2:|\tau_{\textup{past}}|$}
+% {
+% $S_2=\emptyset$\;
+% \ForAll{$q_s'\in S_1$}
+% {
+% \ForAll{$q_g'\in \delta'(q_s')$}{
+% \If{$q_g'|_{\Pi}=\tau_{\textup{past}}[k]$}
+% {add $q_g'$ to $S_2$	\;
+% }
+% }
+% $S_1=S_2$\;
+% }
+% }
+% \textbf{return} $Q'_{\tau_{\textup{past}}}=S_1$
+% \end{algorithm}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Given the robot's past trajectory $\tau_{\textup{past}}$ and past run $R_{\textup{past}}$  from Algorithm~\ref{alg:hybrid}, its complete trajectory is obtained by {concatenating} $\tau_{\textup{past}}$ with $\tau_{\textup{new}}$, namely
+%\begin{equation}\label{ch03:eq:complete}
+$\tau_{\textup{comp}} = \tau_{\textup{past}} + \tau_{\textup{new}}$.
+%\end{equation}
+Note that $\tau_{\textup{comp}}$ remains the suffix-suffix format. A key observation is that the safety property of $\tau_{\textup{new}}$ does not ensure the safety of the robot's complete trajectory starting from time $0$. In fact, this is because when analyzing the corresponding runs of $\tau_{\textup{past}}$ and $\tau_{\textup{new}}$ in $\tilde{\mathcal{A}}_r^{t^+}$, the product state $q'_{\textup{cur}}$ (the last state of $R_{\textup{past}}$) from Algorithm~\ref{alg:hybrid}  may not be the same as the first product state in $R_{\textup{new}}$. As a result, these two segments can not be concatenated into an accepting run of $\tilde{\mathcal{A}}_r^{t^+}$.
+
+\begin{problem}\label{ch03:prob:concatenate}
+Assume $\Xi$ or $\aleph$ are not empty. Given the robot's past trajectory $\tau_{\textup{past}}$, how to find the \textbf{new plan} $\tau_{\textup{new}}$ such that its complete trajectory above is guaranteed to be \textbf{valid and safe}.  \hfill $\blacktriangle$
+\end{problem}
+
+Before stating the solution, we need to define the set of corresponding product runs given the robot's past trajectory. As pointed out in Definition~\ref{def:cor-run}, the resulting run of an infinite or finite words in $\mathcal{A}_{\varphi}$ may not be \emph{unique} because of the non-determinism of $\tilde{\mathcal{A}}_{\varphi}$. In other words, given the finite past trajectory $\tau_{\textup{past}}$, its trace may result in a set of runs in $\tilde{\mathcal{A}}_{\varphi}$, denoted by $r_{\tau_{\textup{past}}}$:
+\begin{equation}\label{ch03:eq:buchi-past}
+r_{\tau_{\textup{past}}}=\{r_{\bar{\sigma}}\; \text{by Def.~\ref{def:cor-run} for}\,\tilde{\mathcal{A}}_{\varphi}\,|\,\bar{\sigma}=\texttt{trace}(\bar{\tau}_{\textup{past}})\},
+\end{equation}
+where $\bar{\tau}_{\textup{past}}=\tau_{\textup{past}}[1:(|\tau_{\textup{past}}|-1)]$, i.e., the segment from the first state to the second last state of $\tau_{\textup{past}}$; $r_{\tau_{\textup{past}}}$ is finite because $\tau_{\textup{past}}$ is finite and the number of states in $\tilde{\mathcal{A}}_{\varphi}$ is finite.
+Consequently, the finite set of corresponding  runs in $\tilde{\mathcal{A}}_{r}^{t^+}$ is given by
+\begin{equation}\label{ch03:eq:prod-past}
+R_{\tau_{\textup{past}}}=\{R\,|\, R|_{\Pi}=\tau_{\textup{past}},\; R|_{Q}\in r_{\tau_{\textup{past}}}\},
+\end{equation}
+where each finite run $R$ is the synchronized product of $\tau_{\textup{past}}$ and any run belonging to $r_{\tau_{\textup{past}}}$ by~\eqref{eq:buchi-past}. Since $R_{\tau_{\textup{past}}}$ may contain multiple finite runs in $\tilde{\mathcal{A}}_{r}^{t^+}$, $\pi_{\textup{cur}}$ may correspond to multiple states in $\tilde{\mathcal{A}}_{r}^{t^+}$, which is denoted by
+\begin{equation}\label{ch03:eq:set-past}
+Q'_{\tau_{\textup{past}}}=\{\texttt{last}(R)\,|\, R\in R_{\tau_{\textup{past}}}\},
+\end{equation}
+where $\texttt{last}(R)$ is the last state of $R$ within $R_{\tau_{\textup{past}}}$. Clearly, $R_{\text{past}}\in R_{\tau_{\textup{past}}}$ and $q'_{\textup{cur}}\in Q'_{\tau_{\textup{past}}}$; $Q'_{\tau_{\textup{past}}}$ is derived as the reachable states in $\tilde{\mathcal{A}}_{r}^{t^+}$ given $\tau_{\textup{past}}$.
+
+%Algorithm~\ref{alg:set-past}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%$\tilde{\mathcal{A}}_{r}^{t^+}$, which  generates a new optimal accepting run of $\tilde{\mathcal{A}}_{r}^{t^+}$. But this method requires a complete new search of   $\tilde{\mathcal{A}}_{r}^{t^+}$,  which is computationally inefficient (the worst-case time complexity being  $\mathcal{O}(|\tilde{\mathcal{A}}_{r}^t| \cdot \log |\tilde{\mathcal{A}}_{r}^t|\cdot (|Q'_0| + |\mathcal{F}'|))$) in case of large $\mathcal{T}_c^t$ and complex $\varphi$, in case of real-time applications and especially when $\tilde{\mathcal{A}}_{r}^t$ has to be updated frequently.
+%%%%%%%%%%%%%%%%%%%
+\begin{figure}[t]
+\centering
+\includegraphics[height =3.0cm]{figures/ch03/patch.pdf}
+\caption{Locally revise the invalid transitions in $R^t$. The sequences of states in dashed line represent the corresponding runs given the robot's past trajectory.}
+\label{ch03:fig:tworevise}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%
+
+To solve Problem~\ref{prob:concatenate}, we propose an algorithm that is similar to Algorithm~5~in~\cite{guo2013revising}. Denote by $R^{t^-}$, $R^{t^+}$, $\tau^{t^-}$, $\tau^{t^+}$ the accepting run and corresponding plan before and after the revision, respectively. Moreover, $R_{\text{pre}}^{t^-}$ and $R_{\text{suf}}^{t^-}$ are the prefix and suffix of $R^{t^-}$, while $R_{\text{pre}}^{t^+}$ and $R_{\text{suf}}^{t^+}$ are the prefix and suffix of $R^{t^+}$.
+Given the invalid or unsafe transition $(q'_s,\,q'_{s+1})$ in $R^{t^-}$, it belongs to either $R^{t^-}_{\text{pre}}$ or $R^{t^-}_{\text{suf}}$. In Algorithm~\ref{alg:revise}, it firstly tries to locally finds a ``bridging'' segment that make up this transition by breadth-first search (as shown in Figure~\ref{fig:tworevise}).  $\texttt{tail}(q'_{s+1}, R^{t^-}_{\text{pre}})$ is  the segment of $R^{t^-}_{\text{pre}}$ after $q'_{s}$, not including $q'_{s}$; $\texttt{head}(q'_{s-1}, R^{t^-}_{\text{pre}})$ is the segment of  $R^{t^-}_{\text{pre}}$ before $q'_{s-1}$, not including $q'_{s-1}$; $\texttt{last}(bridge)$ is the last state on the path $bridge$. Function \texttt{DijksTarget}($\tilde{\mathcal{A}}_{r}^{t^+}$, $q'_S$, $Q'_T$)  is defined similarly as function \texttt{DijksTargets}($\cdot$) in~Algorithm~\ref{alg:optimal}, which returns shortest path from the source state $q'_S\in Q'$ to \emph{any} target state belonging to the set $Q'_T\subseteq Q'$. Thus it returns the shortest path once one of the targets is reached. At last, if function \texttt{DijksTarget}($\cdot$) returns an empty path $bridge$, it means that the accepting state $\textup{\texttt{last}}(R_{\textup{pre}}^{t^-})$ is not reachable from $q'_{s-1}$. Then $\texttt{OptRun}(\cdot)$ from Algorithm~\ref{alg:optimal} is called to search for the balanced accepting run of~$\tilde{\mathcal{A}}_{r}^{t^+}$, but using $Q'_{\tau_{\textup{past}}}$  as the set of initial states (instead of the default $Q'_0$). Note that in Algorithm~\ref{alg:revise} above, $R^{t^-}$ is revised iteratively and the condition $(q'_s,\,q'_{s+1})\in R^{t^-}_{\text{pre}}$ or $R^{t^-}_{\text{suf}}$ is also checked iteratively.
+
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{algorithm}[t]
+\caption{Revise the current plan, \texttt{Revise}(~)} \label{ch03:alg:revise}
+\DontPrintSemicolon
+%\LinesNumbered
+%\DontPrintSemicolon
+%\LinesNumbered
+\KwIn{$\Xi$, $\aleph$, $R^{t^-}$, $\tilde{\mathcal{A}}_{r}^{t^+}$, $Q'_{\tau_{\textup{past}}}$}
+\KwOut{$R^{t^+}$}
+\ForAll{$(q'_s,\,q'_{s+1})\in (\Xi\cup \aleph)$}{
+\If{$(q'_s,\,q'_{s+1})\in R^{t^-}_{\textup{\text{pre}}}$}{
+  $bridge$=\texttt{DijksTarget}($\tilde{\mathcal{A}}_{r}^{t^+}$, $q_{s-1}'$, \texttt{tail}($q'_{s}$, $R^{t^-}_{\text{pre}}$)) \;
+
+\If{$bridge \neq \emptyset$}{
+$R^{t^-}_{\text{pre}}$ = \texttt{head}($q'_{s-1}$, $R^{t^-}_{\text{pre}}$)+$bridge$+\texttt{tail}(\texttt{last}($bridge$), $R^{t^-}_{\text{pre}}$)\;
+}
+\Else{
+  $R^{t^+}$ = \texttt{OptRun}($\tilde{\mathcal{A}}_{r}^{t^+}$, $Q'_{\tau_{\textup{past}}}$)\;
+
+\textbf{return} $R^{t^+}$\;
+}
+}
+\If{$(q'_s,\,q'_{s+1})\in R^{t^-}_{\textup{\text{suf}}}$}{
+same as the first case, but replace $R^{t^-}_{\text{pre}}$ by $R^{t^-}_{\text{suf}}$
+%$bridge$ = \texttt{DijksTarget}($\texttt{Adj}(\tilde{\mathcal{A}}_{p,k}^t)$, $q_{s-1}'$, \texttt{suffix}($q'_{s+1}$, $R^{t^-}_{\text{suf}}$)) \;
+%\If{$bridge \neq \emptyset$}{
+%$R^{t^+}_{\text{suf}}$ = [\texttt{prefix}($q'_{s-1}$, $R^{t^-}_{\text{suf}}$) \, $bridge$ \, \texttt{suffix}(\texttt{last}($bridge$), $R^{t^-}_{\text{suf}}$)]\;
+%}
+}
+}
+\textbf{return} $R^{t^+}=\langle R^{t^-}_{\textup{\text{pre}}},\, R^{t^-}_{\textup{\text{suf}}}\rangle $\;
+\end{algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% %
+\begin{theorem} \label{ch03:theo:new-safe}
+The new plan $\tau_{\textup{new}}$ can be obtained from Algorithm~\ref{alg:revise} such that $\tau_{\textup{comp}}$ is \textbf{valid and safe}, if there exists one.
+%a valid and safe path $\tau_{\textup{comp}}$ by Definition~\ref{def:vs}, if there exists an infinite path
+%Given $\tau_{\textup{past}}$ and $\tilde{\mathcal{A}}_{r}^{t^+}$,
+\end{theorem}
+\begin{proof}
+If a new plan $\tau_{\textup{new}}$ exists such that the complete path $\tau_{\textup{comp}}$ is valid and safe, by Lemma~\ref{lem:non-empty} there exists an accepting run of $\tilde{\mathcal{A}}_{r}^{t^+}$ whose projection onto $\Pi$ is $\tau_{\textup{comp}}$. Given the invalid or unsafe transitions in $R^{t^-}$ (in prefix or suffix), firstly Algorithm~\ref{alg:revise} tries to revise $R^{t^-}$ by looking for the bridging segments. If no such segments exist, it means that the current accepting state is not reachable from $q_{s-1}'$. Instead it searches for the accepting run that starts from any of the product states in $Q'_{\tau_{\textup{past}}}$ and consists of a cycle containing at least one of accepting states in $\tilde{\mathcal{A}}_{r}^{t^+}$. It means that an accepting run that starts from one of the initial states and \emph{obeys} the robot's past trajectory exists only if a bridging segment is found for the revision in Line~3  or a new accepting run starting from $Q'_{\tau_{\textup{past}}}$ is found in Line~8.
 \end{proof}
 
-Theorem~\ref{thm:collaborative_transfer_correctness} clarifies the role of
-collaboration in the present setting. Knowledge transfer does not couple the
-robots through a joint temporal task, nor does it alter the hard-safety
-guarantee established for the single-robot case. Its purpose is narrower and
-more practical: it accelerates the refinement of each local abstraction by
-routing task-relevant information to the robots for which that information can
-change the current balanced plan.
+The overall structure of the on-line planning scheme is given in Algorithm~\ref{alg:scheme} later, where the accepting run~$R^t$ is updated by both the revision Algorithm~\ref{alg:revise} and the optimal search Algorithm~\ref{alg:optimal}.
+More details about the algorithms can be found in~\cite{guo2013cooperative}.
+The next goal region for the hybrid controller also changes accordingly.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection{Collaborative knowledge transfer}\label{ch03:sec:multi-partial}
+
+Now assume that \emph{a team} of autonomous robots coexist within the same workspace and each of them has an individual local task specified as LTL formulas. If the local task of each robot  relies on only its local propositions, the team of robots are independent that their plans can be synthesized and executed independently from each other. However since the robots are usually located at different locations within the workspace, about which they have up-to-date knowledge.  Those local knowledge, if shared among the team, might benefit each member such that they can make better and more informed plans. In the following, we propose a collaborative knowledge transfer scheme for a multi-robot system with independent local tasks.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsubsection{Multi-robot systems}\label{ch03:subsec:local-tasks}
+Formally, we consider a team of autonomous robots with unique  identities~$i\in \mathcal{N}=\{1,2,\cdots,N\}$, which coexist within the common but partially-known workspace~$\mathcal{W}$. Robot $i$'s possible motion within $\mathcal{W}$ is abstracted as a weighted FTS:
+\begin{equation}\label{ch03:eq:Tk}
+\mathcal{T}_i^t= ({\Pi}_{i},\, \longrightarrow_{i}^t, \, \Pi_{i,0},\,  AP_{i}, \,L_{i}^t ,\, W_{i}^t),
+\end{equation}
+which is defined similarly  as~\eqref{eq:t-FTS}. The superscript $t\geq 0$ indicates that the workspace is partially known and might be updated after the system starts. Each robot $i\in \mathcal{N}$ has a locally-assigned task specification $
+\varphi_i=\varphi_{i}^{\text{soft}} \, \wedge \, \varphi_{i}^{\text{hard}}$, where $\varphi_i^{\text{soft}}$ and $\varphi_i^{\text{hard}}$ are the ``soft'' and ``hard'' constraints as before from~\eqref{eq:spec}.
+
+\subsubsection{Initial synthesis}
+At $t=0$, for each robot $i\in \mathcal{N}$, the initial motion and task plan can be obtained as the safe plan by following the framework proposed in Section~\ref{sec:soft-hard}, regarding the initial transition system $\mathcal{T}_i^0$ and $\varphi_i$.  We assume here the on-the-fly construction is used. Note that the soft specification may not be feasible initially and is relaxed by the balanced accepting run. Denote by $\tilde{\mathcal{A}}_{r,i}^t$ the relaxed product automaton of robot~$i$ at time~$t$; $R_i^t$, $\tau_i^t$ as the balanced accepting run and the associated plan.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Knowledge transfer protocol}\label{ch03:subsec:know-transfer}
+In Section~\ref{sec:partial}, we describe how a single robot could update its transition system through its sensing and communication ability to inquire and retrieve knowledge from external sources.  Belonging to the same multi-robot system, the other robots could be the external source. In other words, they could share and transfer their knowledge about the workspace collectively in real-time. Now we explain how to design the knowledge transfer protocol and more importantly how to combine it with the real-time  planning scheme from Section~\ref{sec:partial}.
+
+%==================
+
+The communication network represents how the information flows among the robots. Each robot $i$ has a set of neighboring robots, denoted by $\mathcal{N}_i \subseteq \mathcal{N}$. Robot $i$ can send messages directly to any robot belonging to $\mathcal{N}_i$. We take into account two different ways to model the communication network: (1) global communication with a fixed topology; (2) limited communication with a dynamic topology. In the first case, $\mathcal{N}_i$ is pre-defined and fixed after the system starts. In the second case, each robot has a communication range, denoted by $C_i\geq 0$. Robot $i$ can only send messages to robot $j$ if their relative distance is less than $C_i$, i.e., $|x_j(t)-x_i(t)|\leq C_i$ where $x_j(t)$, $x_i(t)\in \mathbb{R}^n$ are the positions of robots $j$ and $i$ at time $t$. Then $\mathcal{N}_i^t=\{j\in \mathcal{N}|\,|x_j(t)-x_i(t)|\leq C_i \}$ is  the time-varying neighboring set of robot $i$ at time $t$.
+%==============
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{algorithm}[t]
+\caption{Transfer Knowledge to other robots, \texttt{TranKnow}(~)} \label{ch03:alg:transferAlgo}
+%\linesnumbered
+%\dontprintsemicolon
+%\LinesNumbered
+\DontPrintSemicolon
+\KwIn{$\textbf{Sense}_i^t$, $\textup{\textbf{Request}}_{j,i}^{t_0}$}
+\KwOut{$\textbf{Reply}_{i,j}^t$}
+\ForAll{${(\pi,\,S,\,S_{\neg})}\in \textup{\textbf{Sense}}_i^t$}{
+\ForAll{$\textup{\textbf{Request}}_{j,i}^{t_0}$ \textup{received at} $t_0<t$}{
+  $\textbf{Request}_{j,i}^t= (j,\, \varphi_j|_{AP_j},\, i)$\;
+
+ \If{$j\in \mathcal{N}_i^t$}{
+$S' = S\,\cap\, (\varphi_j|_{AP_j})$,\;
+$S'_{\neg} = S_{\neg}\,\cap\, (\varphi_j|_{AP_j})$\;
+
+\If{$S'\neq \emptyset$ \textup{or} $S'_{\neg}\neq \emptyset$}{
+add $(\pi,\,S',\,S'_{\neg})$ to $\textbf{Reply}_{i,j}^t$}
+}
+}
+}
+\textbf{return} $\textbf{Reply}_{i,j}^t$
+\end{algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Robot~$i$ is  {interested in} all the propositions appearing in   $\varphi_i$, namely  $\varphi_i|_{AP_i}$. We propose a \emph{subscriber-publisher}  mechanism to reduce the communication load. Whenever robot $j$ communicates with robot $i\in \mathcal{N}^t_j$ for the \emph{first} time at time $t$, it follows the \emph{subscribing} procedure: robot $j$ sends a request message to robot $i$:
+\begin{equation}\label{ch03:eq:robot-request}
+\textbf{Request}_{j,i}^t= (j,\, \varphi_j|_{AP_j},\, i),
+\end{equation}
+which informs robot $i$ the set of propositions robot $j$ is interested. Each robot has a subscriber list, containing the request messages it has received. Note that each robot also keeps track of the robots which it has subscribed to, such that it sends a request to any of its neighboring robots only once.
+
+The sensing update of robot $i$ is denoted by $\textbf{Sense}_i^t$, the structure of which is given in~\eqref{eq:sense-info}. Then the \emph{publishing} phase of each robot follows an event-driven approach: whenever $(\pi,\,S,\,S_{\neg})\in \textbf{Sense}_i^t$ is obtained, it checks its subscriber list  whether the content might be  of interest to any of the subscribers regarding some propositions. If it is of interest to robot $j$ regarding some propositions in  in $\varphi_j|_{AP_j}$, then robot $i$ checks if $j\in \mathcal{N}_i^t$. If so, it publishes a reply message to robot $j$ that
+\begin{equation}\label{ch03:eq:robot-reply}
+\textbf{Reply}_{i,j}^t= \{(\pi,\,S',\,S'_{\neg})\},
+\end{equation}
+where $ S' = S\cap (\varphi_j|_{AP_j})$ and $ S'_{\neg} = S_{\neg}\cap (\varphi_j|_{AP_j})$; Note that since $S'$ and $S'_{\neg}$ only contain propositions that are relevant to robot's task $\varphi$, every reply message should contain useful knowledge.  The above procedure is summarized in Algorithm~\ref{alg:transferAlgo}. Note that through this communication mechanism, any request only needs to be sent once and every reply message contains useful knowledge. This subscriber-publisher scheme can be easily implemented by  multicast or unicast wireless protocols.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{On-line plan verification and adaptation}\label{ch03:subsec:multi-revise}
+
+Upon receiving $\textbf{Sense}_i^t$ and $\textbf{Reply}_{j,i}^t$ from $j\in \mathcal{N}_i^t$, robot $i$ could update its transition system $\mathcal{T}_i$ accordingly. Regarding its current motion and task plan $\tau_i^t$, the validity and safety of $\tau_i^t$ needs to be verified as before. Moreover, in case $\tau_i^t$ is falsified, i.e., either invalid or unsafe, Algorithm~\ref{alg:revise} is called to revise $\tau_i^t$ such that it becomes valid and safe, where $\widetilde{\Pi}_i^t$, $\aleph_i^t$,\,\, $\Xi_i^t$ stand for the set of regions in $\mathcal{T}_i^t$ with modified labeling functions, the set of unsafe transitions and invalid transitions in $R_i^t$.
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{algorithm}[t]
+% \caption{Cooperative planning scheme for each robot $i\in \mathcal{N}$} \label{ch03:alg:scheme}
+% \linesnumbered
+% \dontprintsemicolon
+% %\LinesNumbered
+% %\DontPrintSemicolon
+% \KwIn{$\mathcal{T}_i^0$, $\tilde{\mathcal{A}}_{\varphi_i}$, $x_i(t)$}
+% \KwOut{$R_{i}^t$, $\tau_{i}^t$, $\Upsilon_i^t$, $T_i$ }
+% \If{$t=0$}{
+% $R_{i}^{0}$ = \texttt{OptRun}($\tilde{\mathcal{A}}_{p,i}^{0}$)\tcp*[r]{Algorithm~\ref{alg:optimal}}}
+% send $\textbf{Request}_{i,g}^t$\;
+% check $\textbf{Reply}_{h,i}^t$ and $\textup{\textbf{Request}}_{j,i}^{t_0}$\;
+% read $\textbf{Sense}_i^t$\;
+% send $\textup{\textbf{Reply}}_{i,j}^t$ = \texttt{TranKnow}($\textbf{Sense}_i^t$, $\textup{\textbf{Request}}_{j,i}^{t_0}$)\tcp*[r]{Algorithm~\ref{alg:transferAlgo}}
+% $(\,\mathcal{T}_i^{t^+},\, \widetilde{\Pi}^t_i, \, \widehat{\Pi}^t_i)$ = \texttt{UpdateT}($\mathcal{T}_i^{t}$, $\textbf{Sense}_i^t$, $\textbf{Reply}_{h,i}^t$) \tcp*[r]{Algorithm~\ref{alg:updateT}}
+% %$\tilde{\mathcal{A}}_{r,i}^{t^+}=\texttt{UpdProd}(\tilde{\mathcal{A}}_{r,i}^{t^-},\, \widetilde{\Pi}^t_{i},\, E,\, E_{\neg})$ \tcp*[r]{Algorithm~\ref{alg:updateP}}
+% ($\aleph_i^t$,\,\, $\Xi_i^t$) = \texttt{ValidRun}($\tilde{\mathcal{A}}_{r,i}^{t}$, $R_{i}^{t}$, $\widetilde{\Pi}^t_i$, $E_{\neg}$) \tcp*[r]{Algorithm~\ref{alg:validateR}}
+% $\Upsilon_i^{t^+} = \Upsilon_i^{t}+|\widetilde{\Pi}_i^t|+|E|+|E_{\neg}|$\;
+% $Q'_{\tau_{\textup{past}}}$ = \texttt{CorProd}($\tilde{\mathcal{A}}_{r,i}^{t}$, $\tau_{\textup{past}}$)\tcp*[r]{Algorithm~\ref{alg:set-past}}
+% \If{$\Upsilon_i\geq N_{i}^{\textup{\text{call}}}$ or $t-T_i\geq T_i^{\textup{\text{call}}}$}{
+% $R_{i}^{t^{+}}$ = \texttt{OptRun}($\tilde{\mathcal{A}}_{r,i}^{t^+}$,  $Q'_{\tau_{\textup{past}}}$)\tcp*[r]{Algorithm~\ref{alg:optimal}}
+% $\Upsilon_i^{t^+}=0$, $T_i=t$\;}
+% \Else{$R_{i}^{t^+}$ = \texttt{Revise}($\tilde{\mathcal{A}}^{t^+}_{p,i}$, $R_{i}^{t}$, $\aleph_i^t$, $\Xi_i^t$, $Q'_{\tau_{\textup{past}}}$)\tcp*[r]{Algorithm~\ref{alg:revise}}}
+% $R_i^t=R_{i}^{t^+}$, $\tau_i^t = R_i^t|_{\Pi_i}$, $\Upsilon_i^t=\Upsilon_i^{t^+}$, $\mathcal{T}_i^{t}=\mathcal{T}_i^{t^+}$\;
+% \end{algorithm}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{algorithm}[t!h]
+\caption{Cooperative on-line planning for each robot $i\in \mathcal{N}$} \label{ch03:alg:scheme}
+%\linesnumbered
+%\dontprintsemicolon
+%\LinesNumbered
+%\DontPrintSemicolon
+\KwIn{$\mathcal{T}_i^0$, $\tilde{\mathcal{A}}_{\varphi_i}$, $\tilde{\mathcal{A}}_{r,i}^{0}$, $x_i(t)$}
+\KwOut{$R_{i}^t$, $\tau_{i}^t$, $\Upsilon_i^t$, $T_i^t$ }
+$R_{i}^{0}$ = \texttt{OptRun}($\tilde{\mathcal{A}}_{r,i}^{0}$)
+
+$q'_{i,\text{cur}}=q'_{i,\text{next}}=R^0_{i,[\text{pre},1]}$, $\pi_{i,\text{next}}=q'_{i,\textup{next}}|_{\Pi_i}$, $R_{i,\text{past}}=[\;]$, $\tau_{i,\text{past}}=[\;]$ \;
+
+\While{\textup{\texttt{True}}}{
+send $\textbf{Request}_{i,g}^t$\;
+
+check $\textbf{Reply}_{h,i}^t$, $\textup{\textbf{Request}}_{j,i}^{t_0}$ and $\textbf{Sense}_i^t$\;
+
+$\textup{\textbf{Reply}}_{i,j}^t$ = \texttt{TranKnow}($\textbf{Sense}_i^t$, $\textup{\textbf{Request}}_{j,i}^{t_0}$)
+
+send $\textup{\textbf{Reply}}_{i,j}^t$\;
+
+$(\,\mathcal{T}_i^{t^+},\, \widetilde{\Pi}^t_i, \, \widehat{\Pi}^t_i)$ = \texttt{UpdaT}($\mathcal{T}_i^{t}$, $\textbf{Sense}_i^t$, $\textbf{Reply}_{h,i}^t$)
+
+%$\tilde{\mathcal{A}}_{r,i}^{t^+}=\texttt{UpdProd}(\tilde{\mathcal{A}}_{r,i}^{t^-},\, \widetilde{\Pi}^t_{i},\, E,\, E_{\neg})$ \tcp*[r]{Algorithm~\ref{alg:updateP}}
+$\tilde{\mathcal{A}}_{r,i}^{t^+}=\textup{\texttt{AdjProd}}(\mathcal{T}_i^{t^+},\,\widehat{\Pi}^t_i,\, \tilde{\mathcal{A}}_{\varphi_i})$
+
+($\aleph_i^t$,\,\, $\Xi_i^t$) = \texttt{ValidRun}($\tilde{\mathcal{A}}_{r,i}^{t^+}$, $R_{i}^{t}$, $\widetilde{\Pi}^t_i$, $E_{\neg}$)
+
+$\Upsilon_i^{t} = \Upsilon_i^{t}+|\widehat{\Pi}_i^t|$\;
+
+$Q'_{i,\tau_{\textup{past}}}$ = \texttt{CorProd}($\tilde{\mathcal{A}}_{r,i}^{t^+}$, $\tau_{i,\textup{past}}$)
+
+\If{$\Upsilon^t_i\geq N_{i}^{\textup{\text{call}}}$ or $t-T^t_i\geq T_i^{\textup{\text{call}}}$}{
+  $R_{i}^{t^{+}}$ = \texttt{OptRun}($\tilde{\mathcal{A}}_{r,i}^{t^+}$,  $Q'_{i,\tau_{\textup{past}}}$)
+
+$\Upsilon_i^{t}=0$, $T^t_i=t$, $q'_{i,\textup{next}}=R^{t^+}_{i,[\text{pre},2]}$}
+\ElseIf{$\aleph_i^t\neq \emptyset$ or $\Xi_i^t\neq \emptyset$}{$R_{i}^{t^+}$ = \texttt{Revise}($\tilde{\mathcal{A}}^{t^+}_{r,i}$, $R_{i}^{t}$, $\aleph_i^t$, $\Xi_i^t$, $Q'_{i,\tau_{\textup{past}}}$)
+
+$q'_{i,\text{next}}=R^{t^+}_{i,[seg,k]}$}
+%$R_i^t=R_{i}^{t^+}$, $\tau_i^t = R_i^t|_{\Pi_i}$, $\Upsilon_i^t=\Upsilon_i^{t^+}$, $\mathcal{T}_i^{t}=\mathcal{T}_i^{t^+}$\;
+\If{$x(t)\in q'_{i,\textup{next}}|_{\Pi_i}$ \textup{confirmed}}{
+  $q'_{i,\textup{cur}}=q'_{i,\textup{next}}$\;
+
+  $\tau_{i,\textup{past}} = \tau_{i,\textup{past}} + \pi_{i,\text{next}}$,\, $R_{i,\text{past}} = R_{i,\text{past}} + q'_{i,\text{next}}$\;
+
+  $q'_{i,\text{next}}=R^{t^+}_{i,[seg,k]}=\texttt{NextGoal}(q'_{i,\text{cur}},\, R_i^{t^+})$
+
+}
+$\pi_{i,\textup{cur}}=q'_{i,\text{cur}}|_{\Pi_i}$,\, $\pi_{i,\textup{next}}=q'_{i,\text{next}}|_{\Pi_i}$\;
+
+$u_i=\mathcal{U}(x_i(t),\pi_{i,\text{cur}},\, \pi_{i,\text{next}})$
+}
+\end{algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Algorithm~\ref{alg:revise} provides a way to locally revise the invalid or unsafe plan, which  guarantees validity and safety by Theorem~\ref{theo:safety}. However it does not maintain the cost optimality of the safe accepting run compared with Algorithm~\ref{alg:optimal}. The general problem of computing and maintaining the shortest path in a graph where the edges are inserted or deleted and edge weights are increased or decreased is referred to as the \emph{dynamic shortest path problem}~(DSPP) in~\cite{chan2009shortest} and~\cite{misra2005dynamic}. As  pointed out in both papers, it is inefficient to re-compute the shortest path ``from scratch''  using the well-known  {static} solution like Dijkstra algorithm each time the graph changes.
+%Meanwhile, the proposed DSPP algorithms   require much more complicated mechanism and sometimes not more efficient than calculating everything from scratch.
+
+Thus we propose an event-based criterion~\cite{heemels2012introduction} to ensure the optimality check. Denote by $\Upsilon^{t}_i$ the accumulated number of number of changes in $\mathcal{T}_i^t$ at time $t$; $\Upsilon^{t^+}_i=\Upsilon^{t^-}_i\,+\, |\widehat{\Pi}_{i}^t|$ and $\Upsilon^{0}_i=0$. Denote by $T_i$ the last time instant when Algorithm~\ref{alg:optimal} is called. Let the  thresholds $N^{\text{call}}_i,\, T_i^{\text{call}}\geq 0$ be chosen freely by robot~$i\in \mathcal{N}$. Then whenever one of the conditions holds: (1) $\Upsilon^{t}_i\geq N_i^{\text{call}}$; (2) $t-T_i\geq T_i^{\text{call}}$, Algorithm~\ref{alg:optimal} is called with respect the latest $\mathcal{T}_i^t$ to derive the safe plan, but using $Q'_{\tau_{\textup{past}}}$ as the initial states. Afterwards, $\Upsilon^{t^+}_i$ is reset to zero and  $T_i$ to the current time.
+
+
+%=======
+\subsubsection{Overall structure}\label{ch03:subsec:structure}
+
+The overall architecture is summarized in Algorithm~\ref{alg:scheme}, where the detail description of each function can be found in~\cite{guo2014lic}. When the system starts, each robot synthesizes its own initial motion and task plan. It sends requests to neighboring robots. Then it checks if it receives any reply, sensing or request messages, based on which it replies to its subscribers, and updates its transition system. At last, it decides whether the revising algorithm or the optimal synthesis algorithm should be called by the triggering condition. It is worth mentioning that the next goal region $\pi_{i,\textup{next}}$ changes automatically whenever: (i) the accepting run $R_i^t$ is updated by either the revision Algorithm~\ref{alg:revise} and the optimal search Algorithm~\ref{alg:optimal}; (ii) the current goal region is confirmed to be reached.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{theorem}\label{ch03:theo:improvement}
+For each robot $i$ at any time $t\geq 0$, its plan $\tau_i^t$ derived by  Algorithm~\ref{alg:scheme} is always  \textbf{valid} and  \textbf{safe} for $\mathcal{T}_i^t$ and $\varphi_i$. Moreover, for any $t'\geq 0$, there exists time $t\in [t',\,t'+T^{\text{call}}_i]$ such that $\tau_i^t$ corresponds to the \textbf{safe} accepting run.
+\end{theorem}
+\begin{proof}
+The first part follows  from Theorems~\ref{theo:validity} and~\ref{theo:new-safe}.  Moreover $\tau_i^t$ is the {safe} plan for $\tilde{\mathcal{A}}_{r,i}^{t^+}$ given $Q'_{i,\tau_{\textup{past}}}$ whenever Algorithm~\ref{alg:optimal} is called. Due to the triggering condition, it is called at least once within any time period of length~$T^{\text{call}}_i$. \end{proof}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %==============================
 %==============================
