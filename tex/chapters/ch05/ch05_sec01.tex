@@ -1,0 +1,637 @@
+%==============================
+\section{Simultaneous Planning for Communication and Collaboration}
+\label{ch05:sec:ch05_interm_team}
+
+In this section,
+a multi-agent system handles complex temporally constrained tasks continuously released online as shown in Fig.~\ref{ch05:fig:first}.
+We formulate an online co-optimization problem to synthesize the collaborative task execution
+and communication strategies simultaneously.
+Unlike periodic team-wise or intermittent pair-wise communication protocols,
+our approach dynamically optimizes \emph{when}, \emph{where} and \emph{how}
+agents communicate or collaborate
+based on real-time task specifications gathered online.
+To achieve this, we develop a branch-and-bound (BnB) framework with
+joint encoding of task planning and communication events within unified search nodes.
+A novel objective function balances the execution efficiency against communication latency
+for robustness across spatio-temporal task distributions.
+Moreover, communication events are optimized via an iterative algorithm
+that strategically determines the communication locations and timings.
+As shown in Fig.~\ref{ch05:fig:first}, the method is validated through large-scale simulations
+and hardware experiments against several strong baselines.
+
+The main contributions are three-fold:
+(I) A general online co-design of task planning and team-wise communication strategies,
+ensuring the timely information propagation and efficient task fulfillment;
+(II) An adaptive coordination mechanism via a novel objective function robust
+to unknown task distributions and dynamic environments;
+(III) Extensive validation in simulations and hardware experiments
+demonstrating the effectiveness in complex real-world scenarios.
+
+
+%==============================
+%==============================
+\subsection{Problem Description}\label{ch05:sec:problem}
+
+
+% ================================
+\subsubsection{Workspace and Robot Model}
+\label{ch05:subsec:env-task-model}
+
+Consider a team of~$N$ agents that share the common
+workspace~$\mathcal{W}\subset \mathbb{R}^2$.
+Each agent~$i\in \mathcal{N}\triangleq \{1,\cdots,N\}$ is described
+by its position~$p_i\in \mathcal{W}_i$,
+sensor range~$d_i > 0$,
+and the action~$a_i\in \mathcal{A}_i$,
+where~$\mathcal{W}_i\subseteq \mathcal{W}$ is the allowed workspace;
+and~$\mathcal{A}_i$ is the set of primitive actions.
+More specifically, the actions $\mathcal{A}_i$ require different
+capabilities from agent~$i$. For instance, repair and rescue actions necessitate
+fine-grained manipulation capabilities,
+while delivery requires transportation capacity.
+The motion of each agent is characterized by its velocity~$v_i\in \mathbb{R}^2$ with a upper limit $\|v_i\| \leq v^{\texttt{max}}_i$,
+note that $\|v_i\|$ can be adjusted during navigation.
+Thus, the local plan of an agent is given by a sequence of
+timed goal positions and performed actions,
+i.e.,~$\tau_i\triangleq (t^1_i,\,g^1_i,\,a^1_i)
+(t^2_i,\,g^2_i,\,a^2_i)\cdots$
+with~$t^\ell_i\geq 0$,~$g^\ell_i \in \mathcal{W}_i$,~$a_i^\ell \in \mathcal{A}_i$ being
+the time instant, goal position and action,
+$\forall \ell\geq 1$.
+In other words, under this local plan,
+agent~$i\in \mathcal{N}$ should navigate to~$g_i^\ell$ with velocity $v_i$
+and start performing~$a_i^\ell$ from time~$t_i^\ell$, for all~$\ell\geq 1$.
+The collective plan for all agents is denoted by~$J \triangleq \{\tau_i\}, \forall i \in \mathcal{N}$.
+
+\vspace{-0.8em}
+% ================================
+\subsubsection{Task Specification with Temporal Constraints}
+\label{ch05:subsec: task-spec}
+
+Collaborative tasks are dynamically released with unknown and possibly time-varying spatio-temporal distributions,
+each defined as~$\omega_m \triangleq (S_m, \eta_m, \{(n_j, a_j)\}_{j=1}^{J_m})$ where
+and each pair $\{(n_j, a_j)\}$ indicates that $n_j$ agents are required to perform action $a_j$ within $S_m$.
+A task is detected only when $\textbf{min}_{i \in \mathcal{N}} \|p_i(t)-S_m\| \leq d_i$ and no obstacle between $p_i(t)$ and $S_m$ at $t_m$,
+where~$\|\cdot\|$ is the Euclidean distance.
+{The detected tasks will later become
+known to all robots during the team-wise communication process.}
+The set of detected tasks by time $t$ is $\boldsymbol{\Omega}_t \triangleq \{ \omega_m \mid t_m \leq t \}$.
+For each task $\omega_r$, its execution begins at $t_r^\texttt{s} > 0$ and finishes at $t_r^\texttt{f} >0$.
+Three types of temporal constraints are predefined between tasks $\omega_p$ and $\omega_q$:
+  (1) precedence ($\omega_p \preceq \omega_q$) holds if $t_p^\texttt{f} \leq t_q^\texttt{s}$;
+  (2) mutual exclusion ($\omega_p \parallel \omega_q$) holds if their execution intervals are disjoint but no specific ordering is imposed, i.e., $[t_p^\texttt{s}, t_p^\texttt{f}] \cap [t_q^\texttt{s}, t_q^\texttt{f}] = \emptyset$;
+  (3) concurrency ($\omega_p \sim \omega_q$) holds if parallel execution with overlapping time intervals is permitted, i.e., $[t_p^\texttt{s}, t_p^\texttt{f}] \cap [t_q^\texttt{s}, t_q^\texttt{f}] \neq \emptyset$.
+The set $\mathcal{P}_t$ contains all predefined temporal relations between pairs of tasks in $\boldsymbol{\Omega}_t$, i.e.,
+\begin{equation}\label{ch05:eq:task-constraints}
+\mathcal{P}_t \subseteq \big\{
+    (\omega_i, \omega_j, \kappa)
+    \, |\,
+    \omega_i, \omega_j \in \boldsymbol{\Omega}_t,
+    \kappa \in \{\preceq, \parallel, \sim\}
+\big\},
+\end{equation}
+which can only be known at time~$t\geq 0$.
+A task $\omega_m$ completes at finish time $t_m^\texttt{f}$ if two conditions hold:
+(I) at time $t_m^\texttt{s}$, agents arrive at $S_m$ and for each required action $(n_j, a_j)$,
+a team of $n_j$ agents continuously performs $a_j$ within $S_m$ for duration $\eta_m$;
+and (II) the execution interval $[t_m^\texttt{s}, t_m^\texttt{f}]$
+satisfies all relevant constraints in $\mathcal{P}_{t}$
+involving $\omega_m$.
+
+% ================================
+
+%=============================
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=0.9\linewidth,height=0.35\linewidth]{figures/ch05/CommunicationConstraints.pdf}
+    \vspace{-2mm}
+    \caption{
+      (\textbf{Left}): Ad-hoc local communication devices used in the hardware experiments;
+      (\textbf{Right}): Map of the predicted communication quality used in the coordination
+      of communication events.
+    }
+    \label{ch05:fig:communication-constraints}
+    \vspace{-4mm}
+  \end{figure}
+%==============================
+\vspace{-0.8em}
+\subsubsection{Communication Constraints}
+\label{ch05:subsec:comm-const}
+Agents cannot maintain the continuous real-time communication due to physical limitations.
+As illustrated in Fig.~\ref{ch05:fig:communication-constraints}, successful communication
+  between agents $i, j \in \mathcal{N}$ requires sufficient communication quality $Q_{ij}(t) > \delta$,
+  where $\delta > 0$ is the minimum quality threshold. The communication quality $Q_{ij}(t)$ is defined as:
+  $Q_{ij}(t) \triangleq P_t - PL(d_{ij}(t)) - \alpha\, d_{ij}^{\mathrm{obs}}(t)$,
+  for locations $p_i, p_j \in \mathcal{W}_i, \mathcal{W}_j$,
+where $P_t$ denotes the transmission power in dB,
+and $PL(d_{ij}(t)) \triangleq PL(d_0) + 10 n \log_{10}\left(\frac{d_{ij}(t)}{d_0}\right)$ represents the free-space path loss,
+with $d_0$ as the reference distance, $n$ as the path loss exponent,
+and $d_{ij}(t) \triangleq \|p_i(t) - p_j(t)\|$ as the distance between agents $i$ and $j$ at time $t$.
+Note that $d_{ij}^{\mathrm{obs}}(t)$ denotes the total length of obstacles
+along the straight line connecting $p_i(t)$ and $p_j(t)$,
+with $\alpha>0$ as the attenuation coefficient per meter of obstacle.
+This constrained connectivity is modeled as a time-varying graph $G(t) \triangleq (\mathcal{N},\, \mathcal{E}(t))$
+with the edge set
+$\mathcal{E}(t) \triangleq \left\{ e_{ij} \,|\, Q_{ij}(t) > \delta \right\}$,
+where~$e_{ij}$ is the communication link between agents $i$ and $j$.
+The agent team $\mathcal{N}$ achieves the global communication at the time $t > 0$
+if $G(t)$ is connected, namely:
+$G(t) \in \mathcal{G}_{\texttt{c}}$,
+where~$\mathcal{G}_{\texttt{c}}$ is the set of connected graphs.
+We refer to this as team-wise intermittent communication,
+requiring global connectivity across all agents at each event to enable centralized-style replanning.
+To establish the global connectivity,
+agents synchronize at the designated \textit{communication events}
+defined as $\mathbf{C} \triangleq \left\{ \mathbf{c}_i \mid \forall i \in \mathcal{N} \right\}$,
+where each agent-specific event $\mathbf{c}_i \triangleq (t^{\texttt{c}}_i, p^{\texttt{c}}_i)$
+specifies the communication time $t^{\texttt{c}}_i$ and position $p^{\texttt{c}}_i$.
+The global event $\mathbf{C}$ occurs
+when all agents simultaneously reach their respective communication positions at their common times $t^{\texttt{c}}$,
+i.e., $t^{\texttt{c}} = t^{\texttt{c}}_i, \, \forall i \in \mathcal{N}$.
+A valid communication event $\mathbf{C}$ must ensure that:
+\begin{equation}\label{ch05:eq:comm-graph}
+  G(t^{\texttt{c}}) \in \mathcal{G}_{\texttt{c}},
+\end{equation}
+where $t^{\texttt{c}}$ is the communication time.
+Once $G(t^{\texttt{c}})$ is connected, agents exchange critical information including:
+their individually detected tasks $\Omega_t^i$,
+locally generated plans $\tau_i$,
+and future communication events~$\mathbf{c}_i$.
+Subsequently, the local plan for agent $i$ extends to
+$
+  \tau_i \triangleq (t^1_i,\,g^1_i,\,a^1_i)(t^2_i,\,g^2_i,\,a^2_i)\cdots\mathbf{c}_i
+$.
+
+
+
+% ================================
+\subsubsection{Problem Statement}\label{ch05:subsec:prob}
+
+The overall objective is to synthesize the collective
+plans $J \triangleq \{\tau_i\}_{i \in \mathcal{N}}$ so as to maximize
+the long-run average rate of task completion over an infinite
+horizon.
+For a given collective plan $J$ and time $T>0$, define
+  $N_T(J) \triangleq
+  \left|
+    \left\{
+      \omega_m \in \boldsymbol{\Omega}_T
+      \,\middle|\,
+      t_m^{\texttt{f}}(J) \le T
+    \right\}
+  \right|$,
+which denotes the number of tasks completed by time $T$ under plan $J$.
+The long-run average task completion rate of $J$ is then
+$\eta(J) \triangleq
+  \mathbf{lim}_{T \to \infty}
+  \frac{N_T(J)}{T}$.
+  Thus, the overall problem is as follows:
+\begin{equation}\label{ch05:eq:objective}
+  \begin{aligned}
+    & \underset{J}{\mathbf{max}} \quad
+      \eta(J) \\
+    & \mathbf{s.t.} \quad
+      \eqref{ch05:eq:task-constraints} - \eqref{ch05:eq:comm-graph}, \;\forall i \in \mathcal{N},
+  \end{aligned}
+\end{equation}
+where the collective plan $J$ that maximizes
+the average rate~$\eta(J)$;
+$\eqref{ch05:eq:task-constraints}$ ensures that all
+temporal relations between tasks are satisfied;
+and $\eqref{ch05:eq:comm-graph}$ guarantees that the team achieves
+intermittent global connectivity at communication events.
+
+
+
+
+A unified framework co-optimizes collaborative task planning and communication in dynamic, unknown environments.
+It combines a Branch-and-Bound method for temporally constrained planning and communication scheduling
+in Sec. \ref{ch05:subsec:coord-framework}, an iterative approach for optimizing communication events
+in Sec. \ref{ch05:subsec:comm-event}, and an online execution scheme with complexity analysis
+and theoretical guarantees in Sec. \ref{ch05:subsec:online}.
+
+
+
+% ===============================
+
+\subsection{Adaptive Coordination Framework}
+\label{ch05:subsec:coord-framework}
+
+% -----------------------------
+\subsubsection{Design of Adaptive Optimization Objective}
+\label{ch05:subsubsec:new-obj}
+
+To handle unknown spatiotemporal task distributions while still achieving the global
+objective~\eqref{ch05:eq:objective}, an adaptive optimization objective is formulated to
+maximize task completion efficiency within each execution horizon. The coordination
+framework is triggered at every communication event occurring at time~$t$. Based on the
+currently detected task set $\mathbf{\Omega}_t$, the framework jointly optimizes the
+future local plans~$J$ together with the scheduling of the next communication
+event~$\mathbf{c}$. {The team-wise intermittent communication protocol
+guarantees that all tasks assigned in $\{\tau_i\}$ during the interval $[t, t^{\texttt{c}}]$
+are completed before the next re-planning phase at $t^{\texttt{c}}$.}
+The adaptive objective
+is expressed as the maximization of the task completion rate per unit time in the interval
+$[t, t^{\texttt{c}}]$, as an \emph{local approximation} of $\eta(J)$ in~\eqref{ch05:eq:objective}:
+\begin{equation}\label{ch05:eq:adaptive_objective}
+\begin{aligned}
+& \underset{{\{\tau_i\}, t^{\texttt{c}}}}{\textbf{max}} \quad
+\frac{ \left| \left\{ \omega_m \in \mathbf{\Omega}_t \mid t^{\texttt{f}}_m \leq t^{\texttt{c}} \right\} \right| }
+{t^{\texttt{c}} - t} \\
+\textbf{s.t.} \quad  &
+G(t^{\texttt{c}}) \in \mathcal{G}_{\texttt{c}}, \, \mathcal{C}_t \text{ holds};
+t^{\texttt{c}} \geq t^{\texttt{f}}_{i, \ell} > t,\\
+&t^{\texttt{s}}_{i, \ell+1} \geq t^{\texttt{f}}_{i, \ell} + T_{\text{travel}}(\omega^\ell_i, \omega^{\ell+1}_i), \omega^\ell_i \in \mathbf{\Omega}_t \,
+\end{aligned}
+\end{equation}
+where $t^{\texttt{f}}_m$ is the completion time of task $\omega_m$, $t^{\texttt{c}}$ denotes
+the scheduled time of the next communication event, and $G(t^{\texttt{c}}) \in \mathcal{G}_{\texttt{c}}$
+ensures that global communication occurs at $t^{\texttt{c}}$.
+
+
+
+% ===================
+\begin{remark}
+    By maximizing the task completion rate in~\eqref{ch05:eq:adaptive_objective},
+    the formulation adaptively prioritizes that task sequences that yield high efficiency .
+    This emergent spatiotemporal filtering operates without explicit environmental models,
+    as the rate-based metric intrinsically balances task throughput against temporal investment.
+\end{remark}
+% =====================
+
+
+
+% --------------------------------------------------
+\subsubsection{Algorithm Description}
+\label{ch05:subsubsec:algorithm-description}
+
+% =========================
+\begin{algorithm}[!t]
+    \caption{$\texttt{CoCoPlan}(\cdot)$}
+    \label{ch05:alg:cocoplan}
+    \SetAlgoLined
+    \SetAlgoNlRelativeSize{-1} % 调整行号的间距
+    \DontPrintSemicolon
+    \KwIn{Robot team $\mathcal{N}$, Detected tasks $\mathbf{\Omega}_t$, Time budget $T'$} \label{ch05:line:input}
+    \KwOut{Best collective plan  $J^\star$}   \label{ch05:line:output}
+
+    Initialize $\mathcal{T} \gets \emptyset$, $\mathcal{Q}$ (max-heap by UB) \; \label{ch05:line:init}
+    Create $\nu_0$: $J_{\nu_0} \gets \emptyset$ \; \label{ch05:line:create_nu0}
+    $(LB_{\nu_0}, J_{\nu_0}) \gets \texttt{LowBound}(\nu_0, \mathbf{\Omega}_t, \mathcal{N})$ \; \label{ch05:line:lower_nu0}
+    $UB_{\nu_0} \gets \texttt{UpBound}(\nu_0, \mathbf{\Omega}_t, \mathcal{N})$ \; \label{ch05:line:upper_nu0}
+    $\mathcal{T} \gets \mathcal{T} \cup \{\nu_0\}$, $\mathcal{Q}$.insert($\nu_0$, $UB_{\nu_0}$) \; \label{ch05:line:insert_nu0}
+    $LB^\star \gets LB_{\nu_0}$, $J^\star \gets J_{\nu_0}$, \label{ch05:line:init_best}
+    $t_{\texttt{start}} \gets \text{current time}$ \; \label{ch05:init-time}
+
+    \While{$\mathcal{Q} \neq \emptyset$ \textbf{and} $(t- t_{\texttt{start}} < T')$}{ \label{ch05:line:while_start}
+        $\nu \leftarrow \mathcal{Q}$.extractMax()  \label{ch05:line:extract}
+
+        \If{$UB_{\nu} > LB^\star$}{ \label{ch05:line:if_ub}
+            \If{$LB_{\nu} > LB^\star $}{$LB^\star \gets LB_{\nu}$, $J^\star \gets J_{\nu}$} \label{ch05:line:update_best}
+
+            $\mathcal{F} \leftarrow \texttt{GetTasks}(\nu, \mathbf{\Omega}_t)$ \; \label{ch05:line:feasible}
+            \ForEach{$\omega \in \mathcal{F}$}{ \label{ch05:line:for_start}
+                $\nu_+ \leftarrow \texttt{ExpNode}(\nu, \omega)$ \; \label{ch05:line:expand}
+                $(LB_{\nu_+}, J_{\nu_+}) \gets \texttt{LowBound}(\nu_+, \mathbf{\Omega}_t, \mathcal{N})$ \; \label{ch05:line:lower_new}
+                $UB_{\nu_+} \gets \texttt{UpBound}(\nu_+, \mathbf{\Omega}_t, \mathcal{N})$ \; \label{ch05:line:upper_new}
+                $\mathcal{T} \gets \mathcal{T} \cup \{\nu_+\}$ \; \label{ch05:line:insert_new}
+                \If{$LB_{\nu_+} > LB^\star$}{$LB^\star \gets LB_{\nu_+}$, $J^\star \gets J_{\nu_+}$} \label{ch05:line:update_new}
+                \If{$UB_{\nu_+} > LB^\star$}{$\mathcal{Q}$.insert($\nu_+, UB_{\nu_+}$)} \label{ch05:line:insert_new}
+            } \label{ch05:line:for_end}
+        } \label{ch05:line:if_end}
+    } \label{ch05:line:while_end}
+    \Return $J^\star$ \label{ch05:line:return}
+\end{algorithm}
+\setlength{\textfloatsep}{5pt}
+% =========================
+
+
+The proposed $\texttt{CoCoPlan}$ in Alg.~\ref{ch05:alg:cocoplan}
+uses a branch-and-bound (BnB) search to jointly optimize task assignments
+and communication events for the entire team.
+Each node $\nu$ in the BnB tree corresponds to a collective plan
+$J_\nu \triangleq [(\omega_{i_1}^1, \omega_{i_1}^2, \cdots, \mathbf{c}_{i_1}),
+(\omega_{i_2}^1, \cdots, \mathbf{c}_{i_2}), \cdots]$,
+i.e., agent-specific task sequences interleaved with communication events
+$\mathbf{c}$. For brevity, the local plan elements $(t^\ell_i, g^\ell_i, a^\ell_i)$
+are associated with the task $\omega^\ell_i$ in $J_\nu$.
+For each node $\nu$, we maintain a lower bound $LB_\nu$ and an upper bound $UB_\nu$
+on the objective value;
+{nodes are pruned if $UB_\nu < LB^\star$,
+where $LB^\star$ is the current best lower bound.}
+The objective of each node is given by~\eqref{ch05:eq:adaptive_objective},
+representing the task completion rate up to the next communication event.
+{The search continues until all nodes are expanded or pruned, or a time limit
+is reached. It then returns the best collective plan $J^\star$ found within the
+computation budget.}
+The algorithm follows five key stages:
+
+\textbf{(I) Initialization} (Lines~\ref{ch05:line:init}--\ref{ch05:line:init_best}):
+The root node $\nu_0$ is created with an empty plan, and its bounds
+$LB_{\nu_0}$ and $UB_{\nu_0}$ are computed by
+$\texttt{LowBound}$ and $\texttt{UpBound}$, providing pessimistic and
+optimistic estimates of achievable performance. These values initialize
+the max-heap $\mathcal{Q}$, which stores nodes ordered by $UB_\nu$, and
+the incumbent solution $(LB^\star, J^\star)$. A timer $t_{\texttt{start}}$
+is started to enforce the computation budget $T'$.
+
+\textbf{(II) Selection} (Lines~\ref{ch05:line:while_start}--\ref{ch05:line:if_ub}):
+At each iteration, the node $\nu$ with the largest $UB_\nu$ is extracted
+from $\mathcal{Q}$ (Line~\ref{ch05:line:extract}), following a best-first
+strategy that prioritizes nodes with the highest potential to improve
+the incumbent. If $UB_{\nu} \leq LB^\star$, then $\nu$ and its subtree
+are pruned, since they cannot yield a better solution. This pruning
+significantly reduces the explored search space.
+
+\textbf{(III) Expansion} (Lines~\ref{ch05:line:feasible}--\ref{ch05:line:for_end}):
+For each surviving node, feasible tasks $\mathcal{F}$ that respect the
+temporal constraints $\mathcal{C}_t$ are identified
+(Line~\ref{ch05:line:feasible}).
+The $\texttt{ExpNode}$ function (Line~\ref{ch05:line:expand})
+generates child nodes $\nu_+$ by assigning each task
+$\omega \in \mathcal{F}$ to eligible agents and inserting it in their
+plans before the next communication event~$\mathbf{c}_{i_k}$.
+This couples task allocation with communication scheduling. Each child
+is then evaluated to obtain new bounds $LB_{\nu_+}$ and $UB_{\nu_+}$.
+
+\textbf{(IV) Bounding} (Lines~\ref{ch05:line:lower_nu0}--\ref{ch05:line:upper_new}):
+Each child $\nu_+$ undergoes iterative bound refinement starting from
+its plan $J_{\nu_+}$.
+As illustrated in Fig.~\ref{ch05:fig:lower-bound}, at iteration $k$
+a feasible task $\omega^{(k)}$ is chosen from
+$\mathbf{\Omega}_t \setminus \mathbf{\Omega}_{\nu_+}$ and assigned to
+an eligible agent group $\mathcal{A} \in \mathcal{A}_k$ that minimizes
+the maximum travel time to the task location:
+\begin{equation}\label{ch05:eq:task-assign}
+% \[
+\underset{\mathcal{A} \in \mathcal{A}_k}{\mathbf{min}}
+\left\{
+  \underset{i \in \mathcal{A}}{\mathbf{max}}\,
+  T_{\text{travel}}(p^{\texttt{f}}_i, \omega^{(k)})
+\right\},
+% \]
+\end{equation}
+yielding an updated plan $J^{(k)}$ for node $\nu^{(k)}$.
+{Its completion time is computed in two phases:
+(1) \textit{Task phase}: non-communication tasks are scheduled by solving:
+$
+\mathbf{min} \;
+{\mathbf{max}_{\omega_m \in\, \mathbf{\Omega}_{\nu^{(k)}}}} t_m^{\texttt{f}},
+$
+using a standard LP solver such as OR-Tools~\cite{glop}, temporarily
+ignoring communication; and (2) \textit{communication phase}: given the
+resulting task schedule, $\texttt{ComOpt}$ optimizes communication
+events and returns $t^{\texttt{c}}_{(k)}$.}
+The corresponding candidate
+rate is
+$b^{(k)} = |\omega_m \in \mathbf{\Omega}_{\nu^{(k)}}| / t^{\texttt{c}}_{(k)}$.
+Tasks are added while $b^{(k)}$ improves, and the lower bound
+$LB_{\nu_+}$ is set to $\max_j b^{(j)}$. The upper bound $UB_{\nu_+}$
+is obtained by applying the same procedure but assuming instantaneous
+agent movement, giving an optimistic estimate for pruning.
+
+\textbf{(V) Termination} (Line~\ref{ch05:line:return}):
+The algorithm stops when the heap $\mathcal{Q}$ is empty or the time
+budget $T'$ is reached, and returns the incumbent plan $J^\star$ as the
+best solution found. Since bounds and solutions are refined throughout
+the search, the method is anytime: even early termination yields a
+feasible plan.
+
+
+
+%=============================
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/ch05/LowerBoundFigure.pdf}
+    \vspace{-2mm}
+    \caption{
+      Illustration of the iterative process for computing lower bounds,
+      after inserting new tasks in the collective plan.
+    }
+    \label{ch05:fig:lower-bound}
+    \vspace{0mm}
+  \end{figure}
+%==============================
+
+
+
+% ================================
+\vspace{-0.8em}
+\subsection{Optimization of Communication Events}
+\label{ch05:subsec:comm-event}
+
+
+
+
+
+
+% -----------------------------
+\subsubsection{Problem of Communication Events Optimization}
+\label{ch05:subsubsec:comm-event-opt}
+
+Given the non-communication solution $J_{\nu^+}$ obtained in the previous step,
+let $t^{\texttt{f}}_i$ denote the completion time of the last non-communication task
+in the plan of agent $i$ as $\tau_i$, and let $p^{\texttt{f}}_i \in \mathcal{W}$ be its position
+at time $t^{\texttt{f}}_i$. The subsequent communication event must occur at a time
+$t^{\texttt{c}} > \max_{i \in \mathcal{N}} t^{\texttt{f}}_i$,
+with agents located at positions $\{p^{\texttt{c}}_i\}$, where $p^{\texttt{c}}_i \in \mathcal{W}_i$,
+and the induced communication graph $G(t^{\texttt{c}})$ satisfies the connectivity requirement
+$G(t^{\texttt{c}}) \in \mathcal{G}_{\texttt{c}}$.
+The optimization problem aims to minimize the maximum transition time required for agents
+to travel from their last task locations to the communication point, ensuring both feasibility
+and efficiency:
+\begin{equation}\label{ch05:eq:comm-opt}
+\begin{aligned}
+& \underset{t^{\texttt{c}},\, {\{}p^{\texttt{c}}_i\}}{\textbf{min}}\,\big{\{}
+\underset{{i \in \mathcal{N}}}{\textbf{max}}  \left( t^{\texttt{c}} - t^{\texttt{f}}_i \right)\big{\}} \\
+\textbf{s.t.} \quad
+& t^{\texttt{c}} \geq t^{\texttt{f}}_i + T_{\text{travel}}(p^{\texttt{f}}_i, p^{\texttt{c}}_i),
+\quad \forall i \in \mathcal{N}, \\
+& G(t^{\texttt{c}}) \in \mathcal{G}_{\texttt{c}},
+\end{aligned}
+\end{equation}
+where the first constraint guarantees sufficient time for each agent to navigate from
+its last task location $p^{\texttt{f}}_i$ to its communication position
+$p^{\texttt{c}}_i$;
+and the second enforces that the team remains
+connected at the communication time $t^{\texttt{c}}$.
+This formulation explicitly balances task feasibility with connectivity, ensuring that
+communication is synchronized across the team while minimizing idle time.
+
+
+% -----------------------------
+\subsubsection{Algorithm Description}
+\label{ch05:subsubsec:comm-event-algorithm}
+
+
+
+% =========================
+\begin{algorithm}[!t]
+    \caption{$\texttt{ComOpt}(\cdot)$}
+        \label{ch05:alg:comopt}
+        \SetAlgoLined
+        \DontPrintSemicolon
+        \setcounter{AlgoLine}{0} % Ensure line numbering starts from 1
+        \KwIn{Robot team $\mathcal{N}$, set of last tasks~$\{t^{\texttt{f}}_i\}$, time budget $T'$, threshold $\delta$}
+        \KwOut{Communication event $\mathbf{C}_{t}$}
+
+        $i_\ell \gets \textbf{argmax}_i t^{\texttt{f}}_i$ \; \label{ch05:line:1}
+        $p_0 \gets p^{\texttt{f}}_{i_\ell}$, $t^{\texttt{c}} \gets t^{\texttt{f}}_{i_\ell}$, $t^{\texttt{b}} \gets t^{\texttt{c}}$ \; \label{ch05:line:2}
+        $\mathbf{C}_{t} \gets \left\{ (t^{\texttt{b}}, p_0) \mid \forall i \in \mathcal{N}, \forall j>i \right\}$ \; \label{ch05:line:3}
+        $t_{\texttt{start}} \gets \text{current time}$ \; \label{ch05:line:4}
+        \While{$(t - t_{\texttt{start}} < T')$ \textbf{and} $(|t^{\texttt{c}} - t^{\texttt{b}}| \geq \Delta)$}{ \label{ch05:line:5}
+            $i_{\texttt{e}} \gets \textbf{argmin}_i (t^{\texttt{f}}_i + \texttt{A}^\star(p^{\texttt{f}}_i, p_0))$ \; \label{ch05:line:6}
+            $j_n \gets \textbf{argmin}_{j \neq i_{\texttt{e}}} \texttt{A}^\star(p^{\texttt{f}}_{i_{\texttt{e}}}, p_j^c)$ \; \label{ch05:line:7}
+            $p^{\texttt{c}} \gets \texttt{SelCom}(p^{\texttt{f}}_{i_{\texttt{e}}}, p_{j_n}^c)$ \; \label{ch05:line:8}
+            $t_{\texttt{a}} \gets t^{\texttt{f}}_{i_{\texttt{e}}} + \texttt{A}^\star(p^{\texttt{f}}_{i_{\texttt{e}}}, p^{\texttt{c}})$ \; \label{ch05:line:9}
+            $t^{\texttt{c}}_+ \gets \textbf{max}( t_{\texttt{a}}, \textbf{max}_{k \neq i_{\texttt{e}}} (t^{\texttt{f}}_k + \texttt{A}^\star(p^{\texttt{f}}_k, p_k^c)) )$ \; \label{ch05:line:10}
+            \If{$(Q_{c, p^c_{j_n}} > \delta)$ \textbf{and} $(t^{\texttt{c}}_+ < t^{\texttt{b}})$}{ \label{ch05:line:11}
+                $p_{i_{\texttt{e}}}^c \gets p^{\texttt{c}}$ \; \label{ch05:line:12}
+                \eIf{$|t^{\texttt{b}} - t^{\texttt{c}}_+| < \delta$}{ \label{ch05:line:13}
+                    $t^{\texttt{c}} \gets t^{\texttt{c}}_+$, $t^{\texttt{b}} \gets t^{\texttt{c}}_+$; \textbf{break} \; \label{ch05:line:14}
+                }{
+                    $t^{\texttt{c}} \gets t^{\texttt{c}}_+$, $t^{\texttt{b}} \gets t^{\texttt{c}}_+$ \; \label{ch05:line:16}
+                }
+            }
+        }
+        \Return $\mathbf{C}_{t} = \{ (t^{\texttt{b}}, p_i^c) \mid \forall i\}$ \label{ch05:line:17}
+\end{algorithm}
+% =========================
+
+
+The $\texttt{ComOpt}(\cdot)$ algorithm in Alg.~\ref{ch05:alg:comopt} addresses the optimization
+problem in~\eqref{ch05:eq:comm-opt}. The procedure begins by identifying the agent $i_\ell$ that
+finishes its last task the latest in Line~\ref{ch05:line:1}, since all agents must eventually
+wait for this agent before communication. The candidate communication location~$p_0$ is
+set to~$p^{\texttt{f}}_{i_\ell}$, and the initial communication time is initialized to
+$t^{\texttt{b}} = t^{\texttt{c}} = t^{\texttt{f}}_{i_\ell}$ in Line~\ref{ch05:line:2}.
+Accordingly, the event $\mathbf{C}_{t}$ is initialized that all
+agents converge to~$p_0$ at $t^{\texttt{b}}$.
+
+Within the computational budget $T'$, the algorithm iteratively refines the initial guess
+until the gap $|t^{\texttt{c}} - t^{\texttt{b}}|$ is below the convergence threshold $\Delta$
+as stated in Line~\ref{ch05:line:5}. As illustrated in Fig.~\ref{ch05:fig:comm-event}, each iteration
+proceeds as follows. First, the earliest-arriving agent $i_{\texttt{e}}$ is selected in
+Line~\ref{ch05:line:6} by minimizing $t^{\texttt{f}}_i + \texttt{A}^\star(p^{\texttt{f}}_i, p_0)$.
+Among the agents that finish last and the agents whose communication has already optimized, we identify the nearest neighbor $j_n$ in Line~\ref{ch05:line:7} using the shortest
+$\texttt{A}^\star$ path from $p^{\texttt{f}}_{i_{\texttt{e}}}$ to $p_{j_n}^c$. A candidate position $p^{\texttt{c}}$ is sampled
+between $p^{\texttt{f}}_{i_{\texttt{e}}}$ and $p_{j_n}^c$ in Line~\ref{ch05:line:8} using the
+$\texttt{SelCom}$ function, and the corresponding arrival time $t_{\texttt{a}}$ is computed
+in Line~\ref{ch05:line:9}. The potential communication time $t^{\texttt{c}}_+$ is then defined in
+Line~\ref{ch05:line:10} as the maximum of $t_{\texttt{a}}$ and the arrival times of all other
+agents at their current positions.
+If the the communication quality between candidate $p^{\texttt{c}}$ and $p_{j_n}^c$ exceeds
+the threshold $\delta$, and the updated communication time $t^{\texttt{c}}_+$ is earlier
+than the current best $t^{\texttt{b}}$, then the location~$p^{\texttt{c}}$ is accepted as the new
+position of agent $i_{\texttt{e}}$ in Line~\ref{ch05:line:12}. The communication time is updated
+accordingly in Line~\ref{ch05:line:14} and Line~\ref{ch05:line:16}, and convergence is reached once the difference
+$|t^{\texttt{b}} - t^{\texttt{c}}_+|$ falls below~$\delta$, which terminates the loop early.
+Lastly, the algorithm outputs the optimized communication event
+$\mathbf{C}_{t}$, including the
+agent positions $\{p_i^{\texttt{c}}\}$ and the synchronized time $t^{\texttt{b}}$.
+This event satisfies $G(t^{\texttt{b}}) \in \mathcal{G}_{\texttt{c}}$
+and minimizes the maximum delay $\textbf{max}_i (t^{\texttt{b}} - t^{\texttt{f}}_i)$,
+as required by~\eqref{ch05:eq:comm-opt}.
+
+
+% ================================
+\vspace{-0.8em}
+\subsection{Overall Analysis}
+\label{ch05:subsec:online}
+
+
+%=============================
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=0.85 \linewidth, height=0.42\linewidth]{figures/ch05/ComOpt2.pdf}
+    \vspace{-3mm}
+    \caption{Optimization of communication events, showing the selection of the earliest-arriving
+agent and the sampling of candidate communication points to achieve synchronized connectivity.}
+    \label{ch05:fig:comm-event}
+    \vspace{0mm}
+  \end{figure}
+%==============================
+%==============================
+\subsubsection{Online Execution}
+\label{ch05:subsubsec:online-execution}
+
+To handle dynamically emerging tasks, we adopt an online execution
+scheme. As illustrated in Fig.~\ref{ch05:fig:framework}, agents discover new
+tasks while moving, incrementally updating the task set
+$\mathbf{\Omega}_t$. Each agent executes its current local plan
+$\tau_i$ and progresses toward its next communication location.
+
+{To handle uncertainties such as varying
+execution times and navigation delays, we adopt simple
+adaptation mechanisms}: for each assigned task, the corresponding agents
+wait at the task region until all members have arrived before
+execution; at each communication event, all agents wait until every
+agent has reached its designated communication location, ensuring
+$G(t^{\texttt{c}}) \in \mathcal{G}_{\texttt{c}}$.
+{This maintains both temporal and communication constraints,
+even when timing deviations occur.}
+At each communication event, agents exchange information about newly
+discovered tasks. A designated agent aggregates these into
+$\mathbf{\Omega}_t$ and invokes $\texttt{CoCoPlan}$ to compute updated
+collective plans and the next communication event~$\mathbf{C}$. The
+team then follows the new plan, and this cycle of execution,
+communication, and replanning repeats until the mission ends.
+
+%==============================
+\subsubsection{Complexity Analysis}
+\label{ch05:subsubsec:complexity}
+
+The complexity of Alg.~\ref{ch05:alg:cocoplan} is dominated by its
+branch-and-bound (BnB) search. With $m$ tasks and $N$ agents, a single
+expansion step can generate up to $\mathcal{O}(m \cdot N!)$ child nodes,
+leading to a worst-case total of $\mathcal{O}((m \cdot N!)^m)$ nodes.
+Per node, task expansion and bound evaluation are dominated by
+$\mathcal{O}(m \cdot N!)$, so the overall worst-case complexity remains
+$\mathcal{O}((m \cdot N!)^m)$. In practice, pruning substantially
+reduces the number of explored nodes.
+
+
+% ===============================
+
+\begin{lemma}\label{ch05:lem:alg2_graph_connect}
+Alg.~\ref{ch05:alg:comopt} returns communication locations such that the
+communication graph $G(t^{\texttt{c}})$ is connected.
+\end{lemma}
+\begin{proof}
+(Sketch)
+All agents are initialized at the same communication point $p_0$, so
+$G(t^{\texttt{c}})$ is connected. At each iteration, the algorithm
+updates a single agent $i_e$ to a new point $p_{i_e}$ that preserves a
+communication link to already–fixed point~$p_{j_n}$, thus adding a
+node adjacent to the existing connected set. Repeating this for all
+agents preserves connectivity by induction.
+\end{proof}
+
+\begin{theorem}
+\label{ch05:thm:cocoplan_opt}
+Assume that communication events recur indefinitely and that at
+every communication time Alg.~\ref{ch05:alg:cocoplan} is solved to
+optimality for the adaptive objective~\eqref{ch05:eq:adaptive_objective}.
+Then on each communication cycle $[t_k^{\texttt{c}}, t_{k+1}^{\texttt{c}})$
+the returned  plan is feasible w.r.t.
+\eqref{ch05:eq:task-constraints} and \eqref{ch05:eq:comm-graph},
+and locally maximizes the task completion rate over that cycle.
+Moreover,
+\eqref{ch05:eq:adaptive_objective} provides a local approximation of the
+global infinite-horizon objective~\eqref{ch05:eq:objective};
+{Under stationary task arrival and ergodicity assumptions,
+the two optima coincide.}
+\end{theorem}
+\begin{proof}
+(Sketch)
+Feasibility on each cycle follows because Alg.~\ref{ch05:alg:cocoplan}
+enforces the temporal constraints~\eqref{ch05:eq:task-constraints} and calls
+Alg.~\ref{ch05:alg:comopt}, which guarantees connectivity via
+Lemma~\ref{ch05:lem:alg2_graph_connect}. Solving the branch-and-bound search
+to optimality ensures that the returned plan maximizes
+\eqref{ch05:eq:adaptive_objective} over that cycle, giving a locally optimal
+approximation of~\eqref{ch05:eq:objective}. Under stationary, constant-rate
+task discovery and ergodic cycles, the renewal–reward theorem implies
+that the long-run average completion rate equals the time average of the
+per-cycle rates, so local and global optimality are equivalent.
+\end{proof}

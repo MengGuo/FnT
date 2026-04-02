@@ -9,6 +9,35 @@ adaptation under interaction constraints. The final part focuses on contingent
 collaboration and human supervision, which have become increasingly important in
 large-scale and long-horizon robotic systems.
 
+
+\subsection{Task Planning for Robotic Fleets}
+
+Task planning in robotic fleets addresses the decomposition of missions into
+subtasks and their allocation across robots or teams. Surveys on multi-robot
+task allocation (MRTA)~\cite{gini2017multi, torreno2017cooperative}
+have established taxonomies of problem structures, including vehicle routing,
+scheduling, and coalition formation~\cite{dai2024dynamic}.
+Centralized optimization methods such as MILP and heuristic
+search~\cite{ji2021multi} generate globally near-optimal
+solutions and allow precise encoding of resource and time constraints, but the
+combinatorial complexity makes them unsuitable for large fleets or missions with
+dynamic updates. Decentralized approaches improve scalability and resilience by
+distributing decision-making, such as market-based auctions
+\cite{zhao2021market} that trade computational effort for speed, and distributed
+optimization frameworks~\cite{fioretto2018distributed} that enable concurrent
+negotiation among agents. Approximate methods, including evolutionary
+algorithms~\cite{liu2019multi} and genetic search~\cite{martin2021mrta}, reduce
+computational overhead and can adapt to heterogeneous capabilities, but they
+often sacrifice guarantees of feasibility or temporal optimality.
+{Recent efforts emphasize hierarchical decomposition and reactive
+coordination to improve scalability under dynamic task streams,
+including decomposition-based hierarchical planning~\cite{luo2024decomposition,leahy2021scalable}
+and real-time reactive allocation under temporal logic~\cite{chen2025real}.}
+Despite these advances, most approaches assume static and fully known tasks at the planning
+stage. Efficient solutions that adapt to the continual online task generation,
+uncertainties in subtask number and distribution,
+and online operator interventions remain open.
+
 \subsection{Formal methods for task and motion synthesis}
 
 Model checking has provided a principled foundation for synthesizing control and
@@ -199,3 +228,218 @@ supervisory effort should be allocated across a robotic team under uncertainty
 semantics, online contingent collaboration, relative-motion safety, and selective
 human intervention remains comparatively underdeveloped. This gap motivates the
 overall perspective adopted in this monograph.
+
+
+%======================================
+\begin{table}[t!]
+  \centering
+  {
+\caption{\textbf{Comparison with Related Work}}
+\label{table:rw_comparison}
+\vspace{-0.05in}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.5}
+\resizebox{0.9\columnwidth}{!}{%
+\begin{tabular}{l|ccccccc}
+\toprule
+\textbf{Method} &
+\makecell[c]{\scriptsize Task \\ \scriptsize Specification} &
+\makecell[c]{\scriptsize Online \\ \scriptsize Task} &
+\makecell[c]{\scriptsize Uncertain/ \\ \scriptsize Unknown \\ \scriptsize Subtasks} &
+\makecell[c]{\scriptsize Human \\ \scriptsize Interaction} &
+\makecell[c]{\scriptsize Dynamic \\ \scriptsize Constraints} &
+\makecell[c]{\scriptsize Local \\ \scriptsize Coordination} \\
+\midrule
+STyLuS*~\cite{kantaros2020stylus} &
+\makecell[c]{\small LTL} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} \\
+ScRATCHeS~\cite{leahy2021scalable} &
+\makecell[c]{\small CaTL} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} \\
+DecTree~\cite{chen2025real} &
+\makecell[c]{\small LTL} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} \\
+cLTL$+$~\cite{sahin2019multirobot} &
+\makecell[c]{\small cLTL} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} \\
+HieraTL~\cite{luo2025simultaneous} &
+\makecell[c]{\small hLTL} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} \\
+Flow-based~\cite{gosrich2025online} &
+\makecell[c]{\small Ordered} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\times$} \\
+HULK~\cite{luo2025hulk} &
+\makecell[c]{\small LTL} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\times$} &
+\makecell[c]{\small $\surd$} &
+\makecell[c]{\small $\surd$} \\
+\midrule
+\textbf{HECTOR (Ours)} &
+\makecell[c]{\small LTL} &
+\makecell[c]{\small \textbf{$\surd$}} &
+\makecell[c]{\small \textbf{$\surd$}} &
+\makecell[c]{\small \textbf{$\surd$}} &
+\makecell[c]{\small \textbf{$\surd$}} &
+\makecell[c]{\small \textbf{$\surd$}} \\
+\bottomrule
+\end{tabular}%
+}}
+\vspace{-3mm}
+\end{table}
+%======================================
+
+
+\subsection{Human-fleet Interaction}
+{Beyond automated task planning, effective human-swarm collaboration under
+uncertainty remains a central bottleneck, especially in deciding when and how
+operators should validate and intervene online~\cite{ferreira2021survey,dahiya2023survey}.
+In practice, no universal metric reliably predicts
+whether an autonomous plan will remain operationally
+sound once execution begins, so human expertise is essential for validating
+reasoning quality and mission viability.
+Human–swarm interaction emphasizes interface design, situational awareness, and
+scalable mechanisms for directing collectives~\cite{kolling2016human}.
+Mixed-initiative approaches~\cite{gombolay2017computational} dynamically shift
+decision authority between humans and autonomy, supporting conflict resolution
+and efficient replanning in uncertain missions.
+Similar approaches are proposed in~\cite{tumova2014maximally,ulusoy2013optimality}
+to compute least violating plans.
+Scaled-autonomy frameworks~\cite{swamy2020scaledautonomy} extend this by allowing
+robots to modulate the
+level of assistance provided to the operator based on task load.
+Interactive fleet learning~\cite{hoque2022fleetdagger} integrates demonstration,
+online supervision, and data aggregation to refine fleet policies over time.
+However, many existing paradigms provide limited support for online
+validation and intervention, often restricting operators to static displays or
+post-hoc plans. In dynamic settings, this can force a fallback to teleoperation, which scales
+poorly with the fleet size due to increasing workload and latency. Consequently,
+interaction protocols that enable sparse and high-level oversight while preserving
+scalable autonomy remain insufficiently addressed.}
+
+
+\subsection{Continual tasks}
+\label{related-work}
+
+Temporal-task planning is commonly formulated within a model-checking framework
+\cite{baier2008principles}, where an LTL formula is first translated into a
+DRA or NBA by tools such as \texttt{SPIN} and \texttt{LTL2BA}
+\cite{ben2010primer,gastin2002fast}, then synchronized with agent
+models such as wFTSs, MDPs, or Petri nets
+\cite{baier2008principles,ding2014optimal,kloetzer2015accomplish}, and finally
+solved by graph-search or optimization procedures including nested-Dijkstra
+search, integer programming, auction-based coordination, or sampling-based
+methods \cite{schillinger2018simultaneous,leahy2021scalable,
+schillinger2019hierarchical,kantaros2020stylus}. The main bottleneck of this
+pipeline lies in the automaton-construction step, whose worst-case complexity
+grows double-exponentially with the formula length \cite{gastin2002fast},
+except for restricted subclasses such as GR(1)
+\cite{piterman2006synthesis}. As a result, even methods that alleviate the
+search over the product system remain limited by the scale of the translated
+task automata. For example, the sampling-based approach in
+\cite{kantaros2020stylus} considers formulas of length up to $14$, while the
+decomposition-based method in \cite{schillinger2018simultaneous} reports task
+formulas of length up to $18$; many other related works focus on formulas of
+length around $6$--$10$ \cite{vasilopoulos2021reactive,
+verginis2018multiagent,lacerda2014optimal,feyzabadi2016multiobjective}. This
+limitation becomes more severe in dynamic settings, where newly triggered tasks
+must be incorporated online, since many existing approaches construct the
+automaton of each new task and synchronize it with the current automaton
+\cite{lacerda2014optimal,feyzabadi2016multiobjective}, causing the state space
+to grow combinatorially with the number of contingent tasks.
+
+
+
+%==============================
+\subsection{Task Coordination under Communication Constraints}\label{task-com}
+Multi-agent systems improve efficiency through concurrent execution and collaboration,
+particularly in complex scenarios. Traditional approaches focus either on spatial task planning~\cite{huang2025novel},
+or on collective control such as formation maintenance~\cite{ren2011distributed}, while assuming
+unrestricted communication for instantaneous information sharing. This assumption breaks down
+in real deployments, where communication is limited by obstacles~\cite{yu2021resilient}, or range
+constraints~\cite{da2024communication}.
+Such limitations necessitate coordination of communication events. The challenge intensifies in dynamic unknown
+environments with unpredictable tasks and workspace models. Existing methods remain limited:
+static schedules~\cite{huang2025novel} fail under unexpected tasks; dynamic
+approaches~\cite{buyukkocak2021planning} require prior knowledge of distributions; and pairwise
+protocols~\cite{aragues2020intermittent} lack team-wide coordination, leading to degraded
+information flow. This creates a critical gap in jointly handling unknown spatiotemporal task
+distributions and team-wide intermittent communication under constraints.
+Three fundamental challenges arise: the {online discovery}
+demands rapid replanning of assignments and communication when tasks emerge~\cite{chen2025real};
+the {sparse connectivity management} requires
+strategic use of limited communication windows to preserve coordination~\cite{saboia2022achord};
+{the temporal constraints among tasks must be maintained between task deadlines and intermittent
+communication opportunities~\cite{guo2018multirobot}.
+These challenges amplify with large fleets,
+where co-optimizing tasks and communication becomes combinatorially complex.}
+
+
+
+
+%%Formal methods on MAS
+
+
+\subsubsection{Coordination under Limited Communication}
+Communication is critical for multi-agent systems, especially in scenarios such as exploration and inspection where agents
+must exchange information to maintain alignment and improve outcomes. Existing approaches
+either employ an end-to-end connectivity model with constant communication, or an intermittent
+model where agents communicate only when necessary. Both involve trade-offs in efficiency,
+flexibility, and adaptability. All-time communication usually focuses on connectivity control,
+often using graph theory~\cite{griparic2022consensus, nguyen2024connectivity}, either by maintaining all initial links~\cite{griparic2022consensus}
+or dynamically adding and removing them while preserving connectivity~\cite{derbakova2011decentralized}.
+{While this approach guarantees reliable data transfer,
+it often overlooks the communication needs of high-level, collaborative tasks.
+Moreover, it can be impractical in the presence of wireless channel uncertainties.}
+Some studies address the joint constraints of connectivity
+and temporal tasks~\cite{luo2019minimum}, yet they
+typically impose strict proximity requirements, reducing overall efficiency in large-scale deployments.
+
+
+\subsubsection{Intermittent Communication under Complex Temporal Tasks}
+To overcome these limitations, intermittent communication has been proposed as an alternative
+solution~\cite{aragues2020intermittent, guo2018multirobot, kantaros2019temporal}. In this model, the communication network can be
+temporarily interrupted, and agents exchange information only at certain times.
+To this end, several related works adopt intermittent communication
+by predefining fixed intervals and optimizing meeting locations accordingly,
+including centralized~\cite{wang2023multi}, distributed~\cite{kantaros2016distributed}
+and predetermined meeting-point approaches~\cite{da2024communication}.
+However, these works typically fix communication times while optimizing locations,
+lacking simultaneous optimization of both aspects.
+Recent work mainly studies pair-wise intermittent communication~\cite{aragues2020intermittent,
+guo2018multirobot, kantaros2019temporal}, where communication occurs only when necessary. {While
+this improves efficiency, it enforces rigid patterns such as fixed schedules~\cite{aragues2020intermittent,
+kantaros2019temporal} or predetermined meeting points~\cite{guo2018multirobot}, and introduces
+delays due to asynchronous execution, which is problematic for tasks that need timely coordination}. Thus,
+all-time communication sacrifices task efficiency, while pairwise protocols slow
+information propagation. To mitigate these drawbacks, team-wise intermittent communication was proposed,
+in which all agents periodically re-establish global connectivity~\cite{saboia2022achord}.
+This differs from sub-team or clustered communication~\cite{ren2023matcpf, yang2024teamwise},
+where ``team-wise'' denotes coordination within sub-teams or dynamically clustered groups.
+Nevertheless, existing team-wise approaches still assume known environments
+and task distributions, limiting applicability in uncertain scenarios.
