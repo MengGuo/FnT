@@ -63,51 +63,36 @@
 
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}[chapter]
-\newtheorem{lemma}[theorem]{Lemma}
-\newtheorem{proposition}[theorem]{Proposition}
-\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}{Lemma}[chapter]
+\newtheorem{proposition}{Proposition}[chapter]
+\newtheorem{corollary}{Corollary}[chapter]
 
 \declaretheorem[
   style=definition,
-  sibling=theorem,
+  numberwithin=chapter,
   qed=\ensuremath{\blacksquare}
 ]{definition}
 
 \declaretheorem[
   style=definition,
-  sibling=theorem,
+  numberwithin=chapter,
   qed=\ensuremath{\blacksquare},
   name=Problem
 ]{problem}
 
 \declaretheorem[
   style=definition,
-  sibling=theorem,
+  numberwithin=chapter,
   qed=\ensuremath{\blacksquare},
   name=Assumption
 ]{assumption}
 
 \declaretheorem[
   style=definition,
-  sibling=theorem,
+  numberwithin=chapter,
   qed=\ensuremath{\blacksquare},
   name=Remark
 ]{remark}
 
 \theoremstyle{definition}
-\newtheorem{example}[theorem]{Example}
-
-\usepackage{titlesec}
-\usepackage{titlecaps}
-
-\titleformat{\subsection}
-  {\normalfont\large\bfseries}
-  {\thesubsection}
-  {1em}
-  {\titlecap}
-
-\titleformat{\subsubsection}
-  {\normalfont\normalsize\bfseries}
-  {\thesubsubsection}
-  {1em}
-  {\titlecap}
+\newtheorem{example}{Example}[chapter]

@@ -1,5 +1,5 @@
 \section{Partial-Order-Based Task Decomposition and Assignment}
-\label{sec:po_decomp_assignment}
+\label{ch04:sec:po_decomp_assignment}
 
 This section develops the first component of the top-down synthesis framework
 for global temporal tasks. The starting point is the pruned task automaton
@@ -22,10 +22,10 @@ constraints. Finally, an anytime branch-and-bound procedure is applied to
 assign these subtasks to feasible agents or coalitions.
 
 \subsection{B\"{u}chi Automaton Pruning}
-\label{subsubsec:NBA-pruning}
+\label{ch04:subsubsec:NBA-pruning}
 To begin with, the NBA~$\mathcal{B}_{\varphi}$ associated with the task~$\varphi$
-is derived, e.g., via translation tools in~\citep{gastin2001fast}.
-Note that~$\mathcal{B}_{\varphi}$ has the structure as defined in Def.~\ref{def:nba},
+is derived, e.g., via translation tools in~\cite{gastin2001fast}.
+Note that~$\mathcal{B}_{\varphi}$ has the structure as defined in Def.~\ref{ch04:def:nba},
 which however can be overly redundant.
 For instance, the required input alphabets for some transitions are infeasible for the whole team;
 or some transitions can be decomposed equivalently
@@ -55,21 +55,21 @@ to be \emph{exactly} at the same instant in real time.
 Therefore, if possible,
 any transition that requires the simultaneous satisfaction of several subtasks is decomposed into equivalent transitions.
 Decomposable transitions are formally defined in
-Def.~\ref{def:decomposable-transition} below.
+Def.~\ref{ch04:def:decomposable-transition} below.
 In other words, the input alphabets of a decomposed transition can be mapped to
 two other transitions that connect the \emph{same} pair of states,
-but via another intermediate state, as illustrated in Fig.~\ref{fig:example_decomposable}.
+but via another intermediate state, as illustrated in Fig.~\ref{ch04:fig:example_decomposable}.
 Thus, all decomposable transitions in~$\mathcal{B}_{\varphi}$ are removed in the pruned automaton.
 Algorithmically, decomposability can be checked by simply composing and comparing the
 propositional formulas associated with each transition.
 
-\begin{definition}[Decomposable Transition]\label{def:decomposable-transition}
+\begin{definition}[Decomposable Transition]\label{ch04:def:decomposable-transition}
 Any transition from state~$q_i$ to $q_j$ in~$\mathcal{B}_{\varphi}$ is decomposable if there exists another state $q_k$ such that $q_j\in \delta(q_i,\sigma_{ik}\cup\sigma_{kj})$ holds,
 $\forall \sigma_{ik},\,\sigma_{kj} \subseteq \Sigma$ that $q_k\in \delta(q_i,\sigma_{ik})$ and $q_j\in \delta(q_k,\sigma_{kj})$ hold.
 
 \end{definition}
 
-An example of decomposable transitions is shown in Fig.~\ref{fig:example_decomposable}.
+An example of decomposable transitions is shown in Fig.~\ref{ch04:fig:example_decomposable}.
 To summarize, the pruned NBA, denoted by~$\mathcal{B}^{-}_{\varphi}$,
 has the same structure as~$\mathcal{B}_{\varphi}$ but with much fewer states and edges.
 In our experience, this pruning step can reduce up to $60\%$ states and edges for typical multi-agent tasks.
@@ -90,7 +90,7 @@ More details can be found in the experiment section.
 	as a decomposable transition, there exist a state $q_k$ and $\sigma_{kj},\sigma_{ik}$
         satisfying that
 	$q_k=\delta(q_i,\sigma_{ik}),q_j=\delta(q_k,\sigma_{kj})$,
-        $\sigma_{ik}\cup \sigma_{kj}=\sigma_n$ based on Def.~\ref{def:decomposable-transition}.
+        $\sigma_{ik}\cup \sigma_{kj}=\sigma_n$ based on Def.~\ref{ch04:def:decomposable-transition}.
 	{Then, an equivalent word $w'=\cdots\{\sigma_n\}\{\sigma_n\}\cdots$ can
 	be created by inserting~$q_k$ in $\{\sigma_n\}$, of which the associated
 	run is given by $\rho'=\cdots q_iq_kq_j\cdots$.
@@ -99,7 +99,7 @@ More details can be found in the experiment section.
         this follows the first case and $w'$ is the associated accepting word in $\mathcal{B}^-$.
 	If any transition is removed as a decomposable transition, it follows the second case
         and the same insertion process described above can be applied.
-	According to Def.~\ref{def:decomposable-transition}, this process will terminate
+	According to Def.~\ref{ch04:def:decomposable-transition}, this process will terminate
         and return to the first case as eventually there exist transitions that are not
 	decomposable.} This completes the proof.
 \end{proof}
@@ -117,15 +117,15 @@ More details can be found in the experiment section.
 \caption{
 Example of decomposable transitions.
 Any transition in red dashed line are all
-decomposable satisfied by Def.~\ref{def:decomposable-transition}.}
-\label{fig:example_decomposable}
+decomposable satisfied by Def.~\ref{ch04:def:decomposable-transition}.}
+\label{ch04:fig:example_decomposable}
 \end{figure}
 %========================================
 
-\begin{example}\label{eq:prune-nba}
-The NBA~$\mathcal{B}_{\varphi}$ associated with the task formula in~\eqref{example:task}
+\begin{example}\label{ch04:eq:prune-nba}
+The NBA~$\mathcal{B}_{\varphi}$ associated with the task formula in~\eqref{ch04:example:task}
 has $707$ states and $16044$ edges with more than $1.29\times10^7$ accepting{\emph{word}s},
-translated via~\citep{gastin2001fast}.
+translated via~\cite{gastin2001fast}.
 After the pruning process described above, the pruned automaton~$\mathcal{B}^{-}_{\varphi}$
 has $707$ states and $2423$ edges with $174469$ accepting \emph{words}. This step reduces $84.9\%$ edges and $98.6\%$
 accepting \emph{words}.
@@ -134,7 +134,7 @@ accepting \emph{words}.
 
 
 %==============================
-\subsection{Task Decomposition}\label{subsubsec:task-decompose}
+\subsection{Task Decomposition}\label{ch04:subsubsec:task-decompose}
 Since the team-wise task in this work is given as a compact temporal task formula,
 a prerequisite for optimal task assignment later is to decompose this task into suitable subtasks.
 Moreover, different from simple reachability task,
@@ -145,12 +145,12 @@ while~$\Diamond\alpha_1\land\Diamond\alpha_2\land\Diamond\alpha_3$ does not impo
 Thus, it is essential for the overall correctness to abstract such ordering constraints among the subtasks.
 This part describes how the subtasks and their partial orderings are abstracted from the pruned automaton~$\mathcal{B}_{\varphi}^{-}$.
 
-\begin{definition}[Decomposition and Subtasks] \label{def:subtasks}
+\begin{definition}[Decomposition and Subtasks] \label{ch04:def:subtasks}
 Consider an accepting run $\rho=q_0q_1\cdots q_L$ of~$\mathcal{B}_{\varphi}^{-}$,
 where $q_0\in Q_0$ and $q_L\in Q_F$.
 One \emph{possible} decomposition of $\varphi$ into subtasks is defined
 as a set of 3-tuples:
-\begin{equation}\label{eq:subtask}
+\begin{equation}\label{ch04:eq:subtask}
 \Omega_{\varphi} = \left\{\omega_\ell=(\ell,\, \sigma_\ell,\, \sigma^{s}_\ell),\, \forall \ell=1,\cdots,L\right\},
 \end{equation}
 where $\ell$ is the index of{subtask~$\omega_\ell$},
@@ -167,8 +167,8 @@ and (ii) $q_{\ell-1} \in \delta(q_{\ell-1},\,\sigma)$, for all  $\sigma\in\Sigma
 \end{definition}
 
 \begin{example}
-	\label{example:subtask}
-        As shown in Fig.~\ref{fig:example_decomposable}~,
+	\label{ch04:example:subtask}
+        As shown in Fig.~\ref{ch04:fig:example_decomposable}~,
           the subtasks associated with run $\rho=q_1q_2q_4q_5$ are given
           by~$\Omega_\varphi=\{({1},\{\texttt{sweep}_{\texttt{p}_{21}}\},\{\texttt{p}_{24}\}),
          \\ ({2},\{\texttt{mow}_{\texttt{p}_{21}}\}, \{\texttt{p}_{24}\}),
@@ -200,7 +200,7 @@ This however can be overly restrictive as it prohibits the concurrent execution 
 Thus, we propose a new notion of \emph{relaxed and partial} ordering of the decomposition,
 as follows.
 
-\begin{definition}[Partial Relations]\label{def:partial}
+\begin{definition}[Partial Relations]\label{ch04:def:partial}
 Given two subtasks in~$\omega_h,
 \omega_\ell\in \Omega_{\varphi}$,
 the following two types of relations are defined:
@@ -218,19 +218,19 @@ then all subtask $\omega_h,\cdots$ cannot all be {executed} simultaneously.
 \end{definition}
 
 %==========
-\begin{remark}\label{remark:duration}
-Note that most related work in~\citep{kantaros2020stylus, guo2015multi,
+\begin{remark}\label{ch04:remark:duration}
+Note that most related work in~\cite{kantaros2020stylus, guo2015multi,
 tumova2016multi, luo2021abstraction,luo2021temporal, sahin2019multirobot, jones2019scratchs}
 treats the fulfillment of robot actions as \emph{instantaneous},
 i.e., the associated proposition becomes True once the action is finished.
 {
   Moreover, most of the above approaches only take into account the \emph{essential sequence}
-\citep{2016Decomposition}
+\cite{2016Decomposition}
 associated with an accepting run, while ignoring the potential conflicts
 among simultaneous actions. Therefore, the above two relations
 are often simplified into one ``less equal'' relation without the ``opposed" relation,
-see e.g., \citep{luo2021temporal}.}
-On the contrary, as described in Sec.~\ref{subsec:multi-agent},
+see e.g., \cite{luo2021temporal}.}
+On the contrary, as described in Sec.~\ref{ch04:subsec:multi-agent},
 each action has a duration when its proposition is True during the {whole} period.
 Thus, it is essential to distinguish these two relations defined above,
 namely, whether one subtask should be started or finished before another subtask.
@@ -238,7 +238,7 @@ namely, whether one subtask should be started or finished before another subtask
 \end{remark}
 
 
-The above definition is illustrated in Fig.~\ref{fig:partial}.
+The above definition is illustrated in Fig.~\ref{ch04:fig:partial}.
 Intuitively, the relation~$\preceq_{\varphi}$ represents the ordering
 constraints among subtasks,
 while the relation~$\neq_{\varphi}$ represents the concurrent constraints.
@@ -246,18 +246,18 @@ Given these partial relations above, we can formally introduce the poset of subt
 
 
 %==============================
-\begin{definition}[R-poset of Subtasks]\label{def:poset}
+\begin{definition}[R-poset of Subtasks]\label{ch04:def:poset}
 One \emph{relaxed and partially} ordered set (\emph{R-poset}) over the decomposition $\Omega_{\varphi}$ is given by
-\begin{equation}\label{eq:poset}
+\begin{equation}\label{ch04:eq:poset}
 P_{\varphi} = (\Omega_{\varphi}, \, \preceq_{\varphi}, \, \neq_{\varphi}),
 \end{equation}
 where~$\preceq_{\varphi}$, $\neq_{\varphi}$ are the partial relations by
-Def.~\ref{def:partial}.
+Def.~\ref{ch04:def:partial}.
 
 \end{definition}
 %==============================
 
-Similar to the original notion of poset in~\citep{simovici2008mathematical},
+Similar to the original notion of poset in~\cite{simovici2008mathematical},
 the above relation is irreflexive and asymmetric,
 however only partially transitive.
 In particular, it is easy to see that
@@ -290,10 +290,10 @@ that has few partial relations.
 
 
 %==========
-\begin{remark}\label{remark:partial-order-motivation}
+\begin{remark}\label{ch04:remark:partial-order-motivation}
 The above two relations, i.e., $\preceq_\varphi$ and $\neq_\varphi$,
 are chosen in the definition of R-posets due to following observations:
-as illustrated in Fig.~\ref{fig:partial} and explained in Remark~\ref{remark:duration},
+as illustrated in Fig.~\ref{ch04:fig:partial} and explained in Remark~\ref{ch04:remark:duration},
 these two relations can describe any possible temporal relation
 between non-instantaneous subtasks.
 More importantly,
@@ -306,7 +306,7 @@ $(\omega_1,\omega_2)\in\preceq_{\varphi}, \{\omega_1,\omega_2\}\in\neq_\varphi$;
 i.e., $(\omega_1,\omega_2)\\\notin\preceq_\varphi,\{\omega_1,\omega_2\}\in\neq_\varphi$;
 (iv) $\omega_1$ is parallel to $\omega_2$, i.e., $(\omega_1,\omega_2)\notin\preceq_\varphi,
 \{\omega_1,\omega_2\}\notin\neq_\varphi$.
-These cases are summarized in Fig.\ref{fig:example_remark_4}.}
+These cases are summarized in Fig.\ref{ch04:fig:example_remark_4}.}
 %In particular, given any two transitions in an accepting run,
 %their temporal constraint can be expressed via the~$\preceq_\varphi$.
 %Secondly, within each transition, there are often subtasks in the ``negated'' set,
@@ -318,9 +318,9 @@ These cases are summarized in Fig.\ref{fig:example_remark_4}.}
 
 
 %==========
-\begin{remark}\label{remark:compare-poset}
+\begin{remark}\label{ch04:remark:compare-poset}
 It is worth noting that the proposed notion of R-Posets contains
-the ``decomposable states'' proposed in~\citep{schillinger2018simultaneous}
+the ``decomposable states'' proposed in~\cite{schillinger2018simultaneous}
 as a \emph{special case}.
 More specifically, the set of decomposable states divide an accepting run into
 fully independent segments, where
@@ -345,7 +345,7 @@ task~$\omega_2$ is started after task~$\omega_1$.
 \textbf{Middle\&Right}:
 $\{\omega_3,\omega_4,\omega_5\}\subset\neq_{\varphi}$
 requires that $\omega_3,\omega_4,\omega_5$ are not executing simultaneously.}
-\label{fig:partial}
+\label{ch04:fig:partial}
 %--------------------
 \end{figure}
 
@@ -354,7 +354,7 @@ requires that $\omega_3,\omega_4,\omega_5$ are not executing simultaneously.}
 	\includegraphics[scale=0.4]{figures/ch04/explain_about_remark4.pdf}
 	\caption{{$\preceq_\varphi$, $\neq_\varphi$ relations in pruned NBAs,
 			where the red dashed arrows are removed transition.}}
-	\label{fig:example_remark_4}
+	\label{ch04:fig:example_remark_4}
 \end{figure}
 %========================================
 
@@ -362,7 +362,7 @@ To satisfy a given R-poset, the language of the underlying system is
 much more restricted.
 In particular, the language of an R-poset is defined as follows.
 
-\begin{definition}[Language of R-poset]\label{def:language-poset}
+\begin{definition}[Language of R-poset]\label{ch04:def:language-poset}
 Given an R-poset $P_\varphi=(\Omega_{\varphi}, \, \preceq_{\varphi}, \, \neq_{\varphi})$,
 its language is defined as the set of all finite words
 that can be generated by the subtasks in~$\Omega_{\varphi}$
@@ -370,7 +370,7 @@ while satisfying the partial constraints.
 More concretely, the language is given by
 $L(P_\varphi)=\{w_{\varphi}\}$, where $w_{\varphi}$ is a finite
 \emph{word} constructed with the set of subtasks in $P_\varphi$, i.e.,
-\begin{equation}\label{eq:poset-language}
+\begin{equation}\label{ch04:eq:poset-language}
 w_{\varphi}=(t_1,\omega_1) (t_2,\omega_2)\cdots (t_L,\omega_L),
 \end{equation}
 where the subtask~$\omega_\ell \in \Omega_\varphi$ and
@@ -409,7 +409,7 @@ R-poset quickly, while adding more R-posets as time allows.}
 %==============================
 \begin{algorithm}[h]\footnotesize
 	\caption{$\texttt{compute\_poset}(\cdot)$: Anytime algorithm to compute accepting R-posets.}
-	\label{alg:compute-poset}
+	\label{ch04:alg:compute-poset}
 	\SetKwInOut{Input}{Input}
 	\SetKwInOut{Output}{Output}
 	\Input {Pruned NBA~$\mathcal{B}_{\varphi}^{-}$, time budget $t_0$.}
@@ -418,41 +418,41 @@ R-poset quickly, while adding more R-posets as time allows.}
 	Set $\mathcal{L}_{\varphi}=\mathcal{P}_{\varphi}=\emptyset$;\\
 	Begin modified DFS to find an accepting run $\rho$;\\
 	\While{$time<t_0$}{
-		\tcc{Subtask decomp. by Def.~\ref{def:subtasks}}
+		\tcc{Subtask decomp. by Def.~\ref{ch04:def:subtasks}}
 		Compute~ $\Omega$ and word~$w$ given~$\rho$;
-		\label{alg-line:decompose}\\
-		\If{$w \notin \mathcal{L}_\varphi$\label{alg1:inlp}}{
+		\label{ch04:alg-line:decompose}\\
+		\If{$w \notin \mathcal{L}_\varphi$\label{ch04:alg1:inlp}}{
 			Set~$P=(\Omega,\, \preceq_{\varphi}=\mathbb{F},\neq_{\varphi}=2^{\Omega})$,
-			and $\preceq_{\varphi}=\mathbb{F}$;\label{alg-line:initial}\\
-			Set~$L(P)=\{w\},{Que=[w]}$, $I_1=I_2=\emptyset$;\label{alg-line:que}\\
+			and $\preceq_{\varphi}=\mathbb{F}$;\label{ch04:alg-line:initial}\\
+			Set~$L(P)=\{w\},{Que=[w]}$, $I_1=I_2=\emptyset$;\label{ch04:alg-line:que}\\
 			\tcc{Reduce partial relations}
-			\While{$|Que|>0$ and $time>t_0$ \label{alg1:begin_que}}{
+			\While{$|Que|>0$ and $time>t_0$ \label{ch04:alg1:begin_que}}{
 				$w \leftarrow Que.pop()$;\\
 				\For{$i=1,2,\cdots,|w|-1$}{
 					$\omega_{1}=w[i]$, $\omega_{2}=w[i+1]$;\\
 					$w' \leftarrow $ Switching~$\omega_{1}$
-					and~$\omega_{2}$ within~$w$\label{alg1:switch};\\
-					\eIf{$w'$ is accepting\label{alg1:waccepting}}{
+					and~$\omega_{2}$ within~$w$\label{ch04:alg1:switch};\\
+					\eIf{$w'$ is accepting\label{ch04:alg1:waccepting}}{
 
 						Add $(\omega_{1},\,\omega_{2})$ to $I_1$;\\
-						Add $w'$ to $Que, L(P)$ if not in $L(P)$;\label{alg1:add-w}
+						Add $w'$ to $Que, L(P)$ if not in $L(P)$;\label{ch04:alg1:add-w}
 						%Add $W'$ to $L(P)$ if not in $L(P)$;
-					}{Add $(\omega_{1},\,\omega_{2})$ to $I_2$;\label{alg1:end_que}}
+					}{Add $(\omega_{1},\,\omega_{2})$ to $I_2$;\label{ch04:alg1:end_que}}
 				}
 				Remove $\{I_1\,\backslash\, I_2\}$
-				from~$\preceq_{\varphi} $,{update~$time$};\label{alg-line:remove}\\
+				from~$\preceq_{\varphi} $,{update~$time$};\label{ch04:alg-line:remove}\\
 				{\textbf{If} $time>t_0$, \textbf{return}  $\mathcal{P}_{\varphi},\mathcal{L}_{\varphi}$.}\\}
-				\For{$\boldsymbol{\hat{\omega}} \subseteq \neq_{\varphi}$\label{alg-line:calculate_neq}}{
+				\For{$\boldsymbol{\hat{\omega}} \subseteq \neq_{\varphi}$\label{ch04:alg-line:calculate_neq}}{
 				$w' \leftarrow $ Replace~$\omega_i\in\boldsymbol{\hat{\omega}} $ in~$w$
-				by~$\bigcup_{\omega_i\in\boldsymbol{\hat{\omega}}}\omega_i$;\label{alg1:word-neq}\\
-				\If{$w'$ is accepting\label{alg1:waccepting-neq}}{
+				by~$\bigcup_{\omega_i\in\boldsymbol{\hat{\omega}}}\omega_i$;\label{ch04:alg1:word-neq}\\
+				\If{$w'$ is accepting\label{ch04:alg1:waccepting-neq}}{
 					Remove~$\boldsymbol{\hat{\omega}} $
-					from~$\neq_{\varphi}$;\label{alg-line:remove_neq}\\
+					from~$\neq_{\varphi}$;\label{ch04:alg-line:remove_neq}\\
 			}
 			}
 			\tcc{Self loop calculation }\For{$w$ in $L(P)$}{
 				Get path $\rho'$ associated with $\sigma_\ell$ of $w'$;\\
-				\For{$i=0,1,\cdots,|\rho'|$\label{alg-line:self-loop}}{
+				\For{$i=0,1,\cdots,|\rho'|$\label{ch04:alg-line:self-loop}}{
 					$\sigma^p_{\ell_i}=\sigma^p_{\ell_i}\cap\delta^{-1}(\rho'[i-1],\, \rho'[i-1])$;\\
 			}}
 			Add~$P$ to~$\mathcal{P}_{\varphi}$,
@@ -465,71 +465,71 @@ R-poset quickly, while adding more R-posets as time allows.}
 
 
 
-As summarized in Alg.~\ref{alg:compute-poset},
+As summarized in Alg.~\ref{ch04:alg:compute-poset},
 the proposed algorithm builds upon the modified depth first search (DFS)
-algorithm with local visited sets~\citep{sedgewick2001algorithms}.
+algorithm with local visited sets~\cite{sedgewick2001algorithms}.
 Given the pruned automaton~$\mathcal{B}_{\varphi}^-$,
 the modified DFS can generate an accepting run $\rho$ given the chosen pair of
 initial and final states.
 Given $\rho$, the associated set of subtasks $\Omega$ and word $w$ can be
-derived by following Definition~\ref{def:subtasks}~, see Line~\ref{alg-line:decompose}~.
+derived by following Definition~\ref{ch04:def:subtasks}~, see Line~\ref{ch04:alg-line:decompose}~.
 Then, a R-poset $P$ is initialized as $P=(\Omega,\, \mathbb{F},\, 2^{\Omega})$
-in Line~\ref{alg-line:initial}~,
-namely, a fully-ordered R-poset as described after Definition~\ref{def:poset}~.
+in Line~\ref{ch04:alg-line:initial}~,
+namely, a fully-ordered R-poset as described after Definition~\ref{ch04:def:poset}~.
 Furthermore, to reduce the partial relations,
 we introduce a ``swapping'' operation to change the order of adjacent alphabets,
 and then check if the resulting new word can lead to an accepting run
-in the circle of Line~\ref{alg1:begin_que}~-\ref{alg-line:remove}~.
+in the circle of Line~\ref{ch04:alg1:begin_que}~-\ref{ch04:alg-line:remove}~.
 If so, it means the relative ordering of this two adjacent subtasks can
-potentially be relaxed or removed from~$\preceq_{\varphi}$ as in Line~\ref{alg-line:remove}~.
+potentially be relaxed or removed from~$\preceq_{\varphi}$ as in Line~\ref{ch04:alg-line:remove}~.
 On the contrary, for any other word within~$L(P)$, if such swapping does not
 result in an accepting run, it is definitively kept in the partial ordering.
 %讲循环 我们这里设置了一个额外的变量作为循环截止的判断条件。
-{The queue $Que$ is used to store the set of accepting words $w$ and the iteration ends when $|Que|=0$ in Line~\ref{alg1:begin_que},
+{The queue $Que$ is used to store the set of accepting words $w$ and the iteration ends when $|Que|=0$ in Line~\ref{ch04:alg1:begin_que},
 which indicates that all words in $L(P)$ have been found.}
 The resulting R-poset is a new and valid R-poset that have less partial
 ordering constraints.
 Furthermore, for any subtasks set that belong to the ``opposed'' relation,
 a new word is generated by allowing all subtasks to be fulfilled simultaneously
-in Line~\ref{alg1:word-neq}~.
+in Line~\ref{ch04:alg1:word-neq}~.
 If this new word is accepting, it means that this subtasks set do not belong to the
-relation~$\neq_{\varphi}$ in Line~\ref{alg-line:remove_neq}~. After that, labels of self loop $\sigma^s_\ell$ is calculated
-by checking all feasible word in line~\ref{alg-line:self-loop}~.
+relation~$\neq_{\varphi}$ in Line~\ref{ch04:alg-line:remove_neq}~. After that, labels of self loop $\sigma^s_\ell$ is calculated
+by checking all feasible word in line~\ref{ch04:alg-line:self-loop}~.
 Note that the resulting~$P$ is only one of the R-posets and the associated language is
-given by~$L(P)$ as defined in~Definition~\ref{def:language-poset}~.
+given by~$L(P)$ as defined in~Definition~\ref{ch04:def:language-poset}~.
 Lastly, as time allows, the DFS continues until a new accepting run is found,
 which is used to compute new R-posets with same steps.
 
 \begin{example}
-	Continuing from example~\ref{example:subtask}, we can get an R-poset with
+	Continuing from example~\ref{ch04:example:subtask}, we can get an R-poset with
 	$\preceq_\varphi=\{(1,2),(1,3)\},\neq_{\varphi}=\{\{2,3\}\}$.
 
 \end{example}
 
 %==============================
-\begin{lemma}\label{lemma:accepting-poset}
-Any R-poset within $\mathcal{P}_{\varphi}$ obtained by Alg.~\ref{alg:compute-poset}
+\begin{lemma}\label{ch04:lemma:accepting-poset}
+Any R-poset within $\mathcal{P}_{\varphi}$ obtained by Alg.~\ref{ch04:alg:compute-poset}
 is accepting.
 \end{lemma}
 \begin{proof}
 
 Due to the definition of accepting R-poset, it suffices to show that the
 language~$L(P)$ derived above for reach~$P$ is accepting.
-To begin with, as shown in Line~\ref{alg1:add-w}, any word~$w$ added to~$L(P)$
+To begin with, as shown in Line~\ref{ch04:alg1:add-w}, any word~$w$ added to~$L(P)$
 is accepting. %正确性
 Secondly, assume that there exist a word $w\in L_{\varphi}$ that satisfies $P$ but $w\not\in L(P)$%完备性、
 , i.e., $w$ satisfies the partial ordering constraints in~$P$ but does not belong to $L(P)$.
 Regarding the ordering relation~$\preceq_{\varphi}$,
-due to the iteration process of~$Que$ in Line~\ref{alg1:begin_que}-\ref{alg1:end_que},
+due to the iteration process of~$Que$ in Line~\ref{ch04:alg1:begin_que}-\ref{ch04:alg1:end_que},
 any accepting word~$w$ that can be generate by a sequence of switching operation will be added
 to~$L(P)$.{Assume that $w=\sigma_j\sigma_k\cdots$
   where $w[1]$ is associated with the subtask~$\omega_j$.
 Then, $(\omega_i,\omega_j)\notin \preceq_\varphi$ holds if $ i<j$ and $w$ cannot satisfy the ``less equal'' constraints otherwise.
- Similar to the bubble sorting algorithm \citep{astrachan2003bubble},
+ Similar to the bubble sorting algorithm \cite{astrachan2003bubble},
 $w_o[j]$ is switched sequentially with all the preceding terms $w_o[j-1],\cdots,w_o[0]$.
 The resulting words $w'$ after each switch are accepting,
 because if any $w'$ is not accepting, then the switched pairs of subtasks
-$(\omega_i,\omega_j)$ are kept in $\preceq_\varphi$ for all $i<j$ as in Line \ref{alg-line:remove}.
+$(\omega_i,\omega_j)$ are kept in $\preceq_\varphi$ for all $i<j$ as in Line \ref{ch04:alg-line:remove}.
 Afterwards, the resulting word is given by~$w_1=\sigma_j\sigma_1\sigma_2\cdots$.
 This operation can be applied to relocate $\sigma_k$ in $w_1$ to the second
 place as $w_2=\sigma_j\sigma_k\cdots$, and so on until~$w_n=w$ holds.}
@@ -541,30 +541,30 @@ Respecting to each ordering relation within~$\neq_{\varphi}$, it is simpler
 as any word within~$L(P)$ satisfies this relation and is verified to be accepting
 after augmenting the alphabets with the union of all alphabets.
 Thus, if $w$ satisfies the constraints of $P$, it will be first added to~$Que$ in
-Line~\ref{alg1:begin_que}-\ref{alg1:end_que} and then
-verified in Line~\ref{alg1:word-neq}, as~$w\in L(P)$. This completes the proof.
+Line~\ref{ch04:alg1:begin_que}-\ref{ch04:alg1:end_que} and then
+verified in Line~\ref{ch04:alg1:word-neq}, as~$w\in L(P)$. This completes the proof.
 \end{proof}
 
 
 
-Since Alg.~\ref{alg:compute-poset} is an anytime algorithm,
+Since Alg.~\ref{ch04:alg:compute-poset} is an anytime algorithm,
 its output~$\mathcal{P}_{\varphi}$ within the time budget
 could be much smaller than the actual complete set of accepting R-posets.
 Consequently, if a word~$w$ does not satisfy
 any R-poset~$P\in \mathcal{P}_{\varphi}$, i.e.,~$w\notin \mathcal{L}_{\varphi}$,
 it can still be accepting.
 Nonetheless, it is shown in the sequel for completeness analyses that
-given enough time, Alg.~\ref{alg:compute-poset} can generate
+given enough time, Alg.~\ref{ch04:alg:compute-poset} can generate
 the complete set of R-posets.
 In that case, any word that does not satisfy any R-poset
 within~$\mathcal{P}_{\varphi}$ is surely not accepting.
 It means that the complete set of R-posets~$\mathcal{P}_{\varphi}$ is
 equally expressive as the original NBA $\mathcal{B}^-$.
-The above analysis is summarized in lemma~\ref{lemma:complete-poset}.
+The above analysis is summarized in lemma~\ref{ch04:lemma:complete-poset}.
 
 %==============================
-\begin{lemma}\label{lemma:complete-poset}
-The outputs of Alg.~\ref{alg:compute-poset}
+\begin{lemma}\label{ch04:lemma:complete-poset}
+The outputs of Alg.~\ref{ch04:alg:compute-poset}
 satisfy that~$L(P_i)\cap L(P_j)=\emptyset$, $\forall i\neq j$,
 and $L(P_i){\subset}  L_\varphi$, $\forall P_i \in \mathcal{P}_\varphi$.
 Moreover, given enough time~$t_0\rightarrow \infty$,
@@ -578,18 +578,18 @@ The first part can be proven by contradiction.
 Since the set of subtasks within the R-poset is simply
  the union of all subtasks within each word,
  it implies that~$\Omega_1 = \Omega_2$.
- Then, as discussed in Lemma~\ref{lemma:accepting-poset},~$w\in L(P_1)$ implies
+ Then, as discussed in Lemma~\ref{ch04:lemma:accepting-poset},~$w\in L(P_1)$ implies
  that there exists a sequence of switching operations that maps the original
  word~$w_0$ to~$w$, all of which satisfy the partial relations in~$P_1$.
  The same applies to~$w\in L(P_2)$.
  Since the set of subtasks are identical, it implies that the relations in~$P_1$
  is a subset of those in~$P_2$, or vice versa.
- However, since the~$Que$ in Alg.~\ref{alg:compute-poset} iterates through all
+ However, since the~$Que$ in Alg.~\ref{ch04:alg:compute-poset} iterates through all
  accepting words of the same~$\Omega$,
  the partial relations are the maximum given the same~$\Omega$,
  Thus both partial relations in~$P_1, P_2$ can only be equal and~$P_1=P_2$ holds.
 Regarding the second part,
-the underlying DFS search scheme in Alg.~\ref{alg:compute-poset} is guaranteed
+the underlying DFS search scheme in Alg.~\ref{ch04:alg:compute-poset} is guaranteed
  to exhaustively find all accepting runs of~$\mathcal{B}^-_{\varphi}$.
  Namely, the complete set of R-posets~$\mathcal{P}_{\varphi}$ returned
  by the algorithm after full termination is ensured to cover all
@@ -614,15 +614,15 @@ and the accepting language of the task~$L_\varphi$.
 an example of the R-posets graph~$\mathcal{G}_{P_\varphi}$,
 where the relations~$\preceq_{\varphi}$ and~$\neq_{\varphi}$
 are marked by black and red arrows, respectively.}
-\label{fig:poset_language}
+\label{ch04:fig:poset_language}
 %--------------------
 \end{figure}
 %========================================
 
-Similar to the Hasse diagram in~\citep{simovici2008mathematical},
+Similar to the Hasse diagram in~\cite{simovici2008mathematical},
 the following graph can be constructed given one R-poset~$P_{\varphi}$.
 
-\begin{definition}[R-posets Graph]\label{def:poset-graph}
+\begin{definition}[R-posets Graph]\label{ch04:def:poset-graph}
 The R-poset graph of $P_{\varphi}=(\Omega_\varphi,\,\preceq_{\varphi},\,\neq_{\varphi},
 \,\Omega_0)$ is a digraph $\mathcal{G}_{P_\varphi}=(\Omega,\,E,\,R)$,
 where $\Omega$ is the set of nodes;
@@ -641,17 +641,17 @@ have no incoming edges. An undirected 'edge' $(\omega_1,\omega_2,\dots)\in R$, i
 The R-poset graph~$\mathcal{G}_{P_\varphi}$ provides a straightforward
 representation of the partial ordering among subtasks,
 i.e., from low to high in the direction of edges.
-As shown in Fig.~\ref{fig:poset_language}~,~$\mathcal{G}_{P_\varphi}$ can be dis-connected with multiple root nodes.
+As shown in Fig.~\ref{ch04:fig:poset_language}~,~$\mathcal{G}_{P_\varphi}$ can be dis-connected with multiple root nodes.
 
 
 
-\subsection{Task Assignment}\label{subsubsec:task-assignment}
+\subsection{Task Assignment}\label{ch04:subsubsec:task-assignment}
 Given the set of R-posets~$\mathcal{P}_{\varphi}$ derived from the previous
 section, this section describes how this set can be used to compute
 the optimal assignment of these subtasks. More specifically, we consider
 the following sub-problems of task assignment:
 
-\begin{problem}\label{problem:}
+\begin{problem}\label{ch04:problem:}
 Given any R-poset $P=(\Omega,\, \preceq_{\varphi},\, \neq_{\varphi})$
 where~$P\in \mathcal{P}_{\varphi}$,
 find the optimal assignment of all subtasks in~$\Omega$ to the multi-agent system
@@ -665,15 +665,15 @@ respected; (ii) the maximum completion time of all subtasks is minimized.
 
 To begin with, even without the constraints of partial ordering
 and collaborative actions, the above problem includes the multi-vehicle routing
-problem~\citep{khamis2015multi},
-and the job-shop scheduling problem~\citep{morrison2016branch} as special instances.
+problem~\cite{khamis2015multi},
+and the job-shop scheduling problem~\cite{morrison2016branch} as special instances.
 Both problems are known to be NP-hard.
 Thus, the above problem is also NP-hard and its most straightforward solution
 is to formulate a Mixed Integer Linear Program (MILP).
 {However, there are two major drawbacks of MILP:
 (i) the computation complexity grows exponentially with the problem size;
 (ii) there is often no intermediate solution before the optimal solution is generated via a MILP solver,
-  e.g., GLPK~\citep{makhorin2008glpk}.
+  e.g., GLPK~\cite{makhorin2008glpk}.
 Both drawbacks hinder the usage of this approach in large-scale real-time applications,
 where a timely good solution is more valuable than the optimal solution.}
 
@@ -686,17 +686,17 @@ where a timely good solution is more valuable than the optimal solution.}
 		Illustration of the main components in the BnB search,
 		i.e., the node expansion and branching to generate explore new nodes (in green arrow);
 		and the lower and upper bounding to avoid undesired branches (in orange).}
-	\label{fig:bnb_search_logic}
+	\label{ch04:fig:bnb_search_logic}
 	%--------------------
 \end{figure}
 %========================================
 
 Motivated by these observations, an anytime assignment
 algorithm is proposed in this work based on the Branch and Bound (BnB) search
-method~\citep{morrison2016branch}.
+method~\cite{morrison2016branch}.
 It is not only complete and optimal, but also anytime, meaning that a good
 solution can be inquired within any given time budget.
-As shown in Fig.~\ref{fig:bnb_search_logic},
+As shown in Fig.~\ref{ch04:fig:bnb_search_logic},
 the four typical components of a BnB
 algorithm are the node expansion, the branching method,
 and the design of the upper and lower bounds.
@@ -706,7 +706,7 @@ These components for our application are described in detail below.
 \textbf{Node expansion}.
 Each node in the search tree stands for one partial assignment of the
 subtasks, i.e.,
-\begin{equation}\label{eq:node}
+\begin{equation}\label{ch04:eq:node}
 \nu = (\tau_1,\,\tau_2,\cdots,\tau_N),
 \end{equation}
 where $\tau_n$ is the ordered sequence of tasks assigned to agent~$n\in \mathcal{N}$.
@@ -725,14 +725,14 @@ This validation process can avoid the expansion to infeasible nodes with $(\cdot
 , thus improving  efficiency.}
  Let~$\nu$ be the current node of the search tree.
 The \emph{next} subtask~$\omega$ to be assigned is chosen from the
-R-poset~$\mathcal{G}_{P_\varphi}$ defined in Def.~\ref{def:poset-graph}
+R-poset~$\mathcal{G}_{P_\varphi}$ defined in Def.~\ref{ch04:def:poset-graph}
 if \emph{all} of its parent subtasks are already assigned, i.e.,
-\begin{equation}\label{eq:next-task}
+\begin{equation}\label{ch04:eq:next-task}
 \omega' \in \Omega_\nu, \; \forall \omega' \in \text{Pre}(\omega),
 \end{equation}
 where~$\text{Pre}(\omega)$ is the set of preceding or parenting subtasks of $\omega$ in~$\mathcal{G}_{P_\varphi}$;
 and $\Omega_\nu$ is the set of assigned subtasks as
-\begin{equation}\label{eq:node-tasks}
+\begin{equation}\label{ch04:eq:node-tasks}
 \Omega_{\nu}=\{\omega\in\tau_n,\,\forall n\in \mathcal{N}\},
 \;\Omega^-_{\nu} = \Omega\backslash \Omega_{\nu},
 \end{equation}
@@ -761,20 +761,20 @@ estimated completion time of the whole plan given its current assignment.
 %% \begin{algorithm}[t]
 %% \caption{$\texttt{upper\_bound}(\cdot)$: Compute the upper bound of solutions
 %% rooted from a node}
-%% \label{alg:upper_bound}
+%% \label{ch04:alg:upper_bound}
 %% \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
 %% \Input {Poset~$P_{\varphi}$, node~$\nu$.}
 %% \Output {Assignment~$\overline{J}_\nu$, upper bound~$\overline{T}_\nu$.}
 %% \While(\tcp*[f]{\eqref{eq:node-tasks}}){$\Omega^-_\nu \neq \emptyset$}{
 %% \ForAll{$\omega\in \Omega^-_\nu$\, \text{and}\, $\{n\}\subset\mathcal{N} $ satisfy $\omega$
-%% \label{algline:all-next}}
+%% \label{ch04:algline:all-next}}
 %% {Compute and save $\nu_{n,\omega}$ by assigning $\omega$ to agent set~$\{n\}$ }
 %% Select~$\nu^{+}_{\star}=\textbf{argmax}_{\nu\in \{\nu_{n,\omega}^+\}}\,\{\eta_{\nu}\}$
-%% \label{algline:compute-eta}\tcp*{\eqref{eq:node-makespan}}
-%% $\nu \leftarrow \nu^{+}_{\star}$; \label{algline:expand-node}\\
+%% \label{ch04:algline:compute-eta}\tcp*{\eqref{eq:node-makespan}}
+%% $\nu \leftarrow \nu^{+}_{\star}$; \label{ch04:algline:expand-node}\\
 %% }
 %% Compute and makespan~$T_\nu$ and subtask start time $T_\Omega$ of assignment~$J_\nu$ \\
-%% \label{algline:return}
+%% \label{ch04:algline:return}
 %% \textbf{Return} $\overline{J}_\nu=J_\nu,\, \overline{T}_\nu=T_\nu$,$\overline{T}_\Omega=T_\Omega$;\\
 %% \end{algorithm}
 %% %==============================
@@ -782,24 +782,24 @@ estimated completion time of the whole plan given its current assignment.
 %==============================
 \begin{algorithm}[t]
 \caption{$\texttt{BnB}(\cdot)$: Anytime BnB algorithm for task assignment}
-\label{alg:BnB}
+\label{ch04:alg:BnB}
 \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
 \Input {Agents $\mathcal{N}$, R-poset $P_{\varphi}$, time budget $t_0$.}
 \Output {Best assignment $J^\star$ and makespan $T^\star$.}
-Initialize root node~$\nu_0$ and queue $Q=\{(\nu_0,0)\}$; \label{algline:init-start}\\
-Set $T^\star=\infty$ and $J^\star=()$;\label{algline:init-end}\\
+Initialize root node~$\nu_0$ and queue $Q=\{(\nu_0,0)\}$; \label{ch04:algline:init-start}\\
+Set $T^\star=\infty$ and $J^\star=()$;\label{ch04:algline:init-end}\\
 \While{($Q$ not empty) and ($time<t_0$)}{
 Take node $\nu$ off $Q$;\\
-$\overline{J}_\nu,\, \overline{T}_\nu,\overline{T}_\Omega  = \texttt{upper\_bound}(\nu,\, P_{\varphi})$ \label{algline:upper}
+$\overline{J}_\nu,\, \overline{T}_\nu,\overline{T}_\Omega  = \texttt{upper\_bound}(\nu,\, P_{\varphi})$ \label{ch04:algline:upper}
 
-\If{$T^\star > \overline{T}_\nu$ \label{algline:update1}}{
-Set $T^\star=\overline{T}_\nu$ and $J^\star=\overline{J}_\nu$, $T^\star_\Omega=\overline{T}_\Omega$;\label{algline:update2}}
+\If{$T^\star > \overline{T}_\nu$ \label{ch04:algline:update1}}{
+Set $T^\star=\overline{T}_\nu$ and $J^\star=\overline{J}_\nu$, $T^\star_\Omega=\overline{T}_\Omega$;\label{ch04:algline:update2}}
 Expand child nodes $\{\nu^+\}$ from $\nu$ ;\\
 \ForAll{$\nu^+\in\{\nu^+\}$}{
 	$\underline{T}_\nu = \texttt{lower\_bound}(\nu^+,\,P_{\varphi})$
- \label{algline:lower}\\
-	\If{$\underline{T}_\nu \leq T^\star$ \label{algline:store1}}{
-			Add $(\nu^+,\underline{T}_\nu)$ into $Q$.\label{algline:store2}
+ \label{ch04:algline:lower}\\
+	\If{$\underline{T}_\nu \leq T^\star$ \label{ch04:algline:store1}}{
+			Add $(\nu^+,\underline{T}_\nu)$ into $Q$.\label{ch04:algline:store2}
 	}
 	}
 }
@@ -815,8 +815,8 @@ The upper bound method is tried for each chosen node to update
 More specifically, given a node~$\nu$,
 the upper bound of all solutions rooted from this node
 is estimated via a greedy task assignment policy encapsulated as:
-%as summarized in Alg.~\ref{alg:upper_bound}:
-\begin{equation}\label{eq:upper-bound}
+%as summarized in Alg.~\ref{ch04:alg:upper_bound}:
+\begin{equation}\label{ch04:eq:upper-bound}
 \overline{J}_\nu,\, \overline{T}_\nu ,\overline{T}_\Omega= \texttt{upper\_bound}(\nu,\, P_{\varphi}),
 \end{equation}
 {where~$\overline{T}_\nu$ is upper bound, and~$\overline{J}_\nu$ is the
@@ -827,7 +827,7 @@ to any allowed agent set~$\{n\}\subset\mathcal{N}$,
 thus generating a set of child nodes~$\{\nu^+_{n,\omega}\}$.
 Then, for each node~$\nu\in \{\nu^+_{n,\omega}\}$,
 its \emph{concurrency} level~$\eta_{\nu}$ is estimated as follows:
-\begin{equation}\label{eq:node-makespan}
+\begin{equation}\label{ch04:eq:node-makespan}
 T_\nu = \max_{n\in\mathcal{N}} \{T_{\tau_n}\},\;
 T^{\texttt{s}}_\nu = \sum_{\omega\in\Omega_\nu}\, D_{\omega}N_\omega,\;
 \eta_\nu = \frac{T^{\texttt{s}}_\nu}{T_\nu},
@@ -835,7 +835,7 @@ T^{\texttt{s}}_\nu = \sum_{\omega\in\Omega_\nu}\, D_{\omega}N_\omega,\;
 where node~$\nu=(\tau_1,\cdots,\tau_N)$;~$T_{\tau_n}$ is the execution
 time of all subtasks in~$\tau_n$ by agent~$n$;
 $T_\nu$ is the max current makespan;
-%calculate by \eqref{eq:node-makespan};
+%calculate by \eqref{ch04:eq:node-makespan};
 and $T^{\texttt{s}}_\nu$ is the total execution time of all subtasks~$\omega$
 given its duration~$D_\omega$ and the number of participants~$N_\omega$.
 {The makespan $T_\nu$ is calculated given
@@ -862,14 +862,14 @@ node is estimated via two separate relaxations of the original problem:
 one is to consider only the partial ordering constraints while ignoring
 the agent capacities;
 another is vice versa. Details of optimization functions for these bounds
-can be found in \citep{liu2022arxiv}.
+can be found in \cite{liu2022arxiv}.
 
 
 
 %==============================
 
 %------------------------------
-\begin{remark}\label{remark:none-milp}
+\begin{remark}\label{ch04:remark:none-milp}
 The computation of both the upper and lower bounds are designed
 to be free from any integer optimization.
 This is intentional to avoid unpredictable solution time caused by
@@ -878,34 +878,34 @@ external integer optimization solvers.
 %------------------------------
 
 Given the above components, the complete BnB algorithm can be stated as
-in Alg.~\ref{alg:BnB}.
+in Alg.~\ref{ch04:alg:BnB}.
 In the initialization step in
-Line~\ref{algline:init-start}-\ref{algline:init-end},
+Line~\ref{ch04:algline:init-start}-\ref{ch04:algline:init-end},
 the root node~$\nu_0$ is created as an empty assignment,
 the estimated optimal cost~$T^{\star}$ is set to infinity,
 and the queue $Q$ to store un-visited nodes and the lower bound as indexes contains only $(\nu_0,0)$.
 Then, within the time budget, a node $\nu$ is taken from $Q$ for expansion with smallest lower bound.
-We calculate the upper bound of $\nu$ in line~\ref{algline:upper} and update the optimal value $T^\star,J^\star,T^\star_\Omega$
-in line~\ref{algline:update1}-\ref{algline:update2}.
+We calculate the upper bound of $\nu$ in line~\ref{ch04:algline:upper} and update the optimal value $T^\star,J^\star,T^\star_\Omega$
+in line~\ref{ch04:algline:update1}-\ref{ch04:algline:update2}.
 After that, we expand the child nodes $\{\nu^+\}$ of current node $\nu$.
-Finally, we calculate the lower bound of each new node $\nu^+$ in line~\ref{algline:lower} and store
-the node with the potential to get a better solution into $Q$ in line~\ref{algline:store1},\ref{algline:store2}.
+Finally, we calculate the lower bound of each new node $\nu^+$ in line~\ref{ch04:algline:lower} and store
+the node with the potential to get a better solution into $Q$ in line~\ref{ch04:algline:store1},\ref{ch04:algline:store2}.
 This process repeat until time elapsed or the whole search tree is
 exhausted.
 
 %==============================
-\begin{lemma}\label{lemma:BnB-satisfying}
-Any task assignment~$J^\star$ obtained from Alg.~\ref{alg:BnB} satisfies
+\begin{lemma}\label{ch04:lemma:BnB-satisfying}
+Any task assignment~$J^\star$ obtained from Alg.~\ref{ch04:alg:BnB} satisfies
 the partial ordering constraints in~$P_{\varphi}$.
 \end{lemma}
 \begin{proof}
 Since the assignment~$J^\star$ belongs to the set of solutions obtained from
-the upper bound estimation in~\eqref{eq:upper-bound}
+the upper bound estimation in~\eqref{ch04:eq:upper-bound}
 at certain node in the search tree, it suffices to show that any solution
-of~\eqref{eq:upper-bound} satisfies the partial ordering constraints.
+of~\eqref{ch04:eq:upper-bound} satisfies the partial ordering constraints.
 Regardless of the current node~$\nu$, the set of remaining subtasks
 in~$\Omega^-_\nu$ is assigned strictly following the preceding order
-in the R-poset graph as defined in~\eqref{eq:next-task}.
+in the R-poset graph as defined in~\eqref{ch04:eq:next-task}.
 In other words, for any pair~$(\omega_1,\,\omega_2)\in \preceq_{\varphi}\cap \neq_{\varphi}$,
 if $\omega_1\in \Omega_\nu$ and $\omega_2\in \Omega^-_\nu$,
 then the starting time of~$\omega_2$ is larger than the finishing time of~$\omega_1$.

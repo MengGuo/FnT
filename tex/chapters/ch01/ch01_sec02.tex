@@ -1,83 +1,201 @@
 \section{Related Work}
 \label{sec:related_work}
-This section includes a short introduction to the research background of the thesis, including the motion and task planning problem of mobile robots, the model-checking algorithm for verification and synthesis, and the control and coordination problem of multi-robot systems.
-Then we provide a review of some recent work related to the remaining chapters of this work.
 
+This section reviews the literature most relevant to the themes developed in this
+monograph. The discussion begins with formal methods for task and motion
+synthesis, then turns to planning under incomplete models and infeasible
+specifications, multi-robot coordination under temporal tasks, and execution-time
+adaptation under interaction constraints. The final part focuses on contingent
+collaboration and human supervision, which have become increasingly important in
+large-scale and long-horizon robotic systems.
 
+\subsection{Formal methods for task and motion synthesis}
 
-\subsubsection{Model-checking-based control synthesis}
+Model checking has provided a principled foundation for synthesizing control and
+planning policies from high-level specifications. Foundational work on symbolic
+abstraction and discrete verification established the algorithmic basis for
+reasoning about dynamical systems through finite models
+\cite{alur2000discrete,girard2007approximately,baier2008principles}. Building on
+this foundation, temporal-logic-based control synthesis has been developed for
+several system classes, including discrete-time linear systems, piecewise affine
+systems, and stochastic models
+\cite{tabuada2006linear,aydin2013temporal,yordanov2010formal,
+  kloetzer2008fully,yordanov2012temporal,ding2011mdp}. Metric-temporal and
+robustness-based variants further extended this line of work beyond Boolean task
+satisfaction by quantifying the degree of conformity of a trajectory to the given
+specification \cite{fainekos2009robustness,abbas2013probabilistic}.
 
-The model-checking algorithms have been used for both control and plan synthesis of dynamic systems. As the first step, various strategies can be found in~\cite{alur2000discrete, girard2007approximately} to construct finite symbolic abstraction of the dynamic system.
-An automated framework for controller synthesis is proposed in~\cite{tabuada2006linear} for discrete-time linear systems where the control objective is specified by LTL formulas over the output trajectory, which is more complex than the traditional goal of system stabilization and output regulation.
-Under a similar setup,~\cite{aydin2013temporal} adds a quadratic function associated with the cost of satisfying the LTL control objective, which is ought to be minimized.
-Discrete-time piecewise affine systems are considered in~\cite{yordanov2010formal, kloetzer2008fully, yordanov2012temporal}, where the control task is specified as LTL formulas over linear predicates of the statespace.
-Moreover, dynamical systems modeled as Markov Decision Processes (MDP) are considered in~\cite{ding2011mdp} where a dynamic control policy is generated automatically to satisfy the LTL task specification with maximal probability.
-A robustness index is defined and measured for the satisfiability of continuous-time signals under metric temporal logic (MTL) specifications in~\cite{fainekos2009robustness}.
-Then control objectives specified as MTL formulas are considered in~\cite{abbas2013probabilistic} where a generic control strategy is proposed.
+Within robotics, these developments led to a widely used architecture in which a
+continuous robot model is abstracted into a finite transition system over a
+partitioned workspace, after which a discrete plan is synthesized from a temporal
+formula and refined into executable motion. Early robotic formulations of this
+type were developed for autonomous motion planning under linear temporal logic
+(LTL) tasks \cite{fainekos2009temporal}. Related efforts also considered user
+interfaces for specifying temporal tasks and hierarchical structures for
+manipulation and actuation \cite{srinivas2013graphical,he2015towards}. When the
+mission includes region-dependent actions in addition to motion, integrated task
+and motion planning becomes necessary. Existing formulations often rely either on
+actions that are permanently attached to locations or on action propositions that
+can be toggled independently of state, which is restrictive when actions depend
+on local conditions, resource availability, or discrete choices among feasible
+alternatives \cite{smith2011optimal,kress2009temporal}. This limitation motivates
+the motion--action coupling developed later in Chapter~\ref{chapter:action},
+which is closely related to the framework in \cite{guo2013motion}.
 
+\subsection{Planning under incomplete models and infeasible specifications}
 
-On the other hand, \cite{fainekos2009temporal} firstly proposed the complete framework of automated controller synthesis for autonomous robots under LTL tasks. The robot's motion is abstracted by its dynamical transitions within a partition of the workspace, as a finite transition system. Then a high-level discrete plan as a sequence of regions to visit is synthesized by the model-checking algorithm, which is then implemented by the low-level continuous controller. Graphical tools are  developed in~\cite{srinivas2013graphical} for non-expert end-users to formulate the intended tasks freely, which are then translated to LTL formulas.
-Robot manipulation tasks given as LTL formulas are addressed in~\cite{he2015towards} with a multi-layered structure of real-time planning and actuation.
+A major limitation of classical temporal-logic synthesis is the assumption that
+the workspace and its relevant semantic properties are known accurately before
+planning begins. Under this assumption, plans are typically produced offline and
+executed against a fixed model, which reduces responsiveness to unexpected
+changes. Several approaches relax this requirement by modeling environmental
+uncertainty explicitly. Markov decision process formulations and robust planning
+methods address uncertain observations and transitions probabilistically
+\cite{ding2011mdp,wolff2012robust}, while GR(1)-style game formulations and
+receding-horizon schemes embed adversarial or reactive environment behavior into
+the synthesis loop \cite{kress2009temporal,wongpiromsarn2010receding}.
+Perception-aware temporal planning has pushed this direction further by coupling
+formal synthesis with uncertain semantic maps \cite{kantaros2022perception}.
 
-\subsubsection{Partially-known workspace}
+A complementary line of work addresses model mismatch at execution time through
+plan repair and revision. Local backtracking and transition patching have been
+used to repair invalid discrete plans online, although such methods may not fully
+capture changes in the truth values of workspace propositions
+\cite{livingston2012backtracking}. Iterative refinement of the workspace model
+from sensory updates has also been studied for co-safe temporal tasks
+\cite{maly2013iterative}. The plan-revision perspective developed in
+Chapter~\ref{chapter:partially}, based on \cite{guo2013revising}, belongs to this
+broader class of approaches, but places particular emphasis on preserving formal
+correctness while incorporating newly acquired information during execution.
 
-A critical assumption of the model-checking-based formalism for control synthesis  mentioned above is that the workspace needs to be perfectly known and correctly modeled by the finite transition system.
-Then the discrete plan is normally generated off-line and is executed by the robot no matter what has changed in the workspace. As also mentioned in~\cite{ding2011mdp}, the robot does not react to its actual observations, yielding that this formalism lacks of reconfigurability and real-time adaptation.
+A related challenge arises when the nominal task itself is unrealizable or
+infeasible. In such cases, simply reporting failure offers limited guidance to
+the user or the supervisory layer. Relaxation-based approaches search for the
+closest realizable specification automaton or otherwise identify minimal changes
+that restore feasibility \cite{fainekos2011revising,kim2012approximate}. Other
+work analyzes the source of unrealizability by isolating conflicting environment
+or system assumptions \cite{raman2011analyzing}. In parallel, least-violating or
+maximally satisfying planning methods quantify the extent to which a task can be
+satisfied when full realization is impossible
+\cite{tumova2013least,tumova2013minimum,lahijanian2015time,
+  tumova2014maximally}. The treatment developed in Chapter~\ref{chapter:partially}
+is closest to \cite{guo2012infeasible,guo2015multi}, where hard and soft
+constraints are distinguished explicitly and task violation is assessed not only
+by occurrence but also by severity.
 
-Some existing work takes into account the case when a complete representation of the workspace is not available. In~\cite{ding2011mdp, wolff2012robust}, the robot's motion within the uncertain workspace is modeled as nondeterministic Markov decision processes (MDP), where the LTL task specification is satisfied by the proposed control strategy with maximal probability. Instead, a two-player General Reactivity GR(1) game between the robot and the environment is constructed in~\cite{kress2009temporal, wongpiromsarn2010receding} and a receding-horizon control and planning scheme is introduced. Then a winning strategy  can be synthesized by exhaustively searching through all allowed combinations of the robot movements and the admissible workspaces.
+\subsection{Temporal-logic coordination in multi-robot systems}
 
-Instead of aiming for an off-line plan that covers every  situation, we propose in our work~\cite{guo2013revising}, which can be found in Chapter~\ref{chapter:partially}, to create firstly a preliminary plan based on the  initially-available knowledge about the robot dynamics and the workspace model. Then while executing this plan, the robot gathers real-time observations about the workspace and feedback for the plan execution status, based on which the plan can be verified and revised to ensure its correctness and feasibility. Similar ideas appear in~\cite{livingston2012backtracking} by locally patching the invalid transitions, which however can not handle changes of the regions' properties.
-A hybrid motion planning algorithm is proposed in~\cite{maly2013iterative} that refines the workspace model iteratively during run time based on sensory updates, under task specifications given as co-safe LTL formulas.
+The single-robot planning framework described above has been extended in several
+directions to cooperative multi-robot systems. Early work on formal
+multi-robot coordination mainly adopted a top-down viewpoint: a global temporal
+task is specified for the team, decomposed into synchronized or partially
+synchronized local behaviors, and then executed through coordinated motion
+\cite{kloetzer2010automatic,ding2011automatic}. Robustness with respect to travel
+time uncertainty and optimal path construction under global temporal constraints
+have also been studied \cite{ulusoy2012robust,ulusoy2013optimality}. Mixed-integer
+programming formulations similarly provide a direct encoding of routing and
+synchronization constraints for temporal missions \cite{karaman2011sampling}.
+Although these methods offer strong guarantees, they usually rely on centralized
+synthesis and can become computationally demanding as the number of robots,
+synchronization points, and temporal couplings increases.
 
-\subsubsection{Infeasible task}
-The initial knowledge of the workspace might be partially incorrect, which may render the intended task infeasible. As also mentioned in~\cite{fainekos2011revising, kim2012approximate, raman2011analyzing}, the nominal framework presented above simply reports a failure when the given task specification is not  {realizable}. It is desired that users could get feedbacks about why the planning has failed and  how to resolve this failure.  \cite{fainekos2011revising} and \cite{kim2012approximate} address this problem systematically by finding the relaxed specification automaton that is closest to the original one and can be fulfilled by the system.  \cite{raman2011analyzing} introduces a way to analyze the environment and system components contained in the infeasible specification, and identify the possible cause. The main difference between our work~\cite{guo2012infeasible} and the above references  is that we put emphasis on how to synthesize the motion plan that fulfills the infeasible task the most, instead of analyzing its infeasible parts.
+More recent work has broadened the scope of temporal-logic coordination by
+integrating task allocation, hierarchy, and heterogeneity into the synthesis
+process. Surveys on multi-robot systems, cooperative planning, and distributed
+constraint optimization highlight the importance of scalable assignment and
+coalition mechanisms in heterogeneous robotic teams
+\cite{arai2002advances,torreno2017cooperative,fioretto2018distributed}. In this
+spirit, market-based and learning-enabled allocation methods have been proposed
+for uncertain task rewards and dynamic coalition formation
+\cite{zhao2021market,dai2024dynamic}. For temporal-logic missions in particular,
+simultaneous task allocation and planning, sampling-based optimal synthesis,
+abstraction-free methods, counting logics, and scalable coordination frameworks
+have considerably expanded the size and complexity of solvable problems
+\cite{schillinger2018simultaneous,kantaros2020stylus,luo2021abstraction,
+  luo2022temporal,sahin2019multirobot,leahy2021scalable,cardona2024planning}.
+Hierarchical decompositions and large-scale continual coordination have further
+improved tractability for structured missions
+\cite{luo2024decomposition,luo2025hulk,luo2025simultaneous}.
 
-The problem of synthesizing a least-violating control strategy under a set of safety rules are addressed in~\cite{tumova2013least, tumova2013minimum}. However the level of satisfiability is measured differently from our approach in~\cite{guo2012infeasible, guo2015multi}, as discussed in~Chapter~\ref{chapter:partially}. In particular, we not only measure {how many} states along the plan violate the safety specifications, but also {how much} each of those states violates these specifications.
-\cite{lahijanian2015time} proposes a similar solution to~\cite{guo2012infeasible} but an additional weighting is enforced  to the set of atomic propositions.
-Moreover, we introduce in~\cite{guo2012infeasible, guo2015multi} the notion of soft and hard constraints as two distinctive parts of the task specification, where the hard constraints concern safety requirements and soft constraints are for system performances.
+Alongside these top-down and team-level formulations, another thread considers
+locally assigned specifications and loosely coupled collaboration. This bottom-up
+view is particularly relevant when robots have heterogeneous capabilities,
+asynchronous execution, and only intermittent dependence on one another. Local
+plan reconfiguration, distributed conflict resolution, and coordination of task
+and motion under local specifications have been studied in
+\cite{guo2014distributed,guo2015multi,guo2015bottom,guo2016task}. Related
+frameworks address decentralized feasibility verification and receding-horizon
+coordination for dependent local temporal tasks
+\cite{filippidis2012decentralized,tumova2014receding}. The material developed in
+Chapters~\ref{chapter:partially}--\ref{chapter:continuous} is positioned most
+naturally within this locally specified and loosely coupled branch of the
+literature.
 
+\subsection{Relative-motion and interaction constraints}
 
-\subsubsection{Motion and action planning}
-To specify robotic tasks of practical interest, it is often necessary to include various actions at different regions. Thus we propose in our work~\cite{guo2013motion} a generic framework that combines the  model-checking-based robot motion planning with action planning using action description languages (ADL), as described later in Chapter~\ref{chapter:action}. Some relevant work can be found that integrates the model-checking-based motion planning with action planning. In~\cite{smith2011optimal},  since the underlying actions can only be performed at fixed regions, the specification can be easily restated as regions to visit. Or independent propositions are created for each action in~\cite{kress2009temporal} since the actions can be activated and de-activated at any time. The above approaches are not be applicable if some actions can only be performed when the workspace, or the robot itself has to satisfy certain conditions, or choices have to be made among the allowed actions.
+Formal task satisfaction alone is often insufficient for safe multi-robot
+operation, because robots must also respect interaction constraints induced by
+shared physical space and local communication structure. Typical examples include
+collision avoidance, network connectivity, and relative-motion or relative-speed
+constraints \cite{dimarogonas2006feedback,ji2007distributed,zavlanos2011graph,
+  guo2014controlling}. These requirements are frequently imposed as standing
+assumptions, even though they play a central role in the integrity and safety of
+the team. Dynamic leader--follower coordination and decentralized control laws
+have therefore been developed to enforce relative-distance constraints while
+supporting multiple active task leaders and heterogeneous local goals
+\cite{guo2014cooperative,guo2015hybrid,guo2015communication,kloetzer2011multi}.
+This perspective is closely connected to the continuous-control developments in
+Chapter~\ref{chapter:continuous}.
 
+Embedded graph grammars provide another mechanism for integrating local
+interaction rules with robot dynamics and switching logic. They have been used to
+encode decentralized coordination, local information exchange, and mode
+transitions in a unified framework, with applications to coverage, modular
+self-reconfiguration, and deployment
+\cite{mcnew2006locally,mcnew2007solving,pickem2013complete,smith2009multi}.
+Their locality makes them attractive for large-scale systems, especially when
+only neighboring interactions are available. The hybrid framework discussed in
+Chapter~\ref{chapter:continuous}, following \cite{guo2016hybrid}, draws on this
+tradition to couple local temporal tasks with interaction constraints more
+systematically than is common in purely discrete coordination methods.
 
-\subsubsection{Multi-robot system with temporal tasks}
+\subsection{Online, contingent, and human-supervised coordination}
 
-The above motion and task planning framework has also been extended to multi-robot systems that consist of multiple dynamical robots.
-Many existing work can be found on decomposing a global task specification to bisimilar local ones in a top-down manner, which can then be executed by the robots in a synchronized~\cite{kloetzer2010automatic} and partially-synchronized~\cite{ding2011automatic} manner. Uncertainties in traveling time are tackled in~\cite{ulusoy2012robust} where an optimal path planning algorithm is proposed for multi-robot systems under a global task specification. \cite{karaman2011sampling} formulates the multi-vehicle routing problem under a global LTL task as a mixed integer linear programming (MILP) problem and the derived local plans  need to be executed in a synchronized fashion by each robot.  There are several drawbacks of this top-down approach: the plans for the whole team are synthesized by the central unit, with a high computational complexity subjected to the combinatorial blowup; it is vulnerable to robot failures and contingencies during run time.
+An important recent trend is the transition from static mission synthesis to
+continual and reactive coordination. Real-time reactive task allocation and
+planning, online cooperation under precedence constraints, and hierarchical
+coordination under continually arriving temporal tasks illustrate this shift
+\cite{chen2025real,gosrich2025online,luo2025hulk}. These methods improve
+responsiveness substantially, but many still rely on re-solving a global planning
+object or on coordination structures that are expensive to update when new tasks
+or requests arrive frequently.
 
-From an opposite viewpoint, we assume that the local task specifications are assigned locally to each robot and  there is no specified global task. Namely we consider a team of cooperative robots with different, independently-assigned, even conflicting individual tasks as considered in our work~\cite{guo2012infeasible, guo2014distributed, guo2015multi, guo2015bottom}, which can be found in Chapters~\ref{chapter:partially}-\ref{chapter:continuous}. This {loosely coupled} {bottom-up} formulation is particularly useful for multi-robot systems where the robots have heterogeneous capabilities and distinctive task assignment.
-As explained in the remaining chapters, it allows more flexibility of the system since plans and decisions are made locally by each robot~\cite{guo2014distributed}; conflicts are resolved and collaborations are coordinated during run time~\cite{guo2015multi, guo2015bottom}. A similar formalism is adopted in~\cite{filippidis2012decentralized} where a  decentralized framework for collaborative feasibility verification is proposed, which however does not include the way to resolve potentially-conflicting tasks.
-A receding-horizon algorithm for distributed coordination is proposed in~\cite{tumova2014receding} for multi-robot systems under dependent LTL task specifications.
+This issue is especially pronounced in contingent collaboration, where robots
+exchange short-horizon requests at execution time. Service requests capture the
+case in which one robot requires another robot's temporary assistance, whereas
+formation requests encode temporary relative-configuration requirements for a
+joint subtask. Reactive temporal-logic formulations based on GR(1) and sensory
+inputs are relevant in spirit \cite{kress2007s,kress2009temporal}, but they are
+usually synthesized to cover a predefined class of environmental changes rather
+than non-predefined inter-robot requests generated online. The contingent service
+and formation setting considered in Chapter~\ref{chapter:contingent}, following
+\cite{guo2015contingent}, is therefore more closely related to execution-time
+request handling than to classical offline reactive synthesis. Earlier work on
+formation constraints for robotic teams and prescribed-performance control also
+provides relevant background \cite{loizou2004automatic,ogren2001control,
+  olfati2006flocking,bechlioulis2008robust,karayiannidis2012multi,
+  bechlioulis2014robust}, although these studies do not generally integrate
+formation transients with high-level contingent task exchange.
 
-
-\subsubsection{Relative-motion constraints}
-Relative-motion constraints often arise in multi-robot systems as the robots coexist within the same workspace,  such as collision avoidance~\cite{dimarogonas2006feedback}, network connectivity~\cite{ji2007distributed,zavlanos2011graph}, or relative-velocity constraints~\cite{guo2014controlling}.
-As also pointed out in~\cite{guo2014controlling, zavlanos2011graph, zavlanos2007flocking}, obeying these constraints is of great importance for the stability, safety and integrity of the overall multi-robot team, which however are often imposed by assumption rather than treated as extra control objectives. We address a version of this problem in our early work~\cite{guo2014cooperative}, where we propose a dynamic leader-follower coordination and control strategy such that the relative-distance constraints among neighboring robots are respected. Later in our work~\cite{guo2015hybrid, guo2015communication} as included in Chapter~\ref{chapter:continuous}, we improve this scheme by  a fully decentralized and communication-free solution that is applicable to low-cost robotic systems equipped with only range and angle sensors, but without communication capabilities.
-Different from~\cite{filippidis2012decentralized, guo2014cooperative} where a satisfying discrete plan is enough, the initial plan synthesis algorithm proposed in~\cite{guo2015hybrid, guo2015communication} minimizes the bottle-neck cost of a satisfying plan. The proposed motion control scheme guarantees almost global convergence and the satisfaction of relative-distance constraints at all time, for an {arbitrary} number of leaders that are active under different local goals. Most related literature only allows for a single leader~\cite{guo2014cooperative, ren2005survey} or multiple leaders with the same global goal~\cite{ogren2001control, zavlanos2007flocking}.
-Additionally, three different local coordination policies are proposed in~\cite{guo2015communication} to incorporate different types of local tasks. Different from~\cite{kloetzer2011multi}, these policies are locally applicable to robots without explicit communication modules.
-%\cite{guo2015communication} builds on preliminary results from~\cite{guo2015hybrid}, with detailed proofs that are omitted in~\cite{guo2015hybrid}.
-
-\subsubsection{Control with Embedded Graph Grammars}
-As mentioned above, relative-motion constrains are crucial for the safety and stability of multi-robot systems in general. However, most of related work neglects this aspect, e.g, inter-robot collision is not handled formally in~\cite{guo2015multi,tumova2014receding} and connectivity of the communication network is taken for granted in most cases~\cite{guo2015bottom, ulusoy2013optimality}.
-We take advantage of Embedded Graph Grammars (EGGs) in our work~\cite{guo2016hybrid} as described later in Chapter~\ref{chapter:continuous}, to specify local interaction and communication rules among the robots, in order to address simultaneously local LTL tasks and relative-motion constraints.
-EGGs have been  introduced in~\cite{mcnew2006locally, mcnew2007solving}.
-They provide a natural framework to encode the robot dynamics, local information exchange and switching control modes in a unified manner.
-Their successful applications to multi-robot systems can be found in, e.g., coverage control~\cite{mcnew2007solving}, self-reconfiguration of modular robots~\cite{pickem2013complete}, and autonomous multi-robot deployment~\cite{smith2009multi}.
-Note that only local interactions or communication are needed for the execution of EGGs, yielding it suitable for large-scale multi-robot systems.
-
-
-
-\subsubsection{Contingent service and formation tasks}
-
-%In~\cite{guo2015contingent}, we focus on the scenario where the robots within the multi-robot system are allowed to request and exchange contingent tasks with each other during run time.
-
-Two common cooperative robotic tasks, namely service and formation tasks, are taken into account in our work~\cite{guo2015contingent}, of which the details are given in Chapter~\ref{chapter:contingent}.
-Service requests are of particular interest  as they encapsulate the scenario where one robot needs another robot's assistance on a short-term task. The service requests can only be exchanged among the robots in real-time, which means that each robot has to react to the received service requests in a contingent way.
-Similar work on real-time reactivity for dynamical systems under temporal tasks can be found in~\cite{kress2007s}, where sensory inputs are included in the General Reactivity GR(1) formulas to take into account possibly dynamical environments, as well as in~\cite{kress2009temporal}, where similar techniques are applied for various single-robot and multi-robot applications.
-The local plans of each robot are synthesized off-line to handle all modeled changes in the environment, which is however not feasible in our formulation as the service and formation requests are exchanged in real-time under a non-predefined manner.
-
-Another common cooperative robotic  task arises  when an robot requests from another one to form a relative configuration  to accomplish a collaborative task. We denote such a requirement in~\cite{guo2015contingent} as a formation request.
-Similar ideas of imposing formation constraints for multi-robot systems appeared in~\cite{loizou2004automatic}, where however a global formation task for the whole team is embodied.
-In the same vein, although the formation control has been extensively studied for multi-robot systems, e.g., in~\cite{ji2007distributed, ogren2001control, olfati2006flocking}, we enforce prescribed performance constraints on the transient response of the formation process in~\cite{guo2015contingent}.
-The prescribed performance control problem was originally studied for high-order MIMO nonlinear single-robot systems~\cite{bechlioulis2008robust} and was recently extended to multi-robot systems with single integrator dynamics~\cite{karayiannidis2012multi} and nonlinear dynamics~\cite{bechlioulis2014robust}. However, the existing prescribed performance control technique is enhanced in our work~\cite{guo2015contingent} by: (i) considering transient performance specifications on the overall formation error, in contrast to the relative coordinates approach in~\cite{bechlioulis2014robust}, thus simplifying the control design; (ii) combining it with the high-level discrete planning such that various control modes are activated according to the real-time  execution of the discrete plan.
+The need for execution-time adaptation also connects naturally to human
+supervision. Surveys on human--swarm and human--multi-robot interaction have
+shown that scalable oversight requires abstractions that preserve global
+situational awareness while avoiding low-level teleoperation
+\cite{kolling2016human,ferreira2021survey,dahiya2023survey}. Mixed-initiative
+teaming, scaled autonomy, and interactive fleet learning further study how
+supervisory effort should be allocated across a robotic team under uncertainty
+\cite{gombolay2017computational,swamy2020scaledautonomy,
+  hoque2022fleetdagger}. However, the joint treatment of formal temporal task
+semantics, online contingent collaboration, relative-motion safety, and selective
+human intervention remains comparatively underdeveloped. This gap motivates the
+overall perspective adopted in this monograph.

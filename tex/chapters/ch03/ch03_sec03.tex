@@ -13,14 +13,14 @@ developed here.
 
 %=====================================================================
 \subsubsection{Real-time temporal logic}\label{ch03:sec:RTL}
-In order to analyze properties of real-time signals, we also consider a real-time extensions of LTL described in Section~\ref{sec:LTL}, i.e., the real-time temporal logic (RTL), originally introduced in \cite{reynolds2001continuous}.
+In order to analyze properties of real-time signals, we also consider a real-time extensions of LTL described in Section~\ref{ch03:sec:LTL}, i.e., the real-time temporal logic (RTL), originally introduced in \cite{reynolds2001continuous}.
 % In particular, it is defined over a set of  atomic propositions $AP$ with the following syntax:
 % $
 % \varphi := \top\, |\, a \,|\, \neg \varphi \,|\, \varphi_1 \vee \varphi_2 \,|\, \varphi_1\,  \mathsf{U}\, \varphi_2
 % $
 % where $a\in AP$. Similar to LTL, those basic operators can be used to derive other commonly used temporal operators, like $\Diamond$ (\emph{eventually}), $\square$ (\emph{always}). Note that the next operator is not allowed here.
 %%============================
-Its syntax is similar to LTL as introduced in Section~\ref{sec:LTL}, but its semantics is defined over \emph{continuous-time} Boolean signals. Consider a continuous-time Boolean signal $x:\mathbb{R}_{\geq 0}\rightarrow 2^{AP}$ over the set of atomic propositions~$AP$, where~$x(t)\subseteq AP$ is the set of propositions that~$x$ satisfies at time $t\geq 0$.
+Its syntax is similar to LTL as introduced in Section~\ref{ch03:sec:LTL}, but its semantics is defined over \emph{continuous-time} Boolean signals. Consider a continuous-time Boolean signal $x:\mathbb{R}_{\geq 0}\rightarrow 2^{AP}$ over the set of atomic propositions~$AP$, where~$x(t)\subseteq AP$ is the set of propositions that~$x$ satisfies at time $t\geq 0$.
 Given an RTL formula $\varphi$ over $AP$, the satisfiability relation $(x,\, t)\models \varphi$, i.e., whether signal $x$ satisfies $\varphi$ at time $t\geq 0$, is determined according to the following recursive definition:
 % \begin{equation*}
 % \begin{split}
@@ -38,7 +38,7 @@ Moreover, similarly to sc-LTL, there exists a particular class of RTL, called sc
 Finally since we consider RTL and LTL with the same syntax but interpreted with different semantics, we define the following correspondence between an RTL formula and an LTL formula:
 
 \begin{definition}\label{ch03:def:RTL-LTL}
-Given an RTL formula $\varphi$, the associated LTL formula, denoted by $[\varphi]$, has the same expression as $\varphi$ but evaluated under the LTL semantics. \hfill $\blacktriangle$
+Given an RTL formula $\varphi$, the associated LTL formula, denoted by $[\varphi]$, has the same expression as $\varphi$ but evaluated under the LTL semantics.
 \end{definition}
 
 %======================================
@@ -61,7 +61,7 @@ This request can be communicated by sending the formula $\varphi_{ij,t}^\textup{
 (II) \textbf{\emph{Formation}}: robot $i$ requests its neighbor $j\in \mathcal{N}_i$ at time $t$ to converge to a desired relative-position formation  by~$c_{ij}\in \mathbb{R}^2$ with a predefined transient response imposed by the corresponding performance function $\rho_{ij}(t):\mathbb{R}^+\rightarrow \mathbb{R}^+$. This formation has to be kept until robot~$i$ accomplishes a short-term formation task described by a sc-RTL formula $\varphi_{ij,t}^\texttt{f}$ over $R$ and a release message is sent to robot~$j$ afterwards.
 The formation task~$\varphi_{ij,t}^\texttt{f}$ is also predefined for robot~$i$ and may be different at different request time $t$.
 Notice that robot~$j$ needs to satisfy the formation performance, i.e., $h_{ij}(t)=\top$ until it receives a release message from robot~$i$.
-An example of formation control with prescribed performance is shown in Figure~\ref{fig:ppc}.
+An example of formation control with prescribed performance is shown in Figure~\ref{ch03:fig:ppc}.
 
 Upon receiving either a service or formation request from robot~$i$, we assume that robot~$j$ will reply immediately to either confirm or refuse this request.
 Thus we introduce a set of \emph{observational} atomic propositions for each robot~$i\in \mathcal{N}$: $O_i\triangleq\{o_{ij}^\texttt{s},\, o_{ij}^\texttt{f},\, j\in \mathcal{N}_i\}$, where $o_{ij}^\texttt{s}(t)=\top$ if the  service request sent by robot~$i$ is \emph{confirmed} by robot $j$ at time $t$; and $o_{ij}^\texttt{s}(t)=\bot$ otherwise ($o_{ij}^\texttt{f}(t)$ is defined similarly for formation requests).
@@ -92,15 +92,15 @@ Therefore whenever a formation request from robot~$i$ is confirmed by robot~$j$,
 In other words, it requires that once robot~$j$ confirms a formation request from robot~$i$, it should achieve the desired relative position with prescribed performance  as imposed by the corresponding performance function $\rho_{ij}(t)$, until robot~$i$ has accomplished its formation task $\varphi_{ij,t}^\texttt{f}$.
 
 \begin{remark}\label{ch03:remark:req}
-While~the local task $\varphi_i^{\textup{\texttt{l}}}$ as the static task specification is commonly-seen in the related literature~\cite{bhatia2010sampling, guo2015multi}, main novelty of this work lies in the contingent service task $\varphi_{i}^{\textup{\texttt{s}}}$ by~\eqref{eq:service} and the formation task specification $\varphi_i^{\textup{\texttt{f}}}$ by~\eqref{eq:perf-task} that have not been tackled at all for multi-robot systems. Moreover notice that all services and formation requests are exchanged in real-time and hence cannot be known a priori. The validity of the observational and controllable propositions can only be determined in real-time. Thus, it is not possible to acknowledge the complete specification $\varphi_i$ before the system initializes.   \hfill $\blacktriangle$
+While~the local task $\varphi_i^{\textup{\texttt{l}}}$ as the static task specification is commonly-seen in the related literature~\cite{bhatia2010sampling, guo2015multi}, main novelty of this work lies in the contingent service task $\varphi_{i}^{\textup{\texttt{s}}}$ by~\eqref{ch03:eq:service} and the formation task specification $\varphi_i^{\textup{\texttt{f}}}$ by~\eqref{ch03:eq:perf-task} that have not been tackled at all for multi-robot systems. Moreover notice that all services and formation requests are exchanged in real-time and hence cannot be known a priori. The validity of the observational and controllable propositions can only be determined in real-time. Thus, it is not possible to acknowledge the complete specification $\varphi_i$ before the system initializes.
 \end{remark}
 
 Thus, the problem confronted in this work is formulated as follows:
 \begin{problem} \label{ch03:prob:prob-form}
 %==================================================
-Consider a team of robots obeying the dynamics~\eqref{eq:dynamics}, with
-each assigned a local task  defined by~\eqref{eq:task}-\eqref{eq:perf-task}.
-The goal is to synthesize a distributed hybrid control protocol that the RTL formulas~$\varphi_i$ are satisfied, $\forall i\in \mathcal{N}$. \hfill $\blacktriangle$
+Consider a team of robots obeying the dynamics~\eqref{ch03:eq:dynamics}, with
+each assigned a local task  defined by~\eqref{ch03:eq:task}-\eqref{eq:perf-task}.
+The goal is to synthesize a distributed hybrid control protocol that the RTL formulas~$\varphi_i$ are satisfied, $\forall i\in \mathcal{N}$.
 \end{problem}
 
 
@@ -114,7 +114,7 @@ The goal is to synthesize a distributed hybrid control protocol that the RTL for
 In this section, we first present the set of real-time events that are crucial for the system execution, and then describe the communication protocol among the robots to handle contingent requests.
 
 
-\subsection{Real-time event monitoring scheme}\label{ch03:sec:discrete-event}
+\subsubsection{Real-time event monitoring scheme}\label{ch03:sec:discrete-event}
 It is clear from the problem formulation that monitoring several real-time events plays a crucial role in the satisfaction of the individual local tasks.
 In particular, for each robot $i\in \mathcal{N}$, four events  need to be monitored in real time:
 
@@ -131,12 +131,12 @@ In addition, if robot~$i$ sends a release message to its neighbor $j\in \mathcal
 (c) \textbf{\emph{Service finish event}}.
 It is the event that  occurs when robot~$i$ has finished a service request that it has confirmed.
 For instance, suppose that $o^\texttt{s}_{ji}(t_0)=\top$ and robot~$i$ confirms the service request $\varphi_{ji,t_0}^{\texttt{s}}$ by robot $j$ at time $t_0>0$.
-Then $\varphi_{ji,t_0}^{\texttt{s}}$ is {satisfied} by robot~$i$ at time $t_f\geq t_0$, if its trajectory $\mathbf{p}_i([t_0,\, t_f])$ satisfies $\varphi_{ji,t_0}^{\texttt{s}}$ on the basis of the semantics presented in Section~\ref{sec:RTL}. Since all service tasks are assumed to be feasible,  the finishing time $t_f>t_0$ is finite for each service request.
+Then $\varphi_{ji,t_0}^{\texttt{s}}$ is {satisfied} by robot~$i$ at time $t_f\geq t_0$, if its trajectory $\mathbf{p}_i([t_0,\, t_f])$ satisfies $\varphi_{ji,t_0}^{\texttt{s}}$ on the basis of the semantics presented in Section~\ref{ch03:sec:RTL}. Since all service tasks are assumed to be feasible,  the finishing time $t_f>t_0$ is finite for each service request.
 
 (d) \textbf{\emph{Formation finish event}}. It is the event that occurs when robot~$i$ has finished a formation task that has been confirmed.
 For instance, suppose that $o^\texttt{f}_{ji}(t_0)=\top$ and robot~$j$ confirms the formation request by robot~$i$ at time $t_0>0$.
 The corresponding formation task for robot~$i$ is given by~$\varphi_{ij,t_0}^{\texttt{f}}$.
-Then~$\varphi_{ij,t_0}^{\texttt{f}}$ is {satisfied} at time $t_f\geq t_0$ if $\mathbf{p}_i([t_0,\, t_f])$ satisfies $\varphi_{ij,t_0}^{\texttt{f}}$ on the basis of the semantics presented in Section~\ref{sec:RTL}. Since all formation tasks are also assumed to be feasible in finite time, the time $t_f$ is also finite for each formation request.
+Then~$\varphi_{ij,t_0}^{\texttt{f}}$ is {satisfied} at time $t_f\geq t_0$ if $\mathbf{p}_i([t_0,\, t_f])$ satisfies $\varphi_{ij,t_0}^{\texttt{f}}$ on the basis of the semantics presented in Section~\ref{ch03:sec:RTL}. Since all formation tasks are also assumed to be feasible in finite time, the time $t_f$ is also finite for each formation request.
 
 Summarizing the events~(a) and~(b) can be easily monitored in real-time based on their definitions. On the other hand, it is not trivial to monitor the events~(c) and~(d) in an efficient way, especially when multiple service or formation requests occur. Nevertheless, since event~(c) and~(d) are closely related to the discrete plan synthesis and adaptation module, more details will be given there.
 
@@ -150,7 +150,7 @@ In addition, let $r^{\texttt{f}}_{ji}(t): \mathbb{R}^+\rightarrow \mathbb{B}$ be
 Robot~$i$ may send the predefined service formula $\varphi_{ij,t}^\texttt{s}$ to its neighbor~$j\in \mathcal{N}_i$ at time $t>0$ only if $r^{\texttt{f}}_{ij}(t)=\bot$, i.e., robot~$j$ is not still serving the previous service request from robot~$i$.
 Similarly robot~$i$ may send the formation request described by~$c_{ij}$ and $\rho_{ij}(t)$ at time $t>0$, only if $r^{\texttt{f}}_{gi}=\bot$, $\forall g\in \mathcal{N}_i$, i.e., robot~$i$ itself is not currently serving any of its neighbor's formation request and $r^{\texttt{f}}_{ij}(t)=\bot$,i.e., robot~$j$ is not still serving the previous formation request from robot~$i$.
 After sending a request, robot~$i$ needs to wait for robot~$j$'s reply.
-Once its request is confirmed by robot~$j$, the observational proposition $o^\texttt{s}_{ij}(t)$ or $o^\texttt{f}_{ij}(t)$ is updated according to part~(b) of Section~\ref{sec:discrete-event}.
+Once its request is confirmed by robot~$j$, the observational proposition $o^\texttt{s}_{ij}(t)$ or $o^\texttt{f}_{ij}(t)$ is updated according to part~(b) of Section~\ref{ch03:sec:discrete-event}.
 On the other hand,  whenever robot~$i$ \emph{receives} a request from its neighbor $j\in \mathcal{N}_i$ at time $t>0$, it checks first whether $r^\texttt{f}_{ii}(t)=\top$ or $r^{\texttt{f}}_{ji}(t)=\top$, for any $j\in \mathcal{N}_i$, i.e., robot $i$ is currently executing its own formation task or serving one of its neighbor's formation request. If so, robot~$i$ denies this request; otherwise, robot~$i$ confirms its request and starts serving it.
 Alternatively, other approaches like direct user triggering could also be incorporated.
 %================================
@@ -170,10 +170,10 @@ In this section, we demonstrate how to synthesize the initial discrete plan for 
  %==============
 \subsubsection{Initial plan synthesis}\label{ch03:sec:synthesis}
 At time $t=0$, we assume that no requests have been sent yet, i.e., $o^\texttt{s}_{ij}(0)=o^\texttt{f}_{ij}(0)=\bot$, $\forall j\in \mathcal{N}_i$ and $i\in \mathcal{N}$.
-As a result, only the static task $\varphi_{i}^\texttt{l}$ of the RTL formula~$\varphi_i$ defined in~\eqref{eq:task} is initially pursued.
+As a result, only the static task $\varphi_{i}^\texttt{l}$ of the RTL formula~$\varphi_i$ defined in~\eqref{ch03:eq:task} is initially pursued.
 Hence the initial plan synthesis aims at finding a discrete plan that satisfies~$\varphi_i^\texttt{l}$.
 
-Our approach relies on the model-checking algorithm~\cite{baier2008principles} as introduced in Chapter~\ref{chapter:single}.
+Our approach relies on the model-checking algorithm~\cite{baier2008principles} as introduced in Chapter~\ref{ch03:chapter:single}.
 The motion of robot~$i$ within the workspace is abstracted by a wFTS:
 $
 \mathcal{T}_i \triangleq (\Pi_i,\, \longrightarrow, \, R,\, L,\, \Pi_{i,0},\,W),
@@ -185,9 +185,9 @@ $\Pi_{i,0} \triangleq \{\pi_0\}$ is the initial state;
 and $W: \longrightarrow \to \mathbb{R}^+$ computes the cost of each transition with $W(\pi_{m}, \pi_{n})\triangleq\|c_{m}-c_{n}\|$, $\forall (\pi_{m},\, \pi_{n})\in \longrightarrow$.
 Notice that only the local propositions of $R$ are allowed in~$\mathcal{T}_i$ and that the initial state $\pi_0$ is solely determined by the initial position of robot $i$. A path of $\mathcal{T}_i$ is given by $\tau=\pi_0\pi_1\pi_2\cdots$, where $(\pi_k,\,\pi_{k+1})\in \longrightarrow$, $\forall k\geq 0$ and its associated trace,which corresponds to a discrete-time Boolean signal over $R$, is defined as the sequence of propositions that are true along the path, i.e., $\texttt{trace}(\tau)=L(\pi_0)L(\pi_1)\cdots$, which corresponds to a discrete-time Boolean signal over $R$.
 
-On the other hand,  $\varphi_{i}^\texttt{l}$ is a general RTL formula over $R$ with a corresponding LTL formula denoted by~$[\varphi_{i}^\texttt{l}]$ based on Definition~\ref{def:RTL-LTL}.
-Thus following the notations defined in Section~\ref{sec:LTL}, we can construct the NBA associated with $[\varphi_i^{\textup{\texttt{l}}}]$, denoted by $\mathcal{B}_{i,s}=(Q_s, \,2^{R},\, \delta_s,\, Q_{s,0},\, F_s)$.
-Subsequently, given $\mathcal{T}_i$ and $\mathcal{B}_{i,s}$, we may construct the weighted product B\"uchi automaton (wPBA) similarly to Definition~\ref{def:product}.
+On the other hand,  $\varphi_{i}^\texttt{l}$ is a general RTL formula over $R$ with a corresponding LTL formula denoted by~$[\varphi_{i}^\texttt{l}]$ based on Definition~\ref{ch03:def:RTL-LTL}.
+Thus following the notations defined in Section~\ref{ch03:sec:LTL}, we can construct the NBA associated with $[\varphi_i^{\textup{\texttt{l}}}]$, denoted by $\mathcal{B}_{i,s}=(Q_s, \,2^{R},\, \delta_s,\, Q_{s,0},\, F_s)$.
+Subsequently, given $\mathcal{T}_i$ and $\mathcal{B}_{i,s}$, we may construct the weighted product B\"uchi automaton (wPBA) similarly to Definition~\ref{ch03:def:product}.
 %=================================
 The weighted PBA~${\mathcal{A}}_{p,i}=\mathcal{T}_i \, {\times}\, \mathcal{B}_{i,s} =(Q_{p,i},\, \delta_{p,i}, \, Q_{p,i,0},\, F_{p,i},\, W_{p,i})$ is defined by
 $Q_{p,i}=\Pi_i \times Q_s$ with $q_p'= \langle \pi,\, q \rangle \in Q_{p,i} $,  $\forall \pi\in \Pi_i$ and $\forall q \in Q_s$;
@@ -198,7 +198,7 @@ $W_{p,i}:\delta_{p,i}\rightarrow \mathbb{R}^+$ with $W_{p,i}(\langle \pi_{c},\,q
 
 After ${\mathcal{A}}_{p,i}$ is constructed, we search for one of its accepting runs denoted by $R_i$ that: (i) has a prefix-suffix structure, i.e.,~$R_i=R_{i,\text{pre}}\,(R_{i,\text{suf}})^\omega$; and (ii) minimizes the total cost $\texttt{cost}(R_i,\, {\mathcal{A}}_{p,i})=\texttt{cost}(R_{i,\text{pre}})+\texttt{cost}(R_{i,\text{suf}})$, where $\texttt{cost}(R_{i,\text{pre}})$ and $\texttt{cost}(R_{i,\text{suf}})$ are simply the accumulated weight of the transitions along the finite sequence of product states in $R_{i,\text{pre}}$ and $R_{i,\text{suf}}$.
 In this aspect, since~${\mathcal{A}}_{p,i}$ may be viewed as a directed graph with initial and accepting states, a variation of the Dijkstra's shortest path algorithm can be used to find such an optimal accepting run.
-For algorithmic details, we refer the readers to Algorithm~\ref{alg:optimal} and Algorithm~2 in~\cite{guo2012infeasible}.
+For algorithmic details, we refer the readers to Algorithm~\ref{ch03:alg:optimal} and Algorithm~2 in~\cite{guo2012infeasible}.
 Denote by this optimal accepting run by~$R_{i,0}$ and it can be then projected back onto~$\Pi_i$, yielding the initial discrete plan of robot~$i$ as~$\tau_{i,0}=R_{i,0}|_{\Pi_i}$.
 Note that $\tau_{i,0}$ also has the prefix-suffix structure and the trace of $\tau_{i,0}$ satisfies $[\varphi_{i}^\texttt{l}]$ automatically~\cite{baier2008principles}.
 In this way $\tau_{i,0}$ obtains the following sequence:
@@ -208,7 +208,7 @@ In this way $\tau_{i,0}$ obtains the following sequence:
 with trace given by~$\texttt{trace}(\tau_{i,0})=L(\pi_{i0})L(\pi_{i1})\cdots$, where $\pi_{i\ell}\in \Pi_i$, $\forall \ell=1,2,\cdots,K_i$;
 $\pi_{i0}\pi_{i1}\cdots \pi_{ik_i}$ is the plan prefix defined as a finite sequence of goal regions to reach; and $\pi_{ik_i}\pi_{i(k_i+1)}\cdots \pi_{iK_i}$ is the plan suffix which is also finite but should be repeated infinitely often, in order to satisfy~$[\varphi_{i}^\texttt{l}]$.
 
-If no contingent requests are sent or confirmed by robot~$i$ for all~$t>0$, its initial discrete plan $\tau_{i,0}$ should remain unchanged and can be executed as follows: initializing at $p_i(0)$, robot~$i$ moves to and enters region $\pi_{i1}$ employing the motion controller described in Section~\ref{sec:nav-control}.
+If no contingent requests are sent or confirmed by robot~$i$ for all~$t>0$, its initial discrete plan $\tau_{i,0}$ should remain unchanged and can be executed as follows: initializing at $p_i(0)$, robot~$i$ moves to and enters region $\pi_{i1}$ employing the motion controller described in Section~\ref{ch03:sec:nav-control}.
 Then an event that robot~$i$ entered region~$\pi_{i1}$ should be detected.
 Afterwards, it leaves region~$\pi_{i1}$ and moves to region~$\pi_{i2}$ under the same control scheme. Such procedure is repeated until it reaches $\pi_{iK_i}$, after which the next goal region is set at the beginning of the plan suffix $\pi_{ik_i}$ and continues to $\pi_{iK_i}$ and back to $\pi_{ik_i}$ again.
 In this way, the plan suffix is repeated infinitely often as $t\rightarrow \infty$.
@@ -224,18 +224,18 @@ In this way, the trajectory~$\mathbf{p}_i$ intersects with the infinite sequence
 If no contingent requests are sent or confirmed by robot~$i$, i.e., $o^\texttt{s}_{ij}(t)=o^\texttt{f}_{ij}(t)=\bot$, $\forall j\in \mathcal{N}_i$ and $\forall t\geq 0$, then the trajectory $\mathbf{p}_i(t)$ generated by executing the initial plan $\tau_{i,0}$ satisfies the RTL formula $\varphi_i$.
 \end{theorem}
 \begin{proof}
-First of all, if $o^\texttt{s}_{ij}(t)=o^\texttt{f}_{ij}(t)=\bot$, $\forall j\in \mathcal{N}_i$ and $\forall t\geq 0$, the service task~$\varphi_{i}^\texttt{s}$ and formation task~$\varphi_{i}^\texttt{f}$ defined by~\eqref{eq:service} and~\eqref{eq:perf-task} may be ignored owing to the semantics of the implication operator. In particular, if $o^\texttt{s}_{ij}(t)=\bot$, $\forall t\geq 0$,  $\varphi_{ij,t}^{\texttt{s}}$ need not be true to satisfy $\varphi_{i}^\texttt{s}$. Similarly, if $o^\texttt{f}_{ij}(t)=\bot$, $\forall t\geq 0$,  then $\varphi_{ij,t}^{\texttt{f}}\,\wedge\,(h_{ij}\,\mathsf{U}\,z_{ij})$ need not be true to satisfy $\varphi_{i}^\texttt{f}$.
+First of all, if $o^\texttt{s}_{ij}(t)=o^\texttt{f}_{ij}(t)=\bot$, $\forall j\in \mathcal{N}_i$ and $\forall t\geq 0$, the service task~$\varphi_{i}^\texttt{s}$ and formation task~$\varphi_{i}^\texttt{f}$ defined by~\eqref{ch03:eq:service} and~\eqref{ch03:eq:perf-task} may be ignored owing to the semantics of the implication operator. In particular, if $o^\texttt{s}_{ij}(t)=\bot$, $\forall t\geq 0$,  $\varphi_{ij,t}^{\texttt{s}}$ need not be true to satisfy $\varphi_{i}^\texttt{s}$. Similarly, if $o^\texttt{f}_{ij}(t)=\bot$, $\forall t\geq 0$,  then $\varphi_{ij,t}^{\texttt{f}}\,\wedge\,(h_{ij}\,\mathsf{U}\,z_{ij})$ need not be true to satisfy $\varphi_{i}^\texttt{f}$.
 Thus $\varphi_i$ is equivalent to $\varphi_i^\texttt{l}$ and $[\varphi_i]$ is equivalent to $[\varphi_i^\texttt{l}]$.
 
 Notice also that~$\varphi_i^\texttt{l}$ is specified over $R$ and hence depends solely on the robot's trajectory, since it does not contain any observational or controllable propositions.
-Moreover, we have shown that the trace of $\tau_{i,0}$ satisfies the LTL formula $[\varphi_i^\texttt{l}]$ as well as that the trajectory $\mathbf{p}_i(t)$  satisfies~\eqref{eq:traj}.
+Moreover, we have shown that the trace of $\tau_{i,0}$ satisfies the LTL formula $[\varphi_i^\texttt{l}]$ as well as that the trajectory $\mathbf{p}_i(t)$  satisfies~\eqref{ch03:eq:traj}.
 Hence we also need to show that~$\mathbf{p}_i(t)$ satisfies the RTL formula $\varphi_i^{\texttt{l}}$.
 
 Let us define~$w=\texttt{trace}(\tau_{i,0})$, which is a discrete-time Boolean signal over $R$ with $(w,\,0)\models\, [\varphi_i^\texttt{l}]$.
-From the semantics of LTL and RTL presented in Sections~\ref{sec:LTL}~and~\ref{sec:RTL}, it is easy to show that
-(i) if $(w,\,0)\models [R_{\ell}]$ for $R_{\ell}\in R$, i.e., robot~$i$ needs to start from region $\pi_{\ell}$, then~\eqref{eq:traj} guarantees that there exists a time interval $[0,\,t_1)$ with~$t_1>0$ such that $p_i(t)\in \pi_{\ell}$, $\forall t\in [0,\,t_1)$. Thus, invoking the RTL semantics we conclude that~$(\mathbf{p}_i,\,0)\models R_{\ell}$. Similar arguments may also apply for~$[\neg R_{\ell}]$ with $R_{\ell}\in R$;
-(ii) if $(w,\,0)\models [R_{\ell_1} \vee R_{\ell_2}]$ for $R_{\ell_1},\,R_{\ell_2}\in R$, i.e., robot $i$ needs to start either from region $\pi_{\ell_1}$ or $\pi_{\ell_2}$, then~\eqref{eq:traj} guarantees that there exists a time interval $[0,\,t_1)$ with $t_1>0$ such that $p_i(t)\in \pi_{\ell_1}$ or $p_i(t)\in \pi_{\ell_2}$, $\forall t\in [0,\,t_1)$. Thus, invoking the RTL semantics we also conclude that $(\mathbf{p}_i,\,0)\models R_{\ell_1} \vee R_{\ell_2}$.
-(iii) if $(w,\,0)\models [R_{\ell_1} \mathsf{U} R_{\ell_2}]$ for $R_{\ell_1},\, R_{\ell_2}\in R$, i.e., robot~$i$ needs to stay at region~$\pi_{\ell_1}$ before it moves to region $\pi_{\ell_2}$, then~\eqref{eq:traj} guarantees that there exists a time interval $[0,\,t_1)$ with~$t_1>0$ such that $p_i(t)\in \pi_{\ell_1}$ $\forall t \in [0,\,t_1)$  and a subsequent one~$[t_1,\,t_2)$ with~$t_2>t_1$ such that $p_i(t)\in \pi_{\ell_2}$,  $\forall t \in [t_1,\,t_2)$. Thus, invoking the RTL semantics we also conclude that~$(\mathbf{p}_i,\,0)\models R_{\ell_1} \mathsf{U} R_{\ell_2}$.
+From the semantics of LTL and RTL presented in Sections~\ref{ch03:sec:LTL}~and~\ref{ch03:sec:RTL}, it is easy to show that
+(i) if $(w,\,0)\models [R_{\ell}]$ for $R_{\ell}\in R$, i.e., robot~$i$ needs to start from region $\pi_{\ell}$, then~\eqref{ch03:eq:traj} guarantees that there exists a time interval $[0,\,t_1)$ with~$t_1>0$ such that $p_i(t)\in \pi_{\ell}$, $\forall t\in [0,\,t_1)$. Thus, invoking the RTL semantics we conclude that~$(\mathbf{p}_i,\,0)\models R_{\ell}$. Similar arguments may also apply for~$[\neg R_{\ell}]$ with $R_{\ell}\in R$;
+(ii) if $(w,\,0)\models [R_{\ell_1} \vee R_{\ell_2}]$ for $R_{\ell_1},\,R_{\ell_2}\in R$, i.e., robot $i$ needs to start either from region $\pi_{\ell_1}$ or $\pi_{\ell_2}$, then~\eqref{ch03:eq:traj} guarantees that there exists a time interval $[0,\,t_1)$ with $t_1>0$ such that $p_i(t)\in \pi_{\ell_1}$ or $p_i(t)\in \pi_{\ell_2}$, $\forall t\in [0,\,t_1)$. Thus, invoking the RTL semantics we also conclude that $(\mathbf{p}_i,\,0)\models R_{\ell_1} \vee R_{\ell_2}$.
+(iii) if $(w,\,0)\models [R_{\ell_1} \mathsf{U} R_{\ell_2}]$ for $R_{\ell_1},\, R_{\ell_2}\in R$, i.e., robot~$i$ needs to stay at region~$\pi_{\ell_1}$ before it moves to region $\pi_{\ell_2}$, then~\eqref{ch03:eq:traj} guarantees that there exists a time interval $[0,\,t_1)$ with~$t_1>0$ such that $p_i(t)\in \pi_{\ell_1}$ $\forall t \in [0,\,t_1)$  and a subsequent one~$[t_1,\,t_2)$ with~$t_2>t_1$ such that $p_i(t)\in \pi_{\ell_2}$,  $\forall t \in [t_1,\,t_2)$. Thus, invoking the RTL semantics we also conclude that~$(\mathbf{p}_i,\,0)\models R_{\ell_1} \mathsf{U} R_{\ell_2}$.
 Similar arguments can be applied to other operators like~$\Diamond$,~$\rightarrow$ and~$\square$ through induction.
 Thus since~$(\texttt{trace}(\tau_{i,0}),\,0)\models [\varphi_i]$, we conclude that~$(\mathbf{p}_i(t),\,0)\models \varphi_i$.
 \end{proof}
@@ -255,7 +255,7 @@ In that respect, we consider three different cases: (I) robot~$i$ receives the f
 
 \textbf{Case I}: Suppose the first service request~$\varphi_{ji,t_j}^\texttt{s}$ received by robot~$i$ at time $t_j>0$ was sent by robot~$j$. Robot~$i$ needs to incorporate~$\varphi_{ji,t_j}^\texttt{s}$ into its static task specification~$\varphi_{i}^\texttt{l}$ and update its current plan $\tau_{i,0}$ to satisfy this request.
 
-As mentioned earlier, the service task specification from~\eqref{eq:task} requires~$\varphi_{ji,t_j}^\texttt{s}$ to be satisfied in a timely manner. The associated LTL formula is denoted by $[\varphi_{ji,t_j}^\texttt{s}]$ and $\mathcal{B}_{[\varphi_{ji,t_j}^\texttt{s}]}=(Q_j, \,2^{R},\, \delta_j,\, Q_{j,0},\, F_j)$ is the corresponding NBA, where the notations are defined similarly as in~Section~\ref{sec:LTL}.
+As mentioned earlier, the service task specification from~\eqref{ch03:eq:task} requires~$\varphi_{ji,t_j}^\texttt{s}$ to be satisfied in a timely manner. The associated LTL formula is denoted by $[\varphi_{ji,t_j}^\texttt{s}]$ and $\mathcal{B}_{[\varphi_{ji,t_j}^\texttt{s}]}=(Q_j, \,2^{R},\, \delta_j,\, Q_{j,0},\, F_j)$ is the corresponding NBA, where the notations are defined similarly as in~Section~\ref{ch03:sec:LTL}.
 Recall that~$\mathcal{B}_{[\varphi_i^{\textup{\texttt{l}}}]}=(Q_s, \,2^{R},\, \delta_s,\, Q_{s,0},\, F_s)$ is the NBA associated with $[\varphi_i^{\textup{\texttt{l}}}]$.
 Assume that at time~$t_j$ the corresponding product state of robot~$i$ in~$\mathcal{A}_{p,i}'$ is $q'_{p,t_j}\in Q'_p$ and the associated B\"uchi state in~$\mathcal{B}_{[\varphi_i^{\textup{\texttt{l}}}]}$ is~$q_{s,t_j}=q'_{p,t_j}|_{Q_s}$.
 Thus the request-prioritized and layered intersection of~$[\varphi_{ji,t_j}^{\texttt{s}}]$ and~$[\varphi_i^{\textup{\texttt{l}}}]$ is:
@@ -269,12 +269,12 @@ where $Q=Q_{j} \times Q_s  \times \{1,2\}$; $Q_{0}=Q_{j,0} \times \{q_{s,t_j}\} 
 (i) $\langle {q}_j,\,{q}_s, \,{c}\rangle$, $\langle \check{q}_j,\,\check{q}_s, \,\check{c}\rangle \in Q$;
 (ii) $\check{q}_j\in \delta_j(q_j,\,l)$ and  $\check{q}_s\in \delta_s(q_s,\,l)$;
 (iii) $q_{j}\notin F_{j}$ and $\check{c}=c=1 $; \emph{or} $q_{j}\in F_{j}$, $c=1$ and $\check{c} =2$; \emph{or} $\check{c}=c=2$.
-\hfill $\blacktriangle$
+
 \end{definition}
 
 Different from the conventional way of computing intersections of B\"uchi automata~\cite{baier2008principles},~$[\varphi_i^{\textup{\texttt{l}}}]$ is a general LTL formula that should be satisfied at~$t=0$ while $[\varphi_{ji,t_j}^{\textup{\texttt{s}}}]$ is a sc-LTL formula that should be satisfied after it is received.
 In particular, ${\mathcal{A}}_{[\varphi_i]}$  has two layers and it transits from the first layer to the second only if it reaches~$F_j$, i.e., ${[\varphi_{ji,t_j}^{\textup{\texttt{s}}}]}$ is satisfied; afterwards it stays at the second layer in order to satisfy ${[\varphi_i^{\textup{\texttt{l}}}]}$.
-In the following lemma, we prove the correctness of Definition~\ref{def:intersect} by showing that ${\mathcal{A}}_{[\varphi_i]}$ accepts all words that satisfy both~$[\varphi_i^{\textup{\texttt{l}}}]$ and~$[\varphi_{ji,t_j}^{\textup{\texttt{s}}}]$.
+In the following lemma, we prove the correctness of Definition~\ref{ch03:def:intersect} by showing that ${\mathcal{A}}_{[\varphi_i]}$ accepts all words that satisfy both~$[\varphi_i^{\textup{\texttt{l}}}]$ and~$[\varphi_{ji,t_j}^{\textup{\texttt{s}}}]$.
 %=============================
 \begin{lemma} \label{ch03:lem:intersection1}
   If there exists an $\omega$-word $w\in R^\omega$ such that $w\models [\varphi_{ji,t_j}^{\textup{\texttt{s}}}]$ and $w\models [\varphi_i^{\textup{\texttt{l}}}]$, then $\mathcal{A}_{[\varphi_i]}$ has at least one accepting run.
@@ -305,7 +305,7 @@ Moreover, the layered structure of ${\mathcal{A}}_{[\varphi_i]}$ allows us to tr
 \textbf{Case II}: Suppose that robot~$i$ has confirmed~$m$ service requests $[\varphi_{gi,t_g}^{\textup{\texttt{s}}}]$ at time~$t_g$ from robot~$g$, $\forall g\in \mathcal{N}_i^\texttt{s}\subseteq \mathcal{N}_i$.
 Without loss of generality, we can re-order the neighbors in $\mathcal{N}_{i}^\texttt{s}$ by $\{1,2,\cdots,m\}\triangleq \mathcal{N}_i^\texttt{s}$, according to the time their service requests were received, e.g., $[\varphi_{1i,t_1}^{\textup{\texttt{s}}}]$ denotes the earliest and
 $[\varphi_{mi,t_m}^{\textup{\texttt{s}}}]$ denotes the latest received request.
-Furthermore, let $\mathcal{B}_{[\varphi_{gi,t_g}^{\textup{\texttt{s}}}]}=(Q_g, \,2^{R},\, \delta_g,\, Q_{g,0},\, \mathcal{F}_g)$ be the NBA associated with $[\varphi_{gi,t_g}^{\textup{\texttt{s}}}]$, $\forall g \in \mathcal{N}_{i}^\texttt{s}$, where the notations are defined as in Section~\ref{sec:LTL}.
+Furthermore, let $\mathcal{B}_{[\varphi_{gi,t_g}^{\textup{\texttt{s}}}]}=(Q_g, \,2^{R},\, \delta_g,\, Q_{g,0},\, \mathcal{F}_g)$ be the NBA associated with $[\varphi_{gi,t_g}^{\textup{\texttt{s}}}]$, $\forall g \in \mathcal{N}_{i}^\texttt{s}$, where the notations are defined as in Section~\ref{ch03:sec:LTL}.
 
 Additionally, assume that at time $t_m$ the corresponding product state of robot~$i$ in $\mathcal{A}_{p,i}$ is $q'_{p,t_g}\in Q'_p$. In that respect, its associated B\"uchi state in~$\mathcal{B}_{[\varphi_i^{\textup{\texttt{l}}}]}$ is given by $q_{s,t_m}=q'_{p,t_m}|_{Q_s}$ and the associated B\"uchi state in each~$\mathcal{B}_{[\varphi_{gi,t_g}^{\texttt{s}}]}$ is given by $q_{g,t_m}=q'_{p,t_m}|_{Q_g}$, $\forall g \in \mathcal{N}_i^\texttt{s}$.
 Thus we may define the request-prioritized and layered intersection of $[\varphi_{gi,t_g}^{\texttt{s}}]$, $\forall g\in \mathcal{N}_i^\texttt{s}$ and $[\varphi_i^{\textup{\texttt{l}}}]$ as follows:
@@ -320,7 +320,7 @@ where $Q=Q_{1} \times Q_{2} \cdots \times Q_{m}\times Q_s  \times \{1,\,2,\,\cdo
 (i) $\langle {q}_1,\, {q}_2,\,\cdots,{q}_{m},\,{q}_s, \,{c}\rangle$, $\langle \check{q}_1,\, \check{q}_2,\,\cdots,\check{q}_{m},\,\check{q}_s, \,\check{c}\rangle \in Q$;
 (ii) $\check{q}_j\in \delta_j(q_j,\,l)$, $\forall j\in \mathcal{N}_i^\texttt{s}$; and  $\check{q}_s\in \delta_s(q_s,\,l)$;
 (iii) $q_{c}\notin \mathcal{F}_{c}$ and $\check{c} =c$; \emph{or} $q_{c}\in \mathcal{F}_{c}$ and $\check{c}=c+1$; \emph{or} $\check{c}=c=m+1$.
-\hfill $\blacktriangle$
+
 \end{definition}
 
 %============================
@@ -335,14 +335,14 @@ Finally, the correctness of the aforementioned definition relies on the followin
 If there exists an $\omega$-word $w\in R^\omega$ such that $w\models [\varphi_{gi,t_g}^{\textup{\texttt{s}}}]$, $\forall g\in \mathcal{N}_i^\texttt{s}$ and $w\models [\varphi_i^{\textup{\texttt{l}}}]$, then ${\mathcal{A}}_{[\varphi_i]}$ has at least one accepting run.
 \end{lemma}
 \begin{proof}
-Similar to the proof with Lemma~\ref{lem:intersection1}, we may construct an accepting run of ${\mathcal{A}}_{[\varphi_i]}$ by employing the resulting runs of $w$ over $[\varphi_i^{\textup{\texttt{l}}}]$ and $[\varphi_{gi,t_g}^{\textup{\texttt{s}}}]$, $\forall g\in \mathcal{N}_i^\texttt{s}$.
-Similarly to~\eqref{eq:result-run}, such accepting run reaches an accepting state of $\mathcal{B}_{[\varphi_{2i,t_2}^{\textup{\texttt{s}}}]}$ first, transits to the second layer, reaches an accepting state of $\mathcal{B}_{[\varphi_{2i,t_2}^{\textup{\texttt{s}}}]}$, and transits to the third layer and so on. This process is repeated until it reaches the $(m+1)_{th}$ layer and stays there. Afterwards its suffix is repeated infinitely often to satisfy~$[\varphi_i^{\textup{\texttt{l}}}]$.
-%Lemma~\ref{lem:co-safe} might be used to adjust the suffix length of the resulting runs if needed for~$w$ over~$[\varphi_{gi,t_g}^{\textup{\texttt{s}}}]$, $\forall g\in \mathcal{N}_i^\texttt{s}$.
+Similar to the proof with Lemma~\ref{ch03:lem:intersection1}, we may construct an accepting run of ${\mathcal{A}}_{[\varphi_i]}$ by employing the resulting runs of $w$ over $[\varphi_i^{\textup{\texttt{l}}}]$ and $[\varphi_{gi,t_g}^{\textup{\texttt{s}}}]$, $\forall g\in \mathcal{N}_i^\texttt{s}$.
+Similarly to~\eqref{ch03:eq:result-run}, such accepting run reaches an accepting state of $\mathcal{B}_{[\varphi_{2i,t_2}^{\textup{\texttt{s}}}]}$ first, transits to the second layer, reaches an accepting state of $\mathcal{B}_{[\varphi_{2i,t_2}^{\textup{\texttt{s}}}]}$, and transits to the third layer and so on. This process is repeated until it reaches the $(m+1)_{th}$ layer and stays there. Afterwards its suffix is repeated infinitely often to satisfy~$[\varphi_i^{\textup{\texttt{l}}}]$.
+%Lemma~\ref{ch03:lem:co-safe} might be used to adjust the suffix length of the resulting runs if needed for~$w$ over~$[\varphi_{gi,t_g}^{\textup{\texttt{s}}}]$, $\forall g\in \mathcal{N}_i^\texttt{s}$.
 \end{proof}
 
 In other words, the fact that~${\mathcal{A}}_{[\varphi_i]}$ accepts the common words of ${[\varphi_i^{\textup{\texttt{l}}}]}$ and all the service requests  $[\varphi_{gi,t_g}^{\textup{\texttt{s}}}]$, $\forall g\in \mathcal{N}_i^\texttt{s}$.
 %\begin{remark}\label{ch03:rem:repeat}
-Note that ${\mathcal{A}}_{[\varphi_i]}$ is updated recursively by Definition~\ref{def:intersect-all} whenever robot~$i$ confirms new requests from its neighbors.
+Note that ${\mathcal{A}}_{[\varphi_i]}$ is updated recursively by Definition~\ref{ch03:def:intersect-all} whenever robot~$i$ confirms new requests from its neighbors.
 %\end{remark}
 
 
@@ -352,14 +352,14 @@ In the sequel we discuss how we should adjust $\mathcal{A}_{[\varphi_i]}$ to rep
 Let us denote by~$\mathcal{N}_i^\texttt{s}$ the set of neighbors whose service requests robot~$i$ has to satisfy and by~${\mathcal{A}}_{[\varphi_i]}$ the associated intersection NBA.
 Since the service request from robot~$l$ has changed from $\varphi_{li,t^1_l}^\texttt{s}$ to $\varphi_{li,t^3_l}^\texttt{s}$, ${\mathcal{A}}_{[\varphi_i]}$ needs to be updated as follows.
 First, the service requests need to be re-organized according to the time they were received. Thus, the service request of robot~$l$ should be assigned the index $|\mathcal{N}_i^\texttt{s}|$ as it was he latest received one.
-Subsequently, given the product state~$q'_{p,t_l^3}$ of robot~$i$ at time $t_l^3$, the B\"uchi state associated with each $[\varphi_{gi,t_g}^{\texttt{s}}]$ is derived by the projection $q'_{p,t_l^3}|_{Q'_g}$, $\forall g \in \mathcal{N}_i^\texttt{s}$ and $g\neq l$. Thus~${\mathcal{A}}_{[\varphi_i]}$ can be recomputed by Definition~\ref{def:intersect-all}, with the service request of robot~$l$ being moved to the $|\mathcal{N}_i^\texttt{s}|_{th}$ layer.
+Subsequently, given the product state~$q'_{p,t_l^3}$ of robot~$i$ at time $t_l^3$, the B\"uchi state associated with each $[\varphi_{gi,t_g}^{\texttt{s}}]$ is derived by the projection $q'_{p,t_l^3}|_{Q'_g}$, $\forall g \in \mathcal{N}_i^\texttt{s}$ and $g\neq l$. Thus~${\mathcal{A}}_{[\varphi_i]}$ can be recomputed by Definition~\ref{ch03:def:intersect-all}, with the service request of robot~$l$ being moved to the $|\mathcal{N}_i^\texttt{s}|_{th}$ layer.
 
 
 %======================
 %======================
 %======================
-Given the updated intersection automaton~$\mathcal{A}_{[\varphi_i]}$ from Cases~(I)-(III), the corresponding product automaton~$\mathcal{P}_{i}$ should be updated following Definition~\ref{def:product}.
-Thus we should search for an accepting path of the updated~$\mathcal{P}_{i}$ that minimizes the cost function  mentioned in Section~\ref{sec:synthesis}.
+Given the updated intersection automaton~$\mathcal{A}_{[\varphi_i]}$ from Cases~(I)-(III), the corresponding product automaton~$\mathcal{P}_{i}$ should be updated following Definition~\ref{ch03:def:product}.
+Thus we should search for an accepting path of the updated~$\mathcal{P}_{i}$ that minimizes the cost function  mentioned in Section~\ref{ch03:sec:synthesis}.
 Subsequently, this accepting run can be projected onto~$\Pi$, thus yielding the updated discrete plan of robot~$i$. Finally, notice that the local plan should also be adapted whenever~$\mathcal{A}_{[\varphi_i]}$ is updated in any of the aforementioned cases.
 %==================================================
 %==================================================
@@ -382,15 +382,15 @@ Furthermore, let~$q_{i,t}'\in Q'$ be the corresponding product state in~$\mathca
 Given that $\varphi_{gi,t_g}^{\texttt{s}}$ is feasible,  there exists a finite time $t>t_g$ such  that the trajectory $\mathbf{p}_i([t_g,\,t])$ of robot~$i$ satisfies the RTL formula $\varphi_{gi,t_g}^{\texttt{s}}$.
 \end{theorem}
 \begin{proof}
-  Since $\varphi_{gi,t_g}^{\texttt{s}}$ is feasible, Lemma~\ref{lem:intersection2} ensures that~$\mathcal{A}_{[\varphi_i]}$ accepts the satisfying words of $[\varphi_{gi,t_g}^{\texttt{s}}]$. Irrespective of the layer $[\varphi_{gi,t_g}^{\texttt{s}}]$ is in~$\mathcal{A}_{[\varphi_i]}$, since all service requests are co-safe, there exists a finite time $t>t_g$ when $q'_{i,t}|_{Q}$ reaches the accepting state $F_g$
+  Since $\varphi_{gi,t_g}^{\texttt{s}}$ is feasible, Lemma~\ref{ch03:lem:intersection2} ensures that~$\mathcal{A}_{[\varphi_i]}$ accepts the satisfying words of $[\varphi_{gi,t_g}^{\texttt{s}}]$. Irrespective of the layer $[\varphi_{gi,t_g}^{\texttt{s}}]$ is in~$\mathcal{A}_{[\varphi_i]}$, since all service requests are co-safe, there exists a finite time $t>t_g$ when $q'_{i,t}|_{Q}$ reaches the accepting state $F_g$
 From the definition of~$\mathcal{A}_{[\varphi_i]}$,
 we know that if $q_g\in F_g$ for any $g\in \mathcal{N}_i^\texttt{s}$, then the past trace during $[t_g,\,t]$ (i.e., $\texttt{trace}_{i}([t_g,\, t])$) results in an accepting path of~$\mathcal{B}_{[\varphi_{gi,t_g}^{\textup{\texttt{s}}}]}$ from an initial state  to the accepting state $q_g$.
 Thus~$\textup{\texttt{trace}}_{i}([t_g,\,t])$ satisfies~$[\varphi_{gi,t_g}^{\texttt{s}}]$.
-Therefore the fact that the resulting trajectory $\mathbf{p}_i([t_g,\,t])$ satisfies the RTL formula $\varphi_{gi,t_g}^{\texttt{s}}$ can be easily deduced following the line of proof of Theorem~\ref{theo:satisfy}.
+Therefore the fact that the resulting trajectory $\mathbf{p}_i([t_g,\,t])$ satisfies the RTL formula $\varphi_{gi,t_g}^{\texttt{s}}$ can be easily deduced following the line of proof of Theorem~\ref{ch03:theo:satisfy}.
 \end{proof}
 
 This proof also provides a straightforward way for robot~$i$ to monitor the satisfaction of each request specification ~$\varphi_{gi,t_g}^{\texttt{s}}$, $\forall g\in \mathcal{N}_i^\texttt{s}$. Notice that given the projection $q_{i,t}=q_{i,t}'|_Q$, if $q_{i,t}|_{Q_g}\in F_g$ for any $g\in \mathcal{N}_i^\texttt{s}$, then $[\varphi_{gi,t_g}^{\texttt{s}}]$ is satisfied by $\texttt{trace}_{i}([t_g,\, t])$.
-This issue plays an important role for the event monitoring scheme and the communication protocol presented in Section~\ref{sec:communication}.
+This issue plays an important role for the event monitoring scheme and the communication protocol presented in Section~\ref{ch03:sec:communication}.
 
 %==============================================================
 % add arguments for formation tasks and when to send release messages
@@ -399,14 +399,14 @@ This issue plays an important role for the event monitoring scheme and the commu
 
 Finally, while serving its service requests, robot~$i$ may send formation requests to its neighbors in $\mathcal{N}_i$ that may be confirmed.
 In this sense, assume that robot~$j\in \mathcal{N}_i$ confirms a formation request at time~$t_j$. The formation between robots~$i$ and $j$ should be kept until the associated formation task~$\varphi_{ij,t_j}^\texttt{f}$ is fulfilled by robot~$i$.
-In order to achieve that, robot~$i$ first needs to  incorporate~$\varphi_{ij,t_j}^\texttt{f}$ into~$\varphi_i$ employing the same procedure as with the new service requests case described previously. More specifically, the NBA associated with $[\varphi_{ij,t_j}^\texttt{f}]$ is computed as $\mathcal{B}_{[\varphi_{ij,t_j}^\texttt{f}]}$ and the intersection automaton~$\mathcal{A}_{[\varphi_i]}$ is recomputed by adding one extra level for~$\mathcal{B}_{[\varphi_{ij,t_j}^\texttt{f}]}$ in  Definition~\ref{def:intersect-all}.
-Thus similar to Theorem~\ref{theo:service-done}, since~$\varphi_{ij,t_j}^\texttt{f}$ is a feasible sc-RTL formula,  it can be shown that~$\varphi_{ij,t_j}^\texttt{f}$ will be satisfied at a finite time instant~$t>t_j$, after which, robot~$i$ sends a release message to robot~$j$ and then the formation between them is removed by the continuous controller switch as follows.
+In order to achieve that, robot~$i$ first needs to  incorporate~$\varphi_{ij,t_j}^\texttt{f}$ into~$\varphi_i$ employing the same procedure as with the new service requests case described previously. More specifically, the NBA associated with $[\varphi_{ij,t_j}^\texttt{f}]$ is computed as $\mathcal{B}_{[\varphi_{ij,t_j}^\texttt{f}]}$ and the intersection automaton~$\mathcal{A}_{[\varphi_i]}$ is recomputed by adding one extra level for~$\mathcal{B}_{[\varphi_{ij,t_j}^\texttt{f}]}$ in  Definition~\ref{ch03:def:intersect-all}.
+Thus similar to Theorem~\ref{ch03:theo:service-done}, since~$\varphi_{ij,t_j}^\texttt{f}$ is a feasible sc-RTL formula,  it can be shown that~$\varphi_{ij,t_j}^\texttt{f}$ will be satisfied at a finite time instant~$t>t_j$, after which, robot~$i$ sends a release message to robot~$j$ and then the formation between them is removed by the continuous controller switch as follows.
 
 
 %======================================
 %\subsubsection{Continuous Controller Switch}\label{ch03:sec:motion-switch}
 After robot~$j$ confirms a formation request from its neighbor~$i\in \mathcal{N}_j$ at time $t_j>0$, it should converge to the desired formation described by the relative position~$c_{ij}$ under the prescribed performance function~$\rho_{ij}(t)$ until the release message is received from robot~$i$ at $t>t_j$.
-Thus at time~$t_j$, robot~$j$ needs to switch from the navigation control law~\eqref{eq:NF} to the formation control law~\eqref{eq:follower-control}.
+Thus at time~$t_j$, robot~$j$ needs to switch from the navigation control law~\eqref{ch03:eq:NF} to the formation control law~\eqref{ch03:eq:follower-control}.
 Then at time $t$, it needs to switch back to the navigation controller to execute its original discrete plan.
 
 
@@ -414,7 +414,7 @@ Then at time $t$, it needs to switch back to the navigation controller to execut
   Given that $\varphi_{ij,t_j}^{\texttt{f}}$ is feasible for robot~$i$ and robot~$j$ confirms the formation request at time $t_j$,  there exists a finite time $t>t_j$ such that: (i) the trajectory $\mathbf{p}_i([t_j,\,t])$ of robot~$i$ satisfies the formation task~$\varphi_{ij,t_j}^{\texttt{f}}$; (ii) robot~$j$ achieves the desired formation described by~$c_{ij}$ with prescribed performance imposed by the performance function $\rho_{ij}(t)$ during the time interval~$[t_j,\,t]$; and (iii) a release signal is sent to robot~$j$ at time $t$.
 \end{theorem}
 \begin{proof}
-The first part of the theorem can be proved in a similar way to Theorem~\ref{theo:service-done}. In particular, the newly-confirmed formation task is incorporated into the intersection automaton~$\mathcal{A}_{[\varphi_i]}$. Since it is co-safe and feasible, there exists a finite time $t>t_j$ that $q'_{i,t}|_{Q}$ reaches the accepting states of~$\mathcal{B}_{\varphi^\texttt{f}_{ij,t_j}}$ and thus $\texttt{trace}_{i}([t_j,\, t])$ satisfies $[\varphi_{ij,t_j}^{\texttt{f}}]$. Subsequently the fact that the resulting trajectory~$\mathbf{p}_i([t_g,\,t])$ satisfies the RTL formula~$\varphi_{ij,t_j}^{\texttt{f}}$ can be shown as in Theorem~\ref{theo:satisfy}.
+The first part of the theorem can be proved in a similar way to Theorem~\ref{ch03:theo:service-done}. In particular, the newly-confirmed formation task is incorporated into the intersection automaton~$\mathcal{A}_{[\varphi_i]}$. Since it is co-safe and feasible, there exists a finite time $t>t_j$ that $q'_{i,t}|_{Q}$ reaches the accepting states of~$\mathcal{B}_{\varphi^\texttt{f}_{ij,t_j}}$ and thus $\texttt{trace}_{i}([t_j,\, t])$ satisfies $[\varphi_{ij,t_j}^{\texttt{f}}]$. Subsequently the fact that the resulting trajectory~$\mathbf{p}_i([t_g,\,t])$ satisfies the RTL formula~$\varphi_{ij,t_j}^{\texttt{f}}$ can be shown as in Theorem~\ref{ch03:theo:satisfy}.
 At the same time, a confirmation message is sent from robot~$i$ to robot~$j$.
-Regarding the second part, Lemma~\ref{lem:formation-convergence} indicates that the formation control law~\eqref{eq:follower-control} guarantees that robot~$j$ will converge to the desired relative formation described by~$c_{ij}$ with prescribed performance until a release signal is received at time $t$, which completes the proof.
+Regarding the second part, Lemma~\ref{ch03:lem:formation-convergence} indicates that the formation control law~\eqref{ch03:eq:follower-control} guarantees that robot~$j$ will converge to the desired relative formation described by~$c_{ij}$ with prescribed performance until a release signal is received at time $t$, which completes the proof.
 \end{proof}
