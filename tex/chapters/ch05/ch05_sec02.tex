@@ -1,3 +1,690 @@
 %==============================
-\section{Case Study}
-\label{sec:ch04_case_study}
+\section{Topology-adaptive Exploration and Coordination via Intermittent Communication}
+\label{ch05:sec:ch04_case_study}
+
+
+
+\subsection{Problem Description}\label{ch05:sec:problem}
+
+
+%==============================
+\subsubsection{Multi-operator-robot Teams}\label{ch05:subsec:ws}
+Consider a 3D workspace~$\mathcal{A}\subset \mathbb{R}^3$,
+of which its {map} including the boundary, freespace and obstacles are all unknown.
+To obtain a complete map and features within the workspace,
+in total $K>0$ operator-robot
+teams~$\mathcal{T}\triangleq \{\mathcal{T}_1,\cdots, \mathcal{T}_K\}$
+are deployed into the workspace.
+Each team~$\mathcal{T}_k$ consists of one human operator~$\texttt{h}_k$
+and a small fleet of autonomous robots~$\mathcal{N}_k$
+such as UAVs and UGVs,
+i.e., $\mathcal{T}_k\triangleq \{\texttt{h}_k\}\bigcup \mathcal{N}_k$.
+In other words, there are~$K$ operators
+and~$N$ robots in total, i.e.,~$N\triangleq \sum_{k\in \mathcal{K}}
+N_k$ with~$\mathcal{N}\triangleq
+\bigcup_{k\in \mathcal{K}} \mathcal{N}_k$
+and~$\mathcal{K}\triangleq \{1,\cdots,K\}$.
+As shown in Fig.~\ref{ch05:fig:scenario} and~\ref{ch05:fig:comm_model},
+each robot~$i\in \mathcal{N}$ is equipped with various sensors such
+as IMU, Lidar and RGBD cameras;
+and actuators to move around the workspace,
+which allows for simultaneous localization and mapping (SLAM) as follows.
+
+
+%========================================
+\begin{definition}\label{ch05:def:slam}
+Each robot is capable of simultaneous
+localization and mapping (SLAM) with collision avoidance, i.e.,
+%====================
+\begin{equation}\label{ch05:eq:slam}
+\big(M^+_i,\, p^+_i,\, \boldsymbol{\tau}_i\big) \triangleq
+\texttt{SLAM}\big(p_i,\, p_{\texttt{g}},\, M_i,\,\mathcal{A}\big),
+\end{equation}
+%====================
+where~$\texttt{SLAM}(\cdot)$ is a generic SLAM module;
+$M_i(t)\subset \mathcal{A}$ is the \emph{local} map of
+robot~$i\in \mathcal{N}$ at time~$t\geq 0$;
+$p_i(t)\in M_i$ is the pose of robot~$i$;
+$p_{\texttt{g}} \in M_i$ is a goal pose within~$M_i$;
+$\boldsymbol{\tau}_i \subset M_i$ is the collision-free path from~$p_i(t)$ to~$p_{\texttt{g}}$;
+$M^+_i \subset \mathcal{A}$ is the updated map after traversing the path at time~$t'>t$;
+and~$p^+_i(t')$ is its updated pose, close to~$p_{\texttt{g}}$
+if the navigation is successful. \hfill $\blacksquare$
+\end{definition}
+% ========================================
+
+
+On the other hand, the operators~$\texttt{h}_k\in \mathcal{T}_k$
+can \emph{not} build a map,
+but can localize themselves with pose~$p^k_{\texttt{h}}\in \mathcal{A}$
+and move within their local maps~$M^k_{\texttt{h}}$,
+i.e., $p^k_{\texttt{h}}(t)\in M^k_{\texttt{h}}(t) \subset \mathcal{A}$
+for all~$t\geq 0$ and~$k\in \mathcal{K}$.
+Thus, it is essential that the operators to communicate with the robots
+to obtain their local maps.
+
+%==============================
+\begin{remark}\label{ch05:rm:map-model}
+The exact representation of the map depends on the underlying algorithm
+and software used for SLAM,
+e.g., the occupancy map in~\cite{thrun2002probabilistic},
+or  the semantic map in~\cite{tian2022kimera}.
+More details can be found in the numerical experiments.
+\hfill $\blacksquare$
+\end{remark}
+%==============================
+
+%==============================
+\subsubsection{Limited Inter-operator-robot Communication}\label{ch05:subsec:com}
+Furthermore, as shown in Fig.~\ref{ch05:fig:comm_model}, each robot and operator is equipped
+with a wireless communication unit for robot-robot-operator information exchange,
+e.g., ad-hoc networks, UWB, radio or 5G network~\cite{klaesson2020planning,xia2023relink}.
+The following model of communication is applied
+to the robotic fleet and operators.
+
+%========================================
+\begin{definition}\label{ch05:def:com}
+Robot~$i\in \mathcal{N}$ can communicate with robot~$j\in \mathcal{N}$ at
+time~$t>0$, if the communication quality such as SNR is above
+a certain threshold, i.e.,
+%====================
+\begin{equation}\label{ch05:eq:com}
+  (D^+_i, D^+_j) \triangleq \texttt{Com}\big(D_i, D_j\big),
+  \text{\, if \,}\texttt{Qual}(p_i,p_j,\mathcal{A}) > \underline{\delta};
+\end{equation}
+%====================
+where~$\texttt{Com}(\cdot)$ is the communication module; $D_i(t)\in \mathcal{D}$ is the
+{local} data at robot~$i$ at~$t\geq 0$, similar for robot~$j$;
+$\mathcal{D}$ includes map data, video stream, coordination messages
+and requests; $\texttt{Qual}(\cdot)$ evaluates the quality given positions
+and workspace; $\underline{\delta}>0$ is a lower bound on
+the quality; and~$D^+_i(t),\, D^+_j(t)$ are the updated data
+after communication.
+\hfill $\blacksquare$
+\end{definition}
+% ========================================
+
+By default, $(p_i,\,M_i)\in D_i$ holds for all robots and operators.
+Denote by~$\mathcal{C}_i(t)\subset \mathcal{N}$ the set of robots that robot~$i$
+can communicate with at time~$t$ under Def.~\ref{ch05:def:com}.
+The operator-robot and operator-operator communications are defined
+similarly and omitted for brevity. Moreover, several communicating
+robots or operators can form a communication {chain} to relay
+information reliably and consistently.
+
+%========================================
+\begin{definition}\label{ch05:def:chain}
+A \emph{communication chain} from robot~$i_0\in \mathcal{N}$ to the
+operator~$\texttt{h}$ at time~$t\geq 0$ is given by:
+%====================
+\begin{equation}\label{ch05:eq:chain}
+\overline{i\texttt{h}} \triangleq i_0 i_1 \cdots i_{\ell} \cdots i_L \texttt{h},
+\end{equation}
+%====================
+where neighboring nodes~$i_{\ell} \in \mathcal{C}_{i_{\ell+1}}(t)$ satisfy
+the condition in~\eqref{ch05:eq:com},~$\forall \ell\in \{0,\cdots,L-1\}$;
+and~$i_{L}\in \mathcal{C}_{\texttt{h}}(t)$.
+\hfill $\blacksquare$
+\end{definition}
+%========================================
+
+%==============================
+\begin{remark}\label{ch05:rm:requests}
+The above two communication modes are useful for different purposes:
+the pairwise communication by~\eqref{ch05:eq:com} is suitable for
+intermittent data exchange, while the communication
+chain by~\eqref{ch05:eq:chain} is essential for an operator to have
+a consistent and reliable access to a robot for a duration.
+  \hfill $\blacksquare$
+\end{remark}
+%==============================
+
+
+%==============================
+\subsubsection{Operator-fleet Online Interaction}\label{ch05:subsec:robot-human}
+Both the operators and the robots are capable of sending and receiving
+online \emph{requests} to each other via the communication module above.
+More specifically, as summarized in Table~\ref{ch05:tab:requests},
+seven types of requests are considered across three cases.
+
+\textbf{Operator-robot requests}. The operators can send {four} types of
+requests~$\xi^k_{1,2,3,4}$.
+(I) {Intra-team latency constraint}~$\{\xi^k_1\}$. The operator~$\texttt{h}_k$ must
+obtain the local maps of all robots in its team~$\mathcal{T}_k$ with a
+latency smaller than a given threshold~$T^k_{\texttt{h}}>0$ at all times,
+i.e., $\bigcup_{i\in \mathcal{N}_k} M_i(t) \subset M^k_{\texttt{h}}(t+T^k_{\texttt{h}})$, $\forall t \geq 0$.
+This means the explored map by any robot must be known to the
+operator~$\texttt{h}_k$ latest by time~$t+T^k_{\texttt{h}}$. This request remains
+active once issued;
+(II) {Prioritized or avoided region}~$\{\xi^k_2\}$. A certain region
+$\xi^k_2\subset \mathcal{A}$ should be prioritized or avoided during
+exploration by team~$\mathcal{N}_k$. Fulfilled once the locations are
+all explored;
+(III) {Operator movement}~$\{\xi^k_3\}$. The operator~$\texttt{h}_k$ requests
+to move to a desired location $p^{k,\star}_{\texttt{h}}$. Fulfilled when the
+operator reaches $p^{k,\star}_{\texttt{h}}$;
+(IV) {Remote access or tele-operation}~$\{\xi^k_4\}$. The operator~$\texttt{h}_k$
+requests remote access to robot~$i^\star\in \mathcal{N}_k$ at location~$p^\star$
+for duration~$T_{i^{\star}}>0$ as $\xi^k_4\triangleq (i^\star,\, p^\star,\, T_{i^{\star}})$.
+Fulfilled if a communication chain by~\eqref{ch05:eq:chain} is established from
+the operator to robot~$i^\star$ via relays, and uninterrupted for duration~$T_{i^{\star}}$
+.
+
+%==========================================
+\begin{table}[t!]
+\centering
+\caption{Summary of Online Operator-fleet Requests}
+\label{ch05:tab:requests}
+\small
+\begin{tabularx}{0.95\linewidth}{@{}c c X@{}}
+\toprule
+\textbf{Request} & \textbf{Type} & \textbf{Description and Notation} \\
+\midrule
+\multirow{2}{*}{\centering $\{\xi^k_1\}$} & \multirow{2}{*}{\centering Operator-robot} & Intra-team latency of team $\mathcal{T}_k$ should be bounded by $T^k_{\texttt{h}}$.\\
+\multirow{2}{*}{\centering $\{\xi^k_2\}$} & \multirow{2}{*}{\centering Operator-robot} & Regions $\mathcal{P}^+$ and $\mathcal{P}^-$ should be prioritized/explored and avoided. \\
+\multirow{2}{*}{\centering $\{\xi^k_3\}$} & \multirow{2}{*}{\centering Operator-robot} & Dynamic movement of operator $\texttt{h}_k$ to the new location as $p^{k,\star}_{\texttt{h}}$.\\
+\multirow{2}{*}{\centering $\{\xi^k_4\}$} & \multirow{2}{*}{\centering Operator-robot} & Communication chain to robot~$i^\star$ at~$p^\star$ for time $T_{i^{\star}}$.\\
+\midrule
+\multirow{2}{*}{\centering $\{\xi^i_5\}$} & \multirow{2}{*}{\centering Robot-operator} & Data $D_i$ should be modified by operator and returned as~$D^+_i$. \\
+\multirow{2}{*}{\centering $\{\xi^i_6\}$} & \multirow{2}{*}{\centering Robot-operator} & Direct assistance to robot~$i$ at position $p_i$ for duration~$T_i$. \\
+\midrule
+\multirow{2}{*}{\centering $\{\xi^{k_1k_2}_7\}$} & \multirow{2}{*}{\centering Op-operator} & Inter-team latency
+of team $\mathcal{T}_{k_1}$ and $\mathcal{T}_{k_2}$ should be bounded by $T_{\texttt{c}}$. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+%==========================================
+
+\textbf{Robot-operator requests}. Any robot can send {two} types of
+requests~$\xi^i_{5,6}$ to the operators.
+(I) {Confirmation and modification}~$\{\xi^i_5\}$. Robot~$i$ requests an
+immediate confirmation from any operator regarding actions and features,
+denoted by~$\xi^i_5\triangleq D_i$. Fulfilled if $D_i$ reaches any operator
+and is returned as modified data~$D^+_i$;
+(II) {Direct assistance} $\{\xi^i_6\}$. Robot~$i$ requests assistance
+in unexpected situations~$\xi^i_6\triangleq (p_i,\, T_i)$. Fulfilled if a
+communication chain is established from \emph{any} operator to robot~$i$ at
+$p_i\in M_i$, uninterrupted for duration~$T_i>0$.
+
+\textbf{Operator-operator requests}. Each operator~$\texttt{h}_{k_1}$ can send
+{one} type of request to another operator~$\texttt{h}_{k_2}$,
+as the {inter-team latency constraint}~$\{\xi^{k_1k_2}_{7}\}$. One robot
+in team~$\mathcal{N}_{k_1}$ must communicate with one robot in team~$\mathcal{N}_{k_2}$
+at least once every period of~$T_{\texttt{c}}>0$. This request remains active
+once issued.
+
+Thus, the set of all requests received by~$t\geq 0$ is denoted by
+$\Xi(t)\triangleq \{\{\xi^k_{1,2,3,4}\},\{\xi^i_{5,6}\},\{\xi^{k_1k_2}_7\}\}$,
+which are unknown beforehand. Each request is removed from~$\Xi(t)$
+once fulfilled.
+%========================================
+
+%==============================
+\begin{remark}\label{ch05:rm:requests_online}
+Both the intra-team latency~$\{\xi^k_1\}$ and the inter-team latency~$\{\xi^{k_1k_2}_7\}$
+are treated as online requests despite being perpetually active once issued.
+This is because both bounds as $T^k_{\texttt{h}}$ and~$T_{\texttt{c}}$
+can be modified online according to exploration progress,
+e.g., increased as subgroups move further away and the newly-explored
+area decreases.
+  \hfill $\blacksquare$
+\end{remark}
+%==============================
+
+%==============================
+\subsubsection{Problem Statement}\label{ch05:subsec:problem}
+Consequently, the behavior of each robot or an operator can be described
+by a timed sequence of navigation and communication events as their local
+plans.
+%========================================
+\begin{definition}\label{ch05:def:plan}
+  The \emph{local plan} of robot~$i\in \mathcal{N}$ is denoted by:
+%====================
+\begin{equation}\label{ch05:eq:plan}
+\Gamma_i \triangleq \boldsymbol{\tau}^0_i \mathbf{c}^0_i\, \boldsymbol{\tau}^1_i\, \mathbf{c}^1_i
+\, \boldsymbol{\tau}^2_i\,\mathbf{c}^2_i \, \cdots,
+\end{equation}
+%====================
+where~$\mathbf{c}^\ell_i \triangleq (p^\ell_i,\, i^\ell_i,\, D^\ell_i)$
+is a communication event defined by the communication location, the
+other robot or the operator, and the exchanged data from~\eqref{ch05:eq:com};
+the navigation path~$\boldsymbol{\tau}^\ell_i\subset \mathcal{A}$
+is the timed sequence of waypoints that robot~$i$ has visited between the
+consecutive communication events; and~$\ell>0$ records the round of
+communication events.
+\hfill $\blacksquare$
+\end{definition}
+%========================================
+
+Note that the behavior of an operator~$\texttt{h}_k$ is defined similarly
+to~$\Gamma_k$, for all $k \in \mathcal{K}$.
+For brevity, let
+$\widehat{\Gamma} \triangleq \{\Gamma_i\} \cup \{\Gamma_k\}$
+denote the joint plan of all robots and operators, and write
+$\widehat{\Gamma} \models \Xi(t)$ if the behaviors of the
+multi-operator multi-robot system collectively fulfill the
+requirements of the requests in~$\Xi(t)$.
+Accordingly, the overall mission-level objective can be stated as
+follows:
+%====================
+\begin{subequations} \label{ch05:eq:problem}
+ \begin{align}
+  &\mathop{\mathbf{min}}\limits_{\widehat{\Gamma},\, \overline{T}}\; \overline{T} \notag\\
+  \textbf{s.t.}\quad
+  & \mathcal{A} \subseteq M^k_{\texttt{h}}(\overline{T}),\;\forall k, \label{ch05:subeq:terminal}\\
+  & \eqref{ch05:eq:slam}-\eqref{ch05:eq:plan},\;\forall i,\forall k,\quad
+    \widehat{\Gamma} \models \xi,\;\forall \xi \in \Xi,
+    \label{ch05:subeq:system_requests}
+ \end{align}
+\end{subequations}
+%====================
+where~$\widehat{\Gamma}$ is the joint plan of all robots and operators,
+and $\overline{T}>0$ is the time instant when the environment is
+completely mapped and the resulting map is available to all
+operators, as required by~\eqref{ch05:subeq:terminal}. Constraint
+\eqref{ch05:subeq:system_requests} enforces both the operational
+constraints and the fulfillment of all requests in~$\Xi$.
+
+Problem~\eqref{ch05:eq:problem} defines the overall mission-level objective.
+In the online setting considered here, however, the request set is
+revealed incrementally during execution, and future operator motions,
+robot encounters, and communication opportunities are not known
+a priori. Therefore, MoRoCo does not solve~\eqref{ch05:eq:problem}
+directly as a globally optimal planning problem. Instead, it realizes
+this mission objective through a sequence of online feasible
+coordination decisions on the current communication backbone, as
+detailed in Sec.~\ref{ch05:subsec:online}.
+
+%==============================
+\begin{remark}\label{ch05:rm:prob}
+The consideration of multiple teams, each with one operator and a few
+robots, is motivated by several practical concerns:
+(I) The workspace is large and complex, making it suitable for several
+medium-size fleets to explore in parallel;
+(II) One operator has limited attention to supervise and interact with
+too many robots, as revealed by several recent studies in~\cite{dahiya2023survey,villani2020humans};
+and (III) The response to online requests within one team is more efficient
+compared with a global team.
+More numerical comparisons can be found in the experiments.
+\hfill $\blacksquare$
+\end{remark}
+%==============================
+
+%==============================
+\subsubsection{Latency-bounded Intermittent Communication Protocol with
+Dynamic Resizing}\label{ch05:subsec:spread}
+Timely information sharing between the operators and the fleet is
+essential for online request handling. MoRoCo therefore first
+establishes a latency-bounded intermittent communication backbone on a
+joint-wheel graph, and augments it with a distributed
+detach-and-rejoin mechanism for dynamic resizing. Together, these
+components provide the backbone for the
+request-instantiation and online coordination layers.
+
+%==============================
+\subsubsection{Latency-bounded Intermittent Communication Protocol}
+\label{ch05:subsubsec:spread-problem}
+Consider a single team $\mathcal{T}$ with the operator~$\texttt{h}$ and the robots~$\mathcal{N}$,
+tasked with the information gathering tasks
+$\mathcal{F}\triangleq \{f_m\}$, where each task $f_m$ specifies a
+location to be visited for information, such as exploration.
+The information collected by \emph{any} robot~$i$ at time~$t$
+must reach the operator within a predefined latency bound~$T_\texttt{h}>0$.
+Let $\delta_\texttt{h}(t)>0$ denote the maximum latency over all the robots at
+time~$t$.
+
+
+%===============================
+\begin{problem}\label{ch05:prob:latency}
+Given the tasks~$\mathcal{F}$ and the bound $T_\texttt{h}$, synthesize
+the local plans $\{\Gamma_i\}$ such that the completion time of $\mathcal{F}$ is
+minimized and the latency~$\delta_\texttt{h}(t)\leq T_\texttt{h}$ holds
+for all $t>0$.
+\hfill $\blacksquare$
+\end{problem}
+%===============================
+
+The core idea is to enforce bounded latency through scheduled pairwise communication.
+The robots exchange the information at the communication events and replan the next
+event so that a timely return to the operator remains feasible within
+$T_\texttt{h}$.
+This logic is captured conveniently by an embedded joint-wheel coordination
+graph defined as follows.
+
+%===============================
+\begin{definition}\label{ch05:def:embedded_graph}
+An \emph{embedded graph} is a tuple
+$\mathcal{G}\triangleq (\mathcal{V},\, \mathcal{E},\, \sigma,\, x)$, where
+$\mathcal{V}$ is the vertex set;
+$\mathcal{E}\subseteq \mathcal{V}\times\mathcal{V}$ is the edge set;
+$\sigma\triangleq (\sigma_\mathcal{V},\sigma_\mathcal{E})$ embeds vertex and edge
+into attributes~$(\Sigma_\mathcal{V},\Sigma_\mathcal{E})$;
+and $x:\mathcal{V}\rightarrow\boldsymbol{X}_\mathcal{V}$ is the geometric embedding.
+\hfill $\blacksquare$
+\end{definition}
+%===============================
+
+%===============================
+\begin{definition}\label{ch05:def:ejw}
+An \emph{embedded joint-wheel coordination graph} is an embedded graph
+$\mathcal{G}^{\texttt{w}}\triangleq (\mathcal{V},\, \mathcal{E},\, \sigma,\, x)$ such that:
+(I) $\mathcal{V}\triangleq \mathcal{N}\cup\{\texttt{h}\}$;
+(II) $\mathcal{E}\triangleq \mathcal{E}_\texttt{r}\cup\mathcal{E}_\texttt{h}$, where
+$\mathcal{E}_\texttt{r}$ forms a ring over $\mathcal{N}$, i.e.,
+$(k_\ell,k_{\ell+1})\in\mathcal{E}_\texttt{r}$ for $\ell=1,\cdots,N$ with
+$k_{N+1}\triangleq k_1$, and
+$\mathcal{E}_\texttt{h}\triangleq \{(\texttt{h},i)\mid i\in\mathcal{N}\}$.
+\hfill $\blacksquare$
+\end{definition}
+%===============================
+
+
+\begin{remark}\label{ch05:rem:joint-wheel}
+As illustrated in Fig.~\ref{ch05:fig:joint-wheel}, the term \emph{joint-wheel} emphasizes a joint connectivity
+rather than a static graph. At any time instant, the communication protocol activates
+at most one rim edge in $\mathcal{E}_\texttt{r}$, hence only one robot pair
+communicates.
+Over a period longer than~$T_{\texttt{h}}$,
+the union of all rim edges in $\mathcal{E}_\texttt{r}$ and hub edges in $\mathcal{E}_\texttt{h}$ induces a
+wheel-like connectivity pattern. This should be distinguished from the
+static line and star graphs introduced later.
+\hfill $\blacksquare$
+\end{remark}
+
+%=============================
+The embedded graph $\mathcal{G}^{\texttt{w}}$ above is constructed and maintained
+in a fully distributed way via local coordination
+at intermittent communication events as described below.
+
+
+\textbf{Initialization.}
+To begin with, the vertex embedding encodes the local coordination state, defined as:
+\begin{equation}\label{ch05:eq:def-vertex-embed}
+\sigma_\mathcal{V}(i)\triangleq (\Gamma_i,\, \chi_i),\quad
+\sigma_\mathcal{V}(\texttt{h})\triangleq (\widehat{p}_\texttt{h},\, \chi_\texttt{h}),
+\end{equation}
+where the local plan $\Gamma_i$ specifies the sequence of
+visiting locations and communication events for robot $i$ as in~\eqref{ch05:eq:plan};
+the latency variable~$\chi_i\in \mathbb{R}^{N}$ estimates the minimum time stamp of
+information from each robot that is guaranteed to reach the operator;
+and $\widehat{p}_\texttt{h}\in \mathbb{R}^2$ is the current target location of the operator,
+while~$\chi_{\texttt{h}}\in \mathbb{R}^{N}$ is the confirmed time stamp of each robot.
+The initialization assigns $\Gamma_i=\varnothing$ and $\chi_i=\mathbf{0}$ for all
+$i\in\mathcal{N}$, with $\widehat{p}_\texttt{h}=\varnothing$ and $\chi_\texttt{h}=\mathbf{0}$.
+Moreover, the edge embedding encodes the scheduled communication events as:
+\begin{equation}\label{ch05:eq:def-edge-embed}
+\sigma_\mathcal{E}(i,j)\triangleq (t^+_{ij},\, p^+_{ij}),\quad \forall (i,j)\in\mathcal{E}_\texttt{r};
+\end{equation}
+and $\sigma_\mathcal{E}(\texttt{h},i)\triangleq (t^+_{\texttt{h}i}, \, p^+_{\texttt{h}i})$
+are similar for each~$i\in \mathcal{N}$.
+The initial communications are set
+to~$\sigma_\mathcal{E}(i,j)=(0,\, p_{\texttt{h}})$,
+as all robots start around the operator location and communicate immediately.
+The value~$\sigma_\mathcal{E}(\texttt{h},i)=\varnothing$ indicates that no return is
+scheduled initially.
+Lastly, the geometric embedding
+assigns each vertex its physical state and its local data, written as
+$x(i)\triangleq (p_i(t),\, D_i(t))$ and $x(\texttt{h})\triangleq (p_\texttt{h}(t),\, D_\texttt{h}(t))$.
+
+%==============================
+%==============================
+\textbf{Pairwise Coordination.}
+At a communication event $\mathbf{c}_{ij}$, the robots read the current geometric
+states $x(i)$ and $x(j)$, exchange the incident embeddings, and compute the fused
+map~$\mathcal{M}_{ij}$. The exchange yields the merged latency vector:
+\begin{equation}\label{ch05:eq:chi-merge}
+\chi_{ij}\triangleq \textbf{max}\{\chi_i,\, \chi_j\},
+\end{equation}
+where the maximum operation is taken component-wise. Then, the coordination computation
+proceeds in three stages, as summarized in Alg.~\ref{ch05:alg:coordination} and Fig.~\ref{ch05:fig:pairopt}.
+
+%==============================
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/ch05/joint_wheel.png}
+  \vspace{-2mm}
+  \caption{
+  \textbf{Top:} the joint-wheel communication graph over time;
+  \textbf{Bottom:} the pairwise meeting events (black vertical lines)
+  and return events (blue lines).
+  }\label{ch05:fig:joint-wheel}
+\end{figure}
+% ==============================
+
+\emph{Stage-I: Determine Return Event.}
+The quantity~$\underline{\chi}_{ij}\triangleq \textbf{min}_{k\in\mathcal{N}} \{\chi_{ij}(k)\}$,
+is the minimum team time stamp that is guaranteed to reach the
+operator, as inferred at $\mathbf{c}_{ij}$.
+Let~$t^{L_\ell}_\ell$ and~$p^{L_\ell}_\ell$ denote the terminal time and location
+in the local plan~$\Gamma_\ell$ of robot~$\ell\in\{i,j\}$.
+The earliest arrival time at the
+operator for a candidate return robot $\ell\in\{i,j\}$ is estimated as:
+\begin{equation}\label{ch05:eq:estret}
+t^\star_{\texttt{h}\ell}\triangleq t^{L_\ell}_{\ell}+T^{\texttt{nav}}_\ell(p^{L_\ell}_\ell,\widehat{p}_\texttt{h}),
+\end{equation}
+where $T^{\texttt{nav}}_\ell(\cdot,\cdot)$ is the navigation-time model and the
+detailed construction is provided in the Supplementary file.
+A return to the operator is {unnecessary} if:
+\begin{equation}\label{ch05:eq:return_cond}
+\textbf{min}_{\ell\in\{i,j\}} \, \{t^\star_{\texttt{h}\ell}\}\leq (T_\texttt{h}+\underline{\chi}_{ij}),
+\end{equation}
+and otherwise the return robot is selected as
+$n\triangleq \textbf{argmin}_{\ell\in\{i,j\}}\, \{t^\star_{\texttt{h}\ell}\}$,
+where $n$ denotes the robot that returns to the operator immediately after its last event.
+
+\emph{Stage-II: Optimize Task Sequence and Next Communication Event.}
+Conditioned on the return decision, the optimization produces the tailing plans
+for both robots:
+$\Gamma^+_i\triangleq \tau^+_i\mathbf{c}^+_{ij}$ and $\Gamma^+_j\triangleq \tau^+_j\mathbf{c}^+_{ij}$,
+where $\tau^+_i$ and $\tau^+_j$ are the optimized task sequences and
+$\mathbf{c}^+_{ij}$ is the next communication event shared by the two robots.
+The schedule of $\mathbf{c}^+_{ij}$ is set to~$(t^+_{ij},p^+_{ij})$,
+which is constrained locally due to the latency bound:
+\begin{equation}\label{ch05:eq:pairing_cond}
+t^+_{ij}+T^{\texttt{nav}}_\ell(p^+_{ij},\widehat{p}_\texttt{h})
+\leq T_\texttt{h}+\chi^\star,
+\end{equation}
+where $\chi^\star\triangleq \underline{\chi}_{ij}$ if no return is scheduled in
+Stage-I, and $\chi^\star$ is computed using the scheduled return otherwise.
+Feasible outputs $(\tau^+_i,\tau^+_j,\mathbf{c}^+_{ij})$ are obtained by an
+iterative TSP-based procedure. At each iteration, a TSP is constructed over the
+remaining task locations in $\mathcal{F}^-$ together with the current terminal
+locations of robots $i$ and $j$. The edge weights are given by the navigation
+time model~$T^{\texttt{nav}}(\cdot)$. The TSP solution yields a joint
+visiting order $\mathbf{p}_{ij}$, from which $\tau^+_i$ and $\tau^+_j$ are
+extracted, and a candidate $\mathbf{c}^+_{ij}$ is selected along $\mathbf{p}_{ij}$.
+Feasibility of the meeting event is checked by~\eqref{ch05:eq:pairing_cond}.
+If violated, a task in~$\tau^+_i$ or $\tau^+_j$ is removed and the procedure repeats.
+
+%==============================
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/ch05/pairopt.png}
+  \vspace{-2mm}
+  \caption{The proposed pairwise coordination scheme
+    via intermittent communication.
+    \textbf{Top}: return event to the operator is determined first;
+    \textbf{Bottom}: the next meeting event is optimized given
+    the current exploration tasks.
+  }\label{ch05:fig:pairopt}
+\end{figure}
+% ==============================
+
+\emph{Stage-III: Update Embeddings.}
+Consequently, the current event $\mathbf{c}_{ij}$ is removed from the plans to obtain the
+prefixes $\Gamma^-_i$ and $\Gamma^-_j$. The updated plans satisfy
+$\widehat{\Gamma}_i=\Gamma^-_i\Gamma^+_i$ and $\widehat{\Gamma}_j=\Gamma^-_j\Gamma^+_j$.
+The latency vectors are updated by the information exchange as
+$\widehat{\chi}_i\triangleq \widehat{\chi}_j\triangleq \chi_{ij}$,
+where $\chi_{ij}$ is defined in \eqref{ch05:eq:chi-merge}. The local embedding update
+is then given by:
+\begin{equation}\label{ch05:eq:embed-update}
+\begin{aligned}
+\sigma_\mathcal{V}(i) &\leftarrow (\widehat{\Gamma}_i,\,\widehat{\chi}_i),\quad
+\sigma_\mathcal{V}(j) \leftarrow (\widehat{\Gamma}_j,\,\widehat{\chi}_j);\\
+\sigma_\mathcal{E}(i,j) &\leftarrow (t^+_{ij},\,p^+_{ij}),\,
+\sigma_\mathcal{E}(\texttt{h},n) \leftarrow (t^\star_{\texttt{h}n},\,\widehat{p}_\texttt{h});\\
+\end{aligned}
+\end{equation}
+where the last line is applied only if Stage-I schedules a return, and the
+hub-edge embedding remains $\varnothing$ otherwise.
+%==============================
+
+
+%====================
+Combined with the joint-wheel communication topology,
+the above procedure ensures exploration with bounded latency.
+as shown in the following lemmas and theorem.
+The detailed proofs are provided in the Appendix.
+
+%===============================
+\begin{lemma}\label{ch05:prop:latency}
+  The latency constraint~$\delta_\texttt{h}(t)\leq T_\texttt{h}, \forall t>0$ is satisfied if
+  for every return event $\mathbf{c}_{h,n_i}\in \Gamma_{\texttt{h}}$, it holds that:
+  (I) $t_{\texttt{h}}(n_i) \leq T_{\texttt{h}} + \chi_{n_{i-1}}$ and (II) $\chi_{n_i} > \chi_{n_{i-1}}$.
+\end{lemma}
+%===============================
+
+%====================
+\begin{lemma}\label{ch05:prop:exist-solution}
+  The iteration process in Alg.~\ref{ch05:alg:coordination} ends in finite steps,
+  and always returns a feasible plan that satisfies
+  the meeting event constraint~\eqref{ch05:eq:pairing_cond} during each pairwise coordination.
+\end{lemma}
+%====================
+
+%==============================
+\begin{theorem}\label{ch05:prop:Ts-constraint}
+  Under the joint-wheel communication topology
+  and the coordination protocol in Alg.~\ref{ch05:alg:coordination},
+  the intra-team latency constraint is satisfied,
+  i.e.,~$\delta_\texttt{h}(t)\leq T_\texttt{h}$ holds for all $t>0$.
+\end{theorem}
+% ==============================
+
+
+%==============================
+\begin{algorithm}[t]
+  \caption{Latency-aware Intermittent Pair-wise Coordination:
+  $\texttt{PairCoord}(\cdot)$}
+  \label{ch05:alg:coordination}
+	\LinesNumbered
+        \SetKwInOut{Input}{Input}
+        \SetKwInOut{Output}{Output}
+\Input{Local plans~$\Gamma_i$,\, $\Gamma_j$,\, Stamp $\chi_{ij}$,\, Map $\mathcal{M}_{ij}$, Unassigned tasks~$\mathcal{F}^-$.}
+\Output{Revised local plans~$\widehat{\Gamma}_i$,\, $\widehat{\Gamma}_j$; next event~$\mathbf{c}_{ij}$}
+\tcc{\textbf{Determine Return Event.}}
+  Compute~$t^\star_{\texttt{h}\ell}$ by~\eqref{ch05:eq:estret} for $\ell\in\{i,j\}$\;
+  \If{condition \eqref{ch05:eq:return_cond} not satisfied}{
+    Determin return robot by~$n\triangleq \texttt{argmin}_{\ell\in\{i,j\}}\, \{t^\star_{\texttt{h}\ell}\}$\;
+    Append a return event to~$\Gamma_n$\;
+  }
+  \tcc{\textbf{Optimize Task Sequence and Next Pairing Event.}}
+  $\mathbf{p}_{ij}\leftarrow \texttt{TSP-Path}(p^{L_i}_i, \mathcal{F}^-, p^{L_j}_j)$\;
+  $\mathbf{c}_{ij}\leftarrow \texttt{SelComm}(\mathbf{c}^{L_i}_i, \mathbf{c}^{L_j}_j, \mathbf{p}_{ij})$\;
+   \While{condition~\eqref{ch05:eq:pairing_cond} not satisfied}{\label{ch05:alg_line:continue_itr}
+   Remomve $f^\star$ with maximum cost from $\mathcal{F}^-$\;\label{ch05:alg_line:remove_frontier}
+   Recompute $\mathbf{p}_{ij}$ and $\mathbf{c}_{ij}$\;
+  }
+  $\boldsymbol{\tau}^{+}_i,\, \boldsymbol{\tau}^{+}_j \leftarrow
+  \texttt{Split}(\mathbf{p}_{ij},\, \mathbf{c}_{ij})$\;\label{ch05:alg_line:split}
+  \tcc{\textbf{Update Local Plans.}}
+  $\Gamma^-_\ell \leftarrow \texttt{Remove}(\Gamma_\ell,\, \mathbf{c}_{ij})$, for~$\ell\in\{i, j\}$\;
+  $\widehat{\Gamma}_\ell \leftarrow \Gamma^-_\ell + \boldsymbol{\tau}^{+}_\ell + \mathbf{c}_{ij}$, for~$\ell\in\{i, j\}$\;
+  Update embeddings via~\eqref{ch05:eq:embed-update}\;
+\end{algorithm}
+% ==============================
+
+
+\begin{remark}\label{ch05:rem:corner-cases}
+The joint-wheel graph above typically consists of at least three robots.
+For $|\mathcal{N}|=1$, the robot explores independently and returns to the operator
+periodically by $T^k_{\texttt{h}}$. For $|\mathcal{N}|=2$, the same protocol is
+applied on a line topology and the local plan reduces to $\Gamma_i\triangleq \tau_i\mathbf{c}_i$.
+\hfill $\blacksquare$
+\end{remark}
+
+% ==============================
+% ==============================
+\subsubsection{Distributed Detach-and-Rejoin Mechanism}\label{ch05:sec:detach-join}
+Flexible resizing under intermittent communication is enabled through a
+distributed detach-and-rejoin procedure that preserves the wheel topology and
+respects latency constraints. A central design choice is to complete rewiring
+through \emph{two consecutive meeting events}, ensuring that successor robots
+receive consistent plan and adjacency updates before a robot leaves or rejoins
+the wheel, which is illustrated in Fig.~\ref{ch05:fig:detach-rejoin}.
+
+(I) \textbf{To detach},
+consider three consecutive robots~$(i,j,k)$ along the wheel, where robot~$j$
+intends to detach. Let $\Gamma_\ell$ denote robot~$\ell$'s nominal local plan and
+$\widehat{\Gamma}_\ell$ the optimized plan maintained online.
+At the meeting between robots~$i$ and~$j$, robot~$j$ does not depart immediately.
+Instead, using robot~$i$'s most recent knowledge of robot~$k$'s plan $\Gamma_k$,
+robot~$i$ computes a bypass schedule that directly connects $(i,k)$,
+via
+$\widehat{\Gamma}_i, \widehat{\Gamma}_k, \mathbf{c}_{ik}
+= \texttt{PairCoord}(\Gamma_i,\Gamma_k)$;
+and updates the edge embeddings by removing $(i,j)$ and inserting $(i,k)$, i.e.,
+\[
+\sigma_{\mathcal{E}}(i,j) \leftarrow \emptyset,\qquad
+\sigma_{\mathcal{E}}(i,k) \leftarrow (t_{ik},p_{ik}),
+\]
+where $(t_{ik},p_{ik})$ is the time--location pair of the next event
+$\mathbf{c}_{ik}$. Robot~$j$ then follows its original schedule to meet robot~$k$
+and forwards the bypass message so that robot~$k$ adopts $\widehat{\Gamma}_k$ and
+records the updated predecessor implied by $\mathbf{c}_{ik}$. Only after this
+second meeting does robot~$j$ finalize detachment and depart to remote location.
+Thus, the detach event is denoted by:
+\begin{equation}
+  \pi_j \triangleq (j,\, t_{jk},\, p_{jk}),
+\end{equation}
+where $(t_{jk},p_{jk})$ is the confirmed meeting between $(j,k)$
+as the time and location for robot~$j$ to detach from~$\mathcal{G}_k$.
+
+
+(II) \textbf{To rejoin}, robot~$j$ first returns to the operator~$\texttt{h}$ and waits until a
+team robot~$m$ also arrives at~$\texttt{h}$. Reinsertion is completed by two
+consecutive meetings. Let~$\ell$ denote robot~$m$'s current successor on the
+wheel. First, robots~$m$ and~$j$ execute pair-wise coordination at~$\texttt{h}$ to
+synchronize plans and schedule the next event as
+$
+\widehat{\Gamma}_m, \widehat{\Gamma}_j, \mathbf{c}_{mj}
+= \texttt{PairCoord}(\Gamma_m,\Gamma_j)$.
+Then, the embeddings are updated by replacing the successor edge $(m,\ell)$ with
+$(m,j)$, i.e.,
+\[
+\sigma_{\mathcal{E}}(m,\ell) \leftarrow \emptyset,\qquad
+\sigma_{\mathcal{E}}(m,j) \leftarrow (t_{mj},p_{mj}),
+\]
+where~$(t_{mj},p_{mj})$ is from event~$\mathbf{c}_{mj}$. Second, robot~$j$ meets
+robot~$\ell$ to establish the new successor relation via
+$\texttt{PairCoord}(\Gamma_j,\Gamma_\ell)$, and the edge embedding
+$\sigma_{\mathcal{E}}(j,\ell) \leftarrow (t_{j\ell},p_{j\ell})$ is added.
+This two-step reinsertion avoids inconsistent topology and restores a valid
+wheel graph.
+
+Lastly, for \emph{multiple} detaching or rejoining robots,
+the above scheme can be extended by adjusting the number of required
+forwarding meetings. For detachment, nonconsecutive robots may detach
+sequentially using the same two-meeting handoff. If a consecutive block detaches,
+a single bypass plan is computed by the predecessor of the block and is forwarded
+across the block until reaching the first non-detaching successor; each
+intermediate robot forwards once and then exits. For rejoining, a block waiting
+at the operator~$\texttt{h}$ can be inserted between a returning robot~$m$ and its successor
+through consecutive pairwise coordination; the last inserted
+robot then performs the successor take-over meeting to close the wheel.
+
+
+
+%==============================
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figures/ch05/detach_rejoin.png}
+  \vspace{-2mm}
+  \caption{The distributed schemes of
+    detach (\textbf{Top}) and rejoin (\textbf{Bottom}),
+    where the edges can be involved (black), unrelated (gray),
+    and unconfirmed (dashed).
+  }\label{ch05:fig:detach-rejoin}
+\end{figure}
+% ==============================

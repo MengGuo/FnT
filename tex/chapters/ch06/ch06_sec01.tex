@@ -1,0 +1,1060 @@
+%==============================
+\section{Hierarchical Motion Planning under Probabilistic Temporal Tasks
+  and Safe-Return Constraints}
+\label{ch06:sec:ch06_safe_plan}
+
+{Autonomous mobile robots are often deployed in uncertain and unsafe environments
+  that are otherwise risky for humans. For instance,}
+an autonomous ground vehicle (AGV) is deployed in an office for a
+search-and-rescue mission after disaster:
+to search for injured victims and bring them to medical stations,
+to shut down certain machines in different rooms,
+and to report fire hazards or gas leakage;
+also an autonomous rover is deployed in a rough terrain for a planetary exploration mission:
+to gather specimens from areas of interest,
+to assemble them into containers and store in the storage area;
+and to charge often.
+Different from simple navigation tasks,
+such tasks require not only planning on the task-level regarding which areas to visit and actions to perform there,
+but also planning on the motion-level regarding how to reach a desired area.
+In some cases, these tasks are long-term meaning that they should be repeated infinitely often.
+{Furthermore, even though the approximate structure of the environment is known,
+its exact features within the structure can only be estimated.}
+This has two direct consequences:
+first, the robot movement within the environment become uncertain,
+e.g., drifting due to different terrains, and blockage due to debris;
+second, the properties relevant to the task become uncertain,
+e.g., which areas contains human victims, and which charging station is functional.
+In other words, uncertainty in the environment model can cause non-determinism both in the task planning and motion execution.
+A formal consideration of this uncertainty when planning for general complex tasks remains challenging.
+Some recent work addresses this issue with model-based optimization~\cite{guo2018probabilistic,belta2017formal,ding2014ltl} or
+data-driven online learning~\cite{hasanbeig2019reinforcement, bozkurt2020control}.
+However, the computational complexity remains to be the bottleneck and most validations are performed on systems with small number of states.
+
+On the other hand, safety is an indispensable aspect to consider when deploying robotic systems,
+especially so in an uncertain and potentially unsafe environment.
+Depending on the application, robotic safety can be defined in various ways.
+Safety in motion planning~\cite{lavalle2006planning} is commonly defined as the avoidance of a subset of the state space, namely the \emph{unsafe} regions.
+This has been made more general with temporal task specifications,
+e.g., always stop in front of human, infinitely often charge itself, and always travel at the right lane, see~\cite{guo2018probabilistic, hasanbeig2019reinforcement, laurenti2020formal, guo2015multi, schillinger2018simultaneous}.
+These safety rules are useful and often directly imposed as an additional requirement of the overall task.
+However,
+there are certain types of safety requirements that can \emph{not} be expressed in this way.
+Safe-return constraints require that the robot should be able to return to a set of safety states whenever requested during the mission.
+Such constraints are particularly important for non-ergodic systems where not all states are reachable for any other states.
+Considering the same example of search-and-rescue missions,
+the robot should avoid one-way doors, stairs and debris where it may get trapped in some rooms;
+during the planetary exploration mission,
+the robot should avoid steep cliffs and valleys where it can easily descend but hard to ascend back.
+In other words, such safe-return constraints are less state-dependent but more \emph{policy-dependent},
+thus more general in terms of expressiveness and practical relevance.
+More importantly, these constraints are often {conflicting} with the long-term task goals,
+e.g., the task specifies to search and rescue victims at all time, while the safe-return constraints require to return and stay at the base.
+Consequently, they can not be added directly in the task specification,
+instead a separate return policy should be synthesized to fulfill the constraints and further restrict the task execution.
+To the best of our knowledge, such safe-return constraints have been mainly addressed
+in the reinforcement learning community~\cite{moldovan2012safe,turchetta2016safe}
+to ensure safety during the learning process.
+They have not been studied along with the complex temporal tasks as in this work.
+
+In this work, we address the motion planning problem over MDPs with probabilistic labels,
+where the tasks are given as Linear Temporal Logic (LTL) formulas.
+Furthermore, we take into account a general safety requirement as safe-return constraints,
+which demands the existence of a return-policy to drive the system back to home states with a high probability.
+It is first shown that the safe-return constraints can be re-formulated as accumulated rewards
+given the value function in the associated safety automaton.
+Then, the baseline solution is proposed by solving two coupled linear programs in the respective product automaton.
+However, this solution quickly becomes intractable when the system size increases.
+{To overcome this bottleneck, a hierarchical and approximate planning algorithm based on the combination of symbolic and temporal abstractions with constrained optimization is proposed.}
+Two abstracted semi-MDPs and the associated motion policies as \emph{temporal options} are constructed simultaneously for the regions whose features are relevant to the task and safety specifications.
+Afterwards, two high-level task policies are synthesized in sequence within the respective product automata between the semi-MDPs and task automata.
+The return policy ensures that the safe-return constraints are fulfilled, and the outbound policy minimizes the overall cost to satisfy the task.
+{It is shown that this hierarchical solution is more efficient and can solve systems of much larger sizes,
+compared with the alternative and baseline solutions, with only a slight reduction of optimality}.
+The results are validated rigorously via simulations and hardware experiments of various robotic missions
+with different system sizes.
+
+The main contribution lies in three aspects:
+(i) {the formulation of a new planning problem for MDPs with labelling features,
+  where both the tasks and safe-return constraints are given as complex LTL formulas};
+(ii) the theoretical analyses that ensure the correctness of the problem re-formulation;
+(iii) the hierarchical planning algorithm that synthesizes simultaneously and efficiently the outbound policy for task satisfaction and the return policy for safety constraints.
+
+%==============================================================
+\subsection{Problem Formulation}\label{ch06:sec:problem-formulate}
+In this section, we formally define the considered system model, the task specification,
+the safe-return constraints, and the complete problem formulation.
+
+\subsubsection{{Labeled MDP}}\label{ch06:subsec:probMDP}
+{In order to model different workspace properties,
+  the definition of a standard MDP~\cite{puterman2014markov} is extended
+  with a labeling function over the states}, namely:
+\begin{equation}\label{ch06:eq:mdp}
+\mathcal{M} \triangleq \big(X, \, U,\, D,\, p_D, \, AP, \,L,\, c_D,\, x_0\big),
+\end{equation}
+where~$X$ is the finite state space;
+$U$ is the finite control action space
+(with a slight abuse of notation, $U(x)$ also denotes the set of control actions \emph{allowed} at state~$x\in X$);
+$D \triangleq \{(x,\, u)\,|\, x\in X,\, u\in U(x)\}$ is the set of allowed transitions
+as the possible state-action pairs;
+$p_D\colon X\times U \times X \rightarrow {[0, 1]}$ is the transition probability function for each transition in $D$,
+such that ~$\sum_{\check{x}\in X}p_D(x,u,\check{x}) = 1$, $\forall (x,\,u) \in D$;
+$c_D \colon D \rightarrow \mathbb{R}^{>0}$ is the cost function associated with an action;
+$AP$ is a set of atomic propositions as the properties of interest;
+{$L \colon X \rightarrow 2^{AP}$ returns the properties held at each state (or simply labels);}
+and lastly~$x_0\in X$,~$l_0\in L(x_0)$ are the initial states and labels.
+Such models can be obtained by combining the robot motion controller with the environment model.
+
+\begin{remark}\label{ch06:remark:prob-label}
+  {
+    The above model can be extended to probabilistically-labeled MDPs,
+    as proposed in our previous work~\cite{guo2018probabilistic}.
+    It can incorporate probabilistic labels at each state, which are useful
+    for modeling uncertain environments.
+    Moreover, for large-scale systems, such model~$\mathcal{M}$ can often
+    be constructed algorithmically from data without much manual inputs,
+    by combining the workspace data and the robot motion model,
+    e.g., the office blueprint including walls and doors,
+    and the satellite depth image of mountains and valleys.
+    More details can be found in the simulation of Sec.~\ref{ch06:sec:case}.
+  }
+
+\end{remark}
+
+%==========
+\begin{example}\label{ch06:expample:mdp}
+The robot motion for
+the search-and-rescue mission is modeled as follows:
+$X$ is a set of regions with the desired granularity~\cite{lavalle2006planning};
+$U$ maps to the  navigation function among these regions;
+$p_D$ is computed based on the feasibility of such navigation;
+$L$ is the features such as different rooms and whether there are victims.
+\end{example}
+%==========
+
+
+%------------------------------
+\subsubsection{Task Specification}
+Different from the simple navigation task,
+we take into account a more complex task specification
+as LTL formulas $\varphi$ over the same atomic propositions~$AP$ from~\eqref{ch06:eq:mdp} above.
+They can be used to specify both temporal and spatial requirements over the system,
+of which the exact syntax and properties are given in Sec.~\ref{ch06:subsec:LTL}.
+They are general enough to specify most high-level tasks such as surveillance, safety, service and response.
+Many useful templates can be found in related work~\cite{hasanbeig2019reinforcement, laurenti2020formal, guo2015multi, vasile2017minimum, schillinger2019hierarchical, guo2016task, kantaros2020reactive}.
+
+%==========
+\begin{example}\label{ch06:example:task}
+The task to surveil regions $r_1,r_2,r_3$ infinitely often can be specified as $\varphi=(\Box\Diamond r_1) \wedge (\Box\Diamond r_2)\wedge (\Box\Diamond r_3)$;
+The task to pick an object from region $r_1$ and drop it at $r_2$ is given by
+$\varphi=\Diamond ((\texttt{pick} \wedge r_1) \wedge \Diamond (\texttt{drop} \wedge r_2))$;
+The task to provide supply at $r_1$ once a certain material is detected low is given by
+$\varphi= \Box (\texttt{low} \rightarrow \Diamond(\texttt{supply} \wedge r_1))$.
+
+\end{example}
+%==========
+
+
+At stage~$T\geq 0$,
+the robot's past path is given by~$X_T= x_0 x_1 \cdots x_T \in X^{(T+1)}$,
+the past sequence of observed labels is given by~$L_T=l_0 l_{1}\cdots l_T\in (2^{AP})^{(T+1)}$
+and the past sequence of control actions is~$U_T=u_0 u_1 \cdots u_T \in U^{(T+1)}$.
+{It should hold that~$p_D(x_t, u_t, x_{t+1})>0$ and~$l_t=L(x_t)$, $\forall t\geq 0$.}
+The complete past is then given by~$R_T=x_0l_0u_0 \cdots x_Tl_Tu_T$.
+Denote by~$\boldsymbol{X}_T$, $\boldsymbol{L}_T$ and~$\mathbf{R}_T$ the set of all possible past sequences of states, labels, and runs up to stage~$T$.
+{For brevity, $X_T \triangleq  R_T|_{X} $ and $L_T \triangleq R_T|_{L} $ denote the sequence of states and labels associated with the run~$R_T$.}
+{For infinite sequences, $T=\infty$ and~$\boldsymbol{X}_\infty$, $\boldsymbol{L}_\infty$,~$\mathbf{R}_\infty$ denote the set of all infinite sequences of states, labels, and runs, respectively.}
+{A \emph{finite-memory} policy is defined as~$\boldsymbol{\mu}=\mu_0\mu_1\cdots\mu_T$.}
+The control policy at stage~$t\geq 0$ is given by~$\mu_t:\mathbf{R}_t \times U\rightarrow [0, \,1]$, $\forall t\geq 0$.
+Denote by~$\overline{\boldsymbol{\mu}}$ the set of all such finite-memory policies.
+Given a control policy~$\boldsymbol{\mu}\in \overline{\boldsymbol{\mu}}$,
+the underlying system~$\mathcal{M}$ evolves as a Markov Chain (MC), denoted by~$\mathcal{M}|{\boldsymbol{\mu}}$.
+{The probability measure on the smallest~$\sigma$-algebra,
+over all possible infinite sequences within~$\mathcal{M}|{\boldsymbol{\mu}}$ that contain~$R_{T}$,
+is the unique measure~\cite{baier2008principles}:
+$Pr_{\mathcal{M}}^{\boldsymbol{\mu}}(R_T)= \prod_{t=0}^{T} \, p_D(x_t,\,u_t,\,x_{t+1}) \cdot {\mu_t(R_t,u_t)}$},
+where~$\mu_t(R_t,u_t)$ is defined as the probability of choosing action~$u_t$ given the past run $\mathbf{R}_t$.
+{Then, the probability of~$\mathcal{M}$ satisfying~$\varphi$ under a finite-memory policy~$\boldsymbol{\mu}$  is defined by}:
+{
+  \begin{equation}\label{ch06:eq:satisfy}
+     \textbf{Sat}_{\mathcal{M}}^{\boldsymbol{\mu}} \triangleq {Pr}_{\mathcal{M}}^{\boldsymbol{\mu}}(\varphi) \triangleq
+      {Pr}_{\mathcal{M}}^{\boldsymbol{\mu}}\big{(} R_{\infty}\in  \mathbf{R}_{\mathcal{M}}^{\boldsymbol{\mu}} \,|
+     \, R_{\infty}|_{L} \models \varphi\big{)},
+\end{equation}
+}
+{where $\mathbf{R}_{\mathcal{M}}^{\boldsymbol{\mu}}\subset \mathbf{R}_{\infty}$ is the set of all infinite runs of system~$\mathcal{M}$ under policy~${\boldsymbol{\mu}}$;
+ $R_{\infty}|_{L}$ is the infinite sequence of labels associated with a run $R_{\infty}$ in~$\mathbf{R}_{\mathcal{M}}^{\boldsymbol{\mu}}$};
+and the satisfaction relation~``$\models$'' is introduced in Sec.~\ref{ch06:subsec:LTL}.
+Namely, the \emph{satisfiability} equals to the probability of all infinite runs whose associated labels satisfy the task.
+More details on the probability measure can be found in~\cite{baier2008principles}.
+Moreover, the \emph{cost} of policy $\boldsymbol{\mu}$ over~$\mathcal{M}$ is given by the expected mean cost of these infinite runs, namely:
+\begin{equation}\label{ch06:eq:total-cost}
+\begin{split}
+\textbf{Cost}_{\mathcal{M}}^{\boldsymbol{\mu}}&\triangleq \mathbb{E}_{R_\infty\in \mathbf{R}_{\mathcal{M}}^{\boldsymbol{\mu}}}\{\textbf{Cost}(R_\infty)\}\\
+&\triangleq \mathbb{E}_{R_\infty\in \mathbf{R}_{\mathcal{M}}^{\boldsymbol{\mu}}}\{\lim_{t\rightarrow \infty} \sum_{t=0}^{\infty} \frac{1}{t}\,c_D(x_t,u_t)\},
+\end{split}
+\end{equation}
+where $\textbf{Cost}(R_\infty)$ is the \emph{mean} total cost~\cite{puterman2014markov} of an infinite run $R_{\infty}$;
+and $c_D(\cdot)$ is the cost of applying $u_t$ and $x_t$ from~\eqref{ch06:eq:mdp}.
+{Given only the task, our previous work in~\cite{guo2018probabilistic} proposes
+  an approach to optimize the above cost by formulating two dependent Linear Programs for the plan
+prefix and suffix.}
+
+
+%==========
+\begin{remark}\label{ch06:remark:cost}
+Un-discounted cost summation is often used for the
+stochastic shortest path problems~\cite{bertsekas1995neuro, polychronopoulos1996stochastic},
+which are not suitable here as many general LTL tasks require liveness property
+over  \emph{infinite} runs.
+\end{remark}
+%==========
+
+
+%==============================
+\subsubsection{Safe-Return Constraints}\label{ch06:subsec:safety}
+As discussed in Sec.~\ref{ch06:sec:introduction} and~\ref{ch06:sec:related-work},
+traditionally safety is defined as the avoidance of unsafe states,
+see~\cite{lavalle2006planning},
+which are \emph{state-dependent} and mostly pre-defined offline.
+Despite its intuitiveness,
+it has serious drawbacks in scenarios where
+safety depends on whether the system can follow a certain strategy to return to the safe states,
+or where unsafe states can only be determined online during execution.
+Such safety measure is now \emph{policy-dependent} and covers the traditional notion.
+
+Formally, we consider the safe-return requirements~$\varphi_{\texttt{r}}$
+specified as LTL formulas with the following format:
+\begin{equation}\label{ch06:eq:safe-task}
+  \varphi_{\texttt{r}}= \varphi^1_{\texttt{r}} \wedge \Diamond \Box\, \varphi^2_{\texttt{r}},
+ \end{equation}
+where~$\varphi^1_{\texttt{r}}$ are syntactically co-safe LTL (sc-LTL) formulas
+over the same propositions~\cite{baier2008principles, pnueli1981temporal};
+$\varphi^1_{\texttt{r}}$ denotes the transient requirement
+{while $\varphi^2_{\texttt{r}}=\bigvee_{l\in L_s} l $, which contains the set of labels~$L_s\subset AP$ associated with a set of safe states that the system should \emph{stay} in the end}.
+Note that sc-LTL formulas can be satisfied by a good prefix of finite length~\cite{pnueli1981temporal}.
+Similar to~\eqref{ch06:eq:satisfy},
+the probability of~$\mathcal{M}$ satisfying~$\varphi_{\texttt{r}}$ under a finite-memory policy $\boldsymbol{\mu}_{\texttt{r}}\in \overline{\boldsymbol{\mu}}$ is given by:
+{\begin{equation}\label{ch06:eq:sat-return}
+  \begin{split}
+    \textbf{Sat}_{\mathcal{M}}^{\boldsymbol{\mu}_{\texttt{r}}}\triangleq Pr_{{\mathcal{M}}}^{\boldsymbol{\mu}_{\texttt{r}}}(\varphi_{\texttt{r}})
+    \triangleq &{Pr}_{\mathcal{M}}^{\boldsymbol{\mu}_{\texttt{r}}}\big{(} R_\infty \in \mathbf{R}_{\mathcal{M}}^{\boldsymbol{\mu}_{\texttt{r}}} \,|\, \\
+    &L_1 L^\omega_2 \models \varphi_{\texttt{r}},\, R_\infty|_L = L_1 L^\omega_2\big{)},
+\end{split}
+\end{equation}}
+{where~$\mathbf{R}_{\mathcal{M}}^{\boldsymbol{\mu}_{\texttt{r}}}$ is the set of infinite runs of system~$\mathcal{M}$ under the policy~$\boldsymbol{\mu}_{\texttt{r}}$;
+  one such run is denoted by~$R_\infty$ and its projection~$R_\infty|_L$ has the prefix-suffix format of~$L_1 L^\omega_2$,
+  where~$L_1$ is a finite prefix that satisfies~$\varphi^1_{\texttt{r}}$ and
+  $L^\omega_2$ is a cyclic suffix that satisfies~$\varphi^2_{\texttt{r}}$ as defined in~\eqref{ch06:eq:safe-task}}.
+
+\begin{example}\label{ch06:example:safety}
+  {For the search-and-rescue mission, it crucial that the robot can return to and stay at its base station via
+  the designated exit, e.g., $\varphi_{\texttt{r}}= \Diamond \texttt{ex} \wedge \Diamond \Box \,\texttt{bs}$}.
+\end{example}
+
+Note that other safety constraints, such as collision avoidance, charging often, and emergency response, should be included in the task $\varphi$ rather than safe-return constraints~$\varphi_{\texttt{r}}$,
+as in~\cite{hasanbeig2019reinforcement, laurenti2020formal, guo2015multi, schillinger2018simultaneous,
+  tumova2013least, vasile2017minimum}.
+More importantly, there are now \emph{two} finite-memory policies:
+$\boldsymbol{\mu}_{\texttt{o}}$ called the \emph{outbound} policy that drives the robot to satisfy task $\varphi$;
+and $\boldsymbol{\mu}_{\texttt{r}}$ called the \emph{return} policy that ensures the safety constraints $\varphi_{\texttt{r}}$.
+{Due to the existence of the outbound policy, the satisfiability of system~$\mathcal{M}$ w.r.t. the safe-return requirements~$\varphi_{\texttt{r}}$ in~\eqref{ch06:eq:sat-return} is modified as follows:
+{\begin{equation}\label{ch06:eq:sat-return-new}
+  \begin{split}
+  &\textbf{Safe}_{\mathcal{M}}^{\boldsymbol{\mu}_{\texttt{o}},\boldsymbol{\mu}_{\texttt{r}}} \triangleq
+    \textbf{Sat}_{\mathcal{M}'_{\texttt{o}}}^{\boldsymbol{\mu}_{\texttt{r}}}
+    = Pr_{\mathcal{M}'_{\texttt{o}}}^{\boldsymbol{\mu}_{\texttt{r}}}(\varphi_{\texttt{r}})\\
+    &={Pr}_{\mathcal{M}'_{\texttt{o}}}^{\boldsymbol{\mu}_{\texttt{r}}}\big{(} R_\infty \in \mathbf{R}_{\mathcal{M}'_{\texttt{o}}}^{\boldsymbol{\mu}_{\texttt{r}}}\,|\, R_\infty|_L \models \varphi_{\texttt{r}}\big{)},
+  \end{split}
+\end{equation}
+  where~$\mathcal{M}'_{\texttt{o}}$ is the modified model with an initial state distribution
+  generated by system~$\mathcal{M}$ under the outbound policy~$\boldsymbol{\mu}_{\texttt{o}}$;
+the word~$R_\infty|_L$ follows the prefix-suffix format as defined in~\eqref{ch06:eq:sat-return}.
+Thus, the safe-return constraints are defined as follows}.
+
+\begin{definition}\label{ch06:def:safety}
+Given system $\mathcal{M}$, an outbound policy~$\boldsymbol{\mu}_{\texttt{o}}$ is called $\chi_{\texttt{r}}$-\emph{safe} if there exists a \emph{return} policy~$\boldsymbol{\mu}_{\texttt{r}}$ such that the probability of $\mathcal{M}$ satisfying $\varphi_{\texttt{r}}$ is lower-bounded:
+\begin{equation}\label{ch06:eq:safe}
+  \textbf{Safe}_{\mathcal{M}}^{\boldsymbol{\mu}_{\texttt{o}},\boldsymbol{\mu}_{\texttt{r}}} \geq \chi_{\texttt{r}},
+\end{equation}
+{or \emph{equivalently}: given $\boldsymbol{\mu}_{\texttt{o}}$ and~$\mathcal{M}$, $\exists \boldsymbol{\mu}_{\texttt{r}}$, s.t. $\textbf{Sat}_{\mathcal{M}|\boldsymbol{\mu}_{\texttt{o}}}^{\boldsymbol{\mu}_{\texttt{r}}} \geq \chi_{\texttt{r}}$, where $\chi_{\texttt{r}}\in [0,\,1]$ is the given safety bound.}
+\end{definition}
+
+It is worth clarifying that the task requirement~$\varphi$ and safe-return
+constraints~$\varphi_\texttt{r}$ are \emph{fundamentally} different from the
+multi-objective tasks considered in~\cite{forejt2011quantitative, etessami2007multi}.
+This is due to the fact that in most cases there does not exist \emph{any}
+policy~$\boldsymbol{\mu}$ that can satisfy~$\varphi$ and~$\varphi_\texttt{r}$
+simultaneously, no matter how their relative priorities are set.
+For instances, consider the surveillance task~$\varphi$ in Example~\ref{ch06:example:task}
+and the safety constraint~$\varphi_\texttt{r}$ in Example~\ref{ch06:example:safety}.
+They are mutually exclusive as  $\varphi$ requires it to surveil several regions
+infinitely often,
+while~$\varphi_\texttt{r}$ requires the system to return and stay at the base.
+
+
+
+%==============================
+\subsubsection{Problem Statement}\label{ch06:subsec:problem}
+\begin{problem}\label{ch06:prob:main}
+Given the labeled MDP~$\mathcal{M}$ from~\eqref{ch06:eq:mdp},
+the task~$\varphi$ and the safe-return requirement~$\varphi_{\texttt{r}}$,
+our goal is to synthesize the outbound policy~$\boldsymbol{\mu}_{\texttt{o}}$ \emph{and} the return policy~$\boldsymbol{\mu}_{\texttt{r}}$
+that solve the constrained optimization below:
+\begin{equation}\label{ch06:eq:objective}
+\begin{split}
+&\min_{\boldsymbol{\mu}_{\texttt{o}},\boldsymbol{\mu}_{\texttt{r}}\in \overline{\boldsymbol{\mu}}} \;\; \textbf{Cost}_{\mathcal{M}}^{\boldsymbol{\mu}_{\texttt{o}}}\\
+&\quad \text{s.t.} \quad \textbf{Sat}_{\mathcal{M}}^{\boldsymbol{\mu}_{\texttt{o}}} \geq \chi_{\texttt{o}}\;\; \text{and} \;\; \textbf{Safe}_{\mathcal{M}}^{\boldsymbol{\mu}_{\texttt{o}},\boldsymbol{\mu}_{\texttt{r}}} \geq \chi_{\texttt{r}},
+\end{split}
+\end{equation}
+where $\chi_{\texttt{o}},\chi_{\texttt{r}}\in [0,\,1]$ are given lower bounds for satisfiability and safety in~\eqref{ch06:eq:satisfy} and~\eqref{ch06:eq:safe}, respectively;
+the overall cost $\textbf{Cost}_{\mathcal{M}}^{\boldsymbol{\mu}_{\texttt{o}}}$ for the task is defined in~\eqref{ch06:eq:total-cost}.
+
+\end{problem}
+
+{The above formulation has two implications: first, the synthesis of the outbound and inbound policies are coupled.
+  The overall cost can not be optimized without ensuring \emph{both} the task satisfiability and the safe-return constraint;
+  second, the system can evolve either under the outbound policy~$\boldsymbol{\mu}_{\texttt{o}}$
+  or the return policy~$\boldsymbol{\mu}_{\texttt{r}}$, of which the switch is triggered
+  by an \emph{external} ``return'' request.}
+Furthermore, the lower bounds~$\chi_{\texttt{o}},\,\chi_{\texttt{r}}$ can {affect} the obtained policy greatly.
+For a highly-uncertain workspace,~$\chi_{\texttt{o}}$ should be set low
+while~$\chi_{\texttt{r}}$ should be high,
+as no valid outbound {policies} exist if~$\chi_{\texttt{o}}$ is set too high.
+On the other hand, for fairly certain models, both~$\chi_{\texttt{o}},\chi_{\texttt{r}}$
+can be set high.
+{More detailed discussions can be found in the numerical studies later in Sec.~\ref{ch06:sec:case}.}
+
+%==========
+\begin{remark}\label{ch06:remark:safety}
+Most related work synthesizes only \emph{one} policy to satisfy $\varphi$ and $\varphi_{\texttt{r}}$ simultaneously, see~\cite{guo2018probabilistic,  hasanbeig2019reinforcement, laurenti2020formal, guo2015multi, schillinger2019hierarchical}.
+This is however not directly possible as discussed after Def.~\ref{ch06:def:safety}, since the safe-constraints $\varphi_{\texttt{r}}$ are conflicting with $\varphi$ in most cases;
+Second, the outgoing policy~$\boldsymbol{\mu}_{\texttt{o}}$ depends on the property of the return policy~$\boldsymbol{\mu}_{\texttt{r}}$ as in~\eqref{ch06:eq:safe},
+thus can not be synthesized independently.
+{Lastly, as elaborated earlier, only~$\boldsymbol{\mu}_{\texttt{o}}$ is {activated} during execution, while~$\boldsymbol{\mu}_{\texttt{r}}$ may
+{never} be activated if not requested.}
+In other words, $\varphi_\texttt{r}$ serves more as a constraint, instead of an actual task.
+
+\end{remark}
+%==========
+
+
+%========================================
+\begin{figure}[t]
+\centering
+   \includegraphics[width = 0.49\textwidth]{figures/ch06/product_framework.pdf}
+  \caption{Framework of the proposed baseline solution, which includes constructing
+the complete product automata~$\mathcal{P}_{\texttt{r}}$ and~$\mathcal{P}_{\texttt{o}}$,
+and then solving two sequential optimizations.}
+\label{ch06:fig:product_framework}
+\end{figure}
+%=========================================================
+
+
+\subsection{Theoretical Analyses and {Baseline Solutions}}\label{ch06:sec:analysis}
+%=========================================================
+In this section,  we first provide the theoretical analyses on how the task and safe-return constraints in~\eqref{ch06:eq:objective}
+can be re-formulated as constrained reachability problems in the respective product automata.
+Based on these results,
+we propose the baseline solution that solves two sequential optimizations using linear programming (LP) within these product automata,  as summarized in Fig.~\ref{ch06:fig:product_framework},
+Lastly, we show that this solution quickly becomes intractable as the system size grows.
+
+%===================
+\subsubsection{Product Automaton and AMECs}\label{ch06:subsec:product}
+As introduced in Sec.~\ref{ch06:subsec:dra}, we can construct the DRA~$\mathcal{A}_{\texttt{o}}$ associated with the task formula~$\varphi$ via the translation tools~\cite{klein2007ltl2dstar}.
+Denote it by~$\mathcal{A}_{\texttt{o}}=(Q, \,2^{AP},\, \delta,\, q_{0},\,\text{Acc}_{\mathcal{A}})$,
+where the detailed notations are omitted here.
+Then we can construct a product automaton~\cite{baier2008principles} between~$\mathcal{M}$ and~$\mathcal{A}_{\texttt{o}}$.
+
+
+%==============================
+\begin{definition}\label{ch06:def:product-o}
+The product $\mathcal{P}_{\texttt{o}}\triangleq \mathcal{M}\times \mathcal{A}_{\texttt{o}}$ is a 7-tuple:
+\begin{equation}\label{ch06:eq:prod-o}
+\mathcal{P}_{\texttt{o}}=(S,\,U,\,E,\,p_E,\,c_E,\, s_0,\,\text{Acc}_{\mathcal{P}}),
+\end{equation}
+{where the state~$S\subseteq X\times Q$ satisfies~$\langle x,\,q \rangle \in S$, $\forall x \in X$ and~$\forall q\in Q$; the action set~$U$ is the same as in~\eqref{ch06:eq:mdp} and~$U(s)=U(x)$,~$\forall s=\langle x, q\rangle \in S$;} $E=\{(s,u)\,|\, s\in S,\, u\in U(s)\}$; {the transition probability~$p_E \colon S\times U \times S\rightarrow {[0,\,1]}$ is defined by}
+\begin{equation}\label{ch06:eq:new_pro}
+p_E\big{(}\langle x,q\rangle,\,u,\, \langle \check{x},\check{q}\rangle \big{)} =  p_D(x,\,u,\,\check{x}),
+\end{equation}
+{where (i) $\langle x, q\rangle,\, \langle \check{x}, \check{q}\rangle \in S$;
+  (ii)~$(x,u)\in D$; and (iii)~$\check{q}= \delta(q,\,L(x))$}.
+The label~$l$ fulfills the condition from~$q$ to~$\check{q}$ in~$\mathcal{A}_{\texttt{o}}$;
+the cost function~$c_E \colon E\rightarrow \mathbb{R}^{>0}$ is given by~$c_E\big{(}\langle x,q\rangle,\,u \big{)}=c_D(x,u)$, $\forall {(}\langle x, q\rangle,\,u {)}\in E$;
+{the initial state is~$s_0=\langle x_0, q_0 \rangle \in S$};
+the accepting pairs are defined as~$\text{Acc}_{\mathcal{P}}=\{(H^i_{\mathcal{P}},\, I^i_{\mathcal{P}}), i=1,\cdots,N\}$, where~$H^i_{\mathcal{P}}=\{\langle x,q\rangle \in S\,|\, q\in H^i_{\mathcal{A}}\}$ and~$I^i_{\mathcal{P}}=\{\langle x,q\rangle \in S\,|\, q\in I^i_{\mathcal{A}}\}$,~$\forall i=1,\cdots,N$.
+\end{definition}
+
+The product~$\mathcal{P}_{\texttt{o}}$ computes the intersection between the traces of~$\mathcal{M}$ and the words of~$\mathcal{A}_{\texttt{o}}$,
+to find the admissible robot behaviors that satisfy the task~$\varphi$.
+Furthermore, the Rabin accepting condition of~$\mathcal{P}_{\texttt{o}}$ is the same as in Sec.~\ref{ch06:subsec:dra}. To transform this condition into equivalent graph properties,  we first compute the
+accepting maximum end components (AMECs) of~$\mathcal{P}_{\texttt{o}}$ associated with its accepting pairs~$\text{Acc}_{\mathcal{P}}$.
+Denote by~$\Xi_{acc}=\{S'_1,\, U'_1), \cdots (S'_{C},\, U'_{C})\}$ the set of AMECs associated with~$\text{Acc}_{\mathcal{P}}$,
+where~$S'_{c}\subset S$ and~$U'_c:S'_c \rightarrow 2^{U}$,~$\forall c=1,\cdots,C$.
+Simply speaking, $S'_c$ is the set of states the robot should converge to,
+while $U'_c$ specifies the allowed actions at each state $s\in S'_c$
+to remain inside $S'_c$.
+Note that $S'_{c_1}\cap S'_{c_2}=\emptyset$, $\forall c_1,c_2=1,\cdots,C$.
+Denote by
+\begin{equation}\label{ch06:eq:AMECs}
+S^{\textup{\texttt{o}}}_{\Xi}\triangleq \bigcup\limits_{c=1}^{C} S'_c,
+\end{equation}
+where $(S'_c,U'_c)\in \Xi_{acc}$ the union of all AMECs associated with~$\mathcal{P}_{\texttt{o}}$.
+We omit the derivation of $\Xi_{acc}$ here
+and refer the readers to Definitions 10.116, 10.117 and 10.124 of~\cite{baier2008principles} for theoretical details and~\cite{git_mdp_tg} for software implementation.
+
+
+
+
+
+%==============================
+\begin{definition}\label{ch06:def:product-r}
+Let $\mathcal{A}_{\texttt{r}}$ be the DRA associated with the safe-return constraints $\varphi_{\texttt{r}}$.
+Then the product $\mathcal{P}_{\texttt{r}}\triangleq \mathcal{M}\times \mathcal{A}_{\texttt{r}}$ can be constructed analogously as $\mathcal{P}_{\texttt{o}}$ above,
+of which the details are omitted here.
+\end{definition}
+
+Note that we omit the subscripts for all elements in $\mathcal{P}_{\texttt{o}}$ and $\mathcal{P}_{\texttt{r}}$ above for clarity.
+Subscripts will be added whenever necessary to distinguish the same elements in different product automata.
+Furthermore, the control policies for the product automata $\mathcal{P}_{\texttt{o}}$ and $\mathcal{P}_{\texttt{r}}$ are denoted by $\boldsymbol{\pi}_{\texttt{o}}$ and $\boldsymbol{\pi}_{\texttt{r}}$, respectively.
+Note that due to the deterministic nature of DRA,
+a policy in the product automaton, e.g., $\boldsymbol{\pi}_{\texttt{o}}$ and $\boldsymbol{\pi}_{\texttt{r}}$,
+can be \emph{uniquely} mapped to a policy, e.g., $\boldsymbol{\mu}_{\texttt{o}}$ and $\boldsymbol{\mu}_{\texttt{r}}$ in $\mathcal{M}$, and vice versa.
+
+
+\subsubsection{Task Satisfiability Reformulation}\label{ch06:subsec:task-reformulate}
+
+Given the product~$\mathcal{P}_{\texttt{o}}$,
+the following theorem is commonly used in related work~\cite{guo2018probabilistic, belta2017formal, ding2014optimal, ding2011mdp, forejt2011quantitative} to convert the task satisfiability to the reachability in~$\mathcal{P}_{\texttt{o}}$.
+
+\begin{theorem} \label{ch06:theorem:task-bound}
+The probability of $\varphi$ being satisfied by $\mathcal{M}$ under policy $\boldsymbol{\mu}_{\textup{\texttt{o}}}$ at stage $0$ can be re-formulated as:
+\begin{equation}\label{ch06:eq:theo-sat-bound}
+\textup{\textbf{Sat}}_{\mathcal{M}}^{\boldsymbol{\mu}_{\textup{\texttt{o}}}} = \mathbb{E}_{\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}}^{\boldsymbol{\pi}_{\textup{\texttt{o}}}}\,
+\left\{\sum_{t=0}^{\infty}\, b_{s_t,S^{\textup{\texttt{o}}}_{\Xi}}\right\},
+\end{equation}
+where~$\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}\triangleq (1-b_{s,S^{\textup{\texttt{o}}}_{\Xi}})\cdot{\mathcal{P}}_{\textup{\texttt{o}}}$,
+$b_{s,S^{\textup{\texttt{o}}}_{\Xi}}\triangleq \mathds{1}_{\{s \in S^{\textup{\texttt{o}}}_{\Xi}\}}$  is an indicator function;
+$S^{\textup{\texttt{o}}}_{\Xi}$ is defined in~\eqref{ch06:eq:AMECs};
+and $\boldsymbol{\pi}_{\textup{\texttt{o}}}$ is the policy for $\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}$ corresponding to $\boldsymbol{\mu}_{\textup{\texttt{o}}}$.
+\end{theorem}
+\begin{proof}
+It has been proven in~\cite{guo2018probabilistic, forejt2011quantitative,  baier2008principles}
+that once the system $\mathcal{M}$ enters the union set of AMECs $S^{\textup{\texttt{o}}}_{\Xi}$ in $\mathcal{P}_{\textup{\texttt{o}}}$,
+it can remain inside and satisfy the accepting condition of $\mathcal{P}_{\textup{\texttt{o}}}$ by following the transition conditions given by $U'_c$,
+e.g., the Round-robin policy~\cite{baier2008principles} or the balanced policy~\cite{guo2018probabilistic}.
+In other words,
+the probability of satisfying $\varphi$ equals to the probability of entering $S^{\textup{\texttt{o}}}_{\Xi}$ \emph{at least once} in $\mathcal{P}_{\textup{\texttt{o}}}$.
+Note that $\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}$ has the same structure as~$\mathcal{P}_{\textup{\texttt{o}}}$.
+But once the system reaches the set $S^{\textup{\texttt{o}}}_{\Xi}$ in~$\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}$,
+any further actions lead to a virtual ``end'' state with only self-loop.
+Thus, the left-hand side of~\eqref{ch06:eq:theo-sat-bound} is computed by:
+\begin{equation}\label{ch06:eq:sat}
+\textbf{Sat}_{\mathcal{M}}^{\boldsymbol{\mu}_{{\textup{\texttt{o}}}}}= \mathbb{E}_{\mathcal{P}_{\textup{\texttt{o}}}}^{\boldsymbol{\pi}_{\texttt{o}}}
+\,\Big\{\mathds{1}_{\{\exists t<\infty, s_t\in S^{\textup{\texttt{o}}}_{\Xi}\}}\Big\} = \mathbb{E}_{\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}}^{\boldsymbol{\pi}_{\textup{\texttt{o}}}}  \,\left\{\sum_{t=0}^{\infty}b_{s_t,S^{\textup{\texttt{o}}}_{\Xi}}\right\},
+\end{equation}
+which completes the proof.
+\end{proof}
+
+%===================
+\subsubsection{Safe-return Constraints Reformulation}\label{ch06:subsubsec:safety-reformulate}
+The safe-return constraints in~\eqref{ch06:eq:safe} however have not been studied before in related work.
+The following theorem is essential to re-formulate such constraints.
+
+\begin{theorem} \label{ch06:theorem:safe-bound}
+The safe-return constraints in~\eqref{ch06:eq:safe} for $\mathcal{M}$ under policies $\boldsymbol{\mu}_{\textup{\texttt{o}}}$ and $\boldsymbol{\mu}_{\textup{\texttt{r}}}$ at stage~$0$ can be re-formulated as:
+\begin{subequations}\label{ch06:eq:theo-safe-bound}
+\begin{align}
+  &\textup{\textbf{Safe}}_{\mathcal{M}}^{\boldsymbol{\mu}_{\textup{\texttt{o}}},\boldsymbol{\mu}_{\textup{\texttt{r}}}} = \mathbb{E}_{\mathcal{P}_{\textup{\texttt{o}}}}^{\boldsymbol{\pi}_{\textup{\texttt{o}}}}\, \left\{\sum_{t=0}^{\infty}\, v_{\textup{\texttt{r}}}^\star(s^{\textup{\texttt{r}}}_t)\right\},\\
+  &\text{where}\; v_{\textup{\texttt{r}}}^\star(s^{\textup{\texttt{r}}}_t) = \, \mathbb{E}_{\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}}^{s^{\textup{\texttt{r}}}_{t},\boldsymbol{\pi}_{\textup{\texttt{r}}}}\left\{\sum_{\ell=t}^{\infty}  b_{s^{\textup{\texttt{r}}}_\ell,S^{\textup{\texttt{r}}}_{\Xi}}\right\},
+\end{align}
+\end{subequations}
+where~$\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}\triangleq (1-b_{s,S^{\textup{\texttt{r}}}_{\Xi}})\cdot{\mathcal{P}_{\textup{\texttt{r}}}}$,
+$b_{s,S^{\textup{\texttt{r}}}_{\Xi}}\triangleq \mathds{1}_{\{s \in S^{\textup{\texttt{r}}}_{\Xi}\}}$ is an indicator function,
+and~$S^{\textup{\texttt{r}}}_{\Xi}$ is defined in~\eqref{ch06:eq:AMECs};
+$v_{\textup{\texttt{r}}}^\star \in [0,\, 1]$ is the value function of $\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}$ under policy $\boldsymbol{\pi}_{\textup{\texttt{r}}}$;
+the product state of $\mathcal{P}_{\textup{\texttt{o}}}$ at stage $t$ is denoted {by~$s_{t}=\langle x_t,q^{\textup{\texttt{o}}}_t\rangle$},
+of which the associated product state in~$\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}$ is given by {$s^{\textup{\texttt{r}}}_{t}=\langle x_t,q^{\textup{\texttt{r}}}_0\rangle$};
+and $\boldsymbol{\pi}_{\textup{\texttt{o}}},\boldsymbol{\pi}_{\textup{\texttt{r}}}$ are the policies for~$\mathcal{P}_{\textup{\texttt{o}}}$ and $\mathcal{P}_{\textup{\texttt{r}}}$, corresponding to $\boldsymbol{\mu}_{\textup{\texttt{o}}},\boldsymbol{\mu}_{\textup{\texttt{r}}}$ for~$\mathcal{M}$, respectively.
+\end{theorem}
+\begin{proof}
+The safe-return constraints can be expanded by \emph{splitting} the evolution of system~$\mathcal{M}$
+before and after the time when the robot is requested to return,
+then starts following the return policy.
+Without loss of generality, denote by~$t\geq 0$ this time instant.
+Thus,~$\mathcal{M}$ evolves under the outbound policy $\boldsymbol{\mu}_{\texttt{o}}$ to satisfy $\varphi$ between time $[0,\, t)$, then under the return policy $\boldsymbol{\mu}_{\texttt{r}}$ to satisfy $\varphi_{\texttt{r}}$ from time $\ell\in [t,\infty)$.
+Thus, the definition of safety in~\eqref{ch06:eq:safe} can be expanded as follows:
+\begin{equation}\label{ch06:eq:safe-bound-1}
+\textbf{Safe}_{\mathcal{M}}^{\boldsymbol{\mu}_{\textup{\texttt{o}}},\boldsymbol{\mu}_{\textup{\texttt{r}}}} = \mathbb{E}_{\mathcal{P}_{\textup{\texttt{o}}}}^{\boldsymbol{\pi}_{\texttt{o}}} \,\left\{\sum_{t=0}^{\infty}\,  \textbf{Sat}_{\mathcal{M}}^{x_t, \boldsymbol{\mu}_{{\textup{\texttt{r}}}}}\right\},
+\end{equation}
+{where $s_{t}=\langle x_t,q^{\textup{\texttt{o}}}_t\rangle$} is the product state
+ of $\mathcal{P}_{\textup{\texttt{o}}}$ at stage $t$;
+and $\textbf{Sat}_{\mathcal{M}}^{x_t,\boldsymbol{\mu}_{{\textup{\texttt{r}}}}}$ is defined analogously to~\eqref{ch06:eq:theo-sat-bound} as the satisfiability of $\varphi_{\texttt{r}}$ under policy $\boldsymbol{\mu}_{\texttt{r}}$,
+for system~$\mathcal{M}$ {but with a modified initial state $x_t$ at stage~$t$}.
+Via the same argumentation as in Theorem~\ref{ch06:theorem:task-bound},
+the probability of satisfying $\varphi_{\texttt{r}}$ equals to the probability of entering the union set $S^{\textup{\texttt{r}}}_{\Xi}$ of $\mathcal{P}_{\texttt{r}}$ at least once as time approaches infinity.
+Then, consider that $\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}$ defined above has the same structure as~$\mathcal{P}_{\textup{\texttt{r}}}$ except that once the system reaches $S^{\textup{\texttt{r}}}_{\Xi}$,
+any further actions lead immediately to a virtual ``end'' state with only self-loop.
+Thus it holds that:
+\begin{equation}\label{ch06:eq:safe-bound-2}
+  \begin{split}
+\textbf{Sat}_{\mathcal{M}}^{x_t,\boldsymbol{\mu}_{{\textup{\texttt{r}}}}}&=\mathbb{E}_{\mathcal{P}_{\textup{\texttt{r}}}}^{s^{\textup{\texttt{r}}}_t,\boldsymbol{\pi}_{\texttt{r}}}\, \Big\{\mathds{1}_{\{\exists \ell\in [t,\,\infty),\, s^{\textup{\texttt{r}}}_\ell\in S^{\texttt{r}}_{\Xi}\}}\Big\}\\
+  &=  \mathbb{E}_{\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}}^{s^{\textup{\texttt{r}}}_t,\boldsymbol{\pi}_{\texttt{r}}}\,\left\{\sum_{\ell=t}^{\infty} b_{s^{\textup{\texttt{r}}}_\ell,S^{\texttt{r}}_{\Xi}}\right\} =v_{\textup{\texttt{r}}}^\star(s^{\textup{\texttt{r}}}_t),
+  \end{split}
+\end{equation}
+{where $s^{\textup{\texttt{r}}}_t=\langle x_t,q^{\textup{\texttt{r}}}_0\rangle$} is the associated initial product state of $\mathcal{P}_{\textup{\texttt{r}}}$ at stage $t$.
+This mapping is necessary as the states in $\mathcal{A}_{\textup{\texttt{o}}}$ and $\mathcal{A}_{\textup{\texttt{r}}}$ can be different;
+and $v_{\textup{\texttt{r}}}^\star$ is by definition the value function of $\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}$ under policy $\boldsymbol{\pi}_{\textup{\texttt{r}}}$.
+Since $\boldsymbol{\mu}_{\textup{\texttt{r}}}$ optimizes the probability of satisfying $\varphi_{\texttt{r}}$,
+it holds that its value function $v_{\textup{\texttt{r}}}^\star(s) \in [0, 1]$, $\forall s\in S_{\texttt{r}}$.
+This completes the proof.
+\end{proof}
+
+
+
+Theorems~\ref{ch06:theorem:task-bound} and~\ref{ch06:theorem:safe-bound} provide theoretical guarantees on the re-formulation of both constraints in Problem~\ref{ch06:prob:main}.
+More specifically,
+Theorem~\ref{ch06:theorem:task-bound} states that
+the task satisfiability can be ensured by limiting the reachability of $S^{\textup{\texttt{o}}}_{\Xi}$ within~$\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}$ under policy $\boldsymbol{\pi}_{\texttt{o}}$.
+Theorem~\ref{ch06:theorem:safe-bound} states that
+the safe-return constraint can be evaluated as the expected \emph{rewards} of $\widetilde{\mathcal{P}}_{\texttt{o}}$ under policy~$\boldsymbol{\pi}_{\texttt{o}}$,
+where the rewards are given by the value function of $\widetilde{\mathcal{P}}_{\texttt{r}}$ under the  return policy $\boldsymbol{\pi}_{\texttt{r}}$ by maximizing the reachability of $S^{\textup{\texttt{r}}}_{\Xi}$.
+%========================================
+\setlength{\textfloatsep}{5pt}
+\begin{algorithm}[t]
+  \caption{Baseline Solution} \label{ch06:alg:direct}
+  \LinesNumbered
+  %\DontPrintSemicolon
+  \KwIn{$\mathcal{M}$, $(\varphi, \chi_{\texttt{o}})$, $(\varphi_{\texttt{r}}, \chi_{\texttt{r}})$.}
+  \KwOut{$(\mathcal{P}_{\texttt{r}}, \boldsymbol{\pi}_{\texttt{r}}, v_{\textup{\texttt{r}}}^\star)$, $(\mathcal{P}_{\texttt{o}}, \boldsymbol{\pi}_{\texttt{o}})$.}
+  Build product $\mathcal{P}_{\texttt{r}}$ and its AMECs $S_{\Xi}^{\texttt{r}}$ \tcp*{Def.~\ref{ch06:def:product-r}}
+  Synthesize policy~$\boldsymbol{\pi}_{\texttt{r}}$ and its value function $v_{\textup{\texttt{r}}}^\star$ \tcp*{Eq.~\eqref{ch06:eq:new-problem-safe}}
+  Build product $\mathcal{P}_{\texttt{o}}$ and its AMECs $S_{\Xi}^{\texttt{o}}$ \tcp*{Def.~\ref{ch06:def:product-o}}
+  Synthesize policy $\boldsymbol{\pi}_{\texttt{o}}$ given~$v_{\textup{\texttt{r}}}^\star$  \tcp*{Eq.~\eqref{ch06:eq:new-problem}}
+\end{algorithm}
+%========================================
+
+
+%===================
+\subsubsection{Baseline Solution and Computational Complexity}\label{ch06:subsec:complexity}
+
+
+Consequently,
+the original problem after re-formulation can be solved by two sequential {optimizations}:
+(i) synthesize the optimal return policy~$\boldsymbol{\pi}_{\texttt{r}}$ by solving the optimization:
+\begin{equation}\label{ch06:eq:new-problem-safe}
+    \max_{\boldsymbol{\mu}_{\texttt{r}}\in \overline{\boldsymbol{\mu}}} \;\; \textbf{Sat}_{\mathcal{M}}^{\boldsymbol{\mu}_{{\textup{\texttt{r}}}}} = \max_{\boldsymbol{\pi}_{\texttt{r}}\in \overline{\boldsymbol{\pi}}} \;\; \mathbb{E}_{\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}}^{\boldsymbol{\pi}_{\texttt{r}}}\,\left\{\sum_{\ell=0}^{\infty} b_{s_\ell,S^{\texttt{r}}_{\Xi}}\right\},
+\end{equation}
+i.e., to {maximize} the reachability of $S^{\texttt{r}}_{\Xi}$ in~$\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}$.
+This amounts to solving a standard MDP problem without constraints, e.g., via LP.
+Since $\widetilde{\mathcal{P}}_{\texttt{r}}$ becomes a Markov Chain under policy~$\boldsymbol{\pi}_{\texttt{r}}$,
+the associated value function~$v_{\textup{\texttt{r}}}^\star$ can be easily computed, e.g., via value iteration;
+(ii) synthesize the optimal outbound policy~$\boldsymbol{\pi}_{\texttt{o}}$ by solving the following constrained optimization:
+\begin{equation}\label{ch06:eq:new-problem}
+\begin{split}
+&\min_{\boldsymbol{\pi}_{\texttt{o}}\in \overline{\boldsymbol{\pi}}} \;\; \textbf{Cost}_{\mathcal{P}_{\textup{\texttt{o}}}}^{\boldsymbol{\pi}_{\texttt{o}}}\\
+\text{s.t.} &\quad \mathbb{E}_{\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}}^{\boldsymbol{\pi}_{\textup{\texttt{o}}}}\,
+  \left\{\sum_{t=0}^{\infty}\, b_{s_t,S^{\textup{\texttt{o}}}_{\Xi}}\right\}\geq \chi_{\texttt{o}},\\
+  &\quad \mathbb{E}_{\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}}^{\boldsymbol{\pi}_{\textup{\texttt{o}}}}\, \left\{\sum_{t=0}^{\infty}\, v_{\textup{\texttt{r}}}^\star(s^{\textup{\texttt{r}}}_t)\right\} \geq \chi_{\texttt{r}},
+\end{split}
+\end{equation}
+where the relevant notations are defined in~\eqref{ch06:eq:theo-sat-bound}  and~\eqref{ch06:eq:theo-safe-bound}.
+The above problem amounts to a \emph{constrained} MDP problem~\cite{altman1999constrained, bertsekas1991analysis}.
+As a result, a methods similar to our earlier work~\cite{guo2018probabilistic} can be applied to synthesize the optimal prefix and suffix policies of $\boldsymbol{\pi}_{\texttt{o}}$.
+Briefly speaking, a constrained LP is formulated over the occupancy measure over all state-action pairs,
+such that (i) the summation of occupancy measure entering $S^{\textup{\texttt{o}}}_{\Xi}$ is larger than $\chi_{\texttt{o}}$;
+(ii) the summation of occupancy measure multiplied by the associated value function over all states is larger than $\chi_{\texttt{r}}$;
+and (iii) the summation of occupancy measure multiplied by the transition cost within $S^{\textup{\texttt{o}}}_{\Xi}$ is minimized.
+The resulting outbound policy $\boldsymbol{\pi}_{\texttt{o}}$ is a stochastic policy over $\mathcal{P}_{\textup{\texttt{o}}}$,
+while the return policy $\boldsymbol{\pi}_{\texttt{r}}$ is a  stochastic policy over $\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}$.
+We refer the readers to the supplementary material for the detailed LP formulation and policy derivation.
+{It is worth noting that the mean cost minimization only applies to the
+  outgoing policy~$\boldsymbol{\mu}_{\texttt{o}}$ not the return policy~$\boldsymbol{\mu}_{\texttt{o}}$
+  as formulated in~\eqref{ch06:eq:objective}.}
+The above procedure is summarized in Fig.~\ref{ch06:fig:product_framework} and Alg.~\ref{ch06:alg:direct}.
+
+
+
+%==============================
+\begin{figure}
+\begin{center}
+  \begin{minipage}[t]{0.7\linewidth}
+\strut\vspace*{-\baselineskip}\newline
+    \centering
+   \includegraphics[width = 0.9\textwidth]{figures/ch06/small-complexity.pdf}
+  \end{minipage}%
+
+  \begin{minipage}[t]{0.9\linewidth}
+\strut\vspace*{-\baselineskip}\newline
+\vspace{0.5cm}
+\resizebox{\textwidth}{!}{
+  \begin{tabular}{ccccc} \hline
+    $|\mathcal{M}|$ & $|\mathcal{P}_{\texttt{r}}|$ & $|\mathcal{P}_{\texttt{o}}|$ & $T_{\boldsymbol{\mu}_{\texttt{r}}} [s]$ & $T_{\boldsymbol{\mu}_{\texttt{o}}} [\si{\second}]$\\ \hline
+\addlinespace[0.3em]
+  $(1\texttt{e}2,8\texttt{e}2)$ & $(5\texttt{e}2,4\texttt{e}3)$ & $(4\texttt{e}3,5\texttt{e}4)$ & $0.1$ & $0.9$ \\
+\addlinespace[0.3em]
+  $(5\texttt{e}2,4\texttt{e}3)$ & $(3\texttt{e}3,3\texttt{e}4)$ & $(2\texttt{e}4,2\texttt{e}5)$ & $2.7$ & $5.9$ \\
+\addlinespace[0.3em]
+  $(2\texttt{e}3,2\texttt{e}4)$ & $(1\texttt{e}4,1\texttt{e}5)$ & $(6\texttt{e}4,6\texttt{e}5)$ & $4.1$ & $48$ \\
+\addlinespace[0.3em]
+  $(7\texttt{e}3,7\texttt{e}4)$ & $(5\texttt{e}4,4\texttt{e}5)$ & $(2\texttt{e}5,3\texttt{e}6)$ & $1\texttt{e}2$ & $2\texttt{e}3$ \\
+\addlinespace[0.3em]
+  $(3\texttt{e}4,3\texttt{e}5)$ & $(2\texttt{e}5,3\texttt{e}6)$ & $(9\texttt{e}5,8\texttt{e}6)$ & $2\texttt{e}3$ & N/A \\
+\addlinespace[0.3em]
+  $(1\texttt{e}5,2\texttt{e}6)$ & $(7\texttt{e}5,8\texttt{e}6)$ & N/A & N/A & N/A\\
+\hline
+  \end{tabular}
+}
+\end{minipage}
+\end{center}
+%\hspace{0.2cm}
+\vspace{-0.2in}
+\caption{\textbf{Top}: Size of product $\mathcal{P}_{\texttt{r}}$, $\mathcal{P}_{\texttt{o}}$
+(measured by the number of nodes and edges);
+and computation time of polices $\boldsymbol{\mu}_{\texttt{r}}$, $\boldsymbol{\mu}_{\texttt{o}}$,
+where~$a\texttt{e}b\triangleq a\times 10^b$.
+Note that $10^4\si{\second}\approx 2.7\si{\hour}$,
+whereas``N/A'' indicates either insufficient memory error or computation longer than $24$ hours;
+\textbf{Bottom}: Plot of model computation time and solution time w.r.t. the size of the underlying $\mathcal{M}$.
+}
+\label{ch06:fig:small-complexity-compare}
+\end{figure}
+%==============================
+
+Note that the product~$\mathcal{P}_{\texttt{r}}$ has the approximate size of~$|2^{\varphi_{\texttt{r}}}|\cdot |\mathcal{M}|$,
+of which the AMECs are computed in polynomial time.
+The optimal return policy~$\boldsymbol{\pi}_{\texttt{r}}$ can be synthesized in polynomial time also due to LP.
+Similar analysis holds also for $\mathcal{P}_{\texttt{r}}$.
+Nonetheless, for high dimensional states, large workspaces and complex tasks considered in practice,
+the LPs above can become \emph{intractable} to even construct, let alone to solve.
+Some examples are given below to illustrate the computation time blow-up with increasing system size,
+e.g., for a moderate size of $\mathcal{M}$ (around $10^5$ edges), it takes more than $24$ hours to synthesize the outgoing policy.
+
+%==============================
+\begin{example}\label{ch06:example:complexity}
+Consider the surveillance task in Example~\ref{ch06:example:task}, the associated DRA has $32$ states, $282$ edges and $1$ accepting pairs,
+while the DRA associated with the safe-return task in Example~\ref{ch06:example:safety} has $7$ states, $14$ edges and $1$ accepting pairs.
+Fig.~\ref{ch06:fig:small-complexity-compare} summarizes
+how $\mathcal{P}_{\texttt{r}}$ and $\mathcal{P}_{\texttt{o}}$ increase in size,
+when the underlying model~$\mathcal{M}$ grows.
+It is apparent that the baseline solution quickly becomes intractable
+as even formulating the LPs takes hours.
+For MDPs with more than $10^6$ edges, neither the return policy nor the outbound policy can be computed within reasonable amount of memory and time.
+
+\end{example}
+%==============================
+
+{
+%===================
+\subsubsection{{Alternative Baseline}}\label{ch06:subsec:alternative}
+{Another straightforward but approximate method as an alternative baseline to the above baseline
+is to build an extended model~$\widehat{\mathcal{M}}$
+  of the original~$\mathcal{M}$ in~\eqref{ch06:eq:mdp} by adding another dimension},
+  i.e.,~$\widehat{X}=\{\langle x,\, i\rangle, \forall x \in X, \, i \in \{0,\, 1\}\}$,
+  where $i$ indicates whether a return has been requested.
+More specifically, when~$i=0$, the system~$\widehat{\mathcal{M}}$ evolves according to the outbound
+policy~$\boldsymbol{\mu}_{\texttt{o}}$;
+when~$i=1$, the system~$\widehat{\mathcal{M}}$ evolves under the return policy~$\boldsymbol{\mu}_{\texttt{r}}$.
+In this way, both the outbound and return policies might be integrated into \emph{one} policy as they act on different
+states in~$\widehat{\mathcal{M}}$.
+However, since this return request is an external signal and not controlled by the robot,
+an \emph{approximation} would be to modify the transition probability of~$\mathcal{M}$ as follows:
+(i) $\widehat{p}_D(\langle x,0\rangle, u, \langle \hat{x},\hat{i}\rangle)=p_D(x,u,\hat{x})\cdot 0.5$,
+$\forall \hat{i}\in \{0,1\}$ and $\forall (x,u)\in D$;
+(ii) $\widehat{p}_D(\langle x,1\rangle, u, \langle \hat{x},1\rangle)=p_D(x,u,\hat{x})$,
+$\forall (x,u)\in D$.
+In other words, the system can transit non-deterministically within level~$i=0$ or from level~$i=0$ to~$i=1$ at each time step,
+but not in the reversing order.
+Then, via the multi-objective probabilistic model checking algorithm proposed in~\cite{Forejt12Pareto}
+and available in PRISM~\cite{kwiatkowska2011prism},
+one common policy, denoted by~$\widehat{\boldsymbol{\mu}}$, can be synthesized
+to satisfy both the objectives
+that{~$Pr_{\widehat{\mathcal{M}}}^{\widehat{\boldsymbol{\mu}}}(\varphi_{\texttt{r}})\geq \chi_{\texttt{r}}$ for~$i=0$
+and~$Pr_{\widehat{\mathcal{M}}}^{\widehat{\boldsymbol{\mu}}}(\varphi)\geq \chi_{\texttt{o}}$ for~$i=1$,}
+while minimizing the rewards in~\eqref{ch06:eq:objective}.
+More details can be found in the supplementary material.}
+
+{Since the extended model~$\widehat{\mathcal{M}}$ has~$2|X|$ nodes and~$3|U|$ edges,
+  the associated product automaton, denoted by~$\widehat{\mathcal{P}}$,
+  has roughly the size of~$3|U|\cdot 2^{|\varphi|} \cdot 2^{|\varphi_{\texttt{r}}|}$,
+  see~\cite{Forejt12Pareto} for the method to construct~$\widehat{\mathcal{P}}$.
+  The computational complexity of this alternative solution can be estimated
+  as~$\mathcal{O}((3|U|\cdot 2^{|\varphi|} \cdot 2^{|\varphi_{\texttt{r}}|})^{N_c})$,
+i.e., at least $(3^{N_c}\cdot 2^{|\varphi_{\texttt{r}}|})$ times the size of the constrained optimization in~\eqref{ch06:eq:new-problem},
+with~$N_c>2.3$ being the currently-known best algorithm to solve a LP.
+In other words, this alternative solution is at least a magnitude more expensive than
+the baseline solution proposed in the section.
+This difference can be even more significant if the specifications~$\varphi_{\texttt{r}}$, $\varphi$ are complex,
+see Sec.~\ref{ch06:subsubsec:exp-compare} for detailed comparisons.}
+
+
+%=========================================================
+\subsection{Proposed Hierarchical Solution}\label{ch06:sec:solution}
+To tackle the intractable complexity of the baseline solution,
+the main hierarchical solution is proposed in this section.
+As illustrated in Fig.~\ref{ch06:fig:proposed_framework},
+a two-step paradigm similar to the baseline solution is followed.
+{It follows the framework of semi-MDPs and options as proposed in~\cite{sutton1999between}.
+The major difference is that two feature-based symbolic and temporal abstraction of system~$\mathcal{M}$ as semi-MDPs are constructed for the task specification and the safe-return constraints, respectively.
+Given these models, a hierarchical planning algorithm is proposed to synthesize both the return policy and outgoing policy as options that solve the original problem}.
+
+%==============================
+\subsubsection{Hierarchical Planning for Safe-return Constraints}\label{ch06:subsec:safe-return-plan}
+
+As discussed before,
+the safe-return policy has to be synthesized first along with its value function,
+which is then used to compute the outbound policy.
+Thus, we first describe how the safe-return policy can be synthesized {hierarchically}.
+
+%========================================
+\begin{figure}[t]
+\centering
+   \includegraphics[width = 0.49\textwidth]{figures/ch06/proposed_framework.pdf}
+  \caption{Illustration of the proposed hierarchical planning framework.
+Compared with the baseline solution in Fig.~\ref{ch06:fig:product_framework},
+two feature-based abstraction models~$\mathcal{M}'_{\texttt{o}}$, $\mathcal{M}'_{\texttt{r}}$
+are constructed first for the task specification and the safe-return constraints, respectively.}
+\label{ch06:fig:proposed_framework}
+\end{figure}
+%=========================================================
+
+%==============================
+\subsubsection{{Labeled Semi-MDPs for Safe-return Constraints}}\label{ch06:subsubsec:abstract-safe}
+Given the DRA $\mathcal{A}_{\texttt{r}}=(Q, \,2^{AP},\, \delta,\, q_{0},\,\text{Acc}_{\mathcal{A}})$
+associated with~$\varphi_{\texttt{r}}$,
+we can compute the set of \emph{effective} features:
+\begin{equation}\label{ch06:eq:effectve-safe}
+  \Theta_{\texttt{r}} = \{\theta \in 2^{AP}\,|\, \exists q,\,\check{q}\in Q,\,
+  \text{s.t.}\; (q,\,\theta,\check{q})\in \delta,\, q\neq \check{q}\},
+\end{equation}
+which includes any label inside~$\Theta_{\texttt{r}}$ that can drive a transition within $\mathcal{A}_{\texttt{r}}$, excluding self-transitions.
+{Then, the feature-based abstraction of the original MDP~$\mathcal{M}$ for $\varphi_{\texttt{r}}$ as semi-MDPs,
+  denoted by~$\mathcal{M}'_{\textup{\texttt{r}}}$, can be constructed as}
+another labeled MDP, namely:
+\begin{equation}\label{ch06:eq:abstract-mdp-safe}
+\mathcal{M}'_{\textup{\texttt{r}}} \triangleq \big(X'_{\textup{\texttt{r}}}, \, U'_{\textup{\texttt{r}}},\, p'_{\textup{\texttt{r}},D}, \, AP_{\textup{\texttt{r}}}, \,L'_{\textup{\texttt{r}}}\big),
+\end{equation}
+where $X'_{\textup{\texttt{r}}}=\{x\in X\,|\, L(x) \cap \Theta_{\textup{\texttt{r}}} \neq \emptyset\}\subset X$ contains \emph{only} the states that can potentially lead to a transition within $\mathcal{A}_{\texttt{r}}$;
+{$AP_{\textup{\texttt{r}}},\,L'_{\textup{\texttt{r}}}$ are defined analogously as in~\eqref{ch06:eq:mdp}};
+$U'_{\textup{\texttt{r}}}$ is the set of {macro} actions that represent {symbolically} the underlying motion policies for each transition in $X'_{\textup{\texttt{r}}}$;
+$p'_{\textup{\texttt{r}},D}: X'_{\textup{\texttt{r}}} \times U'_{\textup{\texttt{r}}} \times X'_{\textup{\texttt{r}}} \rightarrow [0,\, 1]$ is the transition probability for each transition.
+The derivation of $p'_{\textup{\texttt{r}},D}$ is explained below.
+
+%% \begin{example}\label{ch06:example:safe-abstract}
+%% An example of such abstraction process for the search-and-rescue environment is shown in Fig.~\ref{ch06:}, along with the simplified DRAs associated with the task and
+%% safety specifications.
+%% \end{example}
+
+
+
+
+\begin{problem}\label{ch06:problem:determine-path}
+Determine $U'_{\textup{\texttt{r}}}$, $p'_{\textup{\texttt{r}},D}$ in~\eqref{ch06:eq:abstract-mdp-safe},
+given~$\mathcal{M}$.
+\end{problem}
+
+For \emph{each} pair of states $(x_f,\,x_t)\in X'_{\textup{\texttt{r}}}\times X'_{\textup{\texttt{r}}}$,
+the associated macro action is symbolically denoted by $(x_f,\,x_t)\in U'_{\textup{\texttt{r}}}$.
+As illustrated in Fig.~\ref{ch06:fig:feature-abstraction}, the transition probability $p'_{\textup{\texttt{r}},D}$ is computed in three steps:
+(i) Construct modified MDP $\mathcal{M}'_{\textup{\texttt{r}}}(x_f,\,x_t)$ from~$\mathcal{M}$,
+such that state $x_f$ is the ``source'' state,
+and all the other states in $X'_{\textup{\texttt{r}}}$ (including $x_t$) are the ``sink'' states.
+Once the system enters any sink state it will stay there via self-loop with probability one and cost zero;
+(ii) Find the motion policy in~$\mathcal{M}'_{\textup{\texttt{r}}}(x_f,\,x_t)$ that drives the system from $x_f$ to $x_t$ with the \emph{maximum} probability.
+{Denote by $\boldsymbol{\mu}'_{\texttt{r}}(x_f,\,x_t)$ this specific motion policy, which is analogous to the \emph{options} in~\cite{sutton1999between}.}
+Similar to the maximum reachability problem discussed in~\eqref{ch06:eq:new-problem-safe} before,
+this can be readily solved by formulating the LP over the occupancy measures of each state-action pair in~$\mathcal{M}'_{\textup{\texttt{r}}}(x_f,\,x_t)$;
+(iii) Given the policy~$\boldsymbol{\mu}'_{\texttt{r}}(x_f,\,x_t)$,
+the underlying MDP $\mathcal{M}'_{\textup{\texttt{r}}}(x_f,\,x_t)$ becomes a Markov Chain (MC),
+of which of asymptotic behavior is fully determined.
+Thus, the transition probability $p'_{\textup{\texttt{r}},D}\left(x_f,\boldsymbol{\mu}'_{\texttt{r}}(x_f,\,x_t),x_\ell\right)$ from the source state $x_f$ to \emph{any other} sink state $x_\ell\in X'_{\textup{\texttt{r}}}$ is given by the final distribution over the sink states.
+Note that if the LP above does not have a solution for the pair $(x_f,\,x_t)$,
+it means $x_t$ {cannot} be reached from $x_f$.
+Consequently, the transition probability $p'_{\textup{\texttt{r}},D}\left(x_f,\boldsymbol{\mu}'_{\texttt{r}}(x_f,\,x_t),x_\ell\right)=0$ for all $x_\ell \in X'_{\textup{\texttt{r}}}$.
+The detailed formulation of the LP and computation of~$p'_{\textup{\texttt{r}},D}$ can be found in the supplementary material.
+
+%========================================
+\begin{figure}[t]
+\centering
+   \includegraphics[width = 0.48\textwidth]{figures/ch06/abstraction.pdf}
+  \caption{Illustration of feature-based abstraction as described in Sec.~\ref{ch06:subsubsec:abstract-safe}.
+The associated motion policy~$\boldsymbol{\mu}'_{\texttt{r}}$ and the transition probability~$p'_{\texttt{r}, D}$ should be computed for each pair of transition $(x_f,x_t)$ in $\mathcal{M}'_{\texttt{r}}$.
+Note that the ending states under the macro action $(x_f, x_t)$  are non-deterministic,
+as shown in the middle and right figures.}
+\label{ch06:fig:feature-abstraction}
+\end{figure}
+%=========================================================
+
+
+{Via the above three steps, the labeled semi-MDP~$\mathcal{M}'_{\texttt{r}}$ in~\eqref{ch06:eq:abstract-mdp-safe} can be constructed fully.}
+Assume that the DRA~$\mathcal{A}_{\texttt{r}}$ has $N$ unique labels,
+and within $\mathcal{M}$ there are at most $M$ regions of interest associated with each label,
+then $\mathcal{M}'_{\texttt{r}}$ has maximum $M\cdot N$ nodes and less than $M^2\cdot N^2$ edges.
+For large systems with few number of interested regions, this can be significantly less than the size of $\mathcal{M}$.
+
+%=========================================================
+\subsubsection{Hierarchical Safe-Return Policy Synthesis}\label{ch06:subsubsec:safe-return-policy}
+{Given the labeled semi-MDP~$\mathcal{M}'_{\texttt{r}}$ from~\eqref{ch06:eq:abstract-mdp-safe}}
+and the DRA $\mathcal{A}_{\texttt{r}}$,
+their product can be computed in the same way as in Def.~\ref{ch06:def:product-o}:
+\begin{equation}\label{ch06:eq:abstract-safe-product}
+\mathcal{P}'_{\texttt{r}}\triangleq \mathcal{M}'_{\texttt{r}} \times \mathcal{A}_{\texttt{r}}=(S'_{\texttt{r}},\,U'_{\texttt{r}},\,E'_{\texttt{r}},\,p'_{\texttt{r},E},\, s'_{\texttt{r},0},\,\text{Acc}'_{\texttt{r}}),
+\end{equation}
+of which the detailed notations are similarly defined as in~\eqref{ch06:eq:prod-o} and omitted here.
+Note that the transition probability~$p'_{\texttt{r},E}$ is computed based on $p'_{\textup{\texttt{r}},D}$.
+Given $\mathcal{P}'_{\texttt{r}}$ above, the optimal safe-return policy $\boldsymbol{\pi}'_{\texttt{r}}$ and the associated value function $v'^{\star}_{\texttt{r}}$ can be computed in the same way as computing $\boldsymbol{\pi}_{\texttt{r}}$ from $\mathcal{P}_{\texttt{r}}$,
+which are described in Sec.~\ref{ch06:subsec:complexity}.
+Furthermore, since~$\varphi_{\texttt{r}}$ is given as sc-LTL formulas,
+the safe-return constraints are satisfied once the union set of AMECs~$S'_{\texttt{r},\Xi}$ above is reached.
+
+
+
+
+
+
+
+%==============================
+\subsubsection{Hierarchical Planning for Tasks}\label{ch06:subsec:task-plan}
+Similar to the return policy above,
+the outbound policy can also be synthesized in a hierarchical way.
+{Namely, a feature-based abstraction model as semi-MDPs for the task specification is firstly constructed},
+which is safety-ensured as it directly incorporates the safe-return constraints.
+Second, a hierarchical outbound policy is synthesized given the
+product automaton between this abstraction model and the task automaton.
+
+%==============================
+\subsubsection{{Safety-ensured Semi-MDPs for Tasks}}\label{ch06:subsubsec:abstract-task}
+
+Different from~$\mathcal{M}'_{\texttt{r}}$ in~\eqref{ch06:eq:abstract-mdp-safe},
+{the abstraction model for tasks as semi-MDPs should incorporate the safe-return constraints}.
+First, the set of effective features within~$\mathcal{A}_{\texttt{o}}$ is
+computed similarly as~\eqref{ch06:eq:effectve-safe},
+denoted by~$\Theta_{\texttt{o}}$.
+Then, the associated abstraction model as semi-MDPs is given by:
+\begin{equation}\label{ch06:eq:abstract-mdp-task}
+\mathcal{M}'_{\textup{\texttt{o}}} \triangleq \big(X'_{\textup{\texttt{o}}}, \, U'_{\textup{\texttt{o}}},\, p'_{\textup{\texttt{o}},D}, \, AP, \,L'_{\textup{\texttt{o}}},\,c'_{\textup{\texttt{o}},D}\big),
+\end{equation}
+{where the notations are defined analogously as in~\eqref{ch06:eq:abstract-mdp-safe}}.
+However, the transition probability~$p'_{\textup{\texttt{o}},D}$ and cost~$c'_{\textup{\texttt{o}},D}$ are
+computed differently to incorporate the safe-return constraints.
+
+\begin{problem}\label{ch06:problem:determine-prob}
+Determine $p'_{\textup{\texttt{o}},D}$, $c'_{\textup{\texttt{o}},D}$ of $\mathcal{M}'_{\texttt{o}}$,
+given system~$\mathcal{M}$ and the value function~$v_{\texttt{r}}'^\star$
+of~$\mathcal{P}'_{\texttt{r}}$.
+\end{problem}
+
+For \emph{each} pair of states $(x_f,\,x_t)\in X'_{\textup{\texttt{o}}}\times X'_{\textup{\texttt{o}}}$,
+the associated macro action is symbolically denoted by $(x_f,\,x_t)\in U'_{\textup{\texttt{o}}}$.
+{Then, its transition probability $p'_{\textup{\texttt{o}},D}$ is computed in  a similar procedure as~$p'_{\texttt{r},D}$ in Sec.~\ref{ch06:subsec:safe-return-plan}, namely:
+(i) Construct the modified MDP~$\mathcal{M}'_{\texttt{o}}(x_f,\,x_t)$ from~$\mathcal{M}$ similar to~$\mathcal{M}'_{\texttt{r}}(x_f,\,x_t)$;}
+(ii) {Find the motion policy~$\boldsymbol{\mu}'_{\texttt{o}}(x_f,\,x_t)$ as options that drives the system~$\mathcal{M}'_{\texttt{o}}(x_f,\,x_t)$ from~$x_f$ to $x_t$ with the \emph{maximum} probability},
+while satisfying the safe-return constraint.
+Theorem~\ref{ch06:theorem:safe-bound} proves that the safe-return constraint can be re-formulated as
+the accumulated rewards w.r.t. the value function $v'^\star_{\texttt{r}}$.
+Thus, the LP for computing $\boldsymbol{\mu}'_{\texttt{o}}(x_f,\,x_t)$ is revised
+by adding another constraint:
+\begin{equation}\label{ch06:eq:abstract-task-lp}
+\mathbb{E}_{\mathcal{M}'_{\texttt{o}}(x_f,\,x_t)}^{\boldsymbol{\mu}'_{\textup{\texttt{o}}}}\, \left\{\sum_{t=0}^{\infty}\, v'^\star_{\texttt{r}}(s^{\texttt{r}}_t)\right\} \geq \chi_{\texttt{r}},
+\end{equation}
+{where~$s_t^{\texttt{r}}=\langle x_t, q^{\texttt{r}}_0\rangle$ is the product state
+of~$\mathcal{P}'_{\texttt{r}}$ derived from~\eqref{ch06:eq:abstract-safe-product}};
+$v'^\star_{\texttt{r}}(s^{\texttt{r}}_t)$ is the associated value function from~\eqref{ch06:eq:abstract-safe-product};
+(iii) The transition probability $p'_{\textup{\texttt{o}},D}\left(x_f,\boldsymbol{\mu}'_{\texttt{o}}(x_f,\,x_t),x_\ell\right)$
+is the convergent distribution of~$\mathcal{M}'_{\texttt{o}}(x_f,\,x_t)$
+under~$\boldsymbol{\mu}'_{\texttt{o}}(x_f,\,x_t)$.
+Furthermore, the cost function $c'_{\textup{\texttt{o}},D}$ is determined by:
+\begin{equation}\label{ch06:eq:task-edge-cost}
+c'_{\textup{\texttt{o}},D}(x_f,\,x_t) = \mathbb{E}_{\mathcal{M}'_{\texttt{o}}(x_f,\,x_t)}^{\boldsymbol{\mu}'_{\textup{\texttt{o}}}} \left\{\sum_{t=0}^{\infty}\, c_D(x_t,u_t)\right\},
+\end{equation}
+as the expected cost of reaching~$x_t$ from $x_f$ while following the motion policy $\boldsymbol{\mu}'_{\texttt{o}}(x_f,\,x_t)$.
+Note if the constrained LP for solving $\boldsymbol{\mu}'_{\texttt{o}}(x_f,\,x_t)$ \emph{does not} have a solution,
+it means that $x_t$ can not be reached from $x_f$ while satisfying the safe-return constraints in~\eqref{ch06:eq:abstract-task-lp}.
+Then, the macro transition~$(x_f, x_t)$ is removed from $U'_{\texttt{o}}$ with no associated transition.
+The detailed formulation of the LP and derivation of $p'_{\texttt{o},D},\, c'_{\texttt{o},D}$ can be found in the supplementary material.
+
+\begin{remark}\label{ch06:remark:safe-policy}
+{The motion policy~$\boldsymbol{\mu}'_{\texttt{o}}(x_f,\,x_t)$ above is an option that prioritizes the maximization of the probability of reaching~$x_f$ from~$x_t$},
+instead of minimizing the expected cost $c'_{\textup{\texttt{o}},D}(\cdot)$ in~\eqref{ch06:eq:task-edge-cost}.
+This could result in a loss of optimality regarding the original objective in~\eqref{ch06:eq:objective}.
+{First of all}, as also mentioned in our earlier work~\cite{guo2018probabilistic},
+there are often trade-offs when co-optimizing both terms.
+Second, {the overall task satisfiability in~\eqref{ch06:eq:objective} is not incorporated in this \emph{local} semi-MDP},
+rather only in the product automaton in the sequel.
+Nonetheless, as shown later in the experiment, such loss is negligible, especially in contrast to the significant reduction in computation time.
+
+\end{remark}
+
+
+%==============================
+\begin{lemma}\label{ch06:lemma:safe}
+{The semi-MDP~$\mathcal{M}'_{\texttt{o}}$ is safety-ensured}.
+Namely, for each transition $(x_f, x_t) \in U'_{\texttt{o}}$,
+its associated motion policy $\boldsymbol{\mu}'_{\textup{\texttt{o}}}(x_f, x_t)$ and the return policy $\boldsymbol{\mu}'_{\textup{\texttt{r}}}$ satisfy the safe-return constraints by~\eqref{ch06:eq:safe}.
+\end{lemma}
+\begin{proof}
+For each transition $(x_f, x_t) \in U'_{\texttt{o}}$,
+the safe-return constraints are enforced directly by~\eqref{ch06:eq:abstract-task-lp} when synthesizing the motion policy $\boldsymbol{\mu}'_{\textup{\texttt{o}}}(x_f, x_t)$.
+As shown in Theorem~\ref{ch06:theorem:safe-bound}, the expected accumulative value function of all states encountered during the execution of $\boldsymbol{\mu}'_{\textup{\texttt{o}}}(x_f, x_t)$ is equivalent to the safe-return probability in~\eqref{ch06:eq:safe}.
+Thus, during the execution of any transition within~$\mathcal{M}'_{\texttt{o}}$, once requested, the robot can always return to the safe states with a probability larger than~$\chi_\texttt{r}$, by following the safe-return policy~$\boldsymbol{\mu}'_{\textup{\texttt{r}}}$.
+\end{proof}
+%==============================
+
+%============================================================
+\subsubsection{Hierarchical Outbound Policy Synthesis}\label{ch06:subsubsec:task-policy}
+{Given the safety-ensured semi-MDP~$\mathcal{M}'_{\texttt{o}}$},
+its product with the DRA~$\mathcal{A}_{\texttt{o}}$ can be computed via following Def.~\ref{ch06:def:product-r}:
+\begin{equation}\label{ch06:eq:abstract-task-product}
+  \mathcal{P}'_{\texttt{o}}\triangleq \mathcal{M}'_{\texttt{o}} \times \mathcal{A}_{\varphi_\texttt{o}},
+%%   =(S'_{\texttt{o}},\,U'_{\texttt{o}},\,E'_{\texttt{o}},\,p'_{\texttt{o},E},
+%% \,c'_{\texttt{o},E},\, s'_{\texttt{o},0},\,\text{Acc}'_{\texttt{o}}),
+\end{equation}
+of which the detailed notations are similarly defined as in~\eqref{ch06:eq:prod-o} and omitted here.
+Note that its cost function follows from~\eqref{ch06:eq:task-edge-cost}.
+Now, the objective is to find the optimal outbound policy over $\mathcal{P}'_{\texttt{o}}$ for the original planning problem.
+
+%========================================
+\setlength{\textfloatsep}{5pt}
+\begin{algorithm}[t]
+  \caption{Hierarchical Planning Algorithm} \label{ch06:alg:all}
+  \LinesNumbered
+  %\DontPrintSemicolon
+  \KwIn{$\mathcal{M}$, $(\varphi, \chi_{\texttt{o}})$, $(\varphi_{\texttt{r}}, \chi_{\texttt{r}})$.}
+  \KwOut{$\left((\mathcal{M}'_{\texttt{r}},\boldsymbol{\mu}'_{\texttt{r}}), (\mathcal{P}'_{\texttt{r}}, \boldsymbol{\pi}'_{\texttt{r}}, v'^\star_{\texttt{r}})\right)$, $\left((\mathcal{M}'_{\texttt{o}},\boldsymbol{\mu}'_{\texttt{o}}), (\mathcal{P}'_{\texttt{o}}, (\boldsymbol{\pi}'_{\texttt{o},\texttt{pre}}, \boldsymbol{\pi}'_{\texttt{o},\texttt{suf}}))\right)$}
+  \tcc{Safe-return policy, Sec.~\ref{ch06:subsec:safe-return-plan}}
+Construct DRA~$\mathcal{A}_{\texttt{r}}$\;
+  Build abstraction~$\mathcal{M}'_{\texttt{r}}$ and  policy $\boldsymbol{\mu}'_{\texttt{r}}$\;
+  Compute product $\mathcal{P}'_{\texttt{r}}$ in~\eqref{ch06:eq:abstract-safe-product} \;
+  Synthesize return policy~$\boldsymbol{\pi}'_{\texttt{r}}$, and value function $v'^\star_{\texttt{r}}$\;
+  \tcc{Task policy, Sec.~\ref{ch06:subsec:task-plan}}
+Construct DRA~$\mathcal{A}_{\texttt{o}}$\;
+  Build abstraction~$\mathcal{M}'_{\texttt{o}}$ and policy~$\boldsymbol{\mu}'_{\texttt{o}}$, given $v'^\star_{\texttt{r}}$\;
+  Compute product $\mathcal{P}'_{\texttt{o}}$ in~\eqref{ch06:eq:abstract-task-product}\;
+  Synthesize outbound policy~$(\boldsymbol{\pi}'_{\texttt{o},\texttt{pre}}, \boldsymbol{\pi}'_{\texttt{o},\texttt{suf}})$ \;
+\end{algorithm}
+%========================================
+
+\begin{problem}\label{ch06:problem:max-task}
+Determine the policy $\boldsymbol{\pi}'_{\texttt{o}}$ for $\mathcal{P}'_{\texttt{o}}$ such that the long-term cost in~\eqref{ch06:eq:total-cost} is minimized and the task satisfiability in~\eqref{ch06:eq:satisfy} is lowered bounded.
+
+\end{problem}
+
+
+Notice that different from~$\mathcal{P}_{\texttt{o}}$,
+the product~$\mathcal{P}'_{\texttt{o}}$ above \emph{inherits} the safety property from the abstraction model~$\mathcal{M}'_{\texttt{o}}$ as proved in Lemma~\ref{ch06:lemma:safe}.
+Consequently, the safe-return constraints are not imposed as an additional requirement when synthesizing the outbound policy~$\boldsymbol{\pi}'_{\texttt{o}}$.
+Since task $\varphi$ is given as general LTL formulas,
+$\boldsymbol{\pi}'_{\texttt{o}}$ now consists of two parts:
+the prefix~$\boldsymbol{\pi}'_{\texttt{o}, \texttt{pre}}$ that is executed once,
+and the suffix~$\boldsymbol{\pi}'_{\texttt{o}, \texttt{suf}}$ that is executed infinite times.
+Without the additional safe-return constraints,
+the framework proposed in our earlier work~\cite{guo2018probabilistic} can be used
+directly to synthesize~$\boldsymbol{\pi}'_{\texttt{o}}$.
+For brevity, Alg.~1 in~\cite{guo2018probabilistic} is encapsulated as the following constrained optimization:
+\begin{subequations}\label{ch06:eq:abstract-prod-task-lp}
+\begin{align}
+&\underset{\{\boldsymbol{\pi}'_{\texttt{o}, \texttt{pre}}, \boldsymbol{\pi}'_{\texttt{o}, \texttt{suf}}\}}{\boldsymbol{\min}} \; \textbf{Cost}_{\mathcal{P}'_{\texttt{o}}}^{\boldsymbol{\pi}'_{\texttt{o}, \texttt{suf}}} \label{ch06:eq:abstract-prod-task-lp-objective}\\
+&\quad \textrm{s.t.}\quad \textbf{Sat}_{\mathcal{P}'_{\texttt{o}}}^{\boldsymbol{\pi}'_{\texttt{o}, \texttt{pre}}} \geq \chi_{\texttt{o}}, \label{ch06:eq:abstract-prod-task-lp-condition}
+\end{align}
+\end{subequations}
+where the prefix policy $\boldsymbol{\pi}'_{\texttt{o}, \texttt{pre}}$ ensures that
+the union of AMECs~$S'_{\texttt{o},\Xi}$ is reached with a probability larger than $\chi_{\texttt{o}}$,
+while the suffix policy $\boldsymbol{\pi}'_{\texttt{o}, \texttt{suf}}$ ensures that
+the system stays inside~$S'_{\texttt{o},\Xi}$ and the discounted cost in~\eqref{ch06:eq:objective} is minimized.
+In the end, both policies are optimized together to find the best pair of initial state and accepting state.
+The detailed LP formulation and policy derivation are given in the supplementary material.
+
+%% \begin{remark}\label{ch06:remark:safety-in-product}
+%% It is worth noting that the policy optimization in~\eqref{ch06:eq:abstract-prod-task-lp} does \emph{not} have explicit constraints on the safety as in~\eqref{ch06:eq:satisfy-safe}
+%% This is due to the fact that the abstraction model $\mathcal{M}'_{\texttt{o}}$ is constructed
+%% with safety-ensured transitions.
+%%
+%% \end{remark}
+
+
+
+
+%==========
+\subsubsection{Algorithmic Summary and Online Execution} \label{ch06:subsec:summary}
+
+
+The complete hierarchical planning algorithm is summarized in Alg.~\ref{ch06:alg:all} and illustrated in Fig.~\ref{ch06:fig:proposed_framework}.
+Namely, it consists of two main parts:
+{Lines~$1-4$ to construct the semi-MDP~$\mathcal{M}'_{\texttt{r}}$ and product~$\mathcal{P}'_{\texttt{r}}$},
+and learn the safe-return policy~$\boldsymbol{\pi}'_{\texttt{r}}$ and the associated value function $v'^\star_{\texttt{r}}$;
+{Lines~$5-8$ to construct the semi-MDP~$\mathcal{M}'_{\texttt{o}}$ and product~$\mathcal{P}'_{\texttt{o}}$},
+and learn the outbound policy~$\boldsymbol{\pi}'_{\texttt{o}}$.
+As shown in Fig.~\ref{ch06:fig:execution}, the outbound policy is executed hierarchically as discussed in the sequel.
+The safe-return policy is activated only if the robot is requested to return.
+
+During online execution, the outbound policy is executed
+hierarchically as follows:
+Starting from the initial state~$s'_{\texttt{o},k}$ and $k=0$, the prefix policy~$\boldsymbol{\pi}'_{\texttt{o},\texttt{pre}}$ is activated to determine the next action $(x_k, x^\star_{k+1})\in U'_{\texttt{o}}$.
+Once $x^\star_{k+1}$ is given, {the option~$\boldsymbol{\mu}'_{\texttt{o},\texttt{pre}}(x_k, x^\star_{k+1})$ is activated to determine the next motion $(x_{k},x_{k,\ell})\in U$}, where $x_{k,\ell}\in X$ but $x_{k,\ell} \notin X'_{\texttt{o}}$.
+The step~$\ell$ is increased until one of the sink states in $X'_{\texttt{o}}$ is reached,
+which is denoted by $x_{k+1}$ and not necessarily $x^\star_{k+1}$ due to non-determinism.
+Given the actual next state~$x_{k+1}$, the outbound policy~$\boldsymbol{\pi}'_{\texttt{o},\texttt{pre}}$ is activated again to determine the next action $(x_{k+1}, x^\star_{k+2})\in U'_{\texttt{o}}$.
+This process repeats itself until the set~$S'_{\texttt{o},\Xi}$ of $\mathcal{P}'_{\texttt{o}}$ is reached.
+Afterwards, the outbound policy switches to the suffix policy~$\boldsymbol{\pi}'_{\texttt{o},\texttt{suf}}$,
+while the return policy~$\boldsymbol{\pi}'_{\texttt{r}}$ remains the same.
+Last but not least, whenever the robot is requested to return,
+the safe-return policy is executed hierarchically in an analogous way as above,
+which however terminates after the system reaches the set~$S'_{\texttt{r},\Xi}$.
+
+
+%% Lastly, as shown in Fig.~\ref{ch06:fig:execution}, the complete hierarchical return policy is defined as follows:
+%% Starting from the initial state~$s'_{\texttt{r},k}$ and $k=0$, the return policy~$\boldsymbol{\pi}'_{\texttt{r}}$ is activated to determine the next action $(x_k, x^\star_{k+1})\in U'_{\texttt{r}}$.
+%% Once $x^\star_{k+1}$ is given, the motion policy $\boldsymbol{\mu}'_{\texttt{r}}(x_k, x^\star_{k+1})$ is activated to determine the next motion $(x_{k},x_{k,\ell})\in U$, where $x_{k,\ell}\in X$ but $x_{k,\ell} \notin X_{\texttt{r}}'$.
+%% The step~$\ell$ is increased until one of the sink states in $X_{\texttt{r}}'$ is reached,
+%% which is denoted by $x_{k+1}$ and not necessarily $x^\star_{k+1}$ due to non-determinism.
+%% Given the actual next state $x_{k+1}$, the return policy~$\boldsymbol{\pi}'_{\texttt{r}}$ is activated again to determine the next action $(x_{k+1}, x^\star_{k+2})\in U'_{\texttt{r}}$.
+%% This procedure repeats itself until the system reaches the union set~$S'_{\texttt{r},\Xi}$.
+
+
+%========================================
+\begin{figure}[t]
+\centering
+   \includegraphics[width = 0.48\textwidth]{figures/ch06/execution.pdf}
+  \caption{Illustration of the online execution of the hierarchical outbound policy~$(\boldsymbol{\pi}'_{\texttt{o}}, \boldsymbol{\mu}'_{\texttt{o}})$,
+and the hierarchical safe-return policy $(\boldsymbol{\pi}'_{\texttt{r}}, \boldsymbol{\mu}'_{\texttt{r}})$ if requested.}
+\label{ch06:fig:execution}
+\end{figure}
+%=========================================================
+
+%==============================
+\begin{theorem}\label{ch06:lem:safety-guarantee}
+The safe-return policy $\boldsymbol{\pi}'_{\textup{\texttt{r}}}$  and the outbound policy~$\boldsymbol{\pi}'_{\textup{\texttt{o}}}$ fulfill the constraints in~\eqref{ch06:eq:objective} as imposed by Problem~\ref{ch06:prob:main},
+and minimizes the long-term cost in~\eqref{ch06:eq:abstract-prod-task-lp-objective}.
+\end{theorem}
+\begin{proof}
+First,
+{it is proven in Lemma~\ref{ch06:lemma:safe} that the semi-MDP~$\mathcal{M}'_{\texttt{o}}$ is safety-ensured}.
+In other words, during the execution of any transition within~$\mathcal{M}'_{\texttt{o}}$,
+once requested the robot can always return to the safe states with a probability larger than~$\chi_\texttt{r}$,
+{by following the safe-return option~$\boldsymbol{\mu}'_{\textup{\texttt{r}}}$}.
+Thus, the outbound policy $\boldsymbol{\pi}'_{\textup{\texttt{o}}}$ derived by solving~\eqref{ch06:eq:abstract-prod-task-lp} for $\mathcal{P}'_{\texttt{o}}$ always satisfies the safe-return constraints.
+Second, as proven in Theorem~6 of our earlier work~\cite{guo2018probabilistic},
+the optimization in~\eqref{ch06:eq:abstract-prod-task-lp} guarantees the task satisfiability by co-optimizing the prefix and suffix of the outbound policy~$\boldsymbol{\pi}'_{\textup{\texttt{o}}}$.
+In particular, it shows that the prefix policy~$\boldsymbol{\pi}'_{\texttt{o}, \texttt{pre}}$ ensures that
+the union of AMECs~$S'_{\texttt{o},\Xi}$ is reached with a probability larger than $\chi_{\texttt{o}}$,
+while the suffix policy $\boldsymbol{\pi}'_{\texttt{o}, \texttt{suf}}$ ensures that
+the system stays inside~$S'_{\texttt{o},\Xi}$ and the long-term discounted cost is minimized.
+Lastly, as mentioned in Remark~\ref{ch06:remark:safe-policy},
+the transition cost $c'_{\textup{\texttt{o}},D}$ within $\mathcal{M}'_{\texttt{o}}$ might \emph{not} be equivalent to the minimum cost for each transition.
+As a result, the discounted cost in~\eqref{ch06:eq:abstract-prod-task-lp-objective} is an approximation of the original cost in~\eqref{ch06:eq:objective}.
+The exact gap between them is not quantified in this work and remains part of our ongoing research.
+\end{proof}
+%==============================
+
+\begin{remark}\label{ch06:remark:compare-old-new}
+  {It is worth pointing out the algorithmic differences between the baseline method in Alg.~\ref{ch06:alg:direct} and
+    the proposed hierarchical approach in Alg.~\ref{ch06:alg:all}.
+    As shown in Fig.~\ref{ch06:fig:product_framework} and Fig.~\ref{ch06:fig:proposed_framework}, the baseline method directly synthesizes
+    first the return policy~$\pi_{\texttt{r}}$ and then the outbound policy~$\pi_{\texttt{o}}$ over the original system~$\mathcal{M}$,
+    while the proposed approach constructs first the symbolic and temporal abstractions~$\mathcal{M}'_{\texttt{r}}$, $\mathcal{M}'_{\texttt{o}}$ as semi-MDPs and their associated polices as options.
+    Theses semi-MDPs are then used as the respective system model for synthesizing the high-level task policy and return policy.
+    This hierarchical approach allows planning at different spatial and temporal levels over different system models,
+    i.e., instead of a common model as in the baseline method.
+  }
+
+\end{remark}
