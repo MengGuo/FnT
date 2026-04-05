@@ -68,7 +68,7 @@ actions that are permanently attached to locations or on action propositions tha
 can be toggled independently of state, which is restrictive when actions depend
 on local conditions, resource availability, or discrete choices among feasible
 alternatives \cite{smith2011optimal,kress2009temporal}. This limitation motivates
-the motion--action coupling developed later in Chapter~\ref{ch01:chapter:action},
+the motion--action coupling developed later in Chapter~\ref{chap:bottom-up},
 which is closely related to the framework in \cite{guo2013motion}.
 
 \subsection{Planning under incomplete models and infeasible specifications}
@@ -93,7 +93,7 @@ capture changes in the truth values of workspace propositions
 \cite{livingston2012backtracking}. Iterative refinement of the workspace model
 from sensory updates has also been studied for co-safe temporal tasks
 \cite{maly2013iterative}. The plan-revision perspective developed in
-Chapter~\ref{ch01:chapter:partially}, based on \cite{guo2013revising}, belongs to this
+Chapter~\ref{chap:bottom-up}, based on \cite{guo2013revising}, belongs to this
 broader class of approaches, but places particular emphasis on preserving formal
 correctness while incorporating newly acquired information during execution.
 
@@ -107,7 +107,7 @@ or system assumptions \cite{raman2011analyzing}. In parallel, least-violating or
 maximally satisfying planning methods quantify the extent to which a task can be
 satisfied when full realization is impossible
 \cite{tumova2013least,tumova2013minimum,lahijanian2015time,
-  tumova2014maximally}. The treatment developed in Chapter~\ref{ch01:chapter:partially}
+  tumova2014maximally}. The treatment developed in Chapter~\ref{chap:bottom-up}
 is closest to \cite{guo2012infeasible,guo2015multi}, where hard and soft
 constraints are distinguished explicitly and task violation is assessed not only
 by occurrence but also by severity.
@@ -156,7 +156,7 @@ and motion under local specifications have been studied in
 frameworks address decentralized feasibility verification and receding-horizon
 coordination for dependent local temporal tasks
 \cite{filippidis2012decentralized,tumova2014receding}. The material developed in
-Chapters~\ref{ch01:chapter:partially}--\ref{ch01:chapter:continuous} is positioned most
+Chapters~\ref{chap:bottom-up}--\ref{chap:communication} is positioned most
 naturally within this locally specified and loosely coupled branch of the
 literature.
 
@@ -174,7 +174,7 @@ have therefore been developed to enforce relative-distance constraints while
 supporting multiple active task leaders and heterogeneous local goals
 \cite{guo2014cooperative,guo2015hybrid,guo2015communication,kloetzer2011multi}.
 This perspective is closely connected to the continuous-control developments in
-Chapter~\ref{ch01:chapter:continuous}.
+Chapter~\ref{chap:communication}.
 
 Embedded graph grammars provide another mechanism for integrating local
 interaction rules with robot dynamics and switching logic. They have been used to
@@ -184,7 +184,7 @@ self-reconfiguration, and deployment
 \cite{mcnew2006locally,mcnew2007solving,pickem2013complete,smith2009multi}.
 Their locality makes them attractive for large-scale systems, especially when
 only neighboring interactions are available. The hybrid framework discussed in
-Chapter~\ref{ch01:chapter:continuous}, following \cite{guo2016hybrid}, draws on this
+Chapter~\ref{chap:communication}, following \cite{guo2016hybrid}, draws on this
 tradition to couple local temporal tasks with interaction constraints more
 systematically than is common in purely discrete coordination methods.
 
@@ -207,7 +207,7 @@ joint subtask. Reactive temporal-logic formulations based on GR(1) and sensory
 inputs are relevant in spirit \cite{kress2007s,kress2009temporal}, but they are
 usually synthesized to cover a predefined class of environmental changes rather
 than non-predefined inter-robot requests generated online. The contingent service
-and formation setting considered in Chapter~\ref{ch01:chapter:contingent}, following
+and formation setting considered in Chapter~\ref{chap:bottom-up}, following
 \cite{guo2015contingent}, is therefore more closely related to execution-time
 request handling than to classical offline reactive synthesis. Earlier work on
 formation constraints for robotic teams and prescribed-performance control also

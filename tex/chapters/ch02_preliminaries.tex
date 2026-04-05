@@ -9,6 +9,7 @@ Through the model-checking algorithm, we synthesize firstly a discrete motion pl
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Abstraction of robot motion}
 \label{ch02:sec:transitionsystem}
+\label{ch02:sec:system_abstraction_task_specification}
 The robot's  motion within a certain workspace is abstracted as a finite-state transition system (FTS)~\citep{baier2008principles}. This FTS is constructed by integrating two aspects: (i) the workspace model; (ii) the robot dynamics and its navigation controller.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{The workspace model}
@@ -34,12 +35,12 @@ The labeling function $L: \Pi \rightarrow 2^{AP}$ maps a region $\pi_i\in \Pi$ t
 Note that partial satisfaction of a proposition is not allowed. Namely, if only a part of region $\pi_i$ satisfies $a\in AP$ and the other part does not, then $\pi_i$ should be split into two regions: one satisfies $a$ and the other does not.  $AP_p$ greatly improves the flexibility when expressing the intended tasks because one generic property can represent one type of regions without explicitly specify the location of these regions.
 
 \begin{example}\label{ch02:examp:partition}
-  An office-like workspace has six rooms and one corridor, which gives the partition in Figure~\ref{fig:partition}. Two properties are ``there is a basket in the region'' and ``there is a ball in the region''.
+  An office-like workspace has six rooms and one corridor, which gives the partition in Figure~\ref{ch02:fig:partition}. Two properties are ``there is a basket in the region'' and ``there is a ball in the region''.
   \hfill $\blacktriangle$
 \end{example}
 
 Additionally, since every region is a dense subset of the $n$-dimensional space, it is impossible to represent each region by the set of points contained in it. Thus it is crucial to represent and encode these regions efficiently. For instance, rectangles can be encoded by its center coordinate, height and width; sphere by its center and radius; triangular by the coordinates of its corners. There are also automated partition tools like Delaunay triangulation~\citep{lee1980two} and Voronoi diagram~\citep{lavalle2006planning}. Note that this level of partition is preliminary and not robot-specific.
-%, i.e., it does not depend on agent dynamics and navigation in Section~\ref{subsec:robotdynamics}.
+%, i.e., it does not depend on agent dynamics and navigation in Section~\ref{ch02:subsec:robotdynamics}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}[t]
 \centering
@@ -69,17 +70,17 @@ We assume the robot satisfies the following continuous dynamics:
 \end{equation}
 where $x\in \mathbb{R}^n$, $u\in \mathbb{R}^m$ are the position and control signal; $f(\cdot)$ is Lipschitz continuous~\citep{khalil2002nonlinear}. Thus the system is deterministic, i.e.,  given an initial state $x(0)$, a control input $u(t):\mathbb{R}\rightarrow \mathbb{R}^m$ produces an unique state trajectory. We mainly take into account the single-integrator dynamics or the unicycle model. However the proposed framework can be potentially applied to other dynamics.
 
-Given the preliminary partition from Section~\ref{subsec:workspacemodel} and the agent dynamics by~\eqref{eq:dynamic}, we need to abstract the robot's ability to transit from one region to another, which is not necessarily the adjacency relation in the geometrical sense. Instead it is defined in the control-driven fashion.
+Given the preliminary partition from Section~\ref{ch02:subsec:workspacemodel} and the agent dynamics by~\eqref{ch02:eq:dynamic}, we need to abstract the robot's ability to transit from one region to another, which is not necessarily the adjacency relation in the geometrical sense. Instead it is defined in the control-driven fashion.
 %========
 \begin{definition}\label{ch02:def:transition}
 There is a transition from $\pi_i$ to $\pi_j$ if an admissible navigation controller $\mathcal{U}:\mathbb{R}^n\times \Pi \times \Pi \rightarrow \mathbb{R}^m$:
 \begin{equation}\label{ch02:eq:control}
 u(t) = \mathcal{U}(x(t), \pi_i,\, \pi_j), \qquad t \in [t', \, t'']
 \end{equation}
-exists that could drive the system~\eqref{eq:dynamic} from \textbf{any} point in region $\pi_i$ to a point in region $\pi_j$ in finite time. At the same time the robot should stay within $\pi_i$ or $\pi_j$. Namely, $x(t')\in \pi_i$, $x(t'')\in \pi_j$ and $x(t) \in \pi_i \cup \pi_j$,  $\forall t\in [t', \, t'']$. \hfill $\blacktriangle$
+exists that could drive the system~\eqref{ch02:eq:dynamic} from \textbf{any} point in region $\pi_i$ to a point in region $\pi_j$ in finite time. At the same time the robot should stay within $\pi_i$ or $\pi_j$. Namely, $x(t')\in \pi_i$, $x(t'')\in \pi_j$ and $x(t) \in \pi_i \cup \pi_j$,  $\forall t\in [t', \, t'']$. \hfill $\blacktriangle$
 \end{definition}
 %==========
-The above definition is closely related to the implementation of a discrete motion plan described in Section~\ref{sec:hybrid}. Two main navigation techniques are discussed in the thesis: (i) \cite{lindemann2006real} proposes a potential-field-based feedback control algorithm. It navigates a differential-driven mobile robot from any point inside a region to an adjacent region through a desired facet. The partition is based on generalized Voronoi diagram and a smooth vector filed is constructed over each triangular region; (ii) \cite{koditschek1990robot} provides a provably correct point-to-point navigation algorithm, by constructing an exact navigation function for sphere workspace and obstacles. It has been successfully applied in both single~\citep{loizou2008density} and multi-agent~\citep{dimarogonas2007decentralized} navigation control under different geometric constraints, like single-integrator~\citep{loizou2002closed}, double-integrator~\citep{dimarogonas2005decentralized} vehicles. By following the negated gradient of the navigation function, a collision free path is guaranteed from almost any initial position in the free space to any goal position in the free space given that the workspace is valid.
+The above definition is closely related to the implementation of a discrete motion plan described in Section~\ref{ch02:sec:hybrid}. Two main navigation techniques are discussed in the thesis: (i) \cite{lindemann2006real} proposes a potential-field-based feedback control algorithm. It navigates a differential-driven mobile robot from any point inside a region to an adjacent region through a desired facet. The partition is based on generalized Voronoi diagram and a smooth vector filed is constructed over each triangular region; (ii) \cite{koditschek1990robot} provides a provably correct point-to-point navigation algorithm, by constructing an exact navigation function for sphere workspace and obstacles. It has been successfully applied in both single~\citep{loizou2008density} and multi-agent~\citep{dimarogonas2007decentralized} navigation control under different geometric constraints, like single-integrator~\citep{loizou2002closed}, double-integrator~\citep{dimarogonas2005decentralized} vehicles. By following the negated gradient of the navigation function, a collision free path is guaranteed from almost any initial position in the free space to any goal position in the free space given that the workspace is valid.
 
 %\item Sampling-based motion planning techniques like probabilistic roadmap method~\cite{kavraki1996probabilistic}, and rapidly-exploring random trees~\cite{lavalle1998rapidly},~\cite{karaman2011sampling} have achieved great success both in theory and practice, for various geometrically constrained models~\cite{ladd2005fast}. The required controller for feasible trajectories are constructed automatically as a result of the random exploration process of the configuration space, of which the optimality can be improved by increasing the number of samples.
 
@@ -110,12 +111,12 @@ The above definition is closely related to the implementation of a discrete moti
 % \end{figure}
 
 %=========================================================
-It is rarely the case that a navigation technique is applicable to any type of partitions. For instance, the potential-filed-based method requires a triangular partition while the navigation-function-based approach needs all sphere structures. This means that the preliminary workspace partition might be modified in terms of number, size and shape of the regions. Example~\ref{examp:modify} shows some cases where the preliminary partition is modified after incorporating the robot dynamics and navigation techniques.
+It is rarely the case that a navigation technique is applicable to any type of partitions. For instance, the potential-filed-based method requires a triangular partition while the navigation-function-based approach needs all sphere structures. This means that the preliminary workspace partition might be modified in terms of number, size and shape of the regions. Example~\ref{ch02:examp:modify} shows some cases where the preliminary partition is modified after incorporating the robot dynamics and navigation techniques.
 This might lead to an over-approximation or under-approximation~\citep{saidi1999abstract} of the actual workspace as some regions are shrunk or expanded during the process.
 In some cases, another navigation technique needs to be designed when it is infeasible to incorporate one navigation technique to a given workspace model.
 
 \begin{example}\label{ch02:examp:modify}
-As shown in Figure~\ref{fig:partition2}, the office-like workspace from Figure~\ref{fig:partition} is further partitioned since the underlying navigation technique relies on triangular partition. The irregular regions in the right image are approximated by circular areas due to its navigation-function-based construction. \hfill $\blacktriangle$
+As shown in Figure~\ref{ch02:fig:partition2}, the office-like workspace from Figure~\ref{ch02:fig:partition} is further partitioned since the underlying navigation technique relies on triangular partition. The irregular regions in the right image are approximated by circular areas due to its navigation-function-based construction. \hfill $\blacktriangle$
 \end{example}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}[t]
@@ -123,21 +124,21 @@ As shown in Figure~\ref{fig:partition2}, the office-like workspace from Figure~\
 \includegraphics[height =3.5cm]{figures/ch02/workspace_model3}
 \quad
 \includegraphics[height =3.5cm]{figures/ch02/workspace_model4}
-\caption{Results of workspace abstraction after incorporating the navigation techniques, as explained in Example~\ref{examp:modify}.}
+\caption{Results of workspace abstraction after incorporating the navigation techniques, as explained in Example~\ref{ch02:examp:modify}.}
   \label{ch02:fig:partition2}
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Control-driven and weighted FTS}
 \label{ch02:subsec:FTS}
-The robot motion is abstracted as transitions among the regions $\Pi=\{\pi_1,\,\cdots, \pi_N\}$. With a slight abuse of notation, we denote by $\pi_i=\{\texttt{the robot is at region}\; \pi_i\}$, $i=1,\cdots,N$, the states that reflect which region  the robot is currently visiting.  The transitions or state changes represent that the robot has moved from one region to another. Recall that the transition relation is not necessarily the adjacency relation in the geometrical sense, but by Definition~\ref{def:transition}. Formally the control-driven and weighted finite-state transition system (FTS) is defined below:
+The robot motion is abstracted as transitions among the regions $\Pi=\{\pi_1,\,\cdots, \pi_N\}$. With a slight abuse of notation, we denote by $\pi_i=\{\texttt{the robot is at region}\; \pi_i\}$, $i=1,\cdots,N$, the states that reflect which region  the robot is currently visiting.  The transitions or state changes represent that the robot has moved from one region to another. Recall that the transition relation is not necessarily the adjacency relation in the geometrical sense, but by Definition~\ref{ch02:def:transition}. Formally the control-driven and weighted finite-state transition system (FTS) is defined below:
 \begin{definition}\label{ch02:def:FTS}
 The weighted FTS is a tuple $\mathcal{T}_c=(\Pi,\, \longrightarrow_c,\, \Pi_0,\,AP,\, L_c,\, W_c)$, where
 $\Pi=\{\pi_i, \, i=1,\cdots,W\}$ is the set of states;
-$\longrightarrow_c\, \subseteq \Pi \times \Pi$ is the transition relation by Definition~\ref{def:transition}. For simplicity, $\pi_i \longrightarrow_c \pi_j$ is equivalent to $(\pi_i,\,\pi_j)\in \longrightarrow_c$;
+$\longrightarrow_c\, \subseteq \Pi \times \Pi$ is the transition relation by Definition~\ref{ch02:def:transition}. For simplicity, $\pi_i \longrightarrow_c \pi_j$ is equivalent to $(\pi_i,\,\pi_j)\in \longrightarrow_c$;
 $\Pi_0\subseteq \Pi$ is the initial state, to indicate where the robot may start from;
 $AP = AP_r\cup AP_p$ is the set of atomic propositions;
-$L_c: \, \Pi\,\rightarrow\, 2^{AP}$ is a labeling function by Definition~\ref{def:labeling};
+$L_c: \, \Pi\,\rightarrow\, 2^{AP}$ is a labeling function by Definition~\ref{ch02:def:labeling};
 $W_c:\, \Pi\times \Pi \,\rightarrow\, \mathbb{R}^+$ is the weight function as the cost of a transition in $\longrightarrow_c$. \hfill $\blacktriangle$
 \end{definition}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -152,7 +153,7 @@ The weighted FTS $\mathcal{T}_c$ is \emph{fully-known} if it reflects the actual
 %Without loss of generality, we can attach an infinite discrete-time stamp to any infinite path $\tau$. Namely, starting from discrete time $k=0$, whenever the system makes a transition from one state to another, the time stamp is increased by $k=k+1$. We denote by $\tau[k]$ as the $k_{th}$ state in $\tau$.
 
 
-% Example~\ref{examp:path} shows a weighed FTS,  one of its infinite paths and its associated trace.
+% Example~\ref{ch02:examp:path} shows a weighed FTS,  one of its infinite paths and its associated trace.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \begin{figure}[t]
@@ -203,7 +204,7 @@ The semantics of LTL is defined as follows:
 \end{definition}
 
 Any LTL formula $\varphi$ is satisfied by $\sigma$ at time step $0$ if $(\sigma,\, 0)\models \varphi$ (for simplicity we denote by $\sigma \models \varphi$). The \emph{words} of $\varphi$ is defined as the set of words that satisfy $\varphi$ at time step $0$, i.e., $\texttt{Words}(\varphi)=\{\sigma \in (2^{AP})^{\omega}\,|\, \sigma \models \varphi\}$.
-Given an infinite path~$\tau$  of $\mathcal{T}_c$ and an LTL formula $\varphi$ over $AP$, $\texttt{trace}(\tau)$ is a word over the alphabet $2^{AP}$. Thus we can verify if $\texttt{trace}(\tau)$ satisfies $\varphi$ according to the semantics~\eqref{def:semantics}.
+Given an infinite path~$\tau$  of $\mathcal{T}_c$ and an LTL formula $\varphi$ over $AP$, $\texttt{trace}(\tau)$ is a word over the alphabet $2^{AP}$. Thus we can verify if $\texttt{trace}(\tau)$ satisfies $\varphi$ according to the semantics~\eqref{ch02:def:semantics}.
 \begin{definition}\label{ch02:def:path-satisfy}
 An infinite path $\tau$ \textbf{satisfies} $\varphi$, i.e., $\tau\models \varphi$ if its trace $\textup{\texttt{trace}}(\tau)\models \varphi$. A satisfying path is also called a \textbf{plan} for $\varphi$. \hfill $\blacktriangle$
 \end{definition}
@@ -233,24 +234,24 @@ As a plan is essentially an infinite sequence of states in $\mathcal{T}_c$, it i
  \tau_{\text{pre}}\, [\tau_{\text{suf}}]^\omega
 %\pi_0\, \pi_1\,\cdots \pi_{f-1} [\,\pi_{f}\,\pi_{f+1}\cdots \pi_{n}]^{\omega}\, ,
 \end{equation}
-% where the  {prefix} part $\tau_{\text{pre}}=(\pi_0\, \pi_1\, \pi_2\cdots \pi_{f-1})$ from an initial state $q_0$ to some state $q_{f-1}$ that is executed only once and the  {suffix} part $\tau_{\text{suf}}=(\,\pi_{f}\,\pi_{f+1}\cdots \pi_{n})$ from $\pi_f$ back to itself that is repeated infinitely. Note that there are no correspondences among the subscripts. A satisfying path with this prefix-suffix structure has a finite representation as~\eqref{eq:prefix-suffix}, and more importantly it allows us to define the   {total cost} of an satisfying path (similar to Definition~4.5 in~\cite{smith2011optimal}):
+% where the  {prefix} part $\tau_{\text{pre}}=(\pi_0\, \pi_1\, \pi_2\cdots \pi_{f-1})$ from an initial state $q_0$ to some state $q_{f-1}$ that is executed only once and the  {suffix} part $\tau_{\text{suf}}=(\,\pi_{f}\,\pi_{f+1}\cdots \pi_{n})$ from $\pi_f$ back to itself that is repeated infinitely. Note that there are no correspondences among the subscripts. A satisfying path with this prefix-suffix structure has a finite representation as~\eqref{ch02:eq:prefix-suffix}, and more importantly it allows us to define the   {total cost} of an satisfying path (similar to Definition~4.5 in~\cite{smith2011optimal}):
 % \begin{equation}\label{ch02:eq:plan-cost}
 % \begin{split}
 % \texttt{Cost}(\tau,\, \mathcal{T}_c)&=\left( \sum_{i=0}^{f-1} W_c(\pi_i,\pi_{i+1})\right)+ \gamma \left(\sum_{i=f}^{n-1} W_c(\pi_i,\pi_{i+1}) + W_c(\pi_{n},\,\pi_{f}) \right),\\
 % &=\texttt{Cost}(\tau_{\text{pre}})+\gamma\,\texttt{Cost}(\tau_{\text{suf}})\, ,
 % \end{split}
 % \end{equation}
-% where $\gamma\geq 0$ is a design parameter.  The first summation in~\eqref{eq:plan-cost} represents the accumulated weights of transitions along the prefix and the second is the summation along the suffix. Note that $\gamma$ represents the relative weighting on the cost of transient response (the prefix) and steady response (the suffix) to the task specification.
-where the  {prefix}  $\tau_{\text{pre}}$ is transversed only once and the  {suffix} $\tau_{\text{suf}}$ is repeated infinitely. A plan with this prefix-suffix structure has a finite representation as~\eqref{eq:prefix-suffix}. This structure is also called \emph{lasso-shapeed} in~\cite{schuppan2005shortest} with the stem $\tau_{\text{pre}}$ and the loop~$\tau_{\text{suf}}$.
+% where $\gamma\geq 0$ is a design parameter.  The first summation in~\eqref{ch02:eq:plan-cost} represents the accumulated weights of transitions along the prefix and the second is the summation along the suffix. Note that $\gamma$ represents the relative weighting on the cost of transient response (the prefix) and steady response (the suffix) to the task specification.
+where the  {prefix}  $\tau_{\text{pre}}$ is transversed only once and the  {suffix} $\tau_{\text{suf}}$ is repeated infinitely. A plan with this prefix-suffix structure has a finite representation as~\eqref{ch02:eq:prefix-suffix}. This structure is also called \emph{lasso-shapeed} in~\cite{schuppan2005shortest} with the stem $\tau_{\text{pre}}$ and the loop~$\tau_{\text{suf}}$.
 
 
 \begin{definition}\label{ch02:def:feasible}
 $\varphi$ is called \textbf{feasible} if there exists an infinite path $\tau$ of $\mathcal{T}_c$ that satisfies $\varphi$. \hfill $\blacktriangle$
 \end{definition}
-%Note that the same infinite sequence $\tau$ might have different \emph{prefix-suffix} representations. We are looking for the one that minimizes the cost defined by~\eqref{eq:plan-cost}.
+%Note that the same infinite sequence $\tau$ might have different \emph{prefix-suffix} representations. We are looking for the one that minimizes the cost defined by~\eqref{ch02:eq:plan-cost}.
 With the above preliminaries in hand, the problem formulation for the nominal scenario could be stated as follows:
 \begin{problem}\label{ch02:prob:nominal}
-Given the control-driven wFTS $\mathcal{T}_c$ and an LTL formula $\varphi$ over $AP$, (i) find a plan with the prefix-suffix structure in~\eqref{eq:prefix-suffix}; (ii) construct the hybrid control strategy based on~\eqref{eq:control} to execute the derived plan. \hfill $\blacktriangle$
+Given the control-driven wFTS $\mathcal{T}_c$ and an LTL formula $\varphi$ over $AP$, (i) find a plan with the prefix-suffix structure in~\eqref{ch02:eq:prefix-suffix}; (ii) construct the hybrid control strategy based on~\eqref{ch02:eq:control} to execute the derived plan. \hfill $\blacktriangle$
 \end{problem}
 
 
@@ -261,7 +262,8 @@ Given the control-driven wFTS $\mathcal{T}_c$ and an LTL formula $\varphi$ over 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Hybrid controller synthesis}\label{ch02:sec:solution}
-In this section, we describe in detail how to synthesize the discrete plan that solves the first part of Problem~\ref{prob:nominal}.
+\label{ch02:sec:automata_synthesis_hybrid_control}
+In this section, we describe in detail how to synthesize the discrete plan that solves the first part of Problem~\ref{ch02:prob:nominal}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 % \subsection{Further Abstraction of FTS}
 % Since $\mathcal{T}_c$ is constructed independently of the task specification $\varphi$ and it should incorporate all available information about the workspace, it means that given a task $\varphi$ many states of $\mathcal{T}_c$ are probably irrelevant either because their properties are not relevant to $\varphi$ or they are far away from the states of interest to $\varphi$. For example, if the task is to pick up `red ball', then the information about the location of 'blue, green, yellow balls' are not relevant and
@@ -301,17 +303,17 @@ See proof of Theorem 5.37 in~\cite{baier2008principles}
 \end{proof}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The translation process from an LTL formula to its corresponding NBA can be done in time and space $2^{\mathcal{O}(|\varphi|)}$~\citep{baier2008principles}. However, there are fast translation algorithms~\citep{gastin2001fast}, which generates NBA with few states and transitions. Furthermore it is tedious to list all input alphabets for each transition, particularly given a large set of $AP$. Thus it is important to represent them in an compact and efficient manner.  The translation algorithm from~\cite{gastin2001fast} generates a boolean expression for each transition, which accepts all alphabets that enable this transition (as shown in Figure~\ref{fig:Buchi}). Binary decision diagrams (BDD) are well-known for their efficiency to represent and evaluate boolean functions~\citep{akers1978binary} . As a result, an NBA can be encoded symbolically and efficiently. More details can be found in Section~\ref{chapter:experiment}.
+The translation process from an LTL formula to its corresponding NBA can be done in time and space $2^{\mathcal{O}(|\varphi|)}$~\citep{baier2008principles}. However, there are fast translation algorithms~\citep{gastin2001fast}, which generates NBA with few states and transitions. Furthermore it is tedious to list all input alphabets for each transition, particularly given a large set of $AP$. Thus it is important to represent them in an compact and efficient manner.  The translation algorithm from~\cite{gastin2001fast} generates a boolean expression for each transition, which accepts all alphabets that enable this transition (as shown in Figure~\ref{ch02:fig:Buchi}). Binary decision diagrams (BDD) are well-known for their efficiency to represent and evaluate boolean functions~\citep{akers1978binary} . As a result, an NBA can be encoded symbolically and efficiently. More details can be found in Section~\ref{ch02:chapter:experiment}.
 %%%%%%%%%%
 \begin{figure}[t]
 \centering
 \includegraphics[width =7.2cm]{figures/ch02/Buchi}
-\caption{The NBA associated with~$\varphi=(\square\Diamond a_1) \wedge (\square\Diamond a_2) \wedge (\square\Diamond a_3) \wedge  (\square\neg \, a_4)$ (constructed by program from~\cite{gastin2001fast}), as explained in Example~\ref{examp:NBA}.}
+\caption{The NBA associated with~$\varphi=(\square\Diamond a_1) \wedge (\square\Diamond a_2) \wedge (\square\Diamond a_3) \wedge  (\square\neg \, a_4)$ (constructed by program from~\cite{gastin2001fast}), as explained in Example~\ref{ch02:examp:NBA}.}
 \label{ch02:fig:Buchi}
 \end{figure}
 %%%%%%%%%
 \begin{example}\label{ch02:examp:NBA}
-  The NBA that corresponds to $\varphi=(\square\Diamond a_1) \wedge (\square\Diamond a_2) \wedge (\square\Diamond a_3) \wedge  (\square\neg a_4)$ is derived from~\cite{gastin2001fast} and shown in Figure~\ref{fig:Buchi}.
+  The NBA that corresponds to $\varphi=(\square\Diamond a_1) \wedge (\square\Diamond a_2) \wedge (\square\Diamond a_3) \wedge  (\square\neg a_4)$ is derived from~\cite{gastin2001fast} and shown in Figure~\ref{ch02:fig:Buchi}.
   The transition from state $q_1$ to $q_3$ is given by $q_3\in \delta(q_1, l)$ where the boolean expression $l=(a_2\;  \& \; \neg a_4)$ encodes four input alphabets $\{a_2\}$, $\{a_2, \, a_1\}$, $\{a_2, \, a_3\}$, $\{a_2,\, a_1, \, a_3\}$.
   \hfill $\blacktriangle$
 \end{example}
@@ -349,7 +351,7 @@ See the proof of Theorem 4.63 from~\cite{baier2008principles}.
 Given an accepting run $R$ of  $\mathcal{A}_p$, then $R|_{\Pi}\models \varphi$.
 \end{lemma}
 \begin{proof}
-By definition, there exists an accepting state $q_f'\in \mathcal{F}'$  appearing in $R$ infinitely often. Thus $q_f'|_{Q}\in \mathcal{F}$  appears in $R|_{Q}$ infinitely often, yielding that $R|_{Q}$ is an accepting run. It can be easily shown that $R|_{Q}$ is one of the resulting runs of the trace of $R|_{\Pi}$. Thus $\texttt{trace}(R|_{\Pi}) \in \mathcal{L}_{\omega}(\varphi)=\texttt{Words}(\varphi)$, which implies $R|_{\Pi}\models \varphi$ by Definition~\ref{def:path-satisfy}.
+By definition, there exists an accepting state $q_f'\in \mathcal{F}'$  appearing in $R$ infinitely often. Thus $q_f'|_{Q}\in \mathcal{F}$  appears in $R|_{Q}$ infinitely often, yielding that $R|_{Q}$ is an accepting run. It can be easily shown that $R|_{Q}$ is one of the resulting runs of the trace of $R|_{\Pi}$. Thus $\texttt{trace}(R|_{\Pi}) \in \mathcal{L}_{\omega}(\varphi)=\texttt{Words}(\varphi)$, which implies $R|_{\Pi}\models \varphi$ by Definition~\ref{ch02:def:path-satisfy}.
 \end{proof}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -357,13 +359,13 @@ By definition, there exists an accepting state $q_f'\in \mathcal{F}'$  appearing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Cost of an accepting run} \label{ch02:subsec:optimality}
 
-We intended to find an infinite path $\tau$ of $\mathcal{T}_c$ with the prefix-suffix structure in~\eqref{eq:prefix-suffix}, such that ${\tau} \models \varphi$. The following lemma is important for the correctness.
+We intended to find an infinite path $\tau$ of $\mathcal{T}_c$ with the prefix-suffix structure in~\eqref{ch02:eq:prefix-suffix}, such that ${\tau} \models \varphi$. The following lemma is important for the correctness.
 %============
 \begin{lemma}\label{ch02:lem:prefix-suffix}
 If there exists an infinite path $\tau$ with the prefix-suffix structure and~$\tau \models \varphi$, then \textbf{at least} one accepting run of $\mathcal{A}_p$ exists with the prefix-suffix structure.
 \end{lemma}
 \begin{proof}
-Since $\tau \models \varphi$, then $\sigma=\texttt{trace}(\tau) \in \texttt{Words}(\varphi)$. Furthermore as $\mathcal{L}_w(\mathcal{A}_{\varphi})=\texttt{Words}(\varphi)$ by~Lemma~\ref{lem:LTL-BA}, $\sigma \in \mathcal{L}_w(\mathcal{A}_{\varphi})$, meaning that the resulting run $r_\sigma$ in $\mathcal{A}_{\varphi}$ by~Definition~\ref{def:cor-run} is an accepting run of $\mathcal{A}_{\varphi}$.
+Since $\tau \models \varphi$, then $\sigma=\texttt{trace}(\tau) \in \texttt{Words}(\varphi)$. Furthermore as $\mathcal{L}_w(\mathcal{A}_{\varphi})=\texttt{Words}(\varphi)$ by~Lemma~\ref{ch02:lem:LTL-BA}, $\sigma \in \mathcal{L}_w(\mathcal{A}_{\varphi})$, meaning that the resulting run $r_\sigma$ in $\mathcal{A}_{\varphi}$ by~Definition~\ref{ch02:def:cor-run} is an accepting run of $\mathcal{A}_{\varphi}$.
 
 Without loss of generality, let $\tau=\pi_0\pi_1\cdots \pi_i\cdots$ and $r_{\sigma}=q_0q_1\ldots q_j\cdots$. Now we prove that $R=\langle \pi_0,\,q_0\rangle \langle \pi_1,\,q_1\rangle\cdots \langle \pi_i,\,q_j\rangle\cdots$ is an accepting run of $\mathcal{A}_p$. First of all, $\langle \pi_0,\,q_1\rangle \in Q_0'$ as $\pi_0\in \Pi_0$ and $q_0 \in Q_0$. Secondly, $\langle \pi_{i+1},\,q_{j+1} \rangle \in \delta'(\langle \pi_i,\,q_j\rangle)$ as $(\pi_i,\,\pi_{i+1})\in \longrightarrow_c$ and $q_{i+1} \in \delta(q_{i},\, L_c(\pi_i))$. At last, since $r_{\sigma}$ is an accepting run of $\mathcal{A}_{\varphi}$, there exists an accepting state $q_f \in \mathcal{F}$ that appears in $r_{\sigma}$ infinitely often. Correspondingly, there exists at least one $\langle \pi,\, q_f\rangle $ that appears in $R$ infinitely often and  $\langle \pi,\, q_f\rangle \in \mathcal{F}'$, where $\pi$ may stand for one or several states in $\Pi$. Since $\mathcal{F}'$ is finite, there must be one accepting state $q'_f\in \mathcal{F}'$ that appears in $R$ infinitely often.
 
@@ -411,7 +413,7 @@ Thus we could focus on the accepting runs of $\mathcal{A}_p$ with the  \emph{pre
 &=\langle \pi_0, q_0\rangle\, \cdots \langle \pi_{f-1}, q_{f-1}\rangle \left[\, \langle \pi_f, q_f\rangle\langle \pi_{f+1}, q_{f+1}\rangle \cdots \cdots \langle \pi_n, q_n\rangle\, \right]^{\omega}\, ,
 \end{split}
 \end{equation}
-where $q_0'=\langle \pi_0,\, q_0\rangle \in Q'_{0}$ and $q_f'=\langle \pi_f,\, q_f\rangle \in \mathcal{F}'$. Note that there are no correspondences among the subscripts. The  {prefix} part $R_{\textup{pre}}=(q'_0\, q'_1\cdots  q'_f)$ from an initial state $q'_0$ to one accepting state $q'_f$ that is executed only once while the  {suffix} part $R_{\textup{suf}}=(q'_f\, q'_{f+1}\cdots \cdots q'_n)$ from $q'_f$ back to itself that is repeated infinitely. Given the finite representation as~\eqref{eq:prod-Apath}, there is a  finite set of transitions appearing in $R$:
+where $q_0'=\langle \pi_0,\, q_0\rangle \in Q'_{0}$ and $q_f'=\langle \pi_f,\, q_f\rangle \in \mathcal{F}'$. Note that there are no correspondences among the subscripts. The  {prefix} part $R_{\textup{pre}}=(q'_0\, q'_1\cdots  q'_f)$ from an initial state $q'_0$ to one accepting state $q'_f$ that is executed only once while the  {suffix} part $R_{\textup{suf}}=(q'_f\, q'_{f+1}\cdots \cdots q'_n)$ from $q'_f$ back to itself that is repeated infinitely. Given the finite representation as~\eqref{ch02:eq:prod-Apath}, there is a  finite set of transitions appearing in $R$:
 \begin{equation}\label{ch02:edgeR}
 \textup{\texttt{Edge}}(R)=\{(q'_i,\, q'_{i+1}),\; i=0,1\cdots,(n-1)\}\cup\{(q'_n,\, q'_f)\}.
 \end{equation}
@@ -422,11 +424,11 @@ The structure also allows us to define the {total cost} of $R$:
 &=\sum_{i=0}^{f-1} W_{c}(\pi_i,\, \pi_{i+1})+\gamma \sum_{i=f}^{n-1} W_{c}(\pi_i,\, \pi_{i+1})\\
 \end{split}
 \end{equation}
-where the first summation in~\eqref{eq:prod-cost} represents the accumulated weights of transitions along the prefix and the second  the suffix; $\gamma\geq 0$ is the relative weighting on the cost of transient response (the prefix) and steady response (the suffix).
+where the first summation in~\eqref{ch02:eq:prod-cost} represents the accumulated weights of transitions along the prefix and the second  the suffix; $\gamma\geq 0$ is the relative weighting on the cost of transient response (the prefix) and steady response (the suffix).
 
 %=======================
 \begin{problem}\label{ch02:pro:opt-search}
-Given the product automaton~$\mathcal{A}_p$, find its accepting run with the prefix-suffix structure that \textbf{minimizes} the cost defined by~\eqref{eq:prod-cost}. \hfill $\blacktriangle$
+Given the product automaton~$\mathcal{A}_p$, find its accepting run with the prefix-suffix structure that \textbf{minimizes} the cost defined by~\eqref{ch02:eq:prod-cost}. \hfill $\blacktriangle$
 \end{problem}
 We denote by $R_{\text{opt}}$ the solution for the above problem, as the optimal accepting run. Its corresponding plan is given by $\tau_{\textup{opt}}=R_{\text{opt}}|_{\Pi}$.
 
@@ -437,14 +439,14 @@ We denote by $R_{\text{opt}}$ the solution for the above problem, as the optimal
 % $$\textup{\texttt{Cost}}(R_{\textup{opt}}, \mathcal{A}_p)\geq  \textup{\texttt{Cost}}(\tau_{\textup{opt}}, \mathcal{T}_c).$$
 % \end{thm}
 % \begin{proof}
-% First of all, $R_{\text{opt}}|_{\Pi}$ is unique, which clearly has the \emph{prefix-suffix} structure~\eqref{eq:prefix-suffix} and $\texttt{trace}(R_{\text{opt}}|_{\Pi})\models \varphi$ by Lemma~\ref{lem:satisfy}. Moreover, by the definition of $W_p$, $\texttt{Cost}(R_{\text{opt}}, \mathcal{A}_p)=\texttt{Cost}(R_{\text{opt}}|_{\Pi}, \mathcal{T}_c)$. Since $\tau_{\text{opt}}$ is the optimal path of \emph{all} infinite paths that have the prefix-suffix structure and satisfy $\varphi$, the following inequality holds:
+% First of all, $R_{\text{opt}}|_{\Pi}$ is unique, which clearly has the \emph{prefix-suffix} structure~\eqref{ch02:eq:prefix-suffix} and $\texttt{trace}(R_{\text{opt}}|_{\Pi})\models \varphi$ by Lemma~\ref{ch02:lem:satisfy}. Moreover, by the definition of $W_p$, $\texttt{Cost}(R_{\text{opt}}, \mathcal{A}_p)=\texttt{Cost}(R_{\text{opt}}|_{\Pi}, \mathcal{T}_c)$. Since $\tau_{\text{opt}}$ is the optimal path of \emph{all} infinite paths that have the prefix-suffix structure and satisfy $\varphi$, the following inequality holds:
 % \begin{equation}\label{ch02:eq:subset}
 % \texttt{Cost}(R_{\textup{opt}}, \mathcal{A}_p)=\texttt{Cost}(R_{\textup{opt}|_{\Pi}}, \mathcal{T}_c)\geq \texttt{Cost}(\tau_{\textup{opt}}, \mathcal{T}_c),
 % \end{equation}
 % which completes the proof.
 % \end{proof}
 \begin{remark}
-$\tau_{\textup{opt}}$ might not be the actual optimal plan with the prefix-suffix structure, whose cost is defined similarly as~\eqref{eq:prod-cost}. As pointed out in~\cite{schuppan2005shortest}, this optimality loss is due to the simplification during the translation process from LTL formulas to the corresponding NBA. However there are certain types of \emph{tight} NBA such as~\cite{clarke1994another} that preserves this quality. It means that the optimal plan can be found directly as the projection of the optimal run. But we have not found the software implementation for this translation algorithm yet. Nevertheless the trade-off between optimality and computational complexity remains as the tight NBA would certainly have far more states and edges as shown in the examples of~\cite{schuppan2005shortest}.  \hfill $\blacktriangle$
+$\tau_{\textup{opt}}$ might not be the actual optimal plan with the prefix-suffix structure, whose cost is defined similarly as~\eqref{ch02:eq:prod-cost}. As pointed out in~\cite{schuppan2005shortest}, this optimality loss is due to the simplification during the translation process from LTL formulas to the corresponding NBA. However there are certain types of \emph{tight} NBA such as~\cite{clarke1994another} that preserves this quality. It means that the optimal plan can be found directly as the projection of the optimal run. But we have not found the software implementation for this translation algorithm yet. Nevertheless the trade-off between optimality and computational complexity remains as the tight NBA would certainly have far more states and edges as shown in the examples of~\cite{schuppan2005shortest}.  \hfill $\blacktriangle$
 \end{remark}
 %  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \begin{algorithm}[t]
@@ -458,7 +460,7 @@ $\tau_{\textup{opt}}$ might not be the actual optimal plan with the prefix-suffi
 % %$q_m=\langle q_1,\, q_2, c \rangle$, $q_n=\langle \check{q}_1,\, \check{q}_2, \check{c} \rangle$\;
 % %\If{$L_c(\pi_i)\in \chi_1(q_1,\,\check{q}_1)$}{
 % %add $q'_g$ to $\delta'(q'_s)$\;
-% %compute its weight $W_p(q'_s,\,q'_g)$ by~\eqref{weight}\;
+% %compute its weight $W_p(q'_s,\,q'_g)$ by~\eqref{ch02:weight}\;
 % %\textbf{return} \texttt{True}
 % %}
 % $d=-1$\;
@@ -471,10 +473,11 @@ $\tau_{\textup{opt}}$ might not be the actual optimal plan with the prefix-suffi
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Optimal run search}\label{ch02:subsec:alg-imp}
+\label{ch02:sssec:plan_synthesis_algorithm}
 In this part we present firstly two  methods to construct the product automaton and then the graph search algorithm to find the optimal accepting run.
 \subsubsection{Full construction}\label{ch02:subsub:full-const}
 %% full product
-Since only static and fully-known workspace is considered, both $\mathcal{T}_c$ and $\varphi$ are time-invariant. Thus $\mathcal{A}_p$ can be constructed fully by Definition~\ref{def:product}.
+Since only static and fully-known workspace is considered, both $\mathcal{T}_c$ and $\varphi$ are time-invariant. Thus $\mathcal{A}_p$ can be constructed fully by Definition~\ref{ch02:def:product}.
 In particular, given a FTS state $\pi_i \in \Pi$ and a NBA state $q_m \in Q$, the composed state $\langle \pi_i,\, q_m\rangle$ is added to $Q'$ if it is not in $Q'$ already. Then all transitions originated from $\langle \pi_i,\, q_m\rangle$ can be found by the definition of $\delta'$, namely $\forall \pi_j \in \texttt{Post}(\pi_i)$ and $\forall q_m \in \texttt{Post}(q_n)$, $\langle \pi_j,\, q_n\rangle \in \texttt{Post}(\langle \pi_i, \, q_m\rangle)$ if $q_n \in \delta(q_m,\, L(\pi_i))$.
 
 %%%%%%%%%%%%%%%%%%%
@@ -487,7 +490,7 @@ In particular, given a FTS state $\pi_i \in \Pi$ and a NBA state $q_m \in Q$, th
 %%%%%%%%%%%%%%%%%%%%
 
 
-After constructing $\mathcal{A}_p$ fully, Algorithm~\ref{alg:optimal} takes as input arguments $\mathcal{A}_p$ and a set of starting states $S'\subseteq Q'$, which is set to $Q_0'$ by default, while it generates the optimal accepting run. Algorithm~\ref{alg:optimal} utilizes Dijkstra's algorithm~\citep{lavalle2006planning} for computing the shortest path from a single source node to a set of target nodes within a weighted  graph. In particular, function \texttt{DijksTargets}($\mathcal{A}_p$, $q_S'$, $Q_T'$)  computes shortest paths in $\mathcal{A}_p$ from source state $q_S'\in Q$ to every target state belonging to the set $Q_T'\in Q'$. Function \texttt{DijksCycle}($\mathcal{A}_p$, $q_S'$) is used to compute shortest cycle from the source state $q_S'$ back to itself. As shown in Figure~\ref{fig:accPath}, for each pair of initial and accepting states $(q_0',\, q_f')$ where  $q_0'\in Q_0'$ and $q_f' \in \mathcal{F}'$, the shortest path from $q_0'$ to $q_f'$ is obtained from line~1 of Algorithm~\ref{alg:optimal} where \texttt{DijksTargets}($\cdot$) is called while the shortest cycle containing $q'_f$ is obtained from line~2 of Algorithm~\ref{alg:optimal} where \texttt{DijksCycle}($\cdot$) is called.   At last, the pair $(q_{0,\star}',\, q_{f,\star}')$ that minimizes the total cost defined by~\eqref{eq:prod-cost} is chosen. Then the optimal accepting run is determined by setting its prefix as the shortest path from $q_{0,\star}'$ to $q_{f,\star}'$ and its suffix as shortest cycle containing $q_{f,\star}'$.
+After constructing $\mathcal{A}_p$ fully, Algorithm~\ref{ch02:alg:optimal} takes as input arguments $\mathcal{A}_p$ and a set of starting states $S'\subseteq Q'$, which is set to $Q_0'$ by default, while it generates the optimal accepting run. Algorithm~\ref{ch02:alg:optimal} utilizes Dijkstra's algorithm~\citep{lavalle2006planning} for computing the shortest path from a single source node to a set of target nodes within a weighted  graph. In particular, function \texttt{DijksTargets}($\mathcal{A}_p$, $q_S'$, $Q_T'$)  computes shortest paths in $\mathcal{A}_p$ from source state $q_S'\in Q$ to every target state belonging to the set $Q_T'\in Q'$. Function \texttt{DijksCycle}($\mathcal{A}_p$, $q_S'$) is used to compute shortest cycle from the source state $q_S'$ back to itself. As shown in Figure~\ref{ch02:fig:accPath}, for each pair of initial and accepting states $(q_0',\, q_f')$ where  $q_0'\in Q_0'$ and $q_f' \in \mathcal{F}'$, the shortest path from $q_0'$ to $q_f'$ is obtained from line~1 of Algorithm~\ref{ch02:alg:optimal} where \texttt{DijksTargets}($\cdot$) is called while the shortest cycle containing $q'_f$ is obtained from line~2 of Algorithm~\ref{ch02:alg:optimal} where \texttt{DijksCycle}($\cdot$) is called.   At last, the pair $(q_{0,\star}',\, q_{f,\star}')$ that minimizes the total cost defined by~\eqref{ch02:eq:prod-cost} is chosen. Then the optimal accepting run is determined by setting its prefix as the shortest path from $q_{0,\star}'$ to $q_{f,\star}'$ and its suffix as shortest cycle containing $q_{f,\star}'$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{algorithm}[t]
 \caption{Search for optimal run, \texttt{OptRun}().} \label{ch02:alg:optimal}
@@ -501,7 +504,7 @@ After constructing $\mathcal{A}_p$ fully, Algorithm~\ref{alg:optimal} takes as i
 
  3. For each accepting state $q_f'\in \mathcal{F}'$, call \texttt{DijksCycle}($G$, $q_f'$).\;
 
- 4. Find the pair of $(q_{0,\star}', q_{f,\star}')$ that minimizes the summed cost defined by~\eqref{eq:prod-cost}.\;
+ 4. Find the pair of $(q_{0,\star}', q_{f,\star}')$ that minimizes the summed cost defined by~\eqref{ch02:eq:prod-cost}.\;
 
  5. Optimal accepting run $R_{\text{opt}}$, prefix: the shortest path from $q_{0,\star}'$ to $q_{f,\star}'$; suffix: the shortest cycle from $q_{f,\star}'$ and back to itself.\;
 
@@ -509,7 +512,7 @@ After constructing $\mathcal{A}_p$ fully, Algorithm~\ref{alg:optimal} takes as i
 \end{algorithm}
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The algorithm to compute~$\mathcal{A}_p$ has the complexity proportional to the sum of the number of states and transitions in $\mathcal{A}_p$. The worst-case  complexity of Algorithm~\ref{alg:optimal} is given by $\mathcal{O}(|\delta'| \cdot \log |Q'_0|\cdot (|Q'_0|+|\mathcal{F}'|))$) as essentially the Dijkstra algorithm~\cite{lavalle2006planning,korf1987planning} has to be called over $\mathcal{A}_p$ by the number of times equal to $|Q'_0|+|\mathcal{F}'|$.
+The algorithm to compute~$\mathcal{A}_p$ has the complexity proportional to the sum of the number of states and transitions in $\mathcal{A}_p$. The worst-case  complexity of Algorithm~\ref{ch02:alg:optimal} is given by $\mathcal{O}(|\delta'| \cdot \log |Q'_0|\cdot (|Q'_0|+|\mathcal{F}'|))$) as essentially the Dijkstra algorithm~\cite{lavalle2006planning,korf1987planning} has to be called over $\mathcal{A}_p$ by the number of times equal to $|Q'_0|+|\mathcal{F}'|$.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \begin{algorithm}[t]
@@ -532,7 +535,7 @@ The algorithm to compute~$\mathcal{A}_p$ has the complexity proportional to the 
 % $q'_g=\langle\pi_j,\, q_n\rangle\in Q'$\;
 % $d$ = \texttt{CheckTranB}$(q_m,\,L_c(\pi_i),\,q_n,\, \mathcal{A}_{\varphi})$\;
 % \If{$d\geq 0$}
-% %\tcp\star[r]{Algorithm~\ref{checkEdge}}
+% %\tcp\star[r]{Algorithm~\ref{ch02:checkEdge}}
 % {
 % $q'_g\in \delta'(q'_s)$\;
 % $W_p(q'_s,\,  q'_g)= W_c(\pi_i, \, \pi_j)+\alpha \cdot d$\;
@@ -549,15 +552,15 @@ The algorithm to compute~$\mathcal{A}_p$ has the complexity proportional to the 
 %%%%%%%%%%%%%%%%%%=================%%%%%%%%%%%%
 \subsubsection{On-the-fly construction}\label{ch02:subsub:on-the-fly}
 %% on the fly
-Beside constructing $\mathcal{A}_p$ once for all, we would construct ${\mathcal{A}}_{p}$ on-the-fly along with the graph search Algorithm~\ref{alg:optimal} and even the revision Algorithm~\ref{alg:revise} introduced later. In other words, the states and transition relations of~${\mathcal{A}}_{p}$ are built ``on demand''. When the search algorithm visits any state~$q'_s\in Q'$, it constructs the adjacency relation of~$q'_s$ by iterating through all successors of~$q'_s$ and returns the corresponding transition~$q'_g \in \delta'(q'_s)$ along with its weight. Note that each state~$q'_s\in{Q}'$ is marked by the label ``visited'' or ``unvisited'', to indicate if the transitions originated from $q'_s$ have to be constructed. In particular, if $q_s'$ is marked ``visited'', it means that they have been constructed before and can be returned directly; if $q_s'$ is marked ``unvisited'' or $\pi_i$ belongs to $\widehat{\Pi}$, they need to be constructed by Definition~\ref{def:product} ; $\widehat{\Pi}$ will be defined in~\eqref{eq:widehat},
+Beside constructing $\mathcal{A}_p$ once for all, we would construct ${\mathcal{A}}_{p}$ on-the-fly along with the graph search Algorithm~\ref{ch02:alg:optimal} and even the revision Algorithm~\ref{ch03:alg:revise} introduced later. In other words, the states and transition relations of~${\mathcal{A}}_{p}$ are built ``on demand''. When the search algorithm visits any state~$q'_s\in Q'$, it constructs the adjacency relation of~$q'_s$ by iterating through all successors of~$q'_s$ and returns the corresponding transition~$q'_g \in \delta'(q'_s)$ along with its weight. Note that each state~$q'_s\in{Q}'$ is marked by the label ``visited'' or ``unvisited'', to indicate if the transitions originated from $q'_s$ have to be constructed. In particular, if $q_s'$ is marked ``visited'', it means that they have been constructed before and can be returned directly; if $q_s'$ is marked ``unvisited'' or $\pi_i$ belongs to $\widehat{\Pi}$, they need to be constructed by Definition~\ref{ch02:def:product} ; $\widehat{\Pi}$ will be defined in~\eqref{ch03:eq:widehat},
 %which contains all regions whose labeling function or adjacency relation have changed. $\widehat{\Pi}$
 which can be treated as $\emptyset$ for now.
-%lines 5-12 construct the transitions by Definition~\ref{eq:product-weight} where $q'_s$'s successor $q_g'$ is added to $Q'$ as states to be visited~(line~10) by the planning algorithms introduced later.
+%lines 5-12 construct the transitions by Definition~\ref{ch02:eq:product-weight} where $q'_s$'s successor $q_g'$ is added to $Q'$ as states to be visited~(line~10) by the planning algorithms introduced later.
 Detailed implementation of the on-the-fly construction can be found in~\cite{guo2013cooperative}.
 
 
 
-The markers ``visited'' and ``unvisited'' improve the computational efficiency as the adjacency relation of states that have been visited before can be returned directly, meaning that the results from previous planning iterations can be reused later; $\widehat{\Pi}$ provides a highly efficient way to maintain and update ${\mathcal{A}}_{p}$ in case of updates in $\mathcal{T}_c$, as later described in Algorithm~\ref{alg:revise} in Section~\ref{sec:partial}. Then Algorithm~\ref{alg:optimal} can be easily modified such that it takes the adjacency relation of $\mathcal{A}_p$ as an input, instead of the fully-constructed~$\mathcal{A}_p$. Functions~\texttt{DijksTargets}($\cdot$) and~\texttt{DijksCycle}($\cdot$) still work in the same way since the Dijkstra algorithm only needs the adjacency relation in the breadth-first structure and the associated weight. Even though the worst-case computational complexity of Algorithm~\ref{alg:optimal} remains the same for these two different methods to construct~$\mathcal{A}_p$, the on-the-fly construction is essential for the partially-known and dynamic workspace that will be discussed in Section~\ref{sec:partial}, where $\mathcal{T}_c$ has to be updated frequently.
+The markers ``visited'' and ``unvisited'' improve the computational efficiency as the adjacency relation of states that have been visited before can be returned directly, meaning that the results from previous planning iterations can be reused later; $\widehat{\Pi}$ provides a highly efficient way to maintain and update ${\mathcal{A}}_{p}$ in case of updates in $\mathcal{T}_c$, as later described in Algorithm~\ref{ch03:alg:revise} in Section~\ref{ch03:sec:task_relaxation_adaptation}. Then Algorithm~\ref{ch02:alg:optimal} can be easily modified such that it takes the adjacency relation of $\mathcal{A}_p$ as an input, instead of the fully-constructed~$\mathcal{A}_p$. Functions~\texttt{DijksTargets}($\cdot$) and~\texttt{DijksCycle}($\cdot$) still work in the same way since the Dijkstra algorithm only needs the adjacency relation in the breadth-first structure and the associated weight. Even though the worst-case computational complexity of Algorithm~\ref{ch02:alg:optimal} remains the same for these two different methods to construct~$\mathcal{A}_p$, the on-the-fly construction is essential for the partially-known and dynamic workspace that will be discussed in Section~\ref{ch03:sec:task_relaxation_adaptation}, where $\mathcal{T}_c$ has to be updated frequently.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%  TO-DO: show that buchi level is a valid heuristic
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -568,7 +571,7 @@ The markers ``visited'' and ``unvisited'' improve the computational efficiency a
 
 
 \begin{example}\label{ch02:exam:complexity}
-This example shows the general complexity of synthesizing a discrete motion and task plan using the proposed scheme.  The FTS consists of $n\times n$ uniform grids as states and the cost from one region to an adjacent region is set randomly and uniformly within $[0,\,1]$. The task is to deliver two objects to two different destinations separately and then return to the base station. The formula can be written similarly as~\eqref{task-4}. The location of the objects and destinations are chosen randomly. We keep track of: (i) $t_{\textup{full}}$, the time needed to fully construct $\mathcal{A}_p$ by Definition~\ref{def:product}; (ii) $t_{\textup{syn}}$, the time taken to find the optimal accepting run by Algorithm~\ref{alg:optimal} over the fully-constructed $\mathcal{A}_p$; (iii) $t_{\textup{fly}}$, the time taken to construct $\mathcal{A}_p$ on-the-fly along the optimal search by Algorithm~\ref{alg:optimal}. They are measured by CPU time in seconds on a desktop computer (3.06 GHz Duo CPU and 8GB of RAM).
+This example shows the general complexity of synthesizing a discrete motion and task plan using the proposed scheme.  The FTS consists of $n\times n$ uniform grids as states and the cost from one region to an adjacent region is set randomly and uniformly within $[0,\,1]$. The task is to deliver two objects to two different destinations separately and then return to the base station. The formula can be written similarly as~\eqref{ch02:eq:case-study-task}. The location of the objects and destinations are chosen randomly. We keep track of: (i) $t_{\textup{full}}$, the time needed to fully construct $\mathcal{A}_p$ by Definition~\ref{ch02:def:product}; (ii) $t_{\textup{syn}}$, the time taken to find the optimal accepting run by Algorithm~\ref{ch02:alg:optimal} over the fully-constructed $\mathcal{A}_p$; (iii) $t_{\textup{fly}}$, the time taken to construct $\mathcal{A}_p$ on-the-fly along the optimal search by Algorithm~\ref{ch02:alg:optimal}. They are measured by CPU time in seconds on a desktop computer (3.06 GHz Duo CPU and 8GB of RAM).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{table}[t]
 \centering
@@ -592,24 +595,24 @@ This example shows the general complexity of synthesizing a discrete motion and 
         \hline
     \end{tabular}
   }
-\caption{Numerical results for Example~\ref{exam:complexity}.}
+\caption{Numerical results for Example~\ref{ch02:exam:complexity}.}
 \label{ch02:tab:complexity}
 \end{table}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The associated NBA has $75$ states and $877$ edges. Judging from Table~\ref{tab:complexity}, given a fixed transition system and this particular task, these two different approaches consume almost the same amount of time. The construction of $\mathcal{A}_p$ takes almost $95\%$ of the total time while the graph search algorithm is relatively fast. \hfill $\blacktriangle$
+The associated NBA has $75$ states and $877$ edges. Judging from Table~\ref{ch02:tab:complexity}, given a fixed transition system and this particular task, these two different approaches consume almost the same amount of time. The construction of $\mathcal{A}_p$ takes almost $95\%$ of the total time while the graph search algorithm is relatively fast. \hfill $\blacktriangle$
 \end{example}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Control structure}\label{ch02:sec:hybrid}
-% Let the optimal accepting run $R_{\text{opt}}$ from Algorithm~\ref{alg:optimal} have the following format:
+% Let the optimal accepting run $R_{\text{opt}}$ from Algorithm~\ref{ch02:alg:optimal} have the following format:
 % \begin{equation}\label{ch02:eq:final-run}
 % R_{\text{opt}}=q'_{\text{pre},1}q'_{\text{pre},2}\ldots q'_{\text{pre},N_{\text{pre}}} \big( q'_{\text{suf},1}q'_{\text{suf},2}\ldots q'_{\text{suf},N_{\text{suf}}}\big)^{\omega},
 % \end{equation}
 % where $q'_{\text{pre},1}\ldots q'_{\text{pre},N_{\text{pre}}}$ is the prefix;  $q'_{\text{suf},1}\ldots q'_{\text{suf},N_{\text{suf}}}$ is the suffix.
-Assume the optimal run $R_{\text{opt}}$ from Algorithm~\ref{alg:optimal} has the following format:
+Assume the optimal run $R_{\text{opt}}$ from Algorithm~\ref{ch02:alg:optimal} has the following format:
 % Consequently, any product state belonging $R_{\text{opt}}$ is uniquely determined by the segment (prefix or suffix) the state belongs to and the index number of the state on this segment. Correspondingly, the optima plan $\tau_{\text{opt}}$ is given by
 \begin{equation}\label{ch02:eq:final-path}
 \begin{split}
@@ -643,10 +646,10 @@ where $R_{\textup{pre}}= R_{\text{pre},1}\cdots R_{\text{pre},N_{\text{pre}}}$ i
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %the agent' position in the plan $\tau_{\text{opt}}$ can be one of the following two cases: (i) it situates in one state in $\tau_{\text{opt}}$; (ii) it is during the transition from one state to the next state in $\tau_{\text{opt}}$.
 Thus the robot's status within the accepting run can be uniquely determined by the segment (prefix or suffix) and its index within that segment, which are denoted by $seg$ and $k$. To generate the infinite plan using $R_{\textup{pre}}$ and $R_{\textup{suf}}$, function $\texttt{NextGoal}(\cdot)$ takes the current product state $q'_{\text{cur}}=R_{seg,k}$  and $R_{\textup{opt}}$ as inputs and generates the next goal product state. Simply speaking, it firstly follows the prefix until the end of prefix. Then it switches to the suffix and follows it until the end. After that it restarts from the beginning of the suffix and repeats the same process. In this way, the suffix is executed infinitely many times.
-%Note that $k$ is initialized as $1$ and $seg$ initialized as ``$\textup{pre}$" after $R_{\textup{opt}}$ is generated by Algorithm~\ref{alg:optimal}.
+%Note that $k$ is initialized as $1$ and $seg$ initialized as ``$\textup{pre}$" after $R_{\textup{opt}}$ is generated by Algorithm~\ref{ch02:alg:optimal}.
 
-Algorithm~\ref{alg:hybrid} executes the derived optimal run $R_{\textup{opt}}$ off-line. Initially the agent starts from $q'_{\text{pre},1}$; $q'_{\textup{cur}}$ and $q'_{\textup{pre}}$ are the current and next product state in $R_{\textup{opt}}$; $\pi_{\text{cur}}$ and $\pi_{\text{next}}$ indicate the robot's current region and the next goal region. $\pi_{\text{next}}$ is initialized as $\tau_{\text{pre},1}$; $R_{\text{past}}$ is used to store the sequence of product states that has been reached in $R_{\textup{opt}}$; $\tau_{\text{past}}$ is used to store the sequence of regions the robot has visited; Once a confirmation is acquired that $\pi_{\text{next}}$ is reached, $q'_{\textup{next}}$ is added to $R_{\textup{past}}$ and correspondingly $\pi_{\text{next}}$ is added to $\tau_{\text{past}}$. Then $q'_{\text{next}}$ is set to the next goal state given $q'_{\textup{cur}}$. As a result, the controller $\mathcal{U}(x(t),\,\pi_{\text{cur}}, \, \pi_{\text{next}})$ is activated to drive the agent from  $\pi_{\text{cur}}$ to $\pi_{\text{next}}$.
-Algorithm~\ref{alg:hybrid} can be running for infinitely long time as the the suffix segment is repeated infinitely many times. Note that the condition~$x(t)\in \pi_{\text{next}}$ holds when the robot belongs to its current goal region.
+Algorithm~\ref{ch02:alg:hybrid} executes the derived optimal run $R_{\textup{opt}}$ off-line. Initially the agent starts from $q'_{\text{pre},1}$; $q'_{\textup{cur}}$ and $q'_{\textup{pre}}$ are the current and next product state in $R_{\textup{opt}}$; $\pi_{\text{cur}}$ and $\pi_{\text{next}}$ indicate the robot's current region and the next goal region. $\pi_{\text{next}}$ is initialized as $\tau_{\text{pre},1}$; $R_{\text{past}}$ is used to store the sequence of product states that has been reached in $R_{\textup{opt}}$; $\tau_{\text{past}}$ is used to store the sequence of regions the robot has visited; Once a confirmation is acquired that $\pi_{\text{next}}$ is reached, $q'_{\textup{next}}$ is added to $R_{\textup{past}}$ and correspondingly $\pi_{\text{next}}$ is added to $\tau_{\text{past}}$. Then $q'_{\text{next}}$ is set to the next goal state given $q'_{\textup{cur}}$. As a result, the controller $\mathcal{U}(x(t),\,\pi_{\text{cur}}, \, \pi_{\text{next}})$ is activated to drive the agent from  $\pi_{\text{cur}}$ to $\pi_{\text{next}}$.
+Algorithm~\ref{ch02:alg:hybrid} can be running for infinitely long time as the the suffix segment is repeated infinitely many times. Note that the condition~$x(t)\in \pi_{\text{next}}$ holds when the robot belongs to its current goal region.
 
 
 
@@ -687,7 +690,7 @@ $u(t)=\mathcal{U}(x(t),\pi_{\text{cur}},\, \pi_{\text{next}})$
 % \begin{figure}[t]
 % \centering
 % \includegraphics[height =9cm]{figures/ch02/nao-robot}
-% \caption{the actual trajectory that fulfills $\varphi_1$ by~\eqref{task-1}.}
+% \caption{the actual trajectory that fulfills $\varphi_1$ by~\eqref{ch02:task-1}.}
 % \label{ch02:fig:task1}
 % \end{figure}
 % %%%%%%%%%%%%%%%%%%%%
@@ -709,9 +712,9 @@ $n_{\varphi} \triangleq |\varphi|$, where $n_{\varphi}$ denotes the size of
 \label{ch02:eq:buchi-size-bound}
 \end{equation}
 where $Q$ and $\delta$ are the state and transition sets of
-$\mathcal{B}_{\varphi}$ in \eqref{eq:buchi-automaton}. Once
+$\mathcal{B}_{\varphi}$ in Definition~\ref{ch02:def:NBA}. Once
 $\mathcal{T}$ and $\mathcal{B}_{\varphi}$ are fixed, the full product
- automaton in \eqref{eq:product-automaton} satisfies
+ automaton in Definition~\ref{ch02:def:product} satisfies
 $|X| = |S|\,|Q|$ and
 $|\rightarrow_{\mathcal{P}}| =
 \mathcal{O}\bigl(|\rightarrow|\,|\delta|\bigr)$, where $|S|$ and
@@ -781,7 +784,7 @@ where the blow-up arises from both the coupled motion state and the task
  automaton. The transition set also grows combinatorially, since every
  synchronized or asynchronously compatible joint move contributes a team-level
  transition. Therefore, both the graph-search cost and the memory demand inherit
- the multiplicative growth in \eqref{eq:team-product-cardinality}.
+ the multiplicative growth in \eqref{ch02:eq:team-product-cardinality}.
 
 The implications are immediate. Even when the local models are modest, the
  direct centralized construction becomes computationally prohibitive as the
@@ -789,7 +792,7 @@ The implications are immediate. Even when the local models are modest, the
  cannot be transferred naively to the multi-robot setting. Instead, the later
  chapters will exploit local specifications, compositional abstractions, and
  coordination mechanisms in order to avoid the full centralized blow-up in
- \eqref{eq:team-product-cardinality}. Related scalability issues have also been
+ \eqref{ch02:eq:team-product-cardinality}. Related scalability issues have also been
  noted in the literature on multi-robot temporal-logic planning and deployment;
  see, for example, \cite{kloetzer2010automatic,chen2012formal,
  kloetzer2011multi,guo2015multi}.
@@ -797,6 +800,7 @@ The implications are immediate. Even when the local models are modest, the
 %==============================
 \section{Case Study}
 \label{ch02:sec:case_study}
+\label{ch02:chapter:experiment}
 
 This section illustrates the proposed single-robot framework on a TIAGo-based
  simulation example. The implementation combines three components: a finite
@@ -831,7 +835,7 @@ $\mathsf{reach} \triangleq \texttt{reach\_max}$. The complete proposition
 $\mathsf{AP}^{\mathrm{cs}} \triangleq
 \mathsf{AP}_{\mathrm{reg}}^{\mathrm{cs}} \cup
 \mathsf{AP}_{\mathrm{act}}^{\mathrm{cs}}$, which instantiates the general
- alphabet introduced in Section~\ref{sec:system_abstraction_task_specification}.
+ alphabet introduced in Section~\ref{ch02:sec:system_abstraction_task_specification}.
 
 The motion abstraction is fully connected in the implementation. Hence, every
  region is reachable from every other region. The motion cost is proportional to
@@ -885,13 +889,13 @@ The case-study task requires the robot to go to region $r_2$, execute the
 \Bigr),
 \label{ch02:eq:case-study-task}
 \end{equation}
-where \eqref{eq:case-study-task} is the symbolic counterpart of the task
+where \eqref{ch02:eq:case-study-task} is the symbolic counterpart of the task
  expression used in the implementation. Applying the synthesis procedure from
- Section~\ref{sec:automata_synthesis_hybrid_control} to
-$\mathcal{T}_{\mathrm{cs}}$ and \eqref{eq:case-study-task} yields a product
- automaton of the form \eqref{eq:product-automaton}, and the corresponding
+ Section~\ref{ch02:sec:automata_synthesis_hybrid_control} to
+$\mathcal{T}_{\mathrm{cs}}$ and \eqref{ch02:eq:case-study-task} yields a product
+ automaton of the form Definition~\ref{ch02:def:product}, and the corresponding
  optimal accepting run is obtained in prefix--suffix form as in
- Subsubsection~\ref{sssec:plan_synthesis_algorithm}.
+ Subsection~\ref{ch02:sssec:plan_synthesis_algorithm}.
 
 For the present instance, the optimal discrete prefix is
 \begin{equation}
@@ -915,8 +919,8 @@ $\rho_{\mathrm{cs}}^{\star,\mathrm{suf}} \triangleq
  and actions.
 
 Using the motion and action costs defined in
-Subsubsection~\ref{sssec:case_study_workspace_model}, the prefix cost induced
- by \eqref{eq:case-study-prefix} is
+Subsubsection~\ref{ch02:sssec:case_study_workspace_model}, the prefix cost induced
+ by \eqref{ch02:eq:case-study-prefix} is
 \begin{equation}
 J_{\mathrm{cs}}^{\mathrm{pre}}
 \triangleq
@@ -932,16 +936,17 @@ w_{\mathrm{act}}^{\mathrm{cs}}(\mathsf{reach})
 \label{ch02:eq:case-study-prefix-cost}
 \end{equation}
 where the numerical value follows from the waypoint coordinates. The plan in
- \eqref{eq:case-study-prefix} is therefore optimal for the instantiated model,
+ \eqref{ch02:eq:case-study-prefix} is therefore optimal for the instantiated model,
  since any feasible alternative would either preserve the same action cost while
  adding extra motion, or violate the ordering imposed by
- \eqref{eq:case-study-task}.
+ \eqref{ch02:eq:case-study-task}.
 
 \subsection{Hybrid execution and discussion}
 \label{ch02:sssec:case_study_execution_discussion}
 
-The symbolic plan in \eqref{eq:case-study-prefix} is executed through the
- hybrid law introduced in \eqref{eq:hybrid-control-law}. In implementation
+The symbolic plan in \eqref{ch02:eq:case-study-prefix} is executed through the
+ hybrid control structure described in Section~
+ef{ch02:sec:hybrid}. In implementation
  terms, the continuous execution consists of the sequence
 \begin{equation}
 \texttt{goto}(r_{2})
@@ -953,14 +958,14 @@ The symbolic plan in \eqref{eq:case-study-prefix} is executed through the
 \texttt{reach\_max},
 \label{ch02:eq:case-study-execution-sequence}
 \end{equation}
-where \eqref{eq:case-study-execution-sequence} is the implementation-level
- counterpart of the discrete plan in \eqref{eq:case-study-prefix}. Under the
- assumptions of Lemma~\ref{lem:hybrid-execution-correctness}, the resulting
- execution satisfies \eqref{eq:case-study-task}.
+where \eqref{ch02:eq:case-study-execution-sequence} is the implementation-level
+ counterpart of the discrete plan in \eqref{ch02:eq:case-study-prefix}. Under the
+ assumptions of the hybrid execution framework, the resulting
+ execution satisfies \eqref{ch02:eq:case-study-task}.
 
 This case study illustrates how the abstract constructions introduced in
- Sections~\ref{sec:system_abstraction_task_specification} and
- \ref{sec:automata_synthesis_hybrid_control} can be instantiated in a practical
+ Sections~\ref{ch02:sec:system_abstraction_task_specification} and
+ \ref{ch02:sec:automata_synthesis_hybrid_control} can be instantiated in a practical
  single-robot setting. The example also shows that, once the workspace and the
  available actions have been encoded as a finite transition system, complex
  navigation-and-action tasks can be expressed compactly in temporal logic and

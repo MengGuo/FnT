@@ -189,6 +189,7 @@ or just ended when the first R-poset is found.
 %==============================
 \subsubsection{Online Execution and Receding-horizon Adaptation}
 \label{ch04:subsubsec:execute}
+\label{ch04:subsec:online}
 
 %==============================
 \begin{figure}[t!]
@@ -206,6 +207,7 @@ or just ended when the first R-poset is found.
     are enforced by the synchronization state (red line).
     }}
   \label{ch04:fig:Assign_Time}
+  \label{ch04:fig:logic}
   \vspace{-0.1in}
 \end{figure}
 %==============================
@@ -297,7 +299,7 @@ This enables consistent future formations under temporal ordering constraints.
 
 % ====================
 {
-\begin{remark}\label{ch04:rm:conflicting}
+\begin{remark}\label{ch04:rm:key-parameters}
 Note that the choice of the key parameters including the rolling horizon $H$,
 the redundancy margin $\alpha\!\ge\!1$, and the replanning trigger, such as
 the completion ratio of committed tasks or event-driven updates,
@@ -306,7 +308,7 @@ cancellation rate in $\Phi_t$, the uncertainty in task and target estimation,
 e.g., location and service-time dispersion, and the anticipated robot failure
 and communication drop rate, which together balance look-ahead optimality,
 robustness, and responsiveness. Numerical analyses on how their values affect
-the overall performance are provided in Sec.~\ref{ch04:sec:experiments}.
+the overall performance are provided in Sec.~\ref{sec:ch04_case_study}.
 
 \end{remark}
   }
@@ -314,6 +316,9 @@ the overall performance are provided in Sec.~\ref{ch04:sec:experiments}.
 
 %==============================
 \subsubsection{Fulfillment of Online Requests}\label{ch04:subsubsec:interact}
+\label{ch04:subsec:hfi}
+\label{ch04:subsubsec:interface}
+\label{ch04:subsec:human}
 
 Online operator requests are routed from the graphic interface including text, voice and templates, following the protocol for online requests in Sec.~\ref{ch04:subsec:hfi}.
 These requests are processed by the task decomposition module and the proposed planning stack. Each request induces a bounded update of the search tree
@@ -408,4 +413,4 @@ Although the
 local MILPs and coalition updates are NP-hard in the worst case, the hierarchical
 decomposition confines them to small teams, enabling event-based
 replanning with standard solvers.
-Detailed empirical runtime evaluations of each component and scaling benchmarks are provided in Sec.~\ref{ch04:sec:experiments}.}
+Detailed empirical runtime evaluations of each component and scaling benchmarks are provided in Sec.~\ref{sec:ch04_case_study}.}

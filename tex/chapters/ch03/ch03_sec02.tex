@@ -4,7 +4,7 @@
 Robots are deployed to move around within the workspace and more importantly to perform various actions to interact with it.
 Thus in this chapter, we first introduce a new method to construct the model of both robot motion and actions.
 Based on this model, we can specify a local temporal task as the desired robot motion and actions.
-Then a planning scheme for both robot motion and actions is proposed as an extension to the nominal solution presented in Chapter~\ref{ch03:chapter:single}.
+Then a planning scheme for both robot motion and actions is proposed as an extension to the nominal solution presented in Chapter~\ref{chap:preliminaries}.
 Furthermore, inter-robot collaborations are essential for many multi-robot applications to improve system capability, efficiency and robustness.
 Thus we start from defining a dependency relation among the robots using collaborative and assisting actions. Then a distributed and on-line coordination scheme is proposed where each robot sends requests to its neighbors for collaborative tasks, confirms others' requests   and adapts its local plan to fulfill the confirmed collaboration. All decisions are made locally
 by each robot based on local computation and communication between neighboring robots. This scheme is scalable and resilient to robot failures as the dependency relation is formed and removed dynamically according to the plan execution status and robot capabilities, instead of pre-assigned robot identities.
@@ -30,11 +30,11 @@ The complete robot model is derived by composing the abstraction of robot mobili
 
 \subsubsection{Abstraction of robot motion}
 %================
-Firstly, in order to distinguish the FTSs for mobility and action, we replace the FTS $\mathcal{T}_c$ in Definition~\ref{ch03:def:FTS} with $\mathcal{M}$ as the abstraction of robot's \emph{mobility}:
+Firstly, in order to distinguish the FTSs for mobility and action, we replace the FTS $\mathcal{T}_c$ in Definition~\ref{ch02:def:FTS} with $\mathcal{M}$ as the abstraction of robot's \emph{mobility}:
 \begin{equation}\label{ch03:eq:M}
 \mathcal{M}= (\Pi_{\mathcal{M}}, \, \sigma_{\mathcal{M}}, \, \longrightarrow_{\mathcal{M}},\, \Pi_{\mathcal{M},0},\,  \Psi_{\mathcal{M}}, \,L_{\mathcal{M}} ,\, W_{\mathcal{M}}),
 \end{equation}
-of which the notations are similar to~$\mathcal{T}_c$; $\sigma_{\mathcal{M}}$ stands for the control strategy~\eqref{ch03:eq:control} symbolically; $\Psi_{\mathcal{M}}=\Psi_r\cup \Psi_p$ where $\Psi_r=\{\Psi_{r,i}\}$, $i=1,\cdots,N$, is  the set of propositions as region names; $\Psi_p=\{\Psi_{p,1},\cdots, \Psi_{p,I}\}$ is the finite set of propositions as interested properties, some of which are relevant to robot's actions discussed later. For instance, ``this room has product \textsf{A}'' is a property relevant to the action ``pickup \textsf{A}''.
+of which the notations are similar to~$\mathcal{T}_c$; $\sigma_{\mathcal{M}}$ stands for the control strategy~\eqref{ch02:eq:control} symbolically; $\Psi_{\mathcal{M}}=\Psi_r\cup \Psi_p$ where $\Psi_r=\{\Psi_{r,i}\}$, $i=1,\cdots,N$, is  the set of propositions as region names; $\Psi_p=\{\Psi_{p,1},\cdots, \Psi_{p,I}\}$ is the finite set of propositions as interested properties, some of which are relevant to robot's actions discussed later. For instance, ``this room has product \textsf{A}'' is a property relevant to the action ``pickup \textsf{A}''.
 
 %=============
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -146,7 +146,7 @@ where
 
 
 \begin{remark}\label{ch03:rem:Rr}
-Note that $\hookrightarrow_{\mathcal{B}}$, $\sigma_{\mathcal{B},0}$ is released automatically whenever the controller \eqref{ch04:eq:control} is activated. Because whenever the robot moves to a new region,  it indicates that no actions within $\sigma_{\mathcal{B},k}$ are performed as we assume non-concurrent actions.
+Note that $\hookrightarrow_{\mathcal{B}}$, $\sigma_{\mathcal{B},0}$ is released automatically whenever the controller \eqref{ch02:eq:control} is activated. Because whenever the robot moves to a new region,  it indicates that no actions within $\sigma_{\mathcal{B},k}$ are performed as we assume non-concurrent actions.
 %The labeling function $L_{\mathcal{M}}(\Pi_{\mathcal{M}})$ serves as inputs to $\mathcal{B}$ and the conditional transitions in $\mathcal{B}$ are verified or falsified.
 \hfill $\blacktriangle$
 \end{remark}
@@ -173,13 +173,13 @@ for example where these actions are desired and   the preferred sequence. For in
 We now state the problem we consider in this section:
 
 \begin{problem}\label{ch03:pro:full}
-  Given the full robot functionality~$\mathcal{R}$ and the task~$\varphi$, find its {motion and action plan} that \textbf{minimizes} the cost defined by~\eqref{ch03:eq:prod-cost} and construct the hybrid control strategy that executes this plan. \hfill $\blacktriangle$
+  Given the full robot functionality~$\mathcal{R}$ and the task~$\varphi$, find its {motion and action plan} that \textbf{minimizes} the cost defined by~\eqref{ch02:eq:prod-cost} and construct the hybrid control strategy that executes this plan. \hfill $\blacktriangle$
 \end{problem}
 
-Since $\mathcal{R}$ is a standard finite transition system like~$\mathcal{T}_c$ from Definition~\ref{ch03:def:FTS}, the framework proposed in Chapter~\ref{ch03:chapter:single} can be applied directly to find the infinite optimal motion and action sequence that has a finite representation and minimizes the cost by~\ref{ch03:eq:prod-cost}. Namely, denote by~$R_{\text{opt}}$ the optimal accepting run of the product $\mathcal{R}\times \mathcal{A}_{\varphi}$ from Algorithm~\ref{ch03:alg:optimal}, which can be projected onto $\mathcal{R}$ as the~\emph{motion and action} plan $\tau_{\text{opt}}=R_{\text{opt}}|_{\Pi_{\mathcal{R}}}$.
+Since $\mathcal{R}$ is a standard finite transition system like~$\mathcal{T}_c$ from Definition~\ref{ch02:def:FTS}, the framework proposed in Chapter~\ref{chap:preliminaries} can be applied directly to find the infinite optimal motion and action sequence that has a finite representation and minimizes the cost by~\ref{ch02:eq:prod-cost}. Namely, denote by~$R_{\text{opt}}$ the optimal accepting run of the product $\mathcal{R}\times \mathcal{A}_{\varphi}$ from Algorithm~\ref{ch02:alg:optimal}, which can be projected onto $\mathcal{R}$ as the~\emph{motion and action} plan $\tau_{\text{opt}}=R_{\text{opt}}|_{\Pi_{\mathcal{R}}}$.
 %==============
 %\subsubsection{Hybrid Controller Synthesis}\label{ch03:subsec:action-hybrid}
-For each pair of sequential states  $(\pi_{\mathcal{R}, s}, \, \pi_{\mathcal{R}, s+1})$ in $\tau_{\text{opt}}$ there exists an action $\alpha_{\mathcal{R}} \, \in \, \Sigma_{\mathcal{R}}$ such that $(\pi_{\mathcal{R}, s}, \, \alpha_{\mathcal{R}}, \, \pi_{\mathcal{R}, s+1})\, \in \, \longrightarrow_{\mathcal{R}}$ from~\eqref{ch03:eq:R}. Thus the underlying low-level control strategy can be synthesized by sequentially implementing the continuous controller associated with the actions along   $\tau_{\mathcal{R}}$, in a similar way as Algorithm~\ref{ch03:alg:hybrid}. In particular, if $\alpha_{\mathcal{R}}=\sigma_{\mathcal{B},k}$,  the controller $\{\mathcal{K}_k\}$ that implements the action~$\sigma_{\mathcal{B},k}$ is activated. If~$\alpha_{\mathcal{R}}=\sigma_{\mathcal{M}}$, the navigation controller~\eqref{ch03:eq:control} is applied to drive the robot from the starting region to one point in the goal region. %Note that external confirmation messages are needed for the completion of both motion and action.
+For each pair of sequential states  $(\pi_{\mathcal{R}, s}, \, \pi_{\mathcal{R}, s+1})$ in $\tau_{\text{opt}}$ there exists an action $\alpha_{\mathcal{R}} \, \in \, \Sigma_{\mathcal{R}}$ such that $(\pi_{\mathcal{R}, s}, \, \alpha_{\mathcal{R}}, \, \pi_{\mathcal{R}, s+1})\, \in \, \longrightarrow_{\mathcal{R}}$ from~\eqref{ch03:eq:R}. Thus the underlying low-level control strategy can be synthesized by sequentially implementing the continuous controller associated with the actions along   $\tau_{\mathcal{R}}$, in a similar way as Algorithm~\ref{ch02:alg:hybrid}. In particular, if $\alpha_{\mathcal{R}}=\sigma_{\mathcal{B},k}$,  the controller $\{\mathcal{K}_k\}$ that implements the action~$\sigma_{\mathcal{B},k}$ is activated. If~$\alpha_{\mathcal{R}}=\sigma_{\mathcal{M}}$, the navigation controller~\eqref{ch02:eq:control} is applied to drive the robot from the starting region to one point in the goal region. %Note that external confirmation messages are needed for the completion of both motion and action.
 %  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \begin{algorithm}[t]
 % \caption{Robot motion and action planning under LTL specifications} \label{ch03:alg:action-framework}
@@ -197,8 +197,8 @@ For each pair of sequential states  $(\pi_{\mathcal{R}, s}, \, \pi_{\mathcal{R},
 
 % 4. Given a LTL task specification $\varphi$ over $\Psi_{\mathcal{R}}$, construct its associated NBA $\mathcal{A}_{\varphi}$. \;
 % 5. Compute the product automaton $\mathcal{A}_{\mathcal{P}}=\mathcal{R}  \otimes \mathcal{A}_{\varphi}$\;
-% 6. Call Algorithm~\ref{ch03:alg:optimal} to derive the optimal accepting run $R_{\text{opt}}$ and project it to $\mathcal{R}$ yielding $\tau_{\mathcal{R}}$. \;
-% 7. Synthesize the hybrid controller by Algorithm~\ref{ch03:alg:hybrid}.
+% 6. Call Algorithm~\ref{ch02:alg:optimal} to derive the optimal accepting run $R_{\text{opt}}$ and project it to $\mathcal{R}$ yielding $\tau_{\mathcal{R}}$. \;
+% 7. Synthesize the hybrid controller by Algorithm~\ref{ch02:alg:hybrid}.
 
 % \end{algorithm}
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -333,7 +333,7 @@ $\mathfrak{R}_6$ & $o_E$ & $c_F$ & $h_{B},h_M $  & $h_{F}$ \\ \hline
 
 The local task of robot~$i$, denoted by $\varphi_i$, is given as an sc-safe LTL formula over the set of atomic propositions $\Psi_{\mathcal{R}}^i$ from Definition~\ref{ch03:full-model}.
 Thus $\varphi_i$ can contain requirements on robot's motion, local and collaborative actions.
-The syntax and semantics of sc-LTL can be found in Section~\ref{ch03:sec:LTL}.
+The syntax and semantics of sc-LTL can be found in Section~\ref{ch02:sec:LTL}.
 As also mentioned there, an sc-safe LTL formula can be fulfilled by a finite prefix. In particular, given a finite path $\tau_i$ of $\mathcal{R}_i$, then $\tau_i$ {fulfils} $\varphi_i$ if $\texttt{trace}(\tau_i)\models \varphi_i$ where the satisfaction relation is defined there.  One special case is that when $\varphi_i\triangleq\top$, robot $i$ does not have a local task and serves as an assisting robot. In summary, we address the following problem in this section:
 
 %=============================
@@ -354,7 +354,7 @@ This section contains the main contribution as the bottom-up  motion and task co
 Given the complete robot model and its local task,  we can first synthesize an \emph{initial} motion and action plan for each robot, which happens off-line and serves as a starting point for the real-time coordination and adaptation scheme in Section~\ref{ch03:sec:colla}.
 %=============================
 %\subsubsection{Plan as motion and action sequence}
-We intend to find a finite path of $\mathcal{R}_i$ whose trace satisfies the co-safe formula $\varphi_i$ as described in Section~\ref{ch03:task}. Let $\mathcal{A}_{\varphi_i}$ be the NBA associated with $\varphi_i$ from Section~\ref{ch03:sec:LTL}, i.e., $\mathcal{A}_{\varphi_i}=(Q_i, \,2^{\Psi_{\mathcal{G}}^i},\, \delta_i,\, Q^i_0,\, \mathcal{F}_i)$. The product automaton $\mathcal{A}_{p,i}$ is defined as follows:
+We intend to find a finite path of $\mathcal{R}_i$ whose trace satisfies the co-safe formula $\varphi_i$ as described in Section~\ref{ch03:task}. Let $\mathcal{A}_{\varphi_i}$ be the NBA associated with $\varphi_i$ from Section~\ref{ch02:sec:LTL}, i.e., $\mathcal{A}_{\varphi_i}=(Q_i, \,2^{\Psi_{\mathcal{G}}^i},\, \delta_i,\, Q^i_0,\, \mathcal{F}_i)$. The product automaton $\mathcal{A}_{p,i}$ is defined as follows:
 \begin{equation}\label{ch03:Ap}
 \mathcal{A}_{p,i}=\mathcal{R}_i \otimes  \mathcal{A}_{ \varphi_i}=(Q_{p,i},\, \delta_{p,i}, \, Q_{p,i,0},\, \mathcal{F}_{p,i},\, W_{p,i}),
 \end{equation}
@@ -391,7 +391,7 @@ Find a finite path $R_p^i$ of $\mathcal{A}_{p,i}$ with the above structure that 
 %
 %\end{algorithm}
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Denote by $R_{p,\textup{init}}^i$ the solution to the above problem. Algorithm~1 in~\cite{guo2013motion} solves the above problem, which is also restated in Algorithm~\ref{ch03:alg:optimal}. It utilizes Dijkstra's algorithm for computing the shortest path from any initial state in $Q_{p,i,0}$ to every reachable accepting state in $\mathcal{F}^i_p$ and checks if there is cycle back to $q_{p,P}$. The worst-case complexity~\cite{lavalle2006planning,korf1987planning} is  $\mathcal{O}(|\delta_{p,i}| \cdot \log |Q_{p,i}|\cdot |Q_{p,i,0}|)$. By projecting $R_{p,\text{init}}^i$ onto $\Pi_{\mathcal{R}}^i$, it gives the initial motion and action plan $\tau_{\mathcal{R},\text{init}}^i=R_{p,\text{init}}^i|_{\Pi_{\mathcal{R}}^i}$ that fulfils $\varphi_i$.
+Denote by $R_{p,\textup{init}}^i$ the solution to the above problem. Algorithm~1 in~\cite{guo2013motion} solves the above problem, which is also restated in Algorithm~\ref{ch02:alg:optimal}. It utilizes Dijkstra's algorithm for computing the shortest path from any initial state in $Q_{p,i,0}$ to every reachable accepting state in $\mathcal{F}^i_p$ and checks if there is cycle back to $q_{p,P}$. The worst-case complexity~\cite{lavalle2006planning,korf1987planning} is  $\mathcal{O}(|\delta_{p,i}| \cdot \log |Q_{p,i}|\cdot |Q_{p,i,0}|)$. By projecting $R_{p,\text{init}}^i$ onto $\Pi_{\mathcal{R}}^i$, it gives the initial motion and action plan $\tau_{\mathcal{R},\text{init}}^i=R_{p,\text{init}}^i|_{\Pi_{\mathcal{R}}^i}$ that fulfils $\varphi_i$.
 
 \begin{remark}
 The initial plans are synthesized locally by each robot instead of by a central unit~\cite{chen2012formal} or within a cluster~\cite{guo2012infeasible}. \hfill $\blacktriangle$

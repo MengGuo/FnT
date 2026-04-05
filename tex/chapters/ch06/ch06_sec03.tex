@@ -81,6 +81,7 @@ An example is shown in Fig.~\ref{ch06:fig:stl-tree}.
 
 %% ========================================
 \subsubsection{Parallel Evaluation of Perturbed Robustness}\label{ch06:subsec:stl-robustness}
+\label{ch06:subsec:robust}
 As in Sec.~\ref{ch06:subsec:robust}, robustness of a trajectory $\mathbf{Z}(T)$ is computed
 recursively on $\mathcal{T}^{\phi}$ by evaluating leaves and applying
 $\textbf{min}$ for conjunctions and $\textbf{max}$ for disjunctions
@@ -167,6 +168,7 @@ $\mathbf{Z}^\star_{i_1}$ which initializes $\Gamma_{\kappa}=\{\mathbf{Z}^\star_{
 For robot $i_\ell$ such that $2\leq \ell \leq N$ with the preceding set $\Gamma^-_{\ell}$, the task
 cost is given by:
 \begin{equation}\label{ch06:eq:state-cost-sequential}
+\label{ch06:eq:state-cost}
   \begin{aligned}
    c_{\texttt{tsk}}^{i_\ell}\big( \mathbf{Z}_{i_\ell}(T) \big)
     &\triangleq
@@ -181,7 +183,7 @@ where $\widehat{\rho}^{\phi}(\cdot)$ are defined in Sec.~\ref{ch06:subsec:stl-ro
 $\Gamma_{\ell}=\Gamma^-_{\ell}\cup \{\mathbf{Z}_{i_\ell}(T)\}$ is the collective trajectory.
 With the control cost $c_{\texttt{ctr}}(\mathbf{Z}_{i_\ell}(T))$,
 the constrained trajectory optimization of each robot~$i_\ell$
-is defined similarly to Problem~\ref{ch06:prob:multi-robot-control}.
+is defined by the state and control costs introduced above.
 
 
 %==============================
@@ -318,7 +320,7 @@ where the first term measures planning progress,
 the second term approximates accumulated cost,
 and the third term $\psi(\nu)$ propagates feedback from explored nodes.
 Here $\eta>0$ is a weight, $\xi(\cdot)$ estimates trajectory cost
-similar to Problem~\ref{ch06:prob:multi-robot-control},
+using the same trajectory-cost surrogate,
 and $\psi(\cdot)$ is initialized as zero and updated during search.
 
 \emph{(II) Expansion.}

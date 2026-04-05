@@ -111,6 +111,7 @@ involving $\omega_m$.
       of communication events.
     }
     \label{ch05:fig:communication-constraints}
+    \label{ch05:fig:first}
     \vspace{-4mm}
   \end{figure}
 %==============================
@@ -296,7 +297,7 @@ ensures that global communication occurs at $t^{\texttt{c}}$.
                 $UB_{\nu_+} \gets \texttt{UpBound}(\nu_+, \mathbf{\Omega}_t, \mathcal{N})$ \; \label{ch05:line:upper_new}
                 $\mathcal{T} \gets \mathcal{T} \cup \{\nu_+\}$ \; \label{ch05:line:insert_new}
                 \If{$LB_{\nu_+} > LB^\star$}{$LB^\star \gets LB_{\nu_+}$, $J^\star \gets J_{\nu_+}$} \label{ch05:line:update_new}
-                \If{$UB_{\nu_+} > LB^\star$}{$\mathcal{Q}$.insert($\nu_+, UB_{\nu_+}$)} \label{ch05:line:insert_new}
+                \If{$UB_{\nu_+} > LB^\star$}{$\mathcal{Q}$.insert($\nu_+, UB_{\nu_+}$)} \label{ch05:line:queue_new}
             } \label{ch05:line:for_end}
         } \label{ch05:line:if_end}
     } \label{ch05:line:while_end}
@@ -548,6 +549,7 @@ as required by~\eqref{ch05:eq:comm-opt}.
     \caption{Optimization of communication events, showing the selection of the earliest-arriving
 agent and the sampling of candidate communication points to achieve synchronized connectivity.}
     \label{ch05:fig:comm-event}
+    \label{ch05:fig:framework}
     \vspace{0mm}
   \end{figure}
 %==============================

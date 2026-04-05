@@ -111,6 +111,7 @@ $\nu_p^\star \triangleq
 $p=1,\cdots,P$. {The value function
 $\chi: \mathcal{V} \rightarrow \mathbb{R}^+$ is defined as:
 \begin{equation}\label{ch04:eq:value}
+\label{ch04:eq:objective}
   \begin{split}
   \chi(\nu) \triangleq &\underset{k\in\mathcal{K}}{\textbf{max}} \{T_k\}
   + \eta_1 \sum_{k\in\mathcal{K}} C_k\\
@@ -156,6 +157,7 @@ thereby decouples assignment from scheduling.
 Moreover, if the capacity constraints above exceed the overall fleet capacity,
 i.e., the following condition:
 \begin{equation}\label{ch04:eq:capacity-bound}
+\label{eq:capacity-bound}
   \sum_{k\in \mathcal{K}} \beta^j_k \leq
   \sum_{i\in \mathcal{N}} \mathds{1}(a^j \in \mathcal{A}_i),\; \forall a^j \in \mathcal{A};
 \end{equation}
@@ -323,6 +325,7 @@ computation budget is exhausted or no new non-dominated nodes emerge. The
 current set of frontier is $\overline{\mathcal{V}}$ from~\eqref{ch04:eq:frontier},
 and the subset of complete assignments is given by:
 \begin{equation}\label{ch04:eq:complete-nodes}
+\label{eq:complete-nodes}
   \overline{\mathcal{V}}^\star \triangleq
   \big\{\nu \in \overline{\mathcal{V}} \,\big|\,
   (\widehat{Q}_m \cap Q^m_F) \neq \emptyset,\;
@@ -366,7 +369,7 @@ which under-utilizes its capability to optimize large task sets.
 Conversely, an excessively large~$H$ increases computational redundancy
 and may induce oscillation in dynamic environments,
 as long-term commitments are often invalidated by online mission updates.
-This trade-off is evaluated empirically in Sec.~\ref{ch04:sec:experiments}.}
+This trade-off is evaluated empirically in Sec.~\ref{sec:ch04_case_study}.}
 
 %==============================
 \begin{remark}\label{ch04:remark:task-tree}
@@ -391,7 +394,7 @@ each node~$\nu$ above maintains the sets of reachable states~$\widehat{Q}_m$ for
 allowing task decomposition and team assignment simultaneously.
 This approach eliminates the re-computation for global posets, enabling faster integration
 of online missions and reducing overhead pre-processing.
-More numerical comparisons are given in Sec.~\ref{ch04:sec:experiments}.}
+More numerical comparisons are given in Sec.~\ref{sec:ch04_case_study}.}
 
 \end{remark}
 %==============================
@@ -402,7 +405,7 @@ algorithm above is provided below.
 Particularly, it is shown that the completeness and optimality hold in the static
 and known case with the full horizon. Moreover, in the online receding-horizon case,
 the algorithm can still ensure correctness and feasibility,
-while scalability and adaptability are evaluated empirically in Sec.~\ref{ch04:sec:experiments}.
+while scalability and adaptability are evaluated empirically in Sec.~\ref{sec:ch04_case_study}.
 Proofs are provided in the Appendix.}
 
 {
@@ -613,7 +616,7 @@ heuristic is employed as a fallback.
 Note that this team-formation MILP is significantly smaller than the
 direct robot-to-subtask assignment method
 without the hierarchical structure~\cite{sahin2019multirobot, kurtz2021more}.
-More numerical comparisons can be found in Sec.~\ref{ch04:sec:experiments}.}
+More numerical comparisons can be found in Sec.~\ref{sec:ch04_case_study}.}
 
 
 
@@ -638,7 +641,7 @@ the team $\mathcal{N}_{K^\star}=\{5,10,11,17,19,18\}$ executes $\omega_9\omega_{
 Given the optimal assignment~$\nu_{K^\star}^\star$, the local task plan~$\boldsymbol{\tau}_i$
 of each robot~$i \in \mathcal{N}_k$ is derived as in~\eqref{ch04:eq:robot-plan}. Each robot~$i$
 navigates to region~$S^\ell_k$ to start executing its $\ell$-th task~$(S^\ell_k,\, \omega^\ell_k)$.
-As denoted in~\eqref{ch04:eq:task}, subtasks~$\mathcal{J}^\ell_k \triangleq \big\{(n_j,\,a_j,\,s_j),
+As denoted in~\eqref{ch06:eq:task}, subtasks~$\mathcal{J}^\ell_k \triangleq \big\{(n_j,\,a_j,\,s_j),
 j=1,\cdots,J^\ell_k\big\}$ must be considered to perform the task~$\omega^\ell_k$.
 For task~$\omega^\ell_k$ assigned to team~$\mathcal{N}_k$, the local plan of each robot~$i \in \mathcal{N}_k$ is
 given by~$\boldsymbol{\tau}_i \triangleq (t^1_i,\, p^1_i,\, a^1_i)(t^2_i,\, p^2_i,\, a^2_i)\cdots$, which is a sequence of timed
@@ -678,7 +681,7 @@ the makespan of task completion.
 
 %==============================
 \begin{problem} \label{ch04:qs:LocalTaskProblem}
-  Given task~$\omega^\ell_k$ with area~$S_k^\ell$, subtasks~$\mathcal{J}^\ell_k$ as in~\eqref{ch04:eq:task}
+  Given task~$\omega^\ell_k$ with area~$S_k^\ell$, subtasks~$\mathcal{J}^\ell_k$ as in~\eqref{ch06:eq:task}
   and the assigned team~$\mathcal{N}_k$, the goal is to determine the optimal
   local plans~$\{\boldsymbol{\tau}_i\}$ and robot trajectories~$\{\mathbf{x}_i\}$ for each robot~$i \in \mathcal{N}_k$.
   The objective is to minimize the makespan~$T^\ell_k$ as the collective execution time
@@ -744,7 +747,7 @@ that minimize the makespan.
 {
 %==============================
 \begin{example}
-  \label{ch04:example:StaticUnknown}
+  \label{ch04:example:StaticKnown}
   As shown in Fig.~\ref{ch04:fig:StaticKnown},
   in total~$14$ delivery subtasks are assigned to~$5$ robots under different dynamic constraints.
   Note that the subtasks require different robot capabilities.

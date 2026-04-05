@@ -1,4 +1,4 @@
-\section{Partial-Order-Based Task Decomposition and Assignment}
+\section{Partial-order-based Task Decomposition and Assignment}
 \label{ch04:sec:po_decomp_assignment}
 
 This section develops the first component of the top-down synthesis framework
@@ -25,7 +25,7 @@ assign these subtasks to feasible agents or coalitions.
 \label{ch04:subsubsec:NBA-pruning}
 To begin with, the NBA~$\mathcal{B}_{\varphi}$ associated with the task~$\varphi$
 is derived, e.g., via translation tools in~\cite{gastin2001fast}.
-Note that~$\mathcal{B}_{\varphi}$ has the structure as defined in Def.~\ref{ch04:def:nba},
+Note that~$\mathcal{B}_{\varphi}$ has the structure as defined in Def.~\ref{ch02:def:NBA},
 which however can be overly redundant.
 For instance, the required input alphabets for some transitions are infeasible for the whole team;
 or some transitions can be decomposed equivalently
@@ -123,7 +123,7 @@ decomposable satisfied by Def.~\ref{ch04:def:decomposable-transition}.}
 %========================================
 
 \begin{example}\label{ch04:eq:prune-nba}
-The NBA~$\mathcal{B}_{\varphi}$ associated with the task formula in~\eqref{ch04:example:task}
+The NBA~$\mathcal{B}_{\varphi}$ associated with the task formula in~\ref{ch04:example:subtask}
 has $707$ states and $16044$ edges with more than $1.29\times10^7$ accepting{\emph{word}s},
 translated via~\cite{gastin2001fast}.
 After the pruning process described above, the pruned automaton~$\mathcal{B}^{-}_{\varphi}$
@@ -230,7 +230,7 @@ associated with an accepting run, while ignoring the potential conflicts
 among simultaneous actions. Therefore, the above two relations
 are often simplified into one ``less equal'' relation without the ``opposed" relation,
 see e.g., \cite{luo2021temporal}.}
-On the contrary, as described in Sec.~\ref{ch04:subsec:multi-agent},
+On the contrary, as described in the multi-agent setting,
 each action has a duration when its proposition is True during the {whole} period.
 Thus, it is essential to distinguish these two relations defined above,
 namely, whether one subtask should be started or finished before another subtask.
