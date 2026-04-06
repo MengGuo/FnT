@@ -168,7 +168,6 @@ $\mathbf{Z}^\star_{i_1}$ which initializes $\Gamma_{\kappa}=\{\mathbf{Z}^\star_{
 For robot $i_\ell$ such that $2\leq \ell \leq N$ with the preceding set $\Gamma^-_{\ell}$, the task
 cost is given by:
 \begin{equation}\label{ch06:eq:state-cost-sequential}
-\label{ch06:eq:state-cost}
   \begin{aligned}
    c_{\texttt{tsk}}^{i_\ell}\big( \mathbf{Z}_{i_\ell}(T) \big)
     &\triangleq
@@ -426,7 +425,7 @@ The framework also generalizes to more complex scenarios: (I) \emph{
   A global STL formula coordinates these groups,
   enabling them to split, navigate independently, and later merge seamlessly;
   (II) \emph{Dynamic obstacles}. When obstacles have known or predictable
-trajectories, they can be incorporated into the task evaluation by~\eqref{ch06:eq:state-cost},
+trajectories, they can be incorporated into the task evaluation by~\eqref{ch06:eq:state-cost-sequential},
 ensuring collision avoidance and STL robustness in dynamic environments;
 for uncertain motions, conservative reachable sets can be adopted to maintain robustness.
 

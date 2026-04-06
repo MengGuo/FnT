@@ -7,8 +7,7 @@ The robot is assigned a complex task which is specified as temporal logic formul
 Through the model-checking algorithm, we synthesize firstly a discrete motion plan that satisfies the given task and more importantly minimizes a total cost. Then based on this discrete plan, we construct a hybrid control strategy that drives the robot such that its final trajectory satisfies the task specification.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Abstraction of robot motion}
-\label{ch02:sec:transitionsystem}
+\section{Abstraction of Robot Motion}
 \label{ch02:sec:system_abstraction_task_specification}
 The robot's  motion within a certain workspace is abstracted as a finite-state transition system (FTS)~\citep{baier2008principles}. This FTS is constructed by integrating two aspects: (i) the workspace model; (ii) the robot dynamics and its navigation controller.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -176,7 +175,7 @@ The weighted FTS $\mathcal{T}_c$ is \emph{fully-known} if it reflects the actual
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Task specification as LTL formulas}\label{ch02:sec:LTL}
+\section{Task Specification as LTL Formulas}\label{ch02:sec:LTL}
 %=============================
 A language is needed to specify a complex task, which on one hand should be expressive enough to specify various types of tasks, and on the other hand should be formal enough to avoid ambiguity and misinterpretation.  Linear time Temporal Logic (LTL) provides a concise and formal way to specify both propositional and temporal constraints on the system behavior.
 
@@ -261,7 +260,7 @@ Given the control-driven wFTS $\mathcal{T}_c$ and an LTL formula $\varphi$ over 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Hybrid controller synthesis}\label{ch02:sec:solution}
+\section{Hybrid Controller Synthesis}\label{ch02:sec:solution}
 \label{ch02:sec:automata_synthesis_hybrid_control}
 In this section, we describe in detail how to synthesize the discrete plan that solves the first part of Problem~\ref{ch02:prob:nominal}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%

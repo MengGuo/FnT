@@ -68,7 +68,7 @@ $\{\mathcal{C}_k\}$ as the sequences of tasks to be accomplished.
   $\{\mathcal{C}_k\}$, and the local plans $\{\Gamma_k\}$ such that:
   (I) the tasks can be executed by the assigned team under the temporal-logic
   constraints and the robot capacity constraints; and (II) the execution time
-  for missions is minimized as in~\eqref{ch04:eq:objective}.
+  for missions is minimized as in~\eqref{ch04:eq:value}.
 
 \end{problem}
 %==============================
@@ -111,7 +111,6 @@ $\nu_p^\star \triangleq
 $p=1,\cdots,P$. {The value function
 $\chi: \mathcal{V} \rightarrow \mathbb{R}^+$ is defined as:
 \begin{equation}\label{ch04:eq:value}
-\label{ch04:eq:objective}
   \begin{split}
   \chi(\nu) \triangleq &\underset{k\in\mathcal{K}}{\textbf{max}} \{T_k\}
   + \eta_1 \sum_{k\in\mathcal{K}} C_k\\
@@ -157,7 +156,6 @@ thereby decouples assignment from scheduling.
 Moreover, if the capacity constraints above exceed the overall fleet capacity,
 i.e., the following condition:
 \begin{equation}\label{ch04:eq:capacity-bound}
-\label{eq:capacity-bound}
   \sum_{k\in \mathcal{K}} \beta^j_k \leq
   \sum_{i\in \mathcal{N}} \mathds{1}(a^j \in \mathcal{A}_i),\; \forall a^j \in \mathcal{A};
 \end{equation}
@@ -255,7 +253,7 @@ duration between regions.
           Add $(\nu_h^\star,\nu^+)$ to $\mathfrak{T}$\;
           Update $\mathcal{C}_k$ via~\eqref{ch04:eq:update-constraint}\;
           Update $t_{\texttt{e}}(\omega_k^\ell)$ via~\eqref{ch04:eq:estimated_time}\;
-          \lIf{\eqref{eq:capacity-bound} violated}{mark $\nu^+$ infeasible}
+          \lIf{\eqref{ch04:eq:capacity-bound} violated}{mark $\nu^+$ infeasible}
         }
       }
     }
@@ -325,7 +323,6 @@ computation budget is exhausted or no new non-dominated nodes emerge. The
 current set of frontier is $\overline{\mathcal{V}}$ from~\eqref{ch04:eq:frontier},
 and the subset of complete assignments is given by:
 \begin{equation}\label{ch04:eq:complete-nodes}
-\label{eq:complete-nodes}
   \overline{\mathcal{V}}^\star \triangleq
   \big\{\nu \in \overline{\mathcal{V}} \,\big|\,
   (\widehat{Q}_m \cap Q^m_F) \neq \emptyset,\;
@@ -418,7 +415,7 @@ Alg.~\ref{ch04:alg:ss-TaskAssign} satisfy:
 (I) all temporal constraints encoded in the
 mission automata $\{\mathcal{B}_{\varphi_m}\}$ hence all mission specifications;
 and (II) all capacity constraints
-in~\eqref{ch04:eq:capacity-team}--\eqref{eq:capacity-bound}.
+in~\eqref{ch04:eq:capacity-team}--\eqref{ch04:eq:capacity-bound}.
 Moreover, whenever feasible plans exist,
 Alg.~\ref{ch04:alg:ss-TaskAssign} returns the feasible plan
 that minimizes the makespan objective in~\eqref{ch04:eq:value}.
@@ -431,7 +428,7 @@ that minimizes the makespan objective in~\eqref{ch04:eq:value}.
 $\widehat{Q}_m$ along enabled automaton transitions
 $q_m^{\ell+1} \in \delta^m(q_m^\ell,\omega^{\ell+1})$ and from the
 completeness condition $\widehat{Q}_m \cap Q_F^m \neq \emptyset$ in
-\eqref{eq:complete-nodes}. Any root to leaf path that ends at a node
+\eqref{ch04:eq:complete-nodes}. Any root to leaf path that ends at a node
 $\nu \in \overline{\mathcal{V}}^\star$ therefore induces, for every
 $m \in \mathcal{M}$, an accepting run of $\mathcal{B}_{\varphi_m}$, so
 the joint plans $\{\Gamma_k\}$ satisfy all temporal constraints encoded
@@ -451,7 +448,7 @@ feasible problem, at least one complete {non-dominated} node
 $\nu \in \overline{\mathcal{V}}^\star$ is therefore generated in finite
 time, which yields plans that satisfy all missions and all capacities.
 Lastly, given the objective function~\eqref{ch04:eq:value} and enough planning time,
-the node with the minimum cost as in~\eqref{ch04:eq:objective} would be returned,
+the node with the minimum cost as in~\eqref{ch04:eq:value} would be returned,
 which also satisfies each mission requirement at the accepting states.
     This completes the proof. }
   \end{proof}
@@ -511,7 +508,7 @@ formulated as follows.
   Each team must satisfy the required capacities, and membership must be
   disjoint, i.e., $\mathcal{N}_{k_1}\cap\mathcal{N}_{k_2}=\emptyset$ for
   $k_1\neq k_2$. The objective is to {min}imize the overall response
-  time as defined in~\eqref{ch04:eq:objective}, thereby ensuring efficient
+  time as defined in~\eqref{ch04:eq:value}, thereby ensuring efficient
   execution of all assigned tasks.
 
 \end{problem}
