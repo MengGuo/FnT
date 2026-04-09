@@ -1,3 +1,158 @@
-%==============================
 \section{Outline}
-\label{sec:ch01_Outline}
+\label{sec:ch01:outline}
+
+Section~\ref{ch01:sec:related_work} reviewed the literature along the main
+conceptual gaps that motivate this monograph. Those gaps concern, in
+particular, the mismatch between expressive temporal-task semantics and
+computationally manageable multi-robot coordination, the difficulty of
+maintaining task correctness under incomplete models and evolving requests, and
+the further complications introduced by communication limits, uncertainty, and
+dynamic task structure. The purpose of the present section is to turn that
+literature map into the organizing logic of the book. Rather than revisiting
+the earlier review, the discussion below explains how the later chapters take
+up these issues in a deliberate order, starting from the nominal synthesis
+setting and then moving toward progressively richer coordination scenarios.
+The resulting structure is cumulative, but it is also driven by the gaps
+identified in the previous section. Chapter~\ref{chap:preliminaries}
+establishes the formal basis in the single-robot case, which provides the
+technical reference point for the rest of the monograph. Chapter~\ref{chap:bottom-up}
+addresses the difficulties that arise when coordination is induced by local
+temporal tasks, partial knowledge, and execution-time collaboration.
+Chapter~\ref{chap:top-down} considers the complementary setting in which the
+mission is specified at the team level and must be decomposed and assigned
+without losing its global temporal structure. Chapter~\ref{chap:communication}
+then turns to the informational side of the same problem by studying limited
+communication and online human involvement. Chapter~\ref{chap:uncertainty}
+extends the framework further to probabilistic models, dynamic constraints, and
+richer task semantics over evolving signals. Finally,
+Chapter~\ref{chap:outlook} returns to the broader methodological picture and
+highlights the open problems that remain at the intersection of formal
+synthesis, scalable coordination, and adaptive autonomy.
+
+\subsection{Single-Robot Foundations}
+\label{sec:ch01:outline:foundations}
+
+Chapter~\ref{chap:preliminaries} establishes the formal foundation on which the
+rest of the monograph depends. The starting point is a finite abstraction of
+robot motion over a partitioned workspace. This abstraction makes it possible
+to describe robot behavior in symbolic terms while preserving the connection to
+continuous dynamics through a lower-level control layer. Linear temporal logic
+is then introduced as the task language used to express sequencing, safety,
+recurrence, and related behavioral constraints.
+From there, the chapter develops the standard synthesis pipeline. A temporal
+formula is translated into a B\"uchi automaton, combined with the motion
+abstraction through a product construction, and searched for an accepting run
+that yields a discrete plan. That plan is then interpreted by a hybrid
+execution strategy that connects symbolic decisions to continuous motion.
+Chapter~\ref{chap:preliminaries} therefore plays a dual role. It supplies the
+technical preliminaries used throughout the book, but it also fixes the
+nominal benchmark against which the later extensions should be read.
+
+\subsection{Bottom-Up Coordination under Local Tasks}
+\label{sec:ch01:outline:bottomup}
+
+With that baseline in place, Chapter~\ref{chap:bottom-up} turns to multi-robot
+coordination in a setting where the tasks are assigned locally rather than
+globally. The emphasis is on how coordination emerges when robots that are
+initially planned in a decentralized way begin to affect one another through
+shared resources, action dependencies, missing knowledge, or temporary needs
+for assistance. This perspective is especially natural for heterogeneous
+teams, where the task of each robot is shaped by its own capabilities and by
+the information available in its local neighborhood.
+The first part of the chapter studies task relaxation and online adaptation in
+partially known workspaces. The problem there is no longer only how to compute
+a satisfying plan, but how to preserve meaningful task progress when the
+workspace model changes during execution. The chapter then moves to dependent
+local tasks with collaborative actions, where one robot can complete part of
+its task only if another robot provides the required support. It closes with
+contingent collaboration, in which requests are triggered during execution
+rather than specified exhaustively in advance. What distinguishes the chapter
+as a whole is that coordination is not imposed by a single team-level mission.
+It arises from local plans whose interactions become visible only as execution
+unfolds.
+
+\subsection{Top-Down Synthesis for Global Tasks}
+\label{sec:ch01:outline:topdown}
+
+A different organizational principle appears in
+Chapter~\ref{chap:top-down}. Here the point of departure is not a collection of
+local specifications, but a global temporal mission posed at the level of the
+team. The central question is how such a mission should be decomposed and
+distributed so that the resulting robot behaviors remain consistent with the
+original team objective. In this sense, the chapter complements
+Chapter~\ref{chap:bottom-up}. The earlier chapter studies how coordination can
+emerge from local dependence, whereas the present one studies how it can be
+derived systematically from global mission structure.
+The chapter begins with partial-order-based task decomposition and assignment,
+where the logical structure of the mission is separated from the choice of
+which robot or subteam should implement each part. It then considers
+hierarchical coordination for large-scale fleets, where abstraction across
+multiple planning layers is used to contain computational growth without
+discarding mission-level consistency. The final part addresses continual tasks,
+for which new demands may appear while the team is already executing a plan.
+That setting brings the top-down perspective closer to online coordination,
+but the organizing idea remains global from the outset. The mission is given at
+the team level, and the synthesis problem is to allocate and refine it without
+losing its temporal structure.
+
+\subsection{Partial Knowledge and Limited Communication}
+\label{sec:ch01:outline:partial}
+
+The next step is motivated less by task structure than by operational reality.
+Even if the temporal objective is well posed and the coordination architecture
+is sound, robot teams rarely act with complete and perfectly shared knowledge.
+Chapter~\ref{chap:communication} addresses this difficulty by treating
+information flow as part of the planning problem rather than as a background
+assumption.
+The chapter first examines settings in which communication and collaboration
+must be planned jointly. It then considers exploration and coordination under
+intermittent communication, where the robots cannot rely on continuous
+connectivity and must instead operate with delayed or sparse information
+exchange. The last part studies online human interaction and request
+fulfillment, where an operator may insert requests, guide decisions, or supply
+missing intent without replacing the underlying autonomous planning framework.
+The common thread across these sections is that temporal-task coordination must
+now coexist with incomplete awareness of the environment, of peer plans, and of
+the future availability of communication itself.
+
+\subsection{Dynamic Constraints and Uncertainty}
+\label{sec:ch01:outline:uncertainty}
+
+Chapter~\ref{chap:uncertainty} pushes the framework further by weakening the
+deterministic assumptions that still remain in the earlier chapters. In some
+settings the difficulty lies in stochastic outcomes, in others in moving
+constraints, evolving signals, or task semantics that cannot be expressed
+adequately over static propositional labels alone. The chapter brings these
+issues together under a broader view of temporal-task planning in dynamic and
+uncertain environments.
+The chapter opens with probabilistic temporal tasks and safe-return
+constraints, where correctness must be interpreted alongside risk and
+recoverability. It then studies reactive coordination under dynamic temporal
+logic tasks, where the environment can invalidate purely offline decisions even
+when the original specification is sound. The final section considers
+collaborative optimal transport under signal temporal logic tasks, thereby
+moving beyond the propositional setting that dominates the nominal synthesis
+pipeline. By this stage, the monograph has moved well beyond the question of
+whether a symbolic task can be satisfied on a fixed abstraction. The problem is
+now how formal task semantics can still guide planning when the system model,
+the environment, and even the relevant signals evolve during execution.
+
+\subsection{Outlook and Open Problems}
+\label{sec:ch01:outline:outlook}
+
+Chapter~\ref{chap:outlook} closes the monograph by drawing out the research
+questions that remain unresolved after the technical development of the
+preceding chapters. The aim is not to append a detached list of future topics,
+but to identify the main fault lines that cut across the entire book. These
+include the scaling behavior of compositional and reactive synthesis,
+coordination for continual tasks in nonstationary or adversarial environments,
+and the integration of learning-based methods with formal guarantees that
+remain meaningful at the system level.
+For that reason, the final chapter should be read as a continuation of the
+earlier material rather than as a separate epilogue. The challenges discussed
+there arise directly from the limitations of the methods developed in
+Chapters~\ref{chap:preliminaries} through~\ref{chap:uncertainty}. The overall
+arc of the monograph is therefore intentionally open-ended. It develops a
+coherent set of foundations and coordination frameworks, but it also makes
+clear that the broader problem of hybrid coordination under complex temporal
+tasks remains an active and expanding area of research.
