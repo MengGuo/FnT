@@ -1072,7 +1072,7 @@ Robot~$i$ is interested only in propositions that appear in its own local task,
 namely the set $\varphi_i|_{AP_i}$. To reduce communication load, a
 subscriber-publisher mechanism is adopted. When robot~$j$ communicates with
 robot~$i \in \mathcal{N}_j^t$ for the first time, robot~$j$ subscribes to
-task-relevant information held by robot~$i$ by sending the request
+task-relevant information held by robot~$i$ by sending the request:
 \begin{equation}
 \textbf{Request}_{j,i}^t \triangleq
 (j,\, \varphi_j|_{AP_j},\, i),
@@ -1088,7 +1088,7 @@ $((\pi,\, S,\, S_{\neg}),\, E,\, E_{\neg}) \in \textbf{Sense}_i^t$ is
 obtained, robot~$i$ checks whether the newly observed regional information is
 relevant to any subscriber. If robot~$j$ is currently reachable and at least
 one proposition in $S \cup S_{\neg}$ belongs to $\varphi_j|_{AP_j}$, then
-robot~$i$ sends the reply
+robot~$i$ sends the reply:
 \begin{equation}
 \textbf{Reply}_{i,j}^t \triangleq
 \{\, (\pi,\, S',\, S_{\neg}') \,\},
