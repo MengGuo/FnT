@@ -728,269 +728,219 @@ contain multiple root nodes.
 
 
 
-\subsection{Task Assignment}\label{ch04:subsubsec:task-assignment}
-Given the set of R-posets~$\mathcal{P}_{\varphi}$ derived from the previous
-section, this section describes how this set can be used to compute
-the optimal assignment of these subtasks. More specifically, we consider
-the following sub-problems of task assignment:
+\subsubsection{Task Assignment}
+\label{ch04:subsubsec:task-assignment}
 
-\begin{problem}\label{ch04:problem:}
-Given any R-poset $P=(\Omega,\, \preceq_{\varphi},\, \neq_{\varphi})$
-where~$P\in \mathcal{P}_{\varphi}$,
-find the optimal assignment of all subtasks in~$\Omega$ to the multi-robot system
-$\mathcal{N}$ such that
-(i) all partial ordering requirements in $\preceq_{\varphi},\, \neq_{\varphi}$ are
-respected; (ii) the maximum completion time of all subtasks is minimized.
+Given the family of accepting R-posets $\mathcal{P}_{\varphi}$ computed in the
+previous subsubsection, the next step is to assign the subtasks in each
+R-poset to the robot team. Since different R-posets induce different temporal
+constraints, the assignment problem is considered first for one fixed
+R-poset $P_{\varphi}\in\mathcal{P}_{\varphi}$ and then compared across the
+candidate R-posets. The objective is to respect the temporal relations encoded
+by $P_{\varphi}$ while minimizing the overall completion time.
 
+\begin{problem}
+\label{ch04:prob:task_assignment}
+Given an R-poset
+$P_{\varphi}=(\Omega_{\varphi},\preceq_{\varphi},\neq_{\varphi})$ with
+$P_{\varphi}\in\mathcal{P}_{\varphi}$, determine an assignment of all subtasks
+in $\Omega_{\varphi}$ to the robot team $\mathcal{N}$ such that the relations
+$\preceq_{\varphi}$ and $\neq_{\varphi}$ are respected and the makespan of the
+resulting team execution is minimized.
 \end{problem}
 
+Even without the temporal relations and collaborative requirements, the problem
+already contains the multi-vehicle routing problem~\cite{khamis2015multi} and
+the job-shop scheduling problem~\cite{morrison2016branch} as special cases.
+Both are NP-hard. Therefore, Problem~\ref{ch04:prob:task_assignment} is also
+NP-hard. A direct mixed-integer linear programming formulation is possible, but
+it is not attractive for large-scale real-time settings. Its complexity grows
+rapidly with the problem size, and a solver typically provides no useful
+intermediate assignment before convergence. In time-critical applications, a
+good feasible solution within a prescribed budget is often more valuable than a
+late optimal one.
+Motivated by these considerations, an anytime assignment procedure based on
+branch and bound is adopted; see~\cite{morrison2016branch}. The method remains
+complete and optimal, while also returning progressively better feasible
+solutions as time permits. As illustrated in
+Fig.~\ref{ch04:fig:bnb_search_logic}, the key ingredients are node expansion,
+branching, and the construction of upper and lower bounds.
 
-
-To begin with, even without the constraints of partial ordering
-and collaborative actions, the above problem includes the multi-vehicle routing
-problem~\cite{khamis2015multi},
-and the job-shop scheduling problem~\cite{morrison2016branch} as special instances.
-Both problems are known to be NP-hard.
-Thus, the above problem is also NP-hard and its most straightforward solution
-is to formulate a Mixed Integer Linear Program (MILP).
-{However, there are two major drawbacks of MILP:
-(i) the computation complexity grows exponentially with the problem size;
-(ii) there is often no intermediate solution before the optimal solution is generated via a MILP solver,
-  e.g., GLPK~\cite{makhorin2008glpk}.
-Both drawbacks hinder the usage of this approach in large-scale real-time applications,
-where a timely good solution is more valuable than the optimal solution.}
-
-%========================================
-\begin{figure}[t!]
-	\centering
-	\includegraphics[width=0.9\linewidth]{figures/ch04/bnb_graph3.pdf}
-	%--------------------
-	\caption{
-		Illustration of the main components in the BnB search,
-		i.e., the node expansion and branching to generate explore new nodes (in green arrow);
-		and the lower and upper bounding to avoid undesired branches (in orange).}
-	\label{ch04:fig:bnb_search_logic}
-	%--------------------
-\end{figure}
-%========================================
-
-Motivated by these observations, an anytime assignment
-algorithm is proposed in this work based on the Branch and Bound (BnB) search
-method~\cite{morrison2016branch}.
-It is not only complete and optimal, but also anytime, meaning that a good
-solution can be inquired within any given time budget.
-As shown in Fig.~\ref{ch04:fig:bnb_search_logic},
-the four typical components of a BnB
-algorithm are the node expansion, the branching method,
-and the design of the upper and lower bounds.
-These components for our application are described in detail below.
-
-
-\textbf{Node expansion}.
-Each node in the search tree stands for one partial assignment of the
-subtasks, i.e.,
-\begin{equation}\label{ch04:eq:node}
-\nu = (\tau_1,\,\tau_2,\cdots,\tau_N),
+(I) \emph{Node expansion.}
+Each node of the search tree represents one partial assignment of subtasks,
+written as:
+\begin{equation}
+\label{ch04:eq:node}
+\nu \triangleq (\tau_{1},\tau_{2},\cdots,\tau_{N}),
 \end{equation}
-where $\tau_n$ is the ordered sequence of tasks assigned to robot~$n\in \mathcal{N}$.
-To give an example, for a system of three robots,
-$\nu=((\omega_1,\omega_2),(),())$ means that two subtasks
-$\omega_1,\, \omega_2$ are assigned to robot~$1$,
-whereas no tasks to robots~$2$ and $3$.
-
-
-To avoid producing infeasible nodes, we assign only the next task
-{that satisfies the partial order.}
-{In other words, subtask $\omega_i$ cannot
-be assigned to current node $\nu$ if there exists $\omega_j$
-such that $(\omega_j,\omega_i)\in\preceq_\varphi$ has not been assigned to $\nu$.
-This validation process can avoid the expansion to infeasible nodes with $(\cdots\omega_i\omega_j\cdots)\in\nu', (\omega_j,\omega_i)\in\preceq_\varphi$
-, thus improving  efficiency.}
- Let~$\nu$ be the current node of the search tree.
-The \emph{next} subtask~$\omega$ to be assigned is chosen from the
-R-poset~$\mathcal{G}_{P_\varphi}$ defined in Def.~\ref{ch04:def:poset-graph}
-if \emph{all} of its parent subtasks are already assigned, i.e.,
-\begin{equation}\label{ch04:eq:next-task}
-\omega' \in \Omega_\nu, \; \forall \omega' \in \text{Pre}(\omega),
+where $\tau_{n}$ is the ordered sequence of subtasks currently assigned to
+robot $n\in\mathcal{N}$. For example, if
+$\nu=((\omega_{1},\omega_{2}),(),())$ in a team of three robots, then
+$\omega_{1}$ and $\omega_{2}$ are assigned to robot~$1$, while robots~$2$
+and~$3$ are still unassigned. Let
+\[
+\Omega_{\nu} \triangleq \bigcup_{n\in\mathcal{N}}\{\omega \mid \omega\in\tau_n\},
+\qquad
+\Omega_{\nu}^{-} \triangleq \Omega_{\varphi}\setminus\Omega_{\nu},
+\]
+where $\Omega_{\nu}$ is the set of subtasks already assigned at node $\nu$ and
+$\Omega_{\nu}^{-}$ is the set of remaining subtasks.
+To avoid infeasible expansions, only eligible next subtasks are considered.
+More precisely, a subtask $\omega$ can be chosen at node $\nu$ only if all of
+its predecessors in the R-poset graph
+$\mathcal{G}_{P_{\varphi}}$ from
+Definition~\ref{ch04:def:poset-graph} have already been assigned, that is,
+\begin{equation}
+\label{ch04:eq:next-task}
+\operatorname{Pre}(\omega)\subseteq\Omega_{\nu},
 \end{equation}
-where~$\text{Pre}(\omega)$ is the set of preceding or parenting subtasks of $\omega$ in~$\mathcal{G}_{P_\varphi}$;
-and $\Omega_\nu$ is the set of assigned subtasks as
-\begin{equation}\label{ch04:eq:node-tasks}
-\Omega_{\nu}=\{\omega\in\tau_n,\,\forall n\in \mathcal{N}\},
-\;\Omega^-_{\nu} = \Omega\backslash \Omega_{\nu},
+where $\operatorname{Pre}(\omega)$ denotes the parent set of $\omega$ in
+$\mathcal{G}_{P_{\varphi}}$. Once such a subtask is selected, a child node
+$\nu^{+}$ is created by assigning it to a feasible robot set
+$\mathcal{N}_{\omega}\subseteq\mathcal{N}$. If $\omega$ is a local subtask,
+then $|\mathcal{N}_{\omega}|=1$. If $\omega$ is associated with a
+collaborative behavior $C_{k}$, then $\mathcal{N}_{\omega}$ is admissible only
+if the combined capabilities of the robots in $\mathcal{N}_{\omega}$ cover the
+required actions in $C_{k}$. In this way, infeasible nodes that violate the
+precedence structure are excluded from the search tree.
+
+(II) \emph{Branching.}
+Once a node has been expanded, the branching rule determines the order in which
+its child nodes are visited. Standard choices such as breadth-first search,
+depth-first search, and $A^{\star}$ search are all possible. Here,
+$A^{\star}$-type branching is used, since its evaluation order is naturally
+compatible with the lower bounds introduced below. The child nodes are therefore
+prioritized according to the lower-bound estimate of the makespan that can
+still be achieved from them.
+
+(III) \emph{Upper and lower bounds.}
+The upper bound is used to update the best feasible assignment found so far,
+while the lower bound is used to determine whether a branch can still improve
+the current incumbent. For a node $\nu$, the upper bound is computed by a greedy
+completion policy:
+\begin{equation}
+\label{ch04:eq:upper-bound}
+\overline{J}_{\nu},\,\overline{T}_{\nu},\,\overline{T}_{\Omega}
+\triangleq
+\texttt{upper\_bound}(\nu,P_{\varphi}),
 \end{equation}
-where~$\Omega$ is the set of subtasks from $P_\varphi$;
-$\Omega_{\nu}$ is the set of subtasks already assigned in node~$\nu$;
-and $\Omega^-_{\nu}$ are the remaining unassigned subtasks. Once this
-subtask~$\omega$ is chosen, the succeeding or child node $\nu^+$
-of $\nu$ in the search tree is created by assigning local action to any robot or
-cooperative task combination of robots which has capable functions.
-{If subtask~$\omega$ is associated with a collaborative
-  behavior $C_k$, an robot $n$ may be chosen if it is capable of performing
-the required action $a_\ell\in\mathcal{A}_n\cap C_k$.}
+where $\overline{J}_{\nu}$ is a complete assignment extending the current node,
+$\overline{T}_{\nu}$ is its makespan, and $\overline{T}_{\Omega}$ is the vector
+of subtask starting times. Starting from $\nu$, each remaining subtask
+$\omega\in\Omega_{\nu}^{-}$ is tentatively assigned to each admissible robot
+set, thus generating a family of child nodes. For each such node, the
+concurrency index is estimated by
+\begin{equation}
+\label{ch04:eq:node-makespan}
+T_{\nu}\triangleq\max_{n\in\mathcal{N}}T_{\tau_n}, \qquad
+T_{\nu}^{\mathrm{s}}\triangleq
+\sum_{\omega\in\Omega_{\nu}} D_{\omega}N_{\omega}, \qquad
+\eta_{\nu}\triangleq \frac{T_{\nu}^{\mathrm{s}}}{T_{\nu}},
+\end{equation}
+where $T_{\tau_n}$ is the execution time of the sequence $\tau_n$ assigned to
+robot~$n$, $D_{\omega}$ is the duration of subtask $\omega$, and
+$N_{\omega}$ is the number of robots participating in $\omega$. The quantity
+$T_{\nu}$ is computed under the precedence relation $\preceq_{\varphi}$, the
+opposition relation $\neq_{\varphi}$, the motion constraints induced by the
+graphs $\mathcal{G}_{n}$, and the synchronization requirements of
+collaborative subtasks. The greedy upper-bound routine expands the child node
+with the largest value of $\eta_{\nu}$ until all subtasks are assigned.
+Moreover, the lower bound is estimated from two relaxations of the original problem.
+The first retains only the temporal relations and relaxes the robot-capacity
+constraints. The second retains the robot-capacity constraints and relaxes the
+temporal relations. Accordingly, the lower bound is written as
+\begin{equation}
+\label{ch04:eq:lower-bound}
+\underline{T}_{\nu}\triangleq \texttt{lower\_bound}(\nu,P_{\varphi})
+= \max\bigl\{\underline{T}_{\nu}^{\mathrm{ord}},
+\underline{T}_{\nu}^{\mathrm{cap}}\bigr\},
+\end{equation}
+where $\underline{T}_{\nu}^{\mathrm{ord}}$ is the bound obtained from the
+ordering relaxation and $\underline{T}_{\nu}^{\mathrm{cap}}$ is the bound
+obtained from the capacity relaxation. The estimate in
+\eqref{ch04:eq:lower-bound} is used in
+Algorithm~\ref{ch04:alg:BnB} to prune any node that cannot improve the current
+incumbent. Details of the two relaxed optimization problems can be found
+in~\cite{liu2022arxiv}. Both the upper-bound and lower-bound routines are
+designed to avoid integer optimization, which helps keep their runtime
+predictable during the search.
 
-\textbf{Branching}.
-Given the set of nodes to be expanded,
-the branching method determines the order in which these child nodes are
-visited.
-Many search methods such as breadth first search (BFS), depth first search (DFS)
-or $A^\star$ search can be used.
-We propose to use $A^\star$ search here as the heuristic function matches well
-with the lower bounds introduced in the sequel.
-More specifically, the set of child nodes is expanded in the order of
-estimated completion time of the whole plan given its current assignment.
+Given the components above, the anytime branch-and-bound procedure is stated in
+Algorithm~\ref{ch04:alg:BnB}. The root node is the empty assignment. The queue
+stores unvisited nodes together with their lower bounds. At each iteration, the
+node with smallest lower bound is selected for expansion. Its greedy completion
+provides an upper bound, which is used to update the incumbent solution. The
+child nodes are then generated and evaluated by the lower bound. Any child node
+whose lower bound exceeds the current best makespan is discarded. The procedure
+terminates when the queue becomes empty or the time budget is exhausted.
 
-%% %==============================
-%% \begin{algorithm}[t]
-%% \caption{$\texttt{upper\_bound}(\cdot)$: Compute the upper bound of solutions
-%% rooted from a node}
-%% \label{ch04:alg:upper_bound}
-%% \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
-%% \Input {Poset~$P_{\varphi}$, node~$\nu$.}
-%% \Output {Assignment~$\overline{J}_\nu$, upper bound~$\overline{T}_\nu$.}
-%% \While(\tcp*[f]{\eqref{eq:node-tasks}}){$\Omega^-_\nu \neq \emptyset$}{
-%% \ForAll{$\omega\in \Omega^-_\nu$\, \text{and}\, $\{n\}\subset\mathcal{N} $ satisfy $\omega$
-%% \label{ch04:algline:all-next}}
-%% {Compute and save $\nu_{n,\omega}$ by assigning $\omega$ to robot set~$\{n\}$ }
-%% Select~$\nu^{+}_{\star}=\textbf{argmax}_{\nu\in \{\nu_{n,\omega}^+\}}\,\{\eta_{\nu}\}$
-%% \label{ch04:algline:compute-eta}\tcp*{\eqref{eq:node-makespan}}
-%% $\nu \leftarrow \nu^{+}_{\star}$; \label{ch04:algline:expand-node}\\
-%% }
-%% Compute and makespan~$T_\nu$ and subtask start time $T_\Omega$ of assignment~$J_\nu$ \\
-%% \label{ch04:algline:return}
-%% \textbf{Return} $\overline{J}_\nu=J_\nu,\, \overline{T}_\nu=T_\nu$,$\overline{T}_\Omega=T_\Omega$;\\
-%% \end{algorithm}
-%% %==============================
-
-%==============================
 \begin{algorithm}[t]
-\caption{$\texttt{BnB}(\cdot)$: Anytime BnB algorithm for task assignment}
+\caption{Anytime branch-and-bound search for task assignment}
 \label{ch04:alg:BnB}
-\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
-\Input {Robots $\mathcal{N}$, R-poset $P_{\varphi}$, time budget $t_0$.}
-\Output {Best assignment $J^\star$ and makespan $T^\star$.}
-Initialize root node~$\nu_0$ and queue $Q=\{(\nu_0,0)\}$; \label{ch04:algline:init-start}\\
-Set $T^\star=\infty$ and $J^\star=()$;\label{ch04:algline:init-end}\\
-\While{($Q$ not empty) and ($time<t_0$)}{
-Take node $\nu$ off $Q$;\\
-$\overline{J}_\nu,\, \overline{T}_\nu,\overline{T}_\Omega  = \texttt{upper\_bound}(\nu,\, P_{\varphi})$ \label{ch04:algline:upper}
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+\Input{Robots $\mathcal{N}$, R-poset $P_{\varphi}$, and time budget $t_{0}$.}
+\Output{Best assignment $J^{\star}$, makespan $T^{\star}$, and subtask starting
+times $T_{\Omega}^{\star}$.}
 
-\If{$T^\star > \overline{T}_\nu$ \label{ch04:algline:update1}}{
-Set $T^\star=\overline{T}_\nu$ and $J^\star=\overline{J}_\nu$, $T^\star_\Omega=\overline{T}_\Omega$;\label{ch04:algline:update2}}
-Expand child nodes $\{\nu^+\}$ from $\nu$ ;\\
-\ForAll{$\nu^+\in\{\nu^+\}$}{
-	$\underline{T}_\nu = \texttt{lower\_bound}(\nu^+,\,P_{\varphi})$
- \label{ch04:algline:lower}\\
-	\If{$\underline{T}_\nu \leq T^\star$ \label{ch04:algline:store1}}{
-			Add $(\nu^+,\underline{T}_\nu)$ into $Q$.\label{ch04:algline:store2}
-	}
-	}
+Initialize the root node $\nu_{0}$ and queue
+$Q=\{(\nu_{0},0)\}$.\label{ch04:algline:init-start}\;
+Set $T^{\star}=\infty$, $J^{\star}=()$, and
+$T_{\Omega}^{\star}=()$.\label{ch04:algline:init-end}\;
+
+\While{$Q\neq\emptyset$ and $\mathrm{time}<t_{0}$}{
+    Remove from $Q$ the node $\nu$ with smallest lower-bound key.\;
+
+    $\overline{J}_{\nu},\,\overline{T}_{\nu},\,\overline{T}_{\Omega}
+    = \texttt{upper\_bound}(\nu,P_{\varphi})$.\label{ch04:algline:upper}\;
+
+    \If{$\overline{T}_{\nu}<T^{\star}$ \label{ch04:algline:update1}}{
+        Set $T^{\star}=\overline{T}_{\nu}$,
+        $J^{\star}=\overline{J}_{\nu}$, and
+        $T_{\Omega}^{\star}=\overline{T}_{\Omega}$.\;
+        \label{ch04:algline:update2}
+    }
+
+    Expand the child nodes $\{\nu^{+}\}$ of $\nu$.\;
+
+    \ForEach{$\nu^{+}\in\{\nu^{+}\}$}{
+        $\underline{T}_{\nu^{+}}
+        = \texttt{lower\_bound}(\nu^{+},P_{\varphi})$.\;
+        \label{ch04:algline:lower}
+
+        \If{$\underline{T}_{\nu^{+}}\leq T^{\star}$
+        \label{ch04:algline:store1}}{
+            Add $(\nu^{+},\underline{T}_{\nu^{+}})$ to $Q$.\;
+            \label{ch04:algline:store2}
+        }
+    }
 }
-\textbf{Return} $J^\star, T^\star, T^\star_\Omega$;
+\Return{$J^{\star},T^{\star},T_{\Omega}^{\star}$}.\;
 \end{algorithm}
-%==============================
 
-\textbf{Lower and upper bounding}.
-The lower bound method is designed to check whether a node fetched by \emph{branching}
-has the potential to produce a better solution.
-The upper bound method is tried for each chosen node to update
- the current best solution.
-More specifically, given a node~$\nu$,
-the upper bound of all solutions rooted from this node
-is estimated via a greedy task assignment policy encapsulated as:
-%as summarized in Alg.~\ref{ch04:alg:upper_bound}:
-\begin{equation}\label{ch04:eq:upper-bound}
-\overline{J}_\nu,\, \overline{T}_\nu ,\overline{T}_\Omega= \texttt{upper\_bound}(\nu,\, P_{\varphi}),
-\end{equation}
-{where~$\overline{T}_\nu$ is upper bound, and~$\overline{J}_\nu$ is the
-associated complete assignment with the same structure of $\nu$, while its $\Omega^-$ is empty; $\overline{T}_\Omega$ is the beginning time
-of each subtasks.}
-From node~$\nu$, any task~$\omega\in \Omega^-_\nu$ is assigned
-to any allowed robot set~$\{n\}\subset\mathcal{N}$,
-thus generating a set of child nodes~$\{\nu^+_{n,\omega}\}$.
-Then, for each node~$\nu\in \{\nu^+_{n,\omega}\}$,
-its \emph{concurrency} level~$\eta_{\nu}$ is estimated as follows:
-\begin{equation}\label{ch04:eq:node-makespan}
-T_\nu = \max_{n\in\mathcal{N}} \{T_{\tau_n}\},\;
-T^{\texttt{s}}_\nu = \sum_{\omega\in\Omega_\nu}\, D_{\omega}N_\omega,\;
-\eta_\nu = \frac{T^{\texttt{s}}_\nu}{T_\nu},
-\end{equation}
-where node~$\nu=(\tau_1,\cdots,\tau_N)$;~$T_{\tau_n}$ is the execution
-time of all subtasks in~$\tau_n$ by robot~$n$;
-$T_\nu$ is the max current makespan;
-%calculate by \eqref{ch04:eq:node-makespan};
-and $T^{\texttt{s}}_\nu$ is the total execution time of all subtasks~$\omega$
-given its duration~$D_\omega$ and the number of participants~$N_\omega$.
-{The makespan $T_\nu$ is calculated given
-  the temporal constraints $\preceq_{\varphi},\neq_{\varphi}$ of the R-Poset,
-  the motions constraints of robots, and the collaborative subtasks.
-  Specifically, $(\omega_i,\omega_j)\in\preceq_\varphi$ requires that $\omega_j$ should start
-after $\omega_i$ has started; $\{\omega_i,\omega_j\}\in\neq_\varphi$
-requires that $\omega_i, \omega_j$ can not be executed at the same time;
-the dynamic constraints require that robot $n$ needs to follow the transition
-cost between different regions in graph~$\mathcal{G}_n$;
-and the collaborative constraints require that all actions of
-the same cooperative behavior should be executed simultaneously. We choose $\eta_\nu$ instead of $T_\nu$ as the index to
-sort child nodes, because $T_\nu$ can describe the efficiency between
-nodes with different assigned subtasks.}
-Thus, the child node with the highest~$\eta_{\nu}$ is chosen as
-the next node to expand.
-This procedure is repeated until no subtasks remain unassigned.
-Afterwards, once a complete assignment~$J_\nu$ is generated,
-its makespan $T_v$ and start time $T_\Omega$ are obtained by
-solving a linear program the same as $T_\nu$.
-
-Furthermore, the lower bound of the makespan of all solutions rooted from this
-node is estimated via two separate relaxations of the original problem:
-one is to consider only the partial ordering constraints while ignoring
-the robot capacities;
-another is vice versa. Details of optimization functions for these bounds
-can be found in \cite{liu2022arxiv}.
-
-
-
-%==============================
-
-%------------------------------
-\begin{remark}\label{ch04:remark:none-milp}
-The computation of both the upper and lower bounds are designed
-to be free from any integer optimization.
-This is intentional to avoid unpredictable solution time caused by
-external integer optimization solvers.
-\end{remark}
-%------------------------------
-
-Given the above components, the complete BnB algorithm can be stated as
-in Alg.~\ref{ch04:alg:BnB}.
-In the initialization step in
-Line~\ref{ch04:algline:init-start}-\ref{ch04:algline:init-end},
-the root node~$\nu_0$ is created as an empty assignment,
-the estimated optimal cost~$T^{\star}$ is set to infinity,
-and the queue $Q$ to store un-visited nodes and the lower bound as indexes contains only $(\nu_0,0)$.
-Then, within the time budget, a node $\nu$ is taken from $Q$ for expansion with smallest lower bound.
-We calculate the upper bound of $\nu$ in line~\ref{ch04:algline:upper} and update the optimal value $T^\star,J^\star,T^\star_\Omega$
-in line~\ref{ch04:algline:update1}-\ref{ch04:algline:update2}.
-After that, we expand the child nodes $\{\nu^+\}$ of current node $\nu$.
-Finally, we calculate the lower bound of each new node $\nu^+$ in line~\ref{ch04:algline:lower} and store
-the node with the potential to get a better solution into $Q$ in line~\ref{ch04:algline:store1},\ref{ch04:algline:store2}.
-This process repeat until time elapsed or the whole search tree is
-exhausted.
-
-%==============================
-\begin{lemma}\label{ch04:lemma:BnB-satisfying}
-Any task assignment~$J^\star$ obtained from Alg.~\ref{ch04:alg:BnB} satisfies
-the partial ordering constraints in~$P_{\varphi}$.
+\begin{lemma}
+\label{ch04:lemma:BnB-satisfying}
+Any task assignment $J^{\star}$ returned by
+Algorithm~\ref{ch04:alg:BnB} satisfies the temporal relations in
+$P_{\varphi}$.
 \end{lemma}
+
 \begin{proof}
-Since the assignment~$J^\star$ belongs to the set of solutions obtained from
-the upper bound estimation in~\eqref{ch04:eq:upper-bound}
-at certain node in the search tree, it suffices to show that any solution
-of~\eqref{ch04:eq:upper-bound} satisfies the partial ordering constraints.
-Regardless of the current node~$\nu$, the set of remaining subtasks
-in~$\Omega^-_\nu$ is assigned strictly following the preceding order
-in the R-poset graph as defined in~\eqref{ch04:eq:next-task}.
-In other words, for any pair~$(\omega_1,\,\omega_2)\in \preceq_{\varphi}\cap \neq_{\varphi}$,
-if $\omega_1\in \Omega_\nu$ and $\omega_2\in \Omega^-_\nu$,
-then the starting time of~$\omega_2$ is larger than the finishing time of~$\omega_1$.
-Similar arguments hold for~$\preceq_{\varphi}$ and~$\neq_{\varphi}$ separately.
+The assignment $J^{\star}$ is obtained from the upper-bound routine at some
+node of the search tree. Therefore, it is sufficient to show that every
+assignment returned by \eqref{ch04:eq:upper-bound} satisfies the temporal
+relations in $P_{\varphi}$.
+During node expansion, a subtask is selected only when all of its parent
+subtasks in $\mathcal{G}_{P_{\varphi}}$ have already been assigned. By
+\eqref{ch04:eq:next-task}, this guarantees that the precedence relation
+$\preceq_{\varphi}$ is respected structurally by every partial assignment
+generated in the search tree. Moreover, the routine
+$\texttt{upper\_bound}(\nu,P_{\varphi})$ computes the makespan and the subtask
+starting times under the precedence relation $\preceq_{\varphi}$, the
+opposition relation $\neq_{\varphi}$, the robot-motion constraints, and the
+synchronization requirements of collaborative behaviors. Hence the complete
+assignment produced by the upper-bound routine satisfies both temporal
+relations of the R-poset.
+Since $J^{\star}$ is one such complete assignment, it satisfies the temporal
+relations in $P_{\varphi}$.
 \end{proof}
