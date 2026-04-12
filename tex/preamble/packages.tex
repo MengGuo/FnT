@@ -26,6 +26,20 @@
 \usepackage[numbers,sort&compress]{natbib}
 
 
+\usepackage{caption}
+\captionsetup[figure]{
+  font={footnotesize,sf},
+  labelfont=bf,
+  textfont=sf
+}
+
+\captionsetup[table]{
+  font={footnotesize,sf},
+  labelfont=bf,
+  textfont=sf
+}
+
+
 \usepackage[ruled,vlined,linesnumbered,noend]{algorithm2e}
 \SetAlFnt{\small}
 \SetAlCapFnt{\small}
@@ -37,7 +51,6 @@
 \renewcommand{\thealgocf}{\thechapter.\arabic{algocf}}
 \makeatother
 \crefname{algocf}{Algorithm}{Algorithms}
-\Crefname{algocf}{Algorithm}{Algorithms}
 
 \hypersetup{
   colorlinks=true,
@@ -100,5 +113,9 @@
   name=Remark
 ]{remark}
 
-\theoremstyle{definition}
-\newtheorem{example}{Example}[chapter]
+\declaretheorem[
+  style=definition,
+  numberwithin=chapter,
+  qed=\ensuremath{\blacksquare},
+  name=Example
+]{example}
