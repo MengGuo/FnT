@@ -2,23 +2,17 @@
 \label{ch04:sec:po_decomp_assignment}
 
 This section develops the first component of the top-down synthesis framework
-for global temporal tasks. The starting point is the pruned task automaton
-$\mathcal{B}_{\varphi}^{-}$ associated with the global sc-LTL formula
-$\varphi$. The main objective is to transform the accepted automaton behavior
-into a collection of executable subtask occurrences together with a compact
-description of their temporal dependence. This description should be rich
-enough to preserve correctness with respect to the original task, while being
-light enough to support efficient assignment over a multi-robot team.
-The key idea is to separate logical structure from allocation decisions.
-An accepting run of $\mathcal{B}_{\varphi}^{-}$ provides a valid symbolic
-execution of the global task, but the induced order is usually too restrictive.
-If this linear order is used directly, then many subtasks that could be
-executed concurrently would be forced into a sequential schedule. To avoid
-this conservatism, the accepting run is first decomposed into indexed subtask
-occurrences. The complete order of these occurrences is then relaxed into a
-partial-order representation that keeps only the essential temporal
-constraints. Finally, an anytime branch-and-bound procedure is applied to
-assign these subtasks to feasible robots or coalitions.
+for global temporal tasks. Subsection~\ref{ch04:subsec:problem_statement}
+introduces the team-level model, the global task specification, and the
+optimization objective. The task-decomposition stage is then developed through
+the pruning step in
+Section~\ref{ch04:subsubsec:NBA-pruning} and the partial-order
+abstraction in Section~\ref{ch04:subsubsec:task-decompose}. Based on the
+resulting temporal structure, Section~\ref{ch04:subsubsec:task-assignment}
+presents an anytime assignment procedure for allocating subtasks to feasible
+robots or coalitions. Together, these components convert a global temporal
+task into an assignment-oriented representation that preserves correctness
+while allowing concurrent execution whenever the task structure permits it.
 
 
 
