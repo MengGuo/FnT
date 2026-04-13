@@ -1,6 +1,35 @@
 \chapter{Partial Knowledge and Limited Communication}
 \label{chap:communication}
 
+
+The preceding chapters developed coordination frameworks for multi-robot
+systems under local and global temporal tasks, under the assumption that the
+information required for planning and coordination can be obtained with
+sufficient accuracy and timeliness. In many deployments, however, this
+assumption is difficult to maintain. Robots often operate with only partial
+knowledge of the workspace, communication links may be range-limited or
+intermittent, and task-relevant information may become available only during
+execution. Under such conditions, temporal-task planning is no longer concerned
+only with motion, action, and allocation. It must also account for how
+information is acquired, propagated, and used across the team. Communication is
+therefore not merely a supporting mechanism for coordination, but an integral
+part of the planning problem itself.
+
+This chapter examines multi-robot coordination under partial knowledge and
+limited communication from that perspective. In
+Section~\ref{ch05:sec:ch05_interm_team}, communication and collaboration are
+planned jointly, so that the robot team coordinates not only task execution but
+also the information exchange required to support it. In
+Section~\ref{ch05:sec:ch04_case_study}, the discussion turns to exploration and
+coordination under intermittent communication, where continuous connectivity
+cannot be assumed and planning must proceed with delayed or sparse information
+sharing. Section~\ref{ch05:sec:ch05_human} addresses online human interaction
+and request fulfillment, where new requests may be introduced during execution
+and must be incorporated without discarding the underlying formal task
+structure. The chapter then presents a case study in
+Section~\ref{sec:ch05_case_study} and concludes with a summary in
+Section~\ref{sec:ch05_summary}.
+
 %==============================
 %==============================
 \input{chapters/ch05/ch05_sec01}
