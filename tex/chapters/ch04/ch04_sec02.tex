@@ -917,3 +917,33 @@ $\mathcal{N}_k$ is finite, the update process terminates at a locally optimal
 coalition configuration. The associated local plans and trajectories are
 therefore feasible and locally consistent with the moving subtasks.
 \end{proof}
+
+%==============================
+\subsection{Complexity and Scalability Analysis}\label{ch04:subsubsec:complexity}
+
+The computational complexity of the proposed method is analyzed as follows.
+{In each iteration of Alg.~\ref{ch04:alg:ss-TaskAssign}, selecting a batch of~$P$
+nodes and expanding up to~$B \triangleq (K{+}1)\,|\Omega^-_{\nu_h^\star}|$
+children incurs $\mathcal{O}(PBK)$ for the automaton-state
+updates~$\widehat{Q}^+_m$, together with the capacity and timing
+updates in~\eqref{ch04:eq:update-constraint} and~\eqref{ch04:eq:estimated_time};
+maintaining the non-dominated frontier based
+on~\eqref{ch04:eq:profile}-\eqref{ch04:eq:frontier} requires
+$\mathcal{O}(|\mathcal{V}|(2K{+}M))$ to reach
+the completeness condition in \eqref{ch04:eq:complete-nodes}. The capacity-based
+team-formation MILP introduces $\mathcal{O}(N K^\star)$ binary variables $b_{ik}$,
+which is NP-hard in general but limited by the small number of teams.
+For the case of static and known tasks, the
+routing problem with subtour elimination is NP-hard,
+and its number of variables scales with $|\mathcal{N}_k|(J_k^\ell)^2$.
+For static and unknown tasks,
+polygonal coverage generation and assignment are near-linear in the region
+representation, while rolling insertion of newly discovered subtasks is
+$\mathcal{O}(|\mathcal{N}_k|)$ per discovery. Lastly, for dynamic and known tasks, the
+distributed coalition updates are linear in
+team size and the number of active targets per iteration.
+Although the
+local MILPs and coalition updates are NP-hard in the worst case, the hierarchical
+decomposition confines them to small teams, enabling event-based
+replanning with standard solvers.
+Detailed empirical runtime evaluations of each component and scaling benchmarks are provided in Sec.~\ref{sec:ch04_case_study}.}
