@@ -391,7 +391,7 @@ computation proceeds in three stages, summarized in
 Algorithm~\ref{ch05:alg:coordination} and
 Fig.~\ref{ch05:fig:pairopt}.
 
-\emph{Stage-I: determine the return event}.
+\textbf{Stage-I: determine the return event}.
 Define
 $\underline{\chi}_{ij} \triangleq \min_{k \in \mathcal{N}} \chi_{ij}(k)$,
 which is the minimum team time stamp guaranteed to reach the operator as
@@ -419,13 +419,13 @@ $n \triangleq
 Thus, robot $n$ is the robot that returns to the operator immediately after its
 last currently planned event.
 
-\emph{Stage-II: optimize the task sequence and the next
+\textbf{Stage-II: optimize the task sequence and the next
 communication event}.
 Conditioned on the return decision, the optimization computes the tail plans
 $\Gamma_i^{+} \triangleq \tau_i^{+}\mathbf{c}_{ij}^{+}$ and
 $\Gamma_j^{+} \triangleq \tau_j^{+}\mathbf{c}_{ij}^{+}$, where
 $\tau_i^{+}$ and $\tau_j^{+}$ are the optimized task sequences and
-$\mathbf{c}_{ij}^{+}$ is the next communication event shared by the two robots.
+$\mathbf{c}_{ij}^{+}$ is the next communication event by the two robots.
 The schedule of $\mathbf{c}_{ij}^{+}$ is denoted by
 $(t_{ij}^{+}, p_{ij}^{+})$ and must satisfy the local latency condition:
 \begin{equation}
@@ -448,7 +448,7 @@ accepted only if the feasibility condition in
 \eqref{ch05:eq:pairing_cond} holds. Otherwise, one task in
 $\tau_i^{+}$ or $\tau_j^{+}$ is removed and the procedure is repeated.
 
-\emph{Stage-III: update the embeddings}.
+\textbf{Stage-III: update the embeddings}.
 After the next communication event has been determined, the current event
 $\mathbf{c}_{ij}$ is removed from the plans to obtain the prefixes
 $\Gamma_i^{-}$ and $\Gamma_j^{-}$. The updated plans satisfy
@@ -474,7 +474,7 @@ where the second line is applied only when Stage-I schedules a return. If no
 return is scheduled, the corresponding hub-edge embedding remains
 $\varnothing$.
 Combined with the joint-wheel communication topology, this pairwise procedure
-ensures exploration under bounded latency, as shown below.
+ensures exploration with bounded latency shown below.
 
 
 \begin{lemma}

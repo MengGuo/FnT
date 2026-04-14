@@ -1,548 +1,704 @@
 %==============================
-\section{Online Human Interaction and Request Fulfillment}
+\section{Topology-adaptive Fulfillment of Temporal Requests}
 \label{ch05:sec:ch05_human}
 
 
-\subsection{Request-consistent Embedded Graph Instantiation}
+The previous section established a latency-bounded coordination
+framework in which the operator and the robot fleet maintain
+intermittent communication through an embedded wheel backbone. That
+framework supports exploration and information exchange while keeping
+the communication burden localized in time and space. In practice,
+however, the mission may also be altered online by temporal requests
+that cannot always be realized by updating local plans alone. Some
+requests only modify priorities or timing and can therefore be
+absorbed within the current backbone. Others require a temporary
+reconfiguration of the embedded topology, for instance to maintain a
+communication chain, to support relocation of the operator, or to
+dispatch a robot for external-demand exchange.
+
+This section develops a topology-adaptive coordination layer for such
+requests. The key idea is to treat the wheel backbone as the nominal
+communication structure and to modify it only when the incoming request
+cannot be fulfilled within the current embedding. When a topology
+change is necessary, a subset of robots is detached from the backbone,
+assigned to a request-consistent embedded topology, and later merged
+back after the request has been completed. In this way, request
+fulfillment is incorporated into the same intermittent-communication
+framework as exploration, rather than being handled by a separate
+coordination mechanism.
+The presentation proceeds in two steps.
+Subsection~\ref{ch05:subsec:requests} formulates the topology-
+optimization problem for a single temporal request, including backbone
+resizing, role assignment, and realization cost. It also describes how
+different request classes are instantiated through topology-preserving
+updates or topology-changing subgraphs.
+Subsection~\ref{ch05:subsec:online-requests} then extends this
+mechanism to the online setting with multiple simultaneous requests,
+where admissibility, compatibility, and sequential execution must be
+handled on the evolving embedded topology.
+
+%==============================
+%==============================
+%==============================
+\subsection{Topology Optimization for Diverse Temporal Requests}
 \label{ch05:subsec:requests}
-Built on the latency-bounded communication, this section
-presents the request-instantiation layer of {MoRoCo}. Given the
-wheel backbone and an incoming request, it constructs a
-request-consistent embedded graph together with the resized backbone and the detach schedule. It then introduces the
-procedure to compute this transition, followed by the
-request-specific graph constructions and detach--rejoin executions.
 
-
-% =========================================================
-\subsubsection{Problem of Request-consistent Graph Instantiation}
-
-Within {MoRoCo}, each request~$\xi$ in
-Table~\ref{ch05:tab:requests} is realized through a family of candidate
-embedded target graphs that encode the desired robot roles and
-communication topology, denoted by~$\widehat{\mathcal{G}}_k^{\xi}$.
-Given the current embedded wheel backbone graph
-$\mathcal{G}_k^{\texttt{w}}$, the request-instantiation problem seeks: a resized wheel backbone $\mathcal{G}_k^{\texttt{w'}}$,
-a selected target graph
-$\mathcal{G}_k^{\xi}\in\widehat{\mathcal{G}}_k^{\xi}$,
-and the corresponding detach events
-$\widehat{\pi}_k^{\xi}\triangleq\{\pi_r^{\xi}\}$ that realize the
-required topology transition. The performance measure is given by:
-% ====================
-\begin{equation}\label{ch05:eq:match_objective}
-  \underset{\mathcal{G}_k^{\texttt{w'}},\,\mathcal{G}_k^{\xi},\,
-  \widehat{\pi}_k^{\xi},\,\Pi_k^{\xi}}{\textbf{min}}
-\Big(
-T_k^{\texttt{trs}}(\mathcal{G}_k^{\texttt{w}},\,
-\mathcal{G}_k^{\texttt{w'}})
-+ w_{\texttt{n}} \,
-\underset{r \in \mathcal{N}_k^{\xi}}{\textbf{max}}
-\left\{ T_r^{\texttt{nav}}(\pi_r^{\xi},\Pi_k^{\xi}) \right\} \Big),
-\end{equation}
-% ====================
-where
-$T_k^{\texttt{trs}}(\mathcal{G}_k^{\texttt{w}},\,
-\mathcal{G}_k^{\texttt{w'}})$ is the transition time induced by
-resizing the wheel backbone;
-$T_r^{\texttt{nav}}(\pi_r^{\xi},\Pi_k^{\xi})$ is the navigation time for robot~$r$
-to execute its detach event and reach the role specified by the
-assignment $\Pi_k^{\xi}$;
-$\mathcal{N}_k^{\xi}$ is the set of robots that switch from
-$\mathcal{G}_k^{\texttt{w}}$ to~$\mathcal{G}_k^{\xi}$; and
-$w_{\texttt{n}}>0$ trades off the backbone-transition time and the
-request-realization time.
+This subsection develops the topology-optimization layer for
+request-adaptive coordination. Starting from the current wheel
+backbone, the objective is to determine whether an incoming temporal
+request can be fulfilled by an embedding update alone or whether it
+requires an explicit topology change. In the latter case, the problem
+is to construct a request-consistent embedded topology together with a
+resized backbone, a feasible detachment schedule, and a role
+assignment for the robots involved. The resulting formulation treats
+request fulfillment as a constrained reconfiguration problem over the
+existing communication structure.
+The presentation is organized as follows. It first formulates the
+instantiation problem and the associated realization cost. It then
+describes the optimization procedure used to evaluate candidate
+topologies and select an executable realization. Finally, it
+distinguishes the realization modes induced by different request
+types, separating topology-preserving updates from topology-changing
+instantiations.
 
 % =========================================================
-\begin{problem}\label{ch05:prob:graph_matching}
-Given the current wheel backbone graph~$\mathcal{G}_k^{\texttt{w}}$
-and the candidate target graphs~$\widehat{\mathcal{G}}_k^{\xi}$ for
-request~$\xi$, define a graph instantiation procedure:
-% ====================
-\begin{equation}\label{ch05:eq:single_graphmatch}
-  \mathcal{G}_k^{\texttt{w'}},\,\mathcal{G}_k^{\xi},\,
-  \widehat{\pi}_k^{\xi},\,\Pi_k^{\xi}
-  = \texttt{GraphMatch}\!\left(\mathcal{G}_k^{\texttt{w}},\,
-  \widehat{\mathcal{G}}_k^{\xi},\,\xi\right),
+\subsubsection{Topology Match for Temporal Request}
+\label{ch05:subsubsec:request_problem}
+
+For each request \(\xi\), let
+\(\widehat{\mathcal{G}}^{\xi}\) denote the family of candidate
+embedded topologies that satisfy the requested robot-role structure
+and the required communication pattern. Given the current wheel
+backbone \(\mathcal{G}^{\texttt{w}}\), the task is to determine a
+resized backbone \(\mathcal{G}^{\texttt{w}'}\), a selected target
+topology \(\mathcal{G}^{\xi}\in\widehat{\mathcal{G}}^{\xi}\), a
+detachment schedule \(\widehat{\pi}^{\xi}\), and a role assignment
+\(\Pi^{\xi}\). The purpose of this topology-matching step is to convert
+a temporal request into an executable topology transition whose cost
+balances backbone reconfiguration and request-realization time. Define
+\(\widehat{\pi}^{\xi}\triangleq
+\{\pi_r^{\xi}\}_{r\in\mathcal{N}^{\xi}}\),
+where \(\mathcal{N}^{\xi}\) is the set of robots detached from
+\(\mathcal{G}^{\texttt{w}}\) to realize \(\mathcal{G}^{\xi}\),
+and \(\pi_r^{\xi}\triangleq(r,t_r,p_r)\) is the detach event
+assigned to robot \(r\). The realization cost is defined by
+\begin{equation}
+\label{ch05:eq:match_objective}
+J^{\xi}\triangleq
+T^{\texttt{trs}}\!\left(
+\mathcal{G}^{\texttt{w}},\mathcal{G}^{\texttt{w}'}
+\right)
++
+w_{\texttt{n}}
+\max_{r\in\mathcal{N}^{\xi}}
+\left\{
+T_r^{\texttt{nav}}(\pi_r^{\xi},\Pi^{\xi})
+\right\},
 \end{equation}
-% ====================
-which realizes a request-consistent topology transition by minimizing
-the objective in~\eqref{ch05:eq:match_objective}.
+where \(T^{\texttt{trs}}(
+\mathcal{G}^{\texttt{w}},\mathcal{G}^{\texttt{w}'})\) is the time
+required to resize the wheel backbone,
+\(T_r^{\texttt{nav}}(\pi_r^{\xi},\Pi^{\xi})\) is the time needed by
+robot \(r\) to execute its detach event and reach the assigned role,
+and \(w_{\texttt{n}}>0\) weights backbone resizing against request
+realization.
+The topology-instantiation problem is therefore to minimize
+\eqref{ch05:eq:match_objective} over all admissible candidates in
+\(\widehat{\mathcal{G}}^{\xi}\).
+
+\begin{problem}
+\label{ch05:prob:topology_matching}
+Given the current wheel backbone \(\mathcal{G}^{\texttt{w}}\) and
+the candidate family \(\widehat{\mathcal{G}}^{\xi}\) associated
+with request \(\xi\), define
+\begin{equation}
+\label{ch05:eq:single_topologymatch}
+\texttt{TopologyMatch}\!\left(
+\mathcal{G}^{\texttt{w}},\widehat{\mathcal{G}}^{\xi},\xi
+\right)
+\triangleq
+\left(
+\mathcal{G}^{\texttt{w}'},\mathcal{G}^{\xi},
+\widehat{\pi}^{\xi},\Pi^{\xi}
+\right),
+\end{equation}
+which returns a request-consistent topology transition that minimizes
+\eqref{ch05:eq:match_objective}.
 \end{problem}
-% =========================================================
-
 
 %==============================
 \begin{algorithm}[t!]
-\caption{Request-consistent graph instantiation for a given
-request $\texttt{GraphMatch}(\cdot)$}
-\label{ch05:alg:graphmatch}
+\caption{Request-consistent topology instantiation
+\(\texttt{TopologyMatch}(\cdot)\)}
+\label{ch05:alg:topologymatch}
 \LinesNumbered
 \SetKwInOut{Input}{Input}
 \SetKwInOut{Output}{Output}
 
-\Input{$\mathcal{G}_k^{\texttt{w}}$, request $\xi$, candidate set
-$\widehat{\mathcal{G}}_k^{\xi}$, weight $w_{\texttt{n}}$}
-\Output{$\mathcal{G}_k^{\xi}$, $\mathcal{G}_k^{\texttt{w'}}$,
-$\widehat{\pi}_r^{\xi}$, $\Pi_k^{\xi}$}
+\Input{\(\mathcal{G}^{\texttt{w}}\), request \(\xi\), candidate
+family \(\widehat{\mathcal{G}}^{\xi}\), weight \(w_{\texttt{n}}\)}
+\Output{\(\mathcal{G}^{\texttt{w}'}\), \(\mathcal{G}^{\xi}\),
+\(\widehat{\pi}^{\xi}\), \(\Pi^{\xi}\)}
 
-Extract $\mathcal{C}^+_k$ from $\mathcal{G}_k^{\texttt{w}}$\;
-\While{candidates in $\widehat{\mathcal{G}}_k^{\xi}$ remain}{
-  Select candidate graph $\mathcal{G}_k^{\xi}$ given
-  $\mathcal{C}^+_k, \mathbf{p}_0^{\xi}$ by
-  \eqref{ch05:eq:graphmatch_next_candidate}\;
-  Extract $\mathcal{N}_k^{\xi}, \mathbf{p}_0^{\xi}$ from
-  $\mathcal{G}_k^{\xi}$\;
-  $\mathcal{G}_k^{\texttt{w'}} \leftarrow
-  \mathcal{G}_k^{\texttt{w}}[\mathcal{N}_k\setminus
-  \mathcal{N}_k^{\xi}]$\;
+Extract \(\mathcal{C}^{+}\) from the local plans associated with
+\(\mathcal{G}^{\texttt{w}}\)\;
+Initialize \(J^\star\leftarrow +\infty\)\;
+Choose an initial candidate
+\(\mathcal{G}_{1}^{\xi}\in\widehat{\mathcal{G}}^{\xi}\)\;
 
-  $(T_{\texttt{trs}},\,\widehat{\pi}_r^{\xi})
+\For{\(q=1,2,\cdots,|\widehat{\mathcal{G}}^{\xi}|\)}{
+  Extract \(\mathcal{N}^{\xi}\) and \(\mathbf{p}_0^{\xi}\) from
+  \(\mathcal{G}_{q}^{\xi}\)\;
+
+  \(\mathcal{G}^{\texttt{w}'}\leftarrow
+  \mathcal{G}^{\texttt{w}}[
+  \mathcal{N}^{\texttt{w}}\setminus\mathcal{N}^{\xi}]\)\;
+
+  \(\left(
+  T^{\texttt{trs}}(
+  \mathcal{G}^{\texttt{w}},\mathcal{G}^{\texttt{w}'}),
+  \widehat{\pi}^{\xi}
+  \right)
   \leftarrow
-  \texttt{MultiDetach}(\mathcal{G}_k^{\texttt{w}},\,
-  \mathcal{N}_k^{\xi})$ by \eqref{ch05:eq:graphmatch_trs}\;
+  \texttt{MultiDetach}(
+  \mathcal{G}^{\texttt{w}},\mathcal{N}^{\xi})\) by
+  \eqref{ch05:eq:topologymatch_trs}\;
 
-  $\Pi_k^{\xi} \leftarrow
-  \texttt{LBAP}(\mathcal{N}_k^{\xi},\,\mathbf{p}_0^{\xi},\,
-  \widehat{\pi}_r^{\xi})$ by \eqref{ch05:eq:role_assignment}\;
+  \If{a feasible detachment schedule is returned}{
+    \(\Pi^{\xi}\leftarrow
+    \texttt{LBAP}(
+    \mathcal{N}^{\xi},\mathbf{p}_0^{\xi},\widehat{\pi}^{\xi})\) by
+    \eqref{ch05:eq:role_assignment}\;
 
-  Update best $\widehat{\mathcal{G}}_k^{\xi}$ by
-  \eqref{ch05:eq:match_objective}\;
+    Evaluate \(J^{\xi}\) by \eqref{ch05:eq:match_objective}\;
+
+    \If{\(J^{\xi}<J^\star\)}{
+      Store the current solution and set
+      \(J^\star\leftarrow J^{\xi}\)\;
+    }
+  }
+
+  \If{unevaluated candidates remain}{
+    Select the next candidate by
+    \eqref{ch05:eq:topologymatch_next_candidate}\;
+  }
 }
-\Return $\mathcal{G}_k^{\xi}$, $\mathcal{G}_k^{\texttt{w'}}$,
-$\widehat{\pi}_r^{\xi}$, $\Pi_k^{\xi}$ with the best candidate\;
+\Return the stored best solution\;
 \end{algorithm}
 %==============================
 
 
-%==============================
-\begin{figure*}[t!]
-  \centering
-  \includegraphics[width=0.93\linewidth]{figures/ch05/Graph_matching.png}
-  \vspace{-2mm}
-  \caption{Illustration of the request-consistent procedure of graph
-    instantiation. Given a request~$\xi$
-    and its associated set of candidate graphs~$\widehat{\mathcal{G}}_k^{\xi}$ (\textbf{Top}),
-    \texttt{GraphMatch} selects a target graph among the set,
-    and realizes it given the current wheel backbone
-  $\mathcal{G}_k^{\texttt{w}}$, yielding a resized backbone~$\mathcal{G}_k^{\texttt{w'}}$, the
-  instantiated target graph~$(\mathcal{G}_k^{\xi}, \Pi_k^{\xi})$, and the detach events~$\widehat{\pi}_r^{\xi}$ (\textbf{Bottom}).}
-  \label{ch05:fig:graph-matching}
-\end{figure*}
-%==============================
-
-
 % =========================================================
-% =========================================================
-\subsubsection{Optimization Procedure}
-As illustrated in
-Fig.~\ref{ch05:fig:graph-matching}, given a request-induced candidate set
-$\widehat{\mathcal{G}}_k^{\xi}$, it first computes a feasible
-transition schedule to resize the wheel backbone, then assigns
-detached robots to target roles through an unbalanced linear
-bottleneck assignment, and finally traverses the candidate set to
-return the solution that minimizes
+\subsubsection{Optimization of Topology Instantiation}
+\label{ch05:subsubsec:request_optimization}
+
+Figure~\ref{ch05:fig:topology-matching} summarizes the realization
+procedure. For a given candidate family
+\(\widehat{\mathcal{G}}^{\xi}\), the procedure evaluates feasible
+backbone-resizing schedules, assigns detached robots to the roles of
+the selected target topology, and returns the candidate that minimizes
 \eqref{ch05:eq:match_objective}.
-
-The first step evaluates the transition time required to resize the
-current wheel backbone into a feasible smaller wheel. For a candidate
-$\mathcal{G}_k^{\xi}\in\widehat{\mathcal{G}}_k^{\xi}$, let
-$\mathcal{N}_k^{\xi}$ denote the robots allocated to
-$\mathcal{G}_k^{\xi}$. Removing $\mathcal{N}_k^{\xi}$ from the wheel
-backbone $\mathcal{G}_k^{\texttt{w}}$ yields the resized wheel
-$\mathcal{G}_k^{\texttt{w'}}$. Conditioned on the return robot that
-conveys the request, the detachment routine in
-Sec.~\ref{ch05:sec:detach-join} is invoked to produce a feasible timed
-schedule and its transition time:
+Consider a candidate
+\(\mathcal{G}^{\xi}\in\widehat{\mathcal{G}}^{\xi}\). Let
+\(\mathcal{N}^{\xi}\) be the robots assigned to this target topology.
+Removing \(\mathcal{N}^{\xi}\) from the current wheel backbone
+\(\mathcal{G}^{\texttt{w}}\) yields the resized backbone
+\(\mathcal{G}^{\texttt{w}'}\). The detachment routine in
+Sec.~\ref{ch05:sec:detach-join} is then invoked to compute a feasible
+timed schedule:
 \begin{equation}
-\Big(T_{\texttt{trs}}(\mathcal{G}_k^{\texttt{w}},\,
-\mathcal{G}_k^{\texttt{w'}}),\,
-\widehat{\pi}_r^{\xi}\Big)
+\label{ch05:eq:topologymatch_trs}
+\left(
+T^{\texttt{trs}}\!\left(
+\mathcal{G}^{\texttt{w}},\mathcal{G}^{\texttt{w}'}
+\right),
+\widehat{\pi}^{\xi}
+\right)
 \triangleq
-\texttt{MultiDetach}\!\left(\mathcal{G}_k^{\texttt{w}},\,
-\mathcal{N}_k^{\xi}\right),
-\label{ch05:eq:graphmatch_trs}
+\texttt{MultiDetach}\!\left(
+\mathcal{G}^{\texttt{w}},\mathcal{N}^{\xi}
+\right),
 \end{equation}
-where each $\widehat{\pi}_r^{\xi}\triangleq (r,\,t_r,\,p_r)$
-specifies the detach time and detach location of robot~$r$. The
-transition completion time $T_{\texttt{trs}}$ is the earliest time
-when $\mathcal{G}_k^{\texttt{w'}}$ is fully formed and its embeddings
-are updated by~\eqref{ch05:eq:embed-update}.
-
-In the second step, the detached robots are assigned to the role
-locations of the selected target graph $\mathcal{G}_k^{\xi}$. Let
-$\mathbf{p}_0^{\xi}\triangleq
-\{p^\xi_{r}\}_{r\in \mathcal{N}_k^{\xi}}$ be the initial role
-locations in $\mathcal{G}_k^{\xi}$. An assignment
-$\Pi_k^{\xi}:\mathcal{N}_k^{\xi}\to\mathbf{p}_0^{\xi}$ induces the
-bottleneck arrival time
-$\textbf{max}_{r\in\mathcal{N}_k^{\xi}}
-\{t_r+T_\texttt{nav}^{r}(p_r,\Pi_k^{\xi}(r))\}$,
-where $T_\texttt{nav}^{r}(p_r,\Pi_k^{\xi}(r))$ is the navigation time
-from the detach location to the assigned role. Selecting
-$\Pi_k^{\xi}$ to minimize this term yields an unbalanced linear
-bottleneck assignment problem (LBAP)~\cite{burkard2012assignment}:
-\begin{equation}\label{ch05:eq:role_assignment}
-  \Pi_k^{\xi} \leftarrow \texttt{LBAP}\!\left(\mathcal{N}_k^{\xi},\,
-  \mathbf{p}_0^{\xi},\, \widehat{\pi}_r^{\xi}\right),
+where each \(\pi_r^{\xi}\in\widehat{\pi}^{\xi}\) has the form
+\(\pi_r^{\xi}\triangleq(r,t_r,p_r)\). The quantity
+\(T^{\texttt{trs}}\) is the earliest time at which the resized
+backbone \(\mathcal{G}^{\texttt{w}'}\) is fully formed and its
+embeddings have been updated through \eqref{ch05:eq:embed-update}.
+The detached robots are next assigned to the role locations of the
+selected topology. Define
+\(\mathbf{p}_0^{\xi}\triangleq
+\{p_r^{\xi}\}_{r\in\mathcal{N}^{\xi}}\) as the set of initial role
+locations in \(\mathcal{G}^{\xi}\). An assignment
+\(\Pi^{\xi}:\mathcal{N}^{\xi}\to\mathbf{p}_0^{\xi}\) induces the
+bottleneck realization time
+\(\max_{r\in\mathcal{N}^{\xi}}
+\{T_r^{\texttt{nav}}(\pi_r^{\xi},\Pi^{\xi})\}\).
+Selecting \(\Pi^{\xi}\) to minimize this bottleneck yields the
+unbalanced linear bottleneck assignment problem
+\begin{equation}
+\label{ch05:eq:role_assignment}
+\Pi^{\xi}\leftarrow
+\texttt{LBAP}\!\left(
+\mathcal{N}^{\xi},\mathbf{p}_0^{\xi},\widehat{\pi}^{\xi}
+\right),
 \end{equation}
-which can be solved efficiently by off-the-shelf tools such as
-OR-Tools~\cite{gor}, and returns a concrete role assignment
-and the navigation plans for all detached robots.
-
-The final step traverses the candidate set
-$\widehat{\mathcal{G}}_k^{\xi}$ using a best-first heuristic. After
-evaluating the current candidate $\mathcal{G}_{k,q}^{\xi}$, the next
-candidate is selected by ranking the remaining graphs via the
-surrogate score below, derived from \eqref{ch05:eq:match_objective}:
-%==========================================
-\begin{equation}\label{ch05:eq:graphmatch_next_candidate}
-\mathcal{G}_{k,q+1}^{\xi}
+where the LBAP formulation follows~\cite{burkard2012assignment}. A
+practical implementation can be obtained from standard optimization
+packages such as OR-Tools~\cite{gor}.
+To reduce the search cost over
+\(\widehat{\mathcal{G}}^{\xi}\), the candidates are ordered by a
+best-first surrogate. After evaluating the current candidate
+\(\mathcal{G}_{q}^{\xi}\), the next candidate is selected by
+\begin{equation}
+\label{ch05:eq:topologymatch_next_candidate}
+\mathcal{G}_{q+1}^{\xi}
 =
-\underset{\mathcal{G}\in\widehat{\mathcal{G}}_k^{\xi}\setminus
-\{\mathcal{G}_{k,q}^{\xi}\}}{\textbf{argmin}}
-\big(
-\widetilde{T}_k^{\texttt{trs}}(\mathcal{G},\mathcal{C}_k^{+})
+\underset{
+\mathcal{G}\in
+\widehat{\mathcal{G}}^{\xi}\setminus\{\mathcal{G}_{q}^{\xi}\}
+}{\textbf{argmin}}
+\Big(
+\widetilde{T}^{\texttt{trs}}(\mathcal{G},\mathcal{C}^{+})
 +
 w_{\texttt{n}}\,
-\widetilde{T}_k^{\texttt{nav}}(\mathbf{p}_0^{\xi},\mathcal{C}_k^{+})
-\big),
+\widetilde{T}^{\texttt{nav}}(\mathcal{G},\mathcal{C}^{+})
+\Big),
 \end{equation}
-%==========================================
-where $\mathcal{C}_k^{+}$ is the set of subsequent meeting events to
-be executed as implied by the local plans $\{\Gamma_i\}$. Here
-$\widetilde{T}_k^{\texttt{trs}}(\mathcal{G},\mathcal{C}_k^{+})$ and
-$\widetilde{T}_k^{\texttt{nav}}(\mathbf{p}_0^{\xi},\mathcal{C}_k^{+})$
-are fast predictors of the transition completion time and bottleneck
-arrival time, respectively, conditioned on the confirmed meeting
-events $\mathcal{C}_k^{+}$. This heuristic prioritizes candidates
-that are likely to admit early feasible detachment and short
-worst-case travel, while avoiding repeated evaluation of exact
-durations during the search. The overall realization procedure is
-summarized in Alg.~\ref{ch05:alg:graphmatch}. Its role within MoRoCo is to
-return an executable request-consistent transition for a given
-candidate family, as formalized by the following lemma and its proof
-provided in the Appendix.
+where \(\mathcal{C}^{+}\) is the set of future meeting events
+implied by the local plans \(\{\Gamma_i\}\). The quantities
+\(\widetilde{T}^{\texttt{trs}}(\mathcal{G},\mathcal{C}^{+})\) and
+\(\widetilde{T}^{\texttt{nav}}(\mathcal{G},\mathcal{C}^{+})\) are
+fast predictors of the backbone-transition time and the bottleneck
+realization time for candidate \(\mathcal{G}\). Thus,
+\eqref{ch05:eq:topologymatch_next_candidate} prioritizes candidates that
+are likely to admit early feasible detachment and small worst-case
+travel, without requiring full evaluation at each intermediate step.
+The complete procedure is summarized in
+Alg.~\ref{ch05:alg:topologymatch}. Its role within the proposed
+coordination method is to return an executable request-consistent
+transition for a given candidate family, as stated below.
 
-\begin{lemma}\label{ch05:thm:graphmatch-exec-short}
-For any request $\xi$ for team $\mathcal{T}_k$, suppose there exists at
-least one candidate $\mathcal{G}_k^{\xi}\in\widehat{\mathcal{G}}_k^{\xi}$
-such that \eqref{ch05:eq:graphmatch_trs} returns a detach schedule for the
-associated robot set $\mathcal{N}_k^{\xi}$. Then
-Alg.~\ref{ch05:alg:graphmatch} terminates in finite time and returns
-$(\mathcal{G}_k^{\texttt{w'}},\,\mathcal{G}_k^{\xi},\,
-\widehat{\pi}_k^{\xi}, \Pi_k^{\xi})$, such that the
-resulting transition is executable under the detach mechanism and the
-objective in~\eqref{ch05:eq:match_objective} is minimized over all
-candidates in $\widehat{\mathcal{G}}_k^{\xi}$.
+\begin{lemma}
+\label{ch05:thm:topologymatch-exec-short}
+For any request \(\xi\), suppose that there exists at least one
+candidate \(\mathcal{G}^{\xi}\in\widehat{\mathcal{G}}^{\xi}\) for
+which \eqref{ch05:eq:topologymatch_trs} returns a feasible detachment
+schedule for the corresponding robot set \(\mathcal{N}^{\xi}\). Then
+Alg.~\ref{ch05:alg:topologymatch} terminates in finite time and returns
+\((\mathcal{G}^{\texttt{w}'},\mathcal{G}^{\xi},
+\widehat{\pi}^{\xi},\Pi^{\xi})\) such that the resulting transition is
+executable under the detachment mechanism, and the objective in
+\eqref{ch05:eq:match_objective} is minimized over all candidates in
+\(\widehat{\mathcal{G}}^{\xi}\).
 \end{lemma}
 
 % =========================================================
-\subsubsection{Request-Specific Execution Modes}
-\label{ch05:subsubsec:request}
-Requests are executed either by updating the
-embeddings of the wheel backbone or by instantiating a
-request-specific embedded subgraph through the detach--execute--rejoin
-mechanism. When a request requires a topology transition,
-Alg.~\ref{ch05:alg:graphmatch} is invoked to instantiate a feasible target
-subgraph and return role assignments together with timed detach events
-for the involved robots, while the remaining robots preserve the wheel
-backbone to maintain latency-bounded intermittent communication.
+\subsubsection{Realization modes for temporal requests}
+\label{ch05:subsubsec:request_modes}
 
-(I) \textbf{Intra-team communication with bounded latency.}
-For intra-team exploration requests $\xi^k_1$, $\xi^k_2$, and
-$\xi^k_5$, the joint-wheel backbone $\mathcal{G}^{\texttt{w}}_k$ is
-retained and no subgraph instantiation is required. The base request
-$\xi^k_1$ is satisfied directly by the backbone, which enforces the
-latency-bounded information flow. Requests $\xi^k_2$ and $\xi^k_5$ are
-realized by modifying the embeddings in~\eqref{ch05:eq:embed-update} under
-the same topology. Specifically, $\xi^k_2$ excludes frontiers inside
-the prohibited region~$\mathcal{P}^-$ and prioritizes other frontiers
-toward $\mathcal{P}^+$ via the embedded weights:
-\begin{equation}\label{ch05:eq:frontier_weight}
-J(f) \triangleq \sum_{p\in \mathcal{P}^+}\Vert x(f)-p\Vert, \quad
-\forall f\in \mathcal{F}_k,
-\end{equation}
-such that larger $J(f)$ is deprioritized. Request $\xi^k_5$ appends an
-immediate return opportunity for timely delivery of $D_i$, updating the
-relevant time-stamps in the embeddings without changing
-$\mathcal{G}^{\texttt{w}}_k$ for the remaining period.
+Requests are realized in one of two ways. For topology-preserving
+requests, the wheel backbone \(\mathcal{G}^{\texttt{w}}\) remains
+unchanged and only its embeddings are updated. For
+topology-changing requests, Alg.~\ref{ch05:alg:topologymatch} is invoked
+to instantiate a request-consistent subtopology and to compute the
+associated detach schedule and role assignment. In both cases, the
+remaining robots keep the wheel backbone active so that
+latency-bounded intermittent communication is preserved.
 
-(II) \textbf{Inter-team exchange with bounded latency.}
-For the inter-team request $\xi^{k_1k_2}_7$, neighboring teams
-$\mathcal{T}_{k_1}$ and $\mathcal{T}_{k_2}$ periodically exchange
-compressed mission data under the inter-team bound $T_{\texttt{c}}$.
-This request is realized as a singleton messenger subgraph, where a
-messenger robot detaches from its backbone, reaches an external meeting
-event $\mathbf{c}_{\texttt{e}}=(p_{\texttt{e}},t_{\texttt{e}})$,
-exchanges data, and rejoins. Feasibility with respect to the intra-team
-meeting sequence is enforced by selecting a messenger robot from the
-most recent intra-team meeting pair and scheduling the external event
-according to:
-\begin{equation}\label{ch05:eq:interteam_req}
-\begin{aligned}
-  & t_{ij}^{+} + T_{\ell}^{\texttt{nav}} \ge t_{\texttt{e}},\;
-  \forall \ell\in\{i,j\}, \\
-  & p_{\texttt{e}}^{+}=\mathop{\mathbf{argmin}}\limits_{p \in
-    \boldsymbol{\tau}_{k_1k_2}}
-    \left\{\mathop{\mathbf{max}}\limits_{\ell=k_1,k_2}
-    \Big\{T_{\texttt{m}_\ell}^{\texttt{nav}}
-    (p_{\texttt{h}_\ell},\,p)\Big\}\right\},
-\end{aligned}
+(I) \emph{Intra-fleet communication with bounded latency.}
+For the intra-fleet exploration requests \(\xi_1\), \(\xi_2\), and
+\(\xi_5^i\), the wheel backbone \(\mathcal{G}^{\texttt{w}}\) is kept
+and no topology instantiation is required. The base request \(\xi_1\) is
+satisfied directly by the backbone itself, which guarantees
+latency-bounded information flow. The requests \(\xi_2\) and
+\(\xi_5^i\) are realized by updating the embeddings in
+\eqref{ch05:eq:embed-update} while retaining the same topology.
+For \(\xi_2\), frontiers in the prohibited region
+\(\mathcal{P}^{-}\) are excluded, while the remaining frontiers are
+prioritized toward \(\mathcal{P}^{+}\) through
+\begin{equation}
+\label{ch05:eq:frontier_weight}
+J(f)\triangleq
+\sum_{p\in\mathcal{P}^{+}}\|x(f)-p\|,
+\qquad \forall f\in\mathcal{F},
 \end{equation}
-where $\mathbf{c}_{ij}^{+}=(p_{ij}^{+},t_{ij}^{+})$ is the next
-intra-team meeting event and $\boldsymbol{\tau}_{k_1k_2}$ is the
-shortest path between operator locations $p_{\texttt{h}_{k_1}}$ and
-$p_{\texttt{h}_{k_2}}$. The inter-team meeting time is advanced by
-$t_{\texttt{e}}^{+}\triangleq t_{\texttt{e}}+T_{\texttt{c}}^{k_1k_2}$,
+where larger values of \(J(f)\) are assigned lower priority. For
+\(\xi_5^i\), an immediate return opportunity is introduced for timely
+delivery of \(D_i\), and the relevant time stamps in the embeddings
+are updated accordingly. In both cases, the backbone topology is
+unchanged.
+
+(II) \emph{External-demand exchange with bounded latency.}
+For the external-demand request \(\xi_7^{\texttt{e}}\), the fleet
+periodically exchanges compressed mission data with an external demand
+under the latency bound \(T_{\texttt{e}}\). This request is realized
+through a singleton messenger subtopology. A messenger robot detaches
+from the backbone, reaches an external exchange event
+\(\mathbf{c}_{\texttt{e}}\triangleq(p_{\texttt{d}},t_{\texttt{e}})\),
+performs the data exchange, and then rejoins the backbone.
+Consistency with the intra-fleet meeting sequence is enforced by
+selecting the messenger from the most recent meeting pair and by
+choosing the external exchange event so that
+\begin{equation}
+\label{ch05:eq:interteam_req}
+t_{ij}^{+}+T_{\ell}^{\texttt{nav}}
+\le t_{\texttt{e}}, \, \forall \ell\in\{i,j\},
+\end{equation}
+where \(\mathbf{c}_{ij}^{+}\triangleq(p_{ij}^{+},t_{ij}^{+})\) is the
+next intra-fleet meeting event. After the data exchange, the external
+meeting time is updated to
+\(t_{\texttt{e}}^{+}\triangleq t_{\texttt{e}}+T_{\texttt{e}}\),
 after which the messenger rejoins the backbone.
 
-(III) \textbf{Operator relocation and group migration.}
-Request $\xi^k_3$ relocates the operator $\texttt{h}_k$ to a target
-position $p_{\texttt{h}_k}^+$ while preserving latency feasibility. If
-$p_{\texttt{h}_k}^+$ satisfies:
-%==============================
-\begin{equation}\label{ch05:eq:base-location}
-T_i^{\texttt{nav}}(p^+_{\texttt{h}_k},\, p^{\ell_i}_i)\leq
-T_i^{\texttt{nav}}(p_{\texttt{h}_k},\, p^{\ell_i}_i),\,
-\forall i\in \mathcal{N}_k,\, \ell_i\leq L_i;
+(III) \emph{Operator relocation and group migration.}
+Request \(\xi_3\) relocates the operator \(\texttt{h}\) to a
+target position \(p_{\texttt{h}}^{+}\) while preserving latency
+feasibility. If \(p_{\texttt{h}}^{+}\) satisfies
+\begin{equation}
+\label{ch05:eq:base-location}
+T_i^{\texttt{nav}}(p_{\texttt{h}}^{+},p_i^{\ell_i})
+\le
+T_i^{\texttt{nav}}(p_{\texttt{h}},p_i^{\ell_i}),
+\qquad
+\forall i\in\mathcal{N},\ \ell_i\le L_i,
 \end{equation}
-%==============================
-then the embeddings are updated in place and the backbone topology
-remains unchanged. Otherwise, the relocation is realized as a
-connectivity-preserving migration. In this case, \texttt{GraphMatch}
-instantiates an embedded star subgraph centered at $\texttt{h}_k$ and
-assigns robots to relative placements that maintain connectivity during
-motion, after which the wheel backbone is restored for continued
-exploration.
+then the embeddings are updated in place and the backbone topology is
+retained. Otherwise, the relocation is realized as a
+connectivity-preserving migration. In that case,
+\texttt{TopologyMatch} instantiates an embedded star subtopology centered at
+\(\texttt{h}\), and assigns robots to relative placements that
+preserve connectivity during motion. Once the migration is completed,
+the wheel backbone is restored for continued exploration.
 
-(IV) \textbf{Consistent link via a communication-ensured chain.}
-Requests $\xi^k_4$ and $\xi^k_6$ require a reliable and consistent
-chain between the operator $\texttt{h}_k$ and a designated robot at
-$p_i^\star$, as required in Def.~\ref{ch05:def:chain}. Accordingly, MoRoCo
-realizes these requests through a communication-ensured chain (CEC) by
-selecting anchor points along the shortest path from $p_{\texttt{h}_k}$
-to $p_i^\star$ such that the hop-by-hop link quality satisfies:
-\begin{equation}\label{ch05:eq:cec}
-\mathbf{p}_k^{\xi}\triangleq p_0p_1\cdots p_C,\quad
-\texttt{Qual}(p_c,p_{c+1},\mathcal{M}_{\texttt{h}_k})
-\ge \underline{\delta}^{\texttt{c}};
+(IV) \emph{Consistent link through a communication-ensured chain.}
+Requests \(\xi_4\) and \(\xi_6^i\) require a reliable and
+consistent chain between the operator \(\texttt{h}\) and a
+designated robot at \(p_i^{\star}\), as required by~\ref{ch05:eq:chain}.
+These requests are therefore realized
+through a communication-ensured chain by selecting anchor points
+along the shortest path from \(p_{\texttt{h}}\) to \(p_i^{\star}\)
+so that the hop-by-hop communication quality satisfies
+\begin{equation}
+\label{ch05:eq:cec}
+\mathbf{p}^{\xi}\triangleq p_0p_1\cdots p_C,
+\qquad
+\texttt{Qual}(p_c,p_{c+1},\mathcal{M}_{\texttt{h}})
+\ge \underline{\delta}^{\texttt{c}},
 \end{equation}
-allocating robots to these anchor points yields an embedded chain
-subgraph that enforces multi-hop connectivity based on estimated
-communication quality. Unassigned robots continue exploration within
-the reduced wheel backbone.
+where \(c=0,\cdots,C-1\). Assigning robots to these anchor points
+yields an embedded chain subtopology that enforces multi-hop
+connectivity using the estimated communication map. Any robots not
+allocated to the chain continue exploration within the resized wheel
+backbone.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 % ========================================
-\subsection{Online Coordination for Multiple Simultaneous Requests}
+% ========================================
+% ========================================
+\subsection{Online Topological Coordination for Multiple Requests}
 \label{ch05:subsec:online-requests}
-This section presents the online coordination layer of
-{MoRoCo} for handling multiple simultaneous requests.
-Starting from the single-request instantiation mechanism introduced
-above, MoRoCo handles multiple requests online by checking request
-admissibility on the current wheel backbone and sequentially
-instantiating feasible request subgraphs.
 
-%==============================
-\begin{figure}[t!]
-    \centering
-    \includegraphics[width=0.95\linewidth]{figures/ch05/interaction.png}
-    \vspace{-2mm}
-    \caption{Illustration of the procedure on how the operator can
-      interact with its team via the panels within the GUI, and the
-      type of data exchanged during the return event including the
-      gathered information and human commands.}
-    \label{ch05:fig:interaction}
-\end{figure}
-%==============================
+This subsection develops the online coordination layer for handling
+multiple simultaneous temporal requests. While
+Subsection~\ref{ch05:subsec:requests} addressed the realization of an
+individual request on the current wheel backbone, the online setting is
+more involved because several requests may arrive close in time and may
+compete for the same robots. The coordination problem is therefore no
+longer only whether a given request is feasible, but also how several
+requests should be incorporated into the evolving embedded topology
+without violating the communication structure maintained by the
+remaining backbone.
 
-%========================================
-\subsubsection{Compatibility and Sequential Request Instantiation}
-\label{ch05:subsec:multi_req}
-At time~$t$, the embedded graph of team~$\mathcal{T}_k$ is given by:
-\begin{equation}\label{ch05:eq:decomposition}
-  \mathcal{G}_k(t) \triangleq \mathcal{G}^{\texttt{w}}_k \cup
-  \bigcup_{j=1}^{L_k}\mathcal{G}^{j}_k,
+The proposed mechanism retains the wheel backbone as the nominal
+coordination structure and processes new requests incrementally as they
+arrive. Depending on the request type, the update may take one of two
+forms. Topology-preserving requests are handled directly through
+embedding updates on the current backbone. Topology-changing requests,
+by contrast, require explicit subtopology instantiation, which detaches
+a subset of robots from the current backbone and assigns them to a
+request-consistent structure. Since several such requests may be active
+at the same time, the embedded topology must be interpreted as a
+combination of the remaining wheel backbone and the instantiated
+subtopologies associated with the currently active requests.
+
+% =========================================================
+\subsubsection{Compatibility and sequential request processing}
+\label{ch05:subsubsec:multi_req}
+
+At time \(t\), the embedded topology consists of two components: the
+current wheel backbone that continues to support exploration and
+latency-bounded intermittent communication, and the collection of
+request-specific subtopologies that have already been instantiated but
+have not yet completed their assigned tasks. This decomposition is
+needed because newly arriving requests are evaluated relative to the
+robots that remain available on the current backbone, rather than
+relative to the full fleet. It also makes explicit that online request
+handling takes place on an evolving topology whose structure depends on
+both previously accepted requests and the residual communication
+backbone that they leave behind. Accordingly, the embedded topology is
+written as
+\begin{equation}
+\label{ch05:eq:decomposition}
+\mathcal{G}(t) \triangleq
+\mathcal{G}^{\texttt{w}}
+\cup
+\bigcup_{j=1}^{L_{\texttt{a}}}\mathcal{G}^{j},
 \end{equation}
-where $\mathcal{G}^{\texttt{w}}_k$ is the wheel backbone used for
-exploration, and each $\mathcal{G}^{j}_k$ is an instantiated request
-subgraph that fulfills request~$\xi^{j}_k$, with $L_k$ denoting the
-number of currently active requests.
+where \(\mathcal{G}^{\texttt{w}}\) is the current wheel backbone used
+for exploration, \(\mathcal{G}^{j}\) is the instantiated subtopology
+associated with the active request \(\xi^{j}\), and
+\(L_{\texttt{a}}\) is the number of active requests.
+Suppose that a robot
+\(\texttt{r}\in\mathcal{N}^{\texttt{w}}\) receives a bundle of
+\(L>0\) new requests
+\(\Xi \triangleq \{\xi^{\ell}\}_{\ell=1}^{L}\). The requests
+\(\xi_1\), \(\xi_2\), and \(\xi_5\) preserve the wheel topology
+and are handled directly through embedding updates, as described in
+Sec.~\ref{ch05:subsubsec:request_modes}. The request \(\xi_3\) is
+also topology-preserving when the in-place condition in
+\eqref{ch05:eq:base-location} is satisfied. Otherwise, \(\xi_3\)
+induces a topology-changing migration. By contrast, the requests
+\(\xi_4\), \(\xi_6\), \(\xi_7^{\texttt{e}}\), and the migration case of
+\(\xi_3\) require explicit topology instantiation through candidate
+families \(\widehat{\mathcal{G}}^{\xi}\), constructed according to
+\eqref{ch05:eq:base-location}, \eqref{ch05:eq:cec}, and
+\eqref{ch05:eq:interteam_req}.
 
-Suppose robot~$\texttt{r}\in\mathcal{N}^{\texttt{w}}_k$ receives a
-bundle of $L>0$ new requests
-$\Xi_k\triangleq\{\xi^\ell_k\}_{\ell=1}^{L}$.
-Each request~$\xi$ is associated with a candidate family of embedded
-target graphs $\widehat{\mathcal{G}}_k^{\xi}$, including
-\eqref{ch05:eq:frontier_weight} for $\{\xi^k_2\}$,
-\eqref{ch05:eq:base-location} for $\{\xi^k_3\}$,
-\eqref{ch05:eq:cec} for $\{\xi^k_4\}$ and $\{\xi^i_6\}$,
-and \eqref{ch05:eq:interteam_req} for $\{\xi^{k_1k_2}_7\}$.
-A subset $\Xi\subseteq\Xi_k$ is said to be \emph{compatible} on
-$\mathcal{G}^{\texttt{w}}_k$ if the current wheel backbone can provide
-disjoint robot subgroups for instantiating all requests in~$\Xi$, i.e.,
-\begin{equation}\label{ch05:eq:compat}
-  \mathcal{N}^{\xi}_k \cap \mathcal{N}^{\xi'}_k = \emptyset,\
-  \forall\,\xi \neq\xi'\in\Xi;\;
-  \bigcup_{\xi\in\Xi}\mathcal{N}^{\xi}_k \subseteq
-  \mathcal{N}^{\texttt{w}}_k,
+For the topology-changing requests in \(\Xi\), a subset
+\(\Xi' \subseteq \Xi\) is called compatible on
+\(\mathcal{G}^{\texttt{w}}\) if the current wheel backbone can supply
+disjoint robot groups for all requests in \(\Xi'\), namely,
+\begin{equation}
+\label{ch05:eq:compat}
+\mathcal{N}^{\xi}\cap\mathcal{N}^{\xi'}=\emptyset,
+\quad \forall \xi\neq\xi'\in\Xi',
+\qquad
+\bigcup_{\xi\in\Xi'}\mathcal{N}^{\xi}
+\subseteq
+\mathcal{N}^{\texttt{w}},
 \end{equation}
-where $\mathcal{N}^{\xi}_k$ denotes the set of robots allocated to
-fulfill~$\xi$.
-However, the operator-relocation request $\{\xi^k_3\}$, including both
-motion within the feasible region and migration, is only compatible
-with the complete wheel backbone. If the fleet is already split,
-robots in detached subgraphs cannot be guaranteed to
-receive the new operator location after migration. Therefore,
-$\{\xi^k_3\}$ is deferred until all other active requests are completed
-and the complete wheel backbone is restored.
+where \(\mathcal{N}^{\xi}\) denotes the set of robots allocated to
+fulfill request \(\xi\). The migration case of \(\xi_3\) is more
+restrictive. It is compatible only with the complete wheel backbone.
+Once the fleet has already been split into active request subtopologies,
+robots detached from the backbone cannot, in general, be guaranteed to
+receive the updated operator location during migration. For this
+reason, the migration case of \(\xi_3\) is deferred until all other
+active requests have been completed and the full wheel backbone has
+been restored.
 
-Determining a maximum compatible subset of $\Xi_k$ under
-\eqref{ch05:eq:compat} is generally combinatorial,
-requiring an additional subset-selection problem at each activation event.
-MoRoCo does not pursue such a globally optimal selection.
-Instead, it adopts a tractable sequential policy: requests are examined according to a priority order,
-and a request is retained only if it is admissible on the current wheel backbone
-and $\texttt{GraphMatch}(\cdot)$ returns an executable instantiation.
-The priority order is determined either by operator specification or by the default FIFO setting.
-Specifically, let $\mathcal{G}^{\texttt{w},0}_k$ denote the wheel
-graph before processing the new request bundle.
-For $\ell=1,\cdots,L$, if request $\xi^\ell_k$ is admissible,
-the remaining wheel graph $\mathcal{G}^{\texttt{w},\ell-1}_k$ is split by
-instantiating a target graph from
-$\widehat{\mathcal{G}}_k^{\xi^\ell_k}$ via
-Alg.~\ref{ch05:alg:graphmatch}, i.e.,
-%========================================
-\begin{equation}\label{ch05:eq:combinatorial}
-  \mathcal{G}^{\texttt{w},\ell}_k,\ {\mathcal{G}}^{\ell}_k,\
-  \widehat{\pi}^{\ell}_k,\ \Pi^{\ell}_k
-  \leftarrow
-  \texttt{GraphMatch}\!\left(\mathcal{G}^{\texttt{w},\ell-1}_k,\,
-  \widehat{\mathcal{G}}^{\ell}_k,\, \xi^{\ell}_k\right),
+Determining a maximum compatible subset of \(\Xi\) under
+\eqref{ch05:eq:compat} is combinatorial. Solving that additional
+selection problem at every request-activation event is not pursued
+here. Instead, the proposed coordination method adopts a tractable
+sequential policy. The requests in \(\Xi\) are ordered either by
+operator-specified priority or by a default first-in-first-out rule.
+They are then examined one by one on the current wheel backbone. A
+topology-preserving request is retained whenever its embedding update
+is admissible. A topology-changing request is retained only if it is
+admissible on the remaining wheel backbone and
+\(\texttt{TopologyMatch}(\cdot)\) returns an executable instantiation.
+Let \(\mathcal{G}^{\texttt{w},0}\) denote the wheel backbone before
+the new request bundle is processed. For \(\ell=1,\cdots,L\), if the
+request \(\xi^{\ell}\) requires topology instantiation and is admissible
+on \(\mathcal{G}^{\texttt{w},\ell-1}\), then
+\begin{equation}
+\label{ch05:eq:combinatorial}
+\mathcal{G}^{\texttt{w},\ell},\,
+\mathcal{G}^{\ell},\,
+\widehat{\pi}^{\ell},\,
+\Pi^{\ell}
+\leftarrow
+\texttt{TopologyMatch}\!\left(
+\mathcal{G}^{\texttt{w},\ell-1},\,
+\widehat{\mathcal{G}}^{\xi^{\ell}},\,
+\xi^{\ell}
+\right),
 \end{equation}
-%========================================
-where $\widehat{\mathcal{G}}^{\ell}_k$ denotes the target-graph family
-for $\xi^\ell_k$, ${\mathcal{G}}^{\ell}_k$ is the instantiated request
-subgraph, and $\widehat{\pi}^{\ell}_k$ is the associated set of detach
-tasks, consistent with \eqref{ch05:eq:single_graphmatch}.
-If no executable instantiation exists for the current request on the
-remaining wheel backbone, that request is deferred and the procedure
-moves on to the next one in the priority order.
-After all newly arrived requests have been processed, the embedded graph
-$\mathcal{G}_k(t)$ in~\eqref{ch05:eq:decomposition} is augmented by the
-newly instantiated subgraphs that were found executable.
+where \(\mathcal{G}^{\ell}\) is the instantiated subtopology for
+\(\xi^{\ell}\), \(\widehat{\pi}^{\ell}\) is the associated
+detachment schedule, and \(\Pi^{\ell}\) is the resulting role
+assignment, consistently with \eqref{ch05:eq:single_topologymatch}. If no
+executable instantiation exists on the remaining wheel backbone, the
+request is deferred and the procedure moves to the next request in the
+priority order. After all new requests have been processed, the
+decomposition in \eqref{ch05:eq:decomposition} is augmented by the
+newly instantiated subtopologies and by the embedding updates that were
+found admissible.
 
 %==============================
 \begin{algorithm}[t]
-  \caption{Overall online execution of the MoRoCo framework $\texttt{MoRoco}(\cdot)$}
+  \caption{Overall online execution of the proposed coordination
+  method}
   \label{ch05:alg:moroco}
   \LinesNumbered
   \SetKwInOut{Input}{Input}
   \SetKwInOut{Output}{Output}
-  \Input{$\{\mathcal{G}^{\texttt{w}}_{k,0}\}$, $\{\Gamma_i\}$.}
-  \Output{Local plans~$\{\Gamma_i\}$ and evolving graphs
-  $\{\mathcal{G}_k\}$.}
-  \While{not terminated and all teams~$\{\mathcal{T}_k\}$ in parallel}{
-    \tcc{\textbf{Within the wheel graph}}
-    Robot~$i\in\mathcal{N}^{\texttt{w}}_k$ executes~$\Gamma_i$ in
-    parallel\;
-    \uIf{meeting event $\mathbf{c}_{ij}$ occurs}{
-      $\Gamma_i,\Gamma_j,\mathbf{c}^{+}_{ij}
-      \leftarrow \texttt{PairCoord}(\Gamma_i,\,\Gamma_j,\,\chi_{ij})$\;
-      Update embeddings of $\mathcal{G}^{\texttt{w}}_k$\;
+
+  \Input{\(\mathcal{G}_{0}^{\texttt{w}}\), \(\{\Gamma_i\}\)}
+  \Output{Local plans \(\{\Gamma_i\}\) and evolving topology
+  \(\mathcal{G}\)}
+
+  \While{the mission is not terminated}{
+
+    \tcc{\textbf{Wheel-backbone execution}}
+    Each robot \(i\in\mathcal{N}^{\texttt{w}}\) executes \(\Gamma_i\)
+    in parallel\;
+
+    \uIf{meeting event \(\mathbf{c}_{ij}\) occurs}{
+      \(\Gamma_i,\Gamma_j,\mathbf{c}_{ij}^{+}
+      \leftarrow
+      \texttt{PairCoord}(\Gamma_i,\Gamma_j,\chi_{ij})\)\;
+      Update the embeddings of \(\mathcal{G}^{\texttt{w}}\)\;
     }
 
-    \tcc{\textbf{Request instantiation}}
-    \uIf{request bundle $\Xi_k$ received}{
-      Order requests in $\Xi_k$ by priority\;
-      \ForEach{request $\xi^\ell_k \in \Xi_k$}{
-        \uIf{$\xi^\ell_k$ admissible on $\mathcal{G}^{\texttt{w}}_k$}{
-          $\widetilde{\mathcal{G}}^{\texttt{w}}_k,\,
-          \widetilde{\mathcal{G}}^\ell_k,\,
-          \widetilde{\pi}^\ell_k,\,
-          \widetilde{\Pi}^\ell_k
+    \tcc{\textbf{Request processing}}
+    \uIf{a request bundle \(\Xi\) is received}{
+      Order the requests in \(\Xi\) by priority\;
+
+      \ForEach{request \(\xi^{\ell}\in\Xi\)}{
+
+        \uIf{\(\xi^{\ell}\) is topology-preserving and admissible}{
+          Apply the corresponding embedding update on
+          \(\mathcal{G}^{\texttt{w}}\)\;
+        }
+
+        \ElseIf{\(\xi^{\ell}\) is topology-changing and admissible on
+        \(\mathcal{G}^{\texttt{w}}\)}{
+          \(\widetilde{\mathcal{G}}^{\texttt{w}},\,
+          \widetilde{\mathcal{G}}^{\ell},\,
+          \widetilde{\pi}^{\ell},\,
+          \widetilde{\Pi}^{\ell}
           \leftarrow
-          \texttt{GraphMatch}(\mathcal{G}^{\texttt{w}}_k,\,
-          \widehat{\mathcal{G}}^\ell_k,\,\xi^\ell_k)$\;
-          \uIf{an executable instantiation}{
-            $\mathcal{G}^{\texttt{w}}_k \leftarrow \widetilde{\mathcal{G}}^{\texttt{w}}_k$, add $\widetilde{\mathcal{G}}^\ell_k$ to $\mathcal{G}_k$\;
-            Store $\widetilde{\pi}^\ell_k$ for detachment\;
+          \texttt{TopologyMatch}\!\left(
+          \mathcal{G}^{\texttt{w}},\,
+          \widehat{\mathcal{G}}^{\xi^{\ell}},\,
+          \xi^{\ell}
+          \right)\)\;
+
+          \uIf{an executable instantiation is returned}{
+            \(\mathcal{G}^{\texttt{w}}
+            \leftarrow
+            \widetilde{\mathcal{G}}^{\texttt{w}}\)\;
+            Add \(\widetilde{\mathcal{G}}^{\ell}\) to
+            \(\mathcal{G}\)\;
+            Store \(\widetilde{\pi}^{\ell}\) for execution\;
           }
         }
+
+        \Else{
+          Defer \(\xi^{\ell}\)\;
+        }
       }
-      Follow detach schedules and update~$\mathcal{G}_k$\;
+
+      Execute the stored detachment schedules and update
+      \(\mathcal{G}\)\;
     }
 
-    \tcc{\textbf{Request execution}}
-    \ForEach{active request~$\xi^\ell_k$ in parallel}{
-      All robots in~$\mathcal{N}^\ell_k$ perform request~$\xi^\ell_k$\;
-      \uIf{request $\xi^\ell_k$ is fulfilled}{
-        Trigger rejoin procedure and update $\mathcal{G}_k$\;
+    \tcc{\textbf{Active-request execution}}
+    \ForEach{active request \(\xi^{\ell}\) in parallel}{
+      All robots in the associated subgroup perform \(\xi^{\ell}\)\;
+      \uIf{\(\xi^{\ell}\) is fulfilled}{
+        Trigger the rejoin procedure and update \(\mathcal{G}\)\;
       }
     }
   }
 \end{algorithm}
 %==============================
 
-%========================================
-\subsubsection{Online Interaction and Execution}
-\label{ch05:subsec:interaction}
-As shown in Fig.~\ref{ch05:fig:interaction}, each operator interacts with
-the fleet through a graphical panel that supports the online requests
-listed in Table~\ref{ch05:tab:requests}. At time~$t$, a command from
-operator~$\texttt{h}_k$ is parsed into a request bundle
-$\Xi_k \triangleq \{\xi_k^\ell\}$ with associated parameters and
-transmitted to team~$\mathcal{T}_k$ via intermittent communication.
-Execution is fully distributed and driven by local pairwise
-coordination in Alg.~\ref{ch05:alg:coordination}. Each team maintains an
-embedded communication graph $\mathcal{G}_k$, initialized as a
-joint-wheel backbone
-$\mathcal{G}_k=\mathcal{G}^{\texttt{w}}_{k,0}$ to satisfy the
-intra-team latency bound $T^k_{\texttt{h}}$ specified by $\xi^k_1$,
-while inter-team exchanges under $\{\xi^{k_1k_2}_7\}$ are constrained
-by the bound $T_{\texttt{c}}$. During robot meetings, local embeddings
-and data are updated and fused through $\texttt{PairCoord}(\cdot)$,
-enabling latency-bounded information propagation without centralized
-synchronization.
+% =========================================================
+\subsubsection{Online interaction and execution}
+\label{ch05:subsubsec:interaction}
 
-Upon receiving a new bundle $\Xi_k$, the online
-coordination layer of {MoRoCo} processes the requests sequentially
-under the admissibility condition~\eqref{ch05:eq:compat}, and instantiates
-executable request subgraphs within the overall runtime summarized in
-Alg.~\ref{ch05:alg:moroco}.
-Consequently, $\mathcal{G}_k$ evolves into
-the union of the wheel backbone and the subgraphs required by active
-requests, such as a singleton for $\{\xi^{k_1k_2}_7\}$, a chain for
-$\{\xi^k_4\}$ and $\{\xi^k_6\}$, and a star for $\{\xi^k_3\}$. Robots
-detach to execute within the instantiated subgraphs, while the
+Figure~\ref{ch05:fig:interaction} illustrates the interaction
+interface through which the operator issues the online requests in
+Table~\ref{ch05:tab:requests}. At time \(t\), a command from the
+operator \(\texttt{h}\) is parsed into a request bundle
+\(\Xi \triangleq \{\xi^{\ell}\}\), together with the associated
+parameters, and is transmitted to the fleet through the intermittent
+communication mechanism. Execution remains fully distributed and is
+driven by the pairwise coordination law in
+Alg.~\ref{ch05:alg:coordination}. Initially, the fleet maintains the
+joint-wheel backbone
+\(\mathcal{G}=\mathcal{G}_{0}^{\texttt{w}}\), which satisfies the
+intra-fleet latency bound \(T_{\texttt{h}}\) associated with
+\(\xi_1\). External-demand exchange under \(\xi_7^{\texttt{e}}\) is
+subject to the bound \(T_{\texttt{e}}\). Whenever a robot meeting
+occurs, local embeddings and collected data are fused through
+\(\texttt{PairCoord}(\cdot)\), thereby maintaining latency-bounded
+information propagation without centralized synchronization.
+
+When a new request bundle \(\Xi\) is received, the online
+coordination layer processes the requests sequentially under the
+admissibility rule described above and within the runtime summarized
+by Alg.~\ref{ch05:alg:moroco}. As a result, the embedded topology
+\(\mathcal{G}(t)\) evolves as the union of the current wheel
+backbone and the instantiated subtopologies required by the active
+topology-changing requests. Typical examples include a singleton
+messenger subtopology for \(\xi_7^{\texttt{e}}\), a chain subtopology for
+\(\xi_4\) and \(\xi_6\), and a star subtopology for the migration
+case of \(\xi_3\). By contrast, topology-preserving requests modify
+only the embeddings of the wheel backbone and do not alter the
+decomposition in \eqref{ch05:eq:decomposition}. Robots assigned to
+instantiated subtopologies detach and execute their requests, while the
 remaining wheel backbone continues exploration and preserves
-latency-bounded intermittent connectivity. After a request is
-completed, the corresponding subgraph is removed and the involved
-robots rejoin the backbone, restoring $\mathcal{G}_k$ for continued
-exploration and subsequent online requests.
-The following theorem states the framework-level guarantee provided by
-the online execution policy in
-Alg.~\ref{ch05:alg:moroco}, with the proof provided in the Appendix.
+latency-bounded intermittent connectivity. Once a request is
+completed, the corresponding subtopology is removed and the involved
+robots rejoin the wheel backbone, thereby restoring the fleet
+structure for continued exploration and later requests.
+The following theorem states the framework-level guarantee induced by
+the online execution policy in Alg.~\ref{ch05:alg:moroco}. The proof
+is deferred to the appendix.
 
 \begin{theorem}
 \label{ch05:thm:moroco-complete-short}
-For any team $\mathcal{T}_k$ and any finite-time arrival sequence of
-request bundles, suppose that whenever a request~$\xi_k^\ell$ becomes
-admissible under the compatibility condition in~\eqref{ch05:eq:compat},
-there exists at least one candidate
-$\mathcal{G}_k^{\xi^\ell_k}\in\widehat{\mathcal{G}}_k^{\xi^\ell_k}$
-such that \eqref{ch05:eq:graphmatch_trs} returns a feasible detach and rejoin
-schedule for~$\mathcal{N}_k^{\xi^\ell_k}$.
-Then Alg.~\ref{ch05:alg:moroco} satisfies the following properties:
-\begin{enumerate}
-    \item[(I)] After each request activation or completion, the
-    embedded graph $\mathcal{G}_k(t)$ remains an executable decomposition
-    of the form~\eqref{ch05:eq:decomposition}, consisting of a remaining wheel
-    backbone and finitely many subgraphs for active requests;
-    \item[(II)] Every request that becomes admissible and is instantiated by
-    Alg.~\ref{ch05:alg:moroco} is fulfilled in finite time;
-    \item[(III)] There exists a finite time $t_f$ such that
-    $\mathcal{G}_k(t)=\mathcal{G}_k^{\texttt{w}}$ for all $t\ge t_f$,
-    i.e., all request subgraphs have been removed and the complete wheel
-    backbone is restored.
-\end{enumerate}
+Consider any finite-time arrival sequence of request bundles.
+Suppose that every topology-preserving request admitted on the current
+wheel backbone can be executed through its associated embedding update,
+and that whenever a topology-changing request \(\xi^{\ell}\) becomes
+admissible under \eqref{ch05:eq:compat}, there exists at least one
+candidate \(\mathcal{G}^{\xi^{\ell}}\in
+\widehat{\mathcal{G}}^{\xi^{\ell}}\) such that
+\eqref{ch05:eq:topologymatch_trs} returns a feasible detach-and-rejoin
+schedule for \(\mathcal{N}^{\xi^{\ell}}\). Then the following
+properties hold.
+(I) After each request activation or completion, the embedded topology
+\(\mathcal{G}(t)\) remains an executable decomposition of the form
+\eqref{ch05:eq:decomposition}, consisting of a remaining wheel
+backbone and finitely many request subtopologies.
+(II) Every request admitted by Alg.~\ref{ch05:alg:moroco} is fulfilled
+in finite time.
+(III) There exists a finite time \(t_f\) such that
+\(\mathcal{G}(t)=\mathcal{G}^{\texttt{w}}\) for all \(t\ge t_f\),
+that is, all request subtopologies have been removed and the complete
+wheel backbone has been restored.
 \end{theorem}
