@@ -2,19 +2,32 @@
 \section{Exploration and Coordination via Intermittent Communication}
 \label{ch05:sec:ch04_case_study}
 
-The previous section addressed communication and collaboration as a joint
-planning problem under online task arrivals. The present section considers a
-different but closely related setting, in which exploration itself becomes the
-primary source of new information and communication can occur only
-intermittently. The focus is on multi-operator-robot teams deployed in an
-initially unknown workspace, where local maps, task-relevant observations, and
-operator requests must be coordinated under limited communication. In contrast
-to settings with continuously available global information, the central
-difficulty here is to maintain coherent exploration and timely information
-fusion when communication opportunities are sparse, delayed, or topology
-dependent. This motivates a framework that combines online exploration,
-intermittent coordination, and operator interaction within a unified planning
-and execution architecture.
+The previous section considered communication and collaboration as a
+joint planning problem under online temporal requests. The present
+section turns to a complementary setting in which exploration itself
+is the primary mechanism for acquiring new information, while
+communication among the operator and the robot fleet is available only
+intermittently. The environment is initially unknown, so map
+information, task-relevant observations, and request-dependent updates
+must be generated and fused online under sparse communication events
+rather than under persistent connectivity.
+This setting introduces a distinct coordination challenge. Since
+robots cannot rely on continuously shared global knowledge, coherent
+exploration must be maintained despite delayed information exchange,
+partial local awareness, and communication opportunities that depend
+on the evolving team topology. At the same time, operator requests and
+newly discovered workspace information must still propagate through
+the fleet with bounded delay whenever possible. These requirements
+motivate a framework in which exploration, intermittent
+communication, and online coordination are treated within a unified
+planning and execution architecture.
+The development in this section therefore centers on an embedded
+communication topology that supports frontier-based exploration while
+preserving periodic information fusion between the operator and the
+fleet. On top of this topology, local exploration plans, map updates,
+and request-triggered coordination decisions are integrated so that
+the team can continue to explore efficiently without assuming
+continuous end-to-end communication.
 
 
 %==============================
@@ -83,8 +96,7 @@ communication model is used throughout the operator-fleet system.
 
 \begin{definition}
 Two communicating entities $x, y \in \mathcal{N} \cup \{\texttt{h}\}$ can
-exchange data at time $t > 0$ if the \emph{communication quality exceeds a threshold},
-namely:
+exchange data at time $t > 0$ if the \emph{communication quality exceeds a threshold}, i.e.,
 \begin{equation}
 \bigl(D_x^+,\, D_y^+\bigr) \triangleq \texttt{Com}(D_x, D_y),
 \quad \text{if } \texttt{Qual}(p_x, p_y, \mathcal{A}) > \underline{\delta},
@@ -483,6 +495,39 @@ The iterative process in Algorithm~\ref{ch05:alg:coordination} terminates in
 finite steps and always returns a feasible plan satisfying the meeting-event
 constraint \eqref{ch05:eq:pairing_cond} during each pairwise coordination.
 \end{lemma}
+\begin{proof}
+The claim follows from the structure of
+Algorithm~\ref{ch05:alg:coordination}. Stage-I is finite, since the
+quantities \(t^{\star}_{\texttt{h}\ell}\) are computed directly from
+\eqref{ch05:eq:return} for \(\ell\in\{i,j\}\), and the return decision
+is made by the feasibility test \eqref{ch05:eq:return-criterion}.
+Hence only finitely many operations are required before Stage-II.
+It remains to consider the iterative loop in Stage-II. At each
+iteration, the candidate next meeting event is accepted only if the
+meeting-event constraint \eqref{ch05:eq:pairing_cond} holds.
+Otherwise, one task \(f^{\star}\) is removed from the remaining set
+\(F^{-}\), and the candidate path and communication event are
+recomputed. Since \(F^{-}\) is finite and each unsuccessful iteration
+strictly decreases its cardinality, the loop can be repeated only
+finitely many times.
+
+Moreover, feasibility is preserved when tasks are removed. If
+\eqref{ch05:eq:return-criterion} already holds in Stage-I, then the
+current tails admit a feasible continuation without forcing an
+immediate operator return. If \eqref{ch05:eq:return-criterion} fails,
+Stage-I explicitly appends a return event for the robot
+\(n=\arg\min_{\ell\in\{i,j\}} t^{\star}_{\texttt{h}\ell}\), so that a
+hub-reaching continuation is inserted before the latency bound is
+violated. Therefore, after finitely many task removals, the remaining
+tail contains only a feasible continuation consistent with the return
+decision, and the selected event necessarily satisfies
+\eqref{ch05:eq:pairing_cond}.
+Once such an event is found, Stage-III updates the local plans and edge
+embeddings according to \eqref{ch05:eq:embed-update}. Hence the
+algorithm terminates in finite steps and returns revised local plans
+whose next meeting event satisfies
+\eqref{ch05:eq:pairing_cond}.
+\end{proof}
 
 \begin{theorem}
 \label{ch05:prop:Ts-constraint}
@@ -491,10 +536,62 @@ Algorithm~\ref{ch05:alg:coordination}, the operator-fleet latency constraint is
 satisfied, namely
 $\delta_{\texttt{h}}(t) \leq T_{\texttt{h}}$ for all $t > 0$.
 \end{theorem}
+\begin{proof}
+The proof is by induction over the sequence of scheduled communication
+events on the embedded joint-wheel graph.
+At initialization, the embeddings are set by
+\eqref{ch05:eq:vertex-embed}--\eqref{ch05:eq:edge-embed}. In
+particular, all robots initially communicate near the operator, so the
+operator possesses the initial information state and the latency bound
+holds at \(t=0\).
+Assume now that the bound is satisfied up to some communication event
+\(c_{ij}\). At \(c_{ij}\), robots \(i\) and \(j\) exchange their
+incident embeddings and fuse their information, producing the merged
+latency vector \(\chi_{ij}\) in \eqref{ch05:eq:chi-ij}. Since the
+maximum in \eqref{ch05:eq:chi-ij} is taken component-wise, no confirmed
+time stamp is lost in this fusion step: every piece of information that
+was guaranteed to reach the operator through either robot remains
+guaranteed after the meeting.
 
+Stage-I then checks whether a direct operator return is needed. If
+\eqref{ch05:eq:return-criterion} holds, one of the current tails
+already implies operator delivery within the admissible horizon. If
+\eqref{ch05:eq:return-criterion} fails, the algorithm appends a return
+event for the robot \(n\) with smallest \(t^{\star}_{\texttt{h}\ell}\),
+computed through \eqref{ch05:eq:return}. Hence, after Stage-I, the
+information available at \(c_{ij}\) is guaranteed to reach the operator
+no later than \(\underline{\chi}_{ij}+T_{\texttt{h}}\).
+Stage-II then selects the next pairwise event
+\(c_{ij}^{+}=(t_{ij}^{+},p_{ij}^{+})\) subject to the local feasibility
+constraint \eqref{ch05:eq:pairing_cond}. This condition states exactly
+that, from the next meeting location \(p_{ij}^{+}\), at least one of
+the two robots can still return to the operator within the residual
+latency budget determined by the current guaranteed time stamp. Thus
+the pairwise schedule preserves the invariant that all information
+known to the communicating pair is still deliverable to the operator
+within \(T_{\texttt{h}}\) from its guaranteed time stamp. Stage-III
+records this invariant in the updated embeddings through
+\eqref{ch05:eq:embed-update}.
+Because the communication topology is a joint wheel, every robot lies on
+the ring \(E_{\texttt{r}}\), and over any interval longer than
+\(T_{\texttt{h}}\) the activated rim edges together with the hub edges
+\(E_{\texttt{h}}\) induce a time-respecting wheel-like communication
+pattern. Consequently, the above invariant propagates from each local
+pairwise coordination step to the whole operator-fleet system: any data
+generated by any robot is forwarded through successive scheduled rim
+meetings and, when required, a hub return, so that it reaches the
+operator within time \(T_{\texttt{h}}\).
+Therefore, for every \(t>0\), all information older than
+\(t-T_{\texttt{h}}\) has already reached the operator. Equivalently,
+the maximum information latency satisfies
+\(\delta_{\texttt{h}}(t)\le T_{\texttt{h}}\) for all \(t>0\).
+\end{proof}
+
+
+%==============================
 \begin{algorithm}[t]
   \caption{Latency-aware Intermittent Pairwise Coordination:
-  $\texttt{PairCoord}(\cdot)$}
+  $\texttt{IntmCoord}(\cdot)$}
   \label{ch05:alg:coordination}
   \LinesNumbered
   \SetKwInOut{Input}{Input}
@@ -535,6 +632,7 @@ $\widehat{\Gamma}_{\ell} \leftarrow
 for $\ell \in \{i,j\}$\;
 Update embeddings through \eqref{ch05:eq:embed-update}\;
 \end{algorithm}
+%==============================
 
 
 \subsubsection{Distributed Detach-and-Rejoin Mechanism}
@@ -557,7 +655,7 @@ immediately. Instead, using robot $i$'s most recent knowledge of robot $k$'s
 plan $\Gamma_k$, robot $i$ computes a bypass schedule that directly connects
 $(i,k)$ through
 $\widehat{\Gamma}_i,\ \widehat{\Gamma}_k,\ \mathbf{c}_{ik}
-= \texttt{PairCoord}(\Gamma_i,\Gamma_k)$,
+= \texttt{IntmCoord}(\Gamma_i,\Gamma_k)$,
 and updates the edge embeddings by removing $(i,j)$ and inserting $(i,k)$, that
 is,
 $\sigma_{\mathcal{E}}(i,j) \leftarrow \emptyset,
@@ -580,14 +678,14 @@ robot $m$ on the wheel. First, robots $m$ and $j$ execute pairwise coordination
 at the operator location in order to synchronize plans and schedule the next
 event as
 $\widehat{\Gamma}_m,\ \widehat{\Gamma}_j,\ \mathbf{c}_{mj}
-= \texttt{PairCoord}(\Gamma_m,\Gamma_j)$.
+= \texttt{IntmCoord}(\Gamma_m,\Gamma_j)$.
 The edge embeddings are then updated by replacing the successor edge $(m,\ell)$
 with $(m,j)$, that is,
 $\sigma_{\mathcal{E}}(m,\ell) \leftarrow \emptyset,
 \sigma_{\mathcal{E}}(m,j) \leftarrow (t_{mj}, p_{mj})$,
 where $(t_{mj}, p_{mj})$ is taken from the event $\mathbf{c}_{mj}$. Second,
 robot $j$ meets robot $\ell$ in order to establish the new successor relation
-through $\texttt{PairCoord}(\Gamma_j,\Gamma_{\ell})$, and the edge embedding
+through $\texttt{IntmCoord}(\Gamma_j,\Gamma_{\ell})$, and the edge embedding
 $\sigma_{\mathcal{E}}(j,\ell) \leftarrow (t_{j\ell}, p_{j\ell})$ is added.
 This two-step reinsertion prevents inconsistent topology updates and restores a
 valid wheel graph.

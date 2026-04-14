@@ -287,7 +287,7 @@ Let $t_{i,\ell}^{\texttt{s}}$ and $t_{i,\ell}^{\texttt{f}}$ denote the
 corresponding start and finish times. Let $\mathcal{C}_t$ denote the
 feasibility constraints induced by the temporal relations in
 \eqref{ch05:eq:task-constraints}.
-The adaptive optimization problem is formulated as
+The adaptive optimization problem is formulated as:
 \begin{equation}
 \begin{aligned}
 \max_{\{\tau_i\},\, t^{\texttt{c}}} \quad &
@@ -332,7 +332,7 @@ needed to complete the selected tasks and restore team-wise communication.
 Let $\mathcal{T}$ denote the branch-and-bound search tree used by
 Algorithm~\ref{ch05:alg:cocoplan}. Each vertex of $\mathcal{T}$ corresponds to
 a partial assignment of detected tasks before the next communication event. A
-node $\nu \in \mathcal{T}$ is associated with a partial collective plan
+node $\nu \in \mathcal{T}$ is associated with a partial collective plan defined as:
 \[
 J_\nu \triangleq
 \bigl[
@@ -416,12 +416,14 @@ $\texttt{LowBound}$ and $\texttt{UpBound}$, respectively. These values are
 used to initialize the max-heap $\mathcal{Q}$ and the incumbent pair
 $(LB^\star, J^\star)$. The timer $t_{\texttt{start}}$ is then recorded in
 order to enforce the computation budget $T'$.
+
 (II) \emph{Selection}.
 At each iteration, the node with the largest upper bound is extracted from
 $\mathcal{Q}$. This best-first rule prioritizes the nodes with the greatest
 potential to improve the incumbent solution. If $UB_\nu \leq LB^\star$, then
 $\nu$ and all of its descendants are discarded because they cannot improve the
 current best plan.
+
 (III) \emph{Expansion}.
 For each surviving node, the routine $\texttt{GetTasks}$ identifies the set
 $\mathcal{F}$ of feasible tasks that satisfy the temporal constraints
@@ -436,7 +438,7 @@ Each child node undergoes iterative bound refinement. As illustrated in
 Fig.~\ref{ch05:fig:lower-bound}, at iteration $k$, a task
 $\omega^{(k)} \in \Omega_t \setminus \Omega_{\nu^{(k)}}$ is selected and
 assigned to an eligible robot group
-$\mathcal{A} \in \mathcal{A}_k$ by solving
+$\mathcal{A} \in \mathcal{A}_k$ by solving:
 \begin{equation}
 \min_{\mathcal{A} \in \mathcal{A}_k}
 \left\{
@@ -542,7 +544,7 @@ The communication-event optimization is formulated so as to reduce the largest
 idle delay between the completion of the last assigned task and the next
 communication event. In this way, the fleet avoids configurations in which one
 or more robots finish early and then wait excessively long for the remaining
-robots. The resulting optimization problem is
+robots. The resulting optimization problem is given by:
 \begin{equation}
 \begin{aligned}
 \min_{t^{\texttt{c}},\, \{p_i^{\texttt{c}}\}} \quad &
