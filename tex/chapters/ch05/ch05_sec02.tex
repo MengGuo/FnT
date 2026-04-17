@@ -210,7 +210,7 @@ $\Xi(t)$ once fulfilled.
 
 Consequently, the behavior of each robot and the operator can be represented by
 a timed sequence of navigation and communication events.
-The local plan of robot $i \in \mathcal{N}$ is denoted by:
+The communication-aware local plan of robot $i \in \mathcal{N}$ is denoted by:
 \begin{equation}
 \Gamma_i \triangleq
 \boldsymbol{\tau}_i^0 \mathbf{c}_i^0
@@ -228,7 +228,7 @@ The behavior of the operator is defined similarly and is denoted by
 $\Gamma_{\texttt{h}}$. For brevity, denote by:
 $\widehat{\Gamma} \triangleq
 \{\Gamma_i\}_{i \in \mathcal{N}} \cup \{\Gamma_{\texttt{h}}\}$
-as the joint plan of the full operator-fleet system.
+as the joint communication-aware plan of the full operator-fleet system.
 Write $\widehat{\Gamma} \models \Xi(\overline{T})$ if the behaviors of the
 robots and the operator collectively fulfill all requests received up to the
 terminal time $\overline{T}$.
@@ -312,7 +312,7 @@ robots at time $t$.
 \begin{problem}
 \label{ch05:prob:latency}
 Given the task set $\mathcal{F}$ and the latency bound $T_{\texttt{h}}$,
-synthesize the local plans $\{\Gamma_i\}_{i \in \mathcal{N}}$ so that the
+synthesize the communication-aware local plans $\{\Gamma_i\}_{i \in \mathcal{N}}$ so that the
 completion time of $\mathcal{F}$ is minimized and the latency constraint
 $\delta_{\texttt{h}}(t) \leq T_{\texttt{h}}$ holds for all $t > 0$.
 \end{problem}
@@ -361,7 +361,7 @@ The vertex embedding records the local coordination state:
 (\widehat{p}_{\texttt{h}}, \chi_{\texttt{h}}),
 \label{ch05:eq:def-vertex-embed}
 \end{equation}
-where the local plan $\Gamma_i$ specifies the visiting locations and
+where the communication-aware local plan $\Gamma_i$ specifies the visiting locations and
 communication events of robot $i$ as in \eqref{ch05:eq:plan},
 $\chi_i \in \mathbb{R}^{N}$ estimates the minimum time stamp of information
 from each robot that is guaranteed to reach the operator,
@@ -409,7 +409,7 @@ $\underline{\chi}_{ij} \triangleq \min_{k \in \mathcal{N}} \chi_{ij}(k)$,
 which is the minimum team time stamp guaranteed to reach the operator as
 inferred at $\mathbf{c}_{ij}$. Let $t_{\ell}^{L_\ell}$ and
 $p_{\ell}^{L_\ell}$ denote the terminal time and terminal location in the
-local plan $\Gamma_\ell$ of robot $\ell \in \{i, j\}$. The earliest return
+communication-aware local plan $\Gamma_\ell$ of robot $\ell \in \{i, j\}$. The earliest return
 time to the operator for a candidate return robot
 $\ell \in \{i, j\}$ is estimated by
 \begin{equation}
@@ -522,9 +522,9 @@ violated. Therefore, after finitely many task removals, the remaining
 tail contains only a feasible continuation consistent with the return
 decision, and the selected event necessarily satisfies
 \eqref{ch05:eq:pairing_cond}.
-Once such an event is found, Stage-III updates the local plans and edge
+Once such an event is found, Stage-III updates the communication-aware local plans and edge
 embeddings according to \eqref{ch05:eq:embed-update}. Hence the
-algorithm terminates in finite steps and returns revised local plans
+algorithm terminates in finite steps and returns revised communication-aware local plans
 whose next meeting event satisfies
 \eqref{ch05:eq:pairing_cond}.
 \end{proof}
@@ -598,7 +598,7 @@ the maximum information latency satisfies
   \SetKwInOut{Output}{Output}
 \Input{Local plans $\Gamma_i$, $\Gamma_j$, stamp $\chi_{ij}$, map
 $\mathcal{M}_{ij}$, and unassigned tasks $\mathcal{F}^{-}$.}
-\Output{Revised local plans $\widehat{\Gamma}_i$, $\widehat{\Gamma}_j$, and next
+\Output{Revised communication-aware local plans $\widehat{\Gamma}_i$, $\widehat{\Gamma}_j$, and next
 event $\mathbf{c}_{ij}$.}
 
 \tcc{\textbf{Determine Return Event}}
@@ -648,7 +648,7 @@ Fig.~\ref{ch05:fig:detach-rejoin}.
 
 (I) \emph{Detaching from the wheel}.
 Consider three consecutive robots $(i,j,k)$ along the wheel, where robot $j$
-intends to detach. Let $\Gamma_{\ell}$ denote the nominal local plan of robot
+intends to detach. Let $\Gamma_{\ell}$ denote the nominal communication-aware local plan of robot
 $\ell$, and let $\widehat{\Gamma}_{\ell}$ denote the optimized plan maintained
 online. At the meeting between robots $i$ and $j$, robot $j$ does not depart
 immediately. Instead, using robot $i$'s most recent knowledge of robot $k$'s

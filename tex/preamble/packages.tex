@@ -65,20 +65,22 @@
 \setcounter{tocdepth}{1}
 \setlength{\headheight}{14pt}
 
+\makeatletter
 \pagestyle{fancy}
 \fancyhf{}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0pt}
-\fancyhead[C]{\ifnum\value{chapter}>0 Chapter \thechapter\fi}
+\fancyhead[C]{\if@mainmatter\ifnum\value{chapter}>0 Chapter \thechapter\fi\fi}
 \fancyfoot[C]{\thepage}
 
 \fancypagestyle{plain}{%
   \fancyhf{}
   \renewcommand{\headrulewidth}{0.4pt}
   \renewcommand{\footrulewidth}{0pt}
-  \fancyhead[C]{\ifnum\value{chapter}>0 Chapter \thechapter\fi}
+  \fancyhead[C]{\if@mainmatter\ifnum\value{chapter}>0 Chapter \thechapter\fi\fi}
   \fancyfoot[C]{\thepage}
 }
+\makeatother
 
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}[chapter]

@@ -4,6 +4,13 @@
 \label{ch03:case}
 
 
+The bottom-up coordination framework is illustrated next on a
+representative multi-robot example involving local temporal tasks,
+execution-time dependence, and collaborative actions. The case study is
+intended to show how local plan synthesis, request-reply exchange, and
+online adaptation interact in a concrete setting.
+
+
 
 
 
@@ -12,15 +19,13 @@
 \section{Summary}
 \label{sec:ch03_summary}
 
-This chapter extended the planning framework from region-based motion tasks to
-robot behaviors that involve both task-level actions and multi-robot
-coordination. A modular construction was first introduced to integrate mobility
-and action models into a complete robot abstraction suitable for temporal-logic
-based synthesis. Building on this model, a distributed coordination scheme was
-then developed for multi-robot systems with dependent local tasks, including
-initial plan synthesis, on-line request and reply exchange, collaborator
-selection, plan adaptation, and failure recovery. Under the assumption of
-loosely coupled interactions, the proposed scheme ensures that all local tasks
-are completed in finite time. The chapter therefore establishes a unified
-framework for motion, action, and collaboration under formal task
-specifications.
+This chapter developed a bottom-up view of multi-robot coordination
+under local temporal tasks. Section~\ref{ch03:sec:task_relaxation_adaptation}
+addressed task relaxation, safety-aware plan revision, online sensing,
+and collaborative knowledge transfer in partially known workspaces.
+Section~\ref{ch03:sec:dep-local-collab} then introduced dependent local
+tasks with collaborative actions and a distributed execution-time
+coordination mechanism for request, reply, assignment, and adaptation.
+Taken together, these developments show how correctness can be
+maintained without a monolithic global mission, by coordinating locally
+specified tasks whose interactions arise during execution.

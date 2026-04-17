@@ -13,7 +13,7 @@ tasks
 \cite{kantaros2020stylus,schillinger2018simultaneous,luo2022temporal,
 leahy2021scalable}. Hierarchical decompositions are therefore essential for
 large fleets
-\cite{chen2025real,liu2024time,luo2025simultaneous,gosrich2025online,
+\cite{chen2025realtime,liu2024time,luo2025simultaneous,gosrich2025online,
 luo2025hulk}.
 This section develops a three-layer coordination architecture for that
 setting. The upper layer performs temporal decomposition together with abstract
@@ -145,11 +145,11 @@ symbols and assign them to abstract teams at the same time. Existing methods
 for temporal-task coordination often rely on the synchronized product between
 a mission automaton and a global fleet model obtained from all local robot
 models
-\cite{schillinger2018simultaneous,luo2021temporal}. Although this construction
+\cite{schillinger2018simultaneous,luo2022temporal}. Although this construction
 preserves correctness, its size grows rapidly with both the number of robots
 and the number of missions. Improved scalability has been pursued through
 local coordination~\cite{lindemann2019coupled}, decision trees
-\cite{chen2025real}, distributed sampling~\cite{kantaros2020stylus},
+\cite{chen2025realtime}, distributed sampling~\cite{kantaros2020stylus},
 hierarchical decoupling~\cite{luo2025simultaneous}, and partial-order
 reasoning~\cite{liu2024time}. The present subsection adopts a different
 hierarchical viewpoint, in which mission decomposition and team
@@ -608,7 +608,7 @@ The plan of each robot $i\in\mathcal{N}_k$ is then induced by the local plan
 $\Gamma_k$ of its team, namely
 \begin{equation}
 \label{ch04:eq:robot-plan}
-\eta_i \triangleq
+\tau_i^{\mathrm{tsk}} \triangleq
 (S_k^1,\omega_k^1)(S_k^2,\omega_k^2)\cdots(S_k^{L_k},\omega_k^{L_k}),
 \qquad \forall i\in\mathcal{N}_k,
 \end{equation}

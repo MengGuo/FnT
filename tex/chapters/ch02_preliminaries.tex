@@ -248,6 +248,15 @@ $\mathcal{T}_c$ is said to be fully known if it faithfully captures the
 workspace model and the robot motion capabilities. It is said to be static if
 it does not vary with time.
 
+
+The constructions above fix the nominal symbolic model used throughout
+this chapter. Workspace partitioning, control-driven reachability, and
+weighted transitions together yield a finite abstraction that remains
+grounded in the robot dynamics rather than in geometry alone. This
+abstraction is the object on which temporal specifications will next be
+imposed.
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Task Specification as LTL Formulas}
@@ -420,6 +429,15 @@ formula $\varphi$ over $AP$, determine a plan of the form
 hybrid control strategy based on \eqref{ch02:eq:control} that executes the
 resulting symbolic plan in the continuous workspace.
 \end{problem}
+
+
+
+The preceding material specifies the task language, its semantics over
+traces, and the nominal planning problem induced by the pair
+$(\mathcal{T}_c,\varphi)$. At this stage, the modeling ingredients are
+complete, and the remaining question is constructive: how to synthesize
+a satisfying, cost-aware plan and realize it through a hybrid execution
+mechanism. That problem is addressed next.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1005,6 +1023,25 @@ been reported in the multi-robot temporal-logic literature
 \label{ch02:sec:case_study}
 
 
+The nominal pipeline developed above is illustrated next on a
+representative single-robot temporal-task planning example. The purpose
+of the case study is not to introduce new modeling ingredients, but to
+show how workspace abstraction, task specification, product
+construction, and hybrid execution fit together in a concrete synthesis
+instance. In this way, the example serves as a baseline for the more
+elaborate multi-robot developments that follow in later chapters.
+
+
  %==============================
 \section{Summary}
 \label{ch02:sec:ch02_summary}
+
+
+This chapter established the nominal single-robot framework used
+throughout the rest of the monograph. Robot motion was abstracted as a
+control-driven weighted transition system, tasks were specified in LTL,
+and the resulting synthesis problem was solved through B\"uchi-automaton
+construction, product search, and hybrid execution. The scalability
+discussion also highlighted why these foundations must later be extended
+through decentralized, compositional, and reactive coordination
+mechanisms in the multi-robot setting.

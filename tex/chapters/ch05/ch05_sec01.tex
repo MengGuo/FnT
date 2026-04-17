@@ -72,13 +72,13 @@ example, repair and rescue actions require dexterous manipulation, whereas
 delivery actions require transportation capability. The motion of robot $i$ is
 described by its velocity $v_i(t) \in \mathbb{R}^2$, which satisfies the bound
 $\|v_i(t)\| \leq v_i^{\texttt{max}}$ for all $t \geq 0$.
-For each robot $i \in \mathcal{N}$, a local plan is a timed sequence
+For each robot $i \in \mathcal{N}$, a nominal local plan is a timed sequence
 $\tau_i \triangleq (t_i^1, g_i^1, a_i^1)(t_i^2, g_i^2, a_i^2)\cdots$,
 where, for every $\ell \geq 1$, the scalar $t_i^\ell \geq 0$ is the execution
 time, the point $g_i^\ell \in \mathcal{W}_i$ is the goal position, and the
 symbol $a_i^\ell \in \mathcal{A}_i$ is the action to be performed. Under
 $\tau_i$, robot $i$ moves toward $g_i^\ell$ and starts action $a_i^\ell$ at
-time $t_i^\ell$. The collective plan is
+time $t_i^\ell$. The nominal collective plan is
 $J \triangleq \{\tau_i\}_{i \in \mathcal{N}}$.
 This plan representation plays the same conceptual role as the execution-level
 objects used in Chapter~\ref{chap:bottom-up} and the team-level plan objects
@@ -212,9 +212,9 @@ where $\mathcal{G}_{\texttt{c}}$ is the set of connected communication graphs
 over the robot set $\mathcal{N}$.
 When \eqref{ch05:eq:comm-graph} holds, the robots exchange critical information,
 including locally detected tasks, local plans, and future communication events.
-Accordingly, each local plan $\tau_i$ should be understood as containing both
+Accordingly, each nominal local plan $\tau_i$ should be understood as containing both
 task-execution decisions and communication decisions.
-For a collective plan $J$ and a horizon $T > 0$, let
+For a nominal collective plan $J$ and a horizon $T > 0$, let
 $N_T(J) \triangleq
 \left|\left\{\omega_m \in \Omega_T\;\middle|\;t_m^{\texttt{f}}(J) \leq T\right\}
 \right|$
@@ -842,3 +842,13 @@ infinite-horizon average objective, and the local optimum induced by
 \eqref{ch05:eq:adaptive_objective} coincides with the global optimum in
 \eqref{ch05:eq:objective}.
 \end{proof}
+
+
+This section showed that communication should be treated as a design
+variable of the coordination process rather than as a passive execution
+constraint. Collaborative-task assignment, fleet-wise communication
+events, and online replanning were integrated within a single
+optimization loop, yielding cyclewise feasibility and a principled
+approximation of the long-run objective. The next section studies a
+complementary setting in which intermittent connectivity is not merely
+scheduled, but structurally embedded into the exploration process.

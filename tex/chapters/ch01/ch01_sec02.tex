@@ -459,7 +459,7 @@ sampling, multi-agent signal-temporal specifications, and scalable decomposition
 into the synthesis loop. Simultaneous task allocation and planning under
 temporal goals were considered in \cite{schillinger2018simultaneous}.
 Sampling-based optimal synthesis was developed in \cite{kantaros2020stylus}.
-Abstraction-free formulations such as \cite{luo2021abstractionfree}, temporal-
+Abstraction-free formulations such as \cite{luo2021abstraction}, temporal-
 task allocation methods such as \cite{luo2022temporal}, and recent multi-agent
 STL planning methods such as \cite{sun2022multiagent,sewlia2025maps2} expanded
 the size and variety of missions that can be handled. Capability-aware and
@@ -512,7 +512,7 @@ maintained across distributed decisions, evolving dependencies, and execution-
 time modifications of local plans.
 Large systems have motivated further refinement of this perspective. Work such
 as \cite{leahy2021scalable}, \cite{leahy2022fast}, \cite{luo2024decomposition},
-\cite{luo2025hiera}, and recent temporal-logic-aware heterogeneous allocation
+\cite{luo2025hulk}, and recent temporal-logic-aware heterogeneous allocation
 methods such as \cite{li2025taskallocation} shows that hierarchical
 decomposition can partially recover global structure without returning fully to
 flat centralized synthesis. Even so, the conceptual
@@ -628,7 +628,7 @@ deployment.
 That distinction has led some work to treat online requests as first-class
 coordination objects rather than as incidental disturbances. Event-based
 collaborative mechanisms involving service and formation requests were studied
-in \cite{guo2017event}, where coordination is triggered by the evolving status
+in \cite{guo2016graphgrammar}, where coordination is triggered by the evolving status
 of local tasks. The important step here is that execution-time negotiation is
 brought inside the planning problem instead of being handled as an external
 patch. The team must decide not only how to respond to change, but also when a
@@ -896,7 +896,7 @@ state labels alone.
 That expressive gain has encouraged optimization-based formulations for
 continuous multi-robot planning. Coupled multi-robot motion under temporal goals
 was studied in \cite{lindemann2019coupled}, while more recent work such as
-\cite{liu2022stlq,kurtz2022mixedinteger,sun2022multiagent,sewlia2025maps2,yang2024stlmpc,buyukkocak2024sequential},
+\cite{liu2022stlq,kurtz2022mixed,sun2022multiagent,sewlia2025maps2,yang2024stlmpc,buyukkocak2024sequential},
 illustrates how STL constraints can be
 integrated into trajectory optimization, low-complexity MPC, mixed-integer
 planning, and dynamic-safety control pipelines. These methods narrow the gap
@@ -913,7 +913,7 @@ missions was studied in \cite{zhang2024reactive}, while dynamic semantic
 environments were considered in \cite{kalluraya2023multirobot}. Online learning
 and control for STL tasks, as in \cite{aksaray2022online}, and conformal-
 prediction-based STL synthesis among dynamic uncontrollable agents
-\cite{yu2026conformal}, point in a similar direction by coupling adaptation to
+\cite{luo2024decomposition}, point in a similar direction by coupling adaptation to
 richer continuous-time specifications. Taken as a whole, these works point to a
 broader transition in the field. Temporal planning is no longer confined to
 static propositions over a fixed abstraction. The task itself may depend on
