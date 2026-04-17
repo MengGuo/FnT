@@ -131,10 +131,10 @@ Thus, given the robot model and the task specification,
 the task plan for the robot team is defined by:
 \begin{equation}
 \label{ch06:plan}
-\Pi_{\mathcal{N}} \triangleq (\pi_1,\pi_2,\cdots,\pi_N),
+\boldsymbol{\tau}_{\mathcal{N}} \triangleq (\pi_1,\pi_2,\cdots,\tau_n),
 \end{equation}
 where
-$\pi_n \triangleq
+$\tau_n \triangleq
 (t_n^1,a_n^1,m_n^1)(t_n^2,a_n^2,m_n^2)\cdots
 (t_n^{K_n},a_n^{K_n},m_n^{K_n})$
 is the timed sequence of actions and corresponding targets for robot
@@ -142,15 +142,15 @@ $n \in \mathcal{N}$. Here, each action $a_n^k \in \mathcal{A}_n$ is
 executed on target $m_n^k \in \mathcal{M}$ at time $t_n^k > 0$, for
 $k \in \mathcal{K}_n \triangleq \{1,\cdots,K_n\}$. The plan
 \eqref{ch06:plan} induces the trace
-$w_{\Pi} \triangleq \sigma_1 \sigma_2 \cdots \sigma_L$, where
+$w_{\tau} \triangleq \sigma_1 \sigma_2 \cdots \sigma_L$, where
 $\sigma_{\ell} \in 2^{AP}$ for every $\ell \in \{1,\cdots,L\}$. The
 language of $\varphi$ is
 $\mathcal{L}_{\varphi} \triangleq \{w \mid w \models \varphi\}$, where
 $\models$ is the satisfaction relation. Since sc-LTL formulas admit
 satisfaction by finite traces
 \cite{belta2017formal,baier2008principles}, the plan satisfies
-$\varphi$ if $w_{\Pi} \in \mathcal{L}_{\varphi}$, which is denoted by
-$\Pi_{\mathcal{N}} \models \varphi$.
+$\varphi$ if $w_{\tau} \in \mathcal{L}_{\varphi}$, which is denoted by
+$\boldsymbol{\tau}_{\mathcal{N}} \models \varphi$.
 The makespan $T_{\varphi}$ is the minimum time required to generate a
 trace satisfying $\varphi$. Let
 $\varphi(t) \triangleq \{\varphi_1,\cdots,\varphi_L\}$ denote the set of
@@ -168,7 +168,7 @@ which is the performance metric used in the sequel.
 
 Given the task formulas $\varphi(t)$ and the observations
 $\{Y_{0:t},V_{0:t}\}$, the objective is to synthesize the team plan
-$\Pi_{\mathcal{N}}$ such that $\Pi_{\mathcal{N}} \models \varphi(t)$
+$\boldsymbol{\tau}_{\mathcal{N}}$ such that $\boldsymbol{\tau}_{\mathcal{N}} \models \varphi(t)$
 and the average makespan in \eqref{ch06:eq:avg-makespan} is minimized.
 
 %==============================
@@ -824,7 +824,7 @@ $G_{\widehat{T}_{\omega},m}/
     \texttt{CP-MCTS}(P_{\varphi},\rho,
     \widehat{Y}_{\mathcal{H}_0},G_{\mathcal{H}_0},x_0)$\;
     \While{the execution is not terminated}{
-        Each robot $n \in \mathcal{N}$ applies its local plan $\pi_n$\;
+        Each robot $n \in \mathcal{N}$ applies its local plan $\tau_n$\;
         Sense the team state $x_t$ and the target observation $Y_t$\;
         Obtain the updated prediction
         $\widehat{Y}_{\mathcal{H}_t}$\;
@@ -880,7 +880,7 @@ As illustrated in Fig.~\ref{ch06:fig:fra} and summarized in
 Algorithm~\ref{ch06:alg:ta}, the execution logic has two stages. The
 first is initial planning. The second is online adaptation. After the
 initial assignment has been computed, each robot
-$n \in \mathcal{N}$ executes its local plan $\pi_n$ by moving toward
+$n \in \mathcal{N}$ executes its local plan $\tau_n$ by moving toward
 the targets associated with its assigned subtasks and then performing
 the required actions. If the current action belongs to a multi-robot
 collaboration $C_k$ with $|C_k|>1$, the participating robot must wait

@@ -120,7 +120,7 @@ Then, the transition weight of the relaxed product automaton is
 \begin{aligned}
 W_r(\langle \pi_i,\, q_m \rangle,\,
 \langle \pi_j,\, q_n \rangle)
-\triangleq {} & W_c(\pi_i,\, \pi_j) \\
+\triangleq {} & w_c(\pi_i,\, \pi_j) \\
 & {} + \alpha \cdot
 \texttt{Dist}(L_c(\pi_i),\, \chi(q_m,\, q_n)),
 \end{aligned}
@@ -135,7 +135,7 @@ $\mathcal{A}_{\varphi}$. By Definition~\ref{ch03:def:relaxpro}, the existence
 of such an alphabet is guaranteed whenever the relaxed transition is present,
 so $\chi(q_m,\, q_n) \neq \emptyset$.
 Equation~\eqref{ch03:eq:WR} has a direct interpretation. The term
-$W_c(\pi_i,\, \pi_j)$ is the implementation cost of the transition in
+$w_c(\pi_i,\, \pi_j)$ is the implementation cost of the transition in
 $\mathcal{T}_c$, whereas
 $\texttt{Dist}(L_c(\pi_i),\, \chi(q_m,\, q_n))$ quantifies the degree to which
 the transition violates the original automaton constraint. A larger value of
@@ -187,7 +187,7 @@ cost in \eqref{ch03:eq:prod-cost2} is
 \begin{equation}
 \texttt{cost}_{\tau} \triangleq
 \Big( \sum_{i=0}^{f-1} + \gamma \sum_{i=f}^{n-1} \Big)
-W_c(\pi_i,\, \pi_{i+1}),
+w_c(\pi_i,\, \pi_{i+1}),
 \label{ch03:eq:cost}
 \end{equation}
 and the accumulated specification distance is
@@ -541,7 +541,7 @@ $W_r : Q' \times Q' \rightarrow \mathbb{R}^{+}$ is given by:
 \begin{aligned}
 W_r(\langle \pi_i,\, q_m \rangle,\,
 \langle \pi_j,\, q_n \rangle)
-\triangleq {} & W_c(\pi_i,\, \pi_j) \\
+\triangleq {} & w_c(\pi_i,\, \pi_j) \\
 & {} + \alpha \cdot
 \textup{\texttt{Dist}}(L_c(\pi_i),\, \chi_2(q_2,\, \check{q}_2)),
 \end{aligned}
@@ -553,7 +553,7 @@ $\alpha \geq 0$.
 \end{definition}
 
 The weight in \eqref{ch03:eq:weight-soft} has two components. The term
-$W_c(\pi_i,\, \pi_j)$ is the implementation cost of the transition in
+$w_c(\pi_i,\, \pi_j)$ is the implementation cost of the transition in
 $\mathcal{T}_c$, whereas
 $\texttt{Dist}(L_c(\pi_i),\, \chi_2(q_2,\, \check{q}_2))$ measures the degree
 to which that transition violates the soft specification. The hard component
