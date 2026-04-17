@@ -499,8 +499,8 @@ constraint \eqref{ch05:eq:pairing_cond} during each pairwise coordination.
 The claim follows from the structure of
 Algorithm~\ref{ch05:alg:coordination}. Stage-I is finite, since the
 quantities \(t^{\star}_{\texttt{h}\ell}\) are computed directly from
-\eqref{ch05:eq:return} for \(\ell\in\{i,j\}\), and the return decision
-is made by the feasibility test \eqref{ch05:eq:return-criterion}.
+\eqref{ch05:eq:estret} for \(\ell\in\{i,j\}\), and the return decision
+is made by the feasibility test \eqref{ch05:eq:return_cond}.
 Hence only finitely many operations are required before Stage-II.
 It remains to consider the iterative loop in Stage-II. At each
 iteration, the candidate next meeting event is accepted only if the
@@ -512,9 +512,9 @@ strictly decreases its cardinality, the loop can be repeated only
 finitely many times.
 
 Moreover, feasibility is preserved when tasks are removed. If
-\eqref{ch05:eq:return-criterion} already holds in Stage-I, then the
+\eqref{ch05:eq:return_cond} already holds in Stage-I, then the
 current tails admit a feasible continuation without forcing an
-immediate operator return. If \eqref{ch05:eq:return-criterion} fails,
+immediate operator return. If \eqref{ch05:eq:return_cond} fails,
 Stage-I explicitly appends a return event for the robot
 \(n=\arg\min_{\ell\in\{i,j\}} t^{\star}_{\texttt{h}\ell}\), so that a
 hub-reaching continuation is inserted before the latency bound is
@@ -540,25 +540,25 @@ $\delta_{\texttt{h}}(t) \leq T_{\texttt{h}}$ for all $t > 0$.
 The proof is by induction over the sequence of scheduled communication
 events on the embedded joint-wheel graph.
 At initialization, the embeddings are set by
-\eqref{ch05:eq:vertex-embed}--\eqref{ch05:eq:edge-embed}. In
+\eqref{ch05:eq:def-vertex-embed}--\eqref{ch05:eq:def-edge-embed}. In
 particular, all robots initially communicate near the operator, so the
 operator possesses the initial information state and the latency bound
 holds at \(t=0\).
 Assume now that the bound is satisfied up to some communication event
 \(c_{ij}\). At \(c_{ij}\), robots \(i\) and \(j\) exchange their
 incident embeddings and fuse their information, producing the merged
-latency vector \(\chi_{ij}\) in \eqref{ch05:eq:chi-ij}. Since the
-maximum in \eqref{ch05:eq:chi-ij} is taken component-wise, no confirmed
+latency vector \(\chi_{ij}\) in \eqref{ch05:eq:chi-merge}. Since the
+maximum in \eqref{ch05:eq:chi-merge} is taken component-wise, no confirmed
 time stamp is lost in this fusion step: every piece of information that
 was guaranteed to reach the operator through either robot remains
 guaranteed after the meeting.
 
 Stage-I then checks whether a direct operator return is needed. If
-\eqref{ch05:eq:return-criterion} holds, one of the current tails
+\eqref{ch05:eq:return_cond} holds, one of the current tails
 already implies operator delivery within the admissible horizon. If
-\eqref{ch05:eq:return-criterion} fails, the algorithm appends a return
+\eqref{ch05:eq:return_cond} fails, the algorithm appends a return
 event for the robot \(n\) with smallest \(t^{\star}_{\texttt{h}\ell}\),
-computed through \eqref{ch05:eq:return}. Hence, after Stage-I, the
+computed through \eqref{ch05:eq:estret}. Hence, after Stage-I, the
 information available at \(c_{ij}\) is guaranteed to reach the operator
 no later than \(\underline{\chi}_{ij}+T_{\texttt{h}}\).
 Stage-II then selects the next pairwise event
