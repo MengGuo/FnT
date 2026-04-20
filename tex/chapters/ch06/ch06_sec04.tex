@@ -2,8 +2,159 @@
 \section{Case Study}
 \label{ch06:sec:case}
 
+%==============================
+\subsection{Collaborative optimal transport under signal temporal tasks}
+\label{ch06:subsec:case_stl}
 
+This case study reports representative simulation results for the
+collaborative optimal transport framework developed in
+Sec.~\ref{ch06:sec:ch06_stl}. The aim is to illustrate how the batched
+robustness evaluation in Subsec.~\ref{ch06:subsec:batch-stl}, the
+sequential local transport updates in
+Subsec.~\ref{ch06:sec:local}, and the hybrid search procedure in
+Subsec.~\ref{ch06:sec:hybrid} operate together on collaborative STL
+tasks of moderate scale.
 
+In all simulations, the robot radius is set to
+$r \triangleq 0.1\,\mathrm{m}$, the discrete time step is
+$dt \triangleq 0.1\,\mathrm{s}$, and the planning horizon is
+$T \triangleq 48$. The workspace is defined on a
+$14 \times 9$ planar domain with static obstacles. For the local
+optimal transport updates, the batch size is fixed at
+$400$ trajectories. The resulting trajectories and robustness traces are
+shown in Figs.~\ref{ch06:fig:split-merge} and
+\ref{ch06:fig:alternative-visitation}.
+
+%==============================
+\subsubsection{Split-and-merge navigation under staged connectivity}
+\label{ch06:subsubsec:case_split_merge}
+
+The first scenario considers a team of $9$ robots navigating in an
+obstacle-cluttered environment. The task consists of two stages. In the
+first stage, the team is partitioned into three subgroups, and each
+subgroup is required to visit its designated target region while
+maintaining an intra-group chain constraint with threshold
+$0.8\,\mathrm{m}$. In the second stage, the three subgroups merge into a
+single connected team and then pass through a narrow corridor to reach
+the final target region.
+Let $\mu_{A_j}$ denote the predicate that subgroup $j$ enters its
+designated target region. Let $\mu_{\textup{chain}}^j$ denote the chain
+predicate for subgroup $j$, and let $\mu_{\textup{conn}}$ denote the
+predicate that the whole team remains connected. The corresponding STL
+task is
+\begin{equation}
+\phi_1
+=
+\left(
+\bigwedge_{j=1}^{3}\mathsf{F}_{[0,2.4]}\mu_{A_j}
+\right)
+\wedge
+\left(
+\bigwedge_{j=1}^{3}\mathsf{G}_{[0,2.4]}
+\mu_{\textup{chain}}^j
+\right)
+\wedge
+\mathsf{G}_{[2.4,4.7]}\mu_{\textup{conn}},
+\label{ch06:eq:case_split_merge}
+\end{equation}
+where the first two terms encode the split phase, and the last term
+imposes global connectivity during the merge-and-traverse phase.
+
+Figure~\ref{ch06:fig:split-merge} shows a representative execution. The
+left panel presents the planned trajectories. The three subgroups first
+separate to visit their intermediate target regions and then merge into
+a connected formation before entering the narrow passage. The right
+panel shows the corresponding predicate robustness values. The regional
+predicates $\mu_{A_1}$, $\mu_{A_2}$, and $\mu_{A_3}$ become positive
+during the first stage, the three chain predicates remain positive on
+$[0,2.4]$, and the global connectivity predicate becomes positive after
+the switching time and stays positive thereafter. In this
+representative trial, a feasible plan is obtained in
+$26.13\,\mathrm{s}$.
+
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.9\linewidth]%
+{figures/ch06/case_split_merge_navigation.png}
+\caption{
+Split-and-merge navigation under staged connectivity constraints. Left:
+planned trajectories for the three subgroups and their subsequent merge
+into a connected team. Right: robustness traces of the regional,
+subgroup-chain, and global-connectivity predicates associated with
+\eqref{ch06:eq:case_split_merge}. The red dashed line marks the
+transition between the split phase and the merge phase.
+}
+\label{ch06:fig:split-merge}
+\end{figure}
+
+%==============================
+\subsubsection{Alternative target visitation under persistent chain
+constraints}
+\label{ch06:subsubsec:case_alternative_visitation}
+
+The second scenario considers a team of $12$ robots moving through a
+workspace with non-convex obstacles. In this case, the team must
+maintain a chain formation throughout the whole motion, with a
+constraint margin of $1\,\mathrm{m}$. In addition, two visitation
+objectives are imposed over the full horizon. For each objective, two
+candidate target regions are given, and satisfying either one is
+sufficient.
+Let $\mu_A^{i,j}$ denote the predicate that all robots simultaneously
+enter the $j$th candidate region of the $i$th visitation objective, and
+let $\mu_{\textup{chain}}$ denote the chain predicate for the whole
+team. The corresponding STL task is
+\begin{equation}
+\phi_2
+=
+\bigwedge_{i=1}^{2}
+\left(
+\bigvee_{j=1}^{2}\mathsf{F}_{[0,4.7]}\mu_A^{i,j}
+\right)
+\wedge
+\mathsf{G}_{[0,4.7]}\mu_{\textup{chain}},
+\label{ch06:eq:case_alternative_visitation}
+\end{equation}
+where each disjunction encodes one alternative visitation objective,
+while the last term enforces the chain constraint over the entire
+horizon.
+
+Figure~\ref{ch06:fig:alternative-visitation} shows a representative
+solution. The left panel indicates that the team preserves the chain
+structure while navigating around the non-convex obstacles and
+eventually reaches one admissible target region from each objective
+pair. The right panel reports the associated robustness traces. The
+chain robustness remains positive throughout the whole horizon, and one
+predicate in each disjunctive visitation set becomes positive, thereby
+confirming satisfaction of
+\eqref{ch06:eq:case_alternative_visitation}. In the representative
+trial, the team selects the lower candidate region in both objective
+sets, and the planning time is $36.97\,\mathrm{s}$.
+
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.9\linewidth]%
+{figures/ch06/case_alternative_target_visitation.png}
+\caption{
+Alternative target visitation under persistent chain constraints. Left:
+planned trajectories of the $12$-robot team in a workspace with
+non-convex obstacles. Right: robustness traces of the candidate-region
+predicates and the chain predicate associated with
+\eqref{ch06:eq:case_alternative_visitation}. The positive robustness of
+one predicate in each disjunctive target set confirms task
+satisfaction.
+}
+\label{ch06:fig:alternative-visitation}
+\end{figure}
+
+These two examples are consistent with the analytical development in
+Sec.~\ref{ch06:sec:ch06_stl}. The first emphasizes staged task logic
+together with time-dependent connectivity requirements, whereas the
+second highlights disjunctive region visitation under persistent
+coupling. In both cases, the robustness traces agree with the formal STL
+specifications, and the resulting trajectories demonstrate that the
+combined use of batched robustness evaluation, sequential local
+transport, and hybrid search yields feasible collaborative plans in
+geometrically nontrivial environments.
 
 
 
