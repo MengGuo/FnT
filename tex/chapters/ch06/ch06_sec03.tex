@@ -355,7 +355,6 @@ compositions, respectively, while $\mathsf{U}_I$ induces a recursive
 combination of both.
 The representation in \eqref{ch06:eq:stl-tree} enables bottom-up
 robustness evaluation over the formula tree.
-An illustration is shown in Figure~\ref{ch06:fig:stl-tree}.
 
 
 %%===================
@@ -700,8 +699,7 @@ In this way, the sequential procedure yields the collective trajectory
 The overall solution quality depends on the planning sequence
 $\kappa$, because early decisions influence the feasible and
 cost-effective regions available to later robots.
-This interaction between sequence selection and sequential transport is
-illustrated in Figure~\ref{ch06:fig:slot} and motivates the hybrid search
+This interaction between sequence selection and sequential transport motivates the hybrid search
 scheme introduced in the next subsection.
 
 Several implementation heuristics can further improve the numerical
@@ -773,9 +771,7 @@ available to the remaining robots, so the final collective solution is
 determined jointly by sequence selection and trajectory refinement.
 To address this coupling, a hybrid search layer is introduced that
 combines discrete exploration over partial planning sequences with
-continuous local optimization through the Sinkhorn-based updates.
-The interaction between these two components is illustrated in
-Figure~\ref{ch06:fig:slot}.
+continuous local optimization through the Sinkhorn-based updates. The two components are tightly coupled, since each partial sequence restricts the feasible local transports and each local transport evaluation influences subsequent sequence expansion.
 
 %==============================
 \subsubsection{Hybrid Search Framework}

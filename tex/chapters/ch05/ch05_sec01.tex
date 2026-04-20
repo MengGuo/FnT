@@ -3,8 +3,7 @@
 \label{ch05:sec:ch05_interm_team}
 
 In this section, a multi-agent system is considered in which complex tasks with
-temporal constraints are released online, as illustrated in
-Fig.~\ref{ch05:fig:first}. The focus is on an online co-optimization problem in
+temporal constraints are released online. The focus is on an online co-optimization problem in
 which collaborative task execution and communication decisions are synthesized
 simultaneously. In contrast to periodic team-wide communication or intermittent
 pairwise communication schemes, the proposed framework determines
@@ -163,8 +162,7 @@ relations in \eqref{ch05:eq:task-constraints} are a task-level specialization.
 \label{ch05:subsec:comm-const}
 
 The fleet cannot maintain continuous real-time communication because of physical
-limitations in signal propagation and environmental occlusion. As illustrated in
-Fig.~\ref{ch05:fig:communication-constraints}, successful communication between
+limitations in signal propagation and environmental occlusion. Successful communication between
 robots $i, j \in \mathcal{N}$ requires the communication quality $Q_{ij}(t)$ to
 exceed a threshold $\delta > 0$. The communication quality is modeled by:
 \begin{equation}
@@ -434,8 +432,7 @@ task allocation and communication scheduling are coupled within a single search
 structure.
 
 (IV) \emph{Bounding}.
-Each child node undergoes iterative bound refinement. As illustrated in
-Fig.~\ref{ch05:fig:lower-bound}, at iteration $k$, a task
+Each child node undergoes iterative bound refinement. At iteration $k$, a task
 $\omega^{(k)} \in \Omega_t \setminus \Omega_{\nu^{(k)}}$ is selected and
 assigned to an eligible robot group
 $\mathcal{A} \in \mathcal{A}_k$ by solving:
@@ -677,8 +674,7 @@ communication position $p_{j_n}^{\texttt{c}}$. This step refines the
 configuration locally while preserving the possibility of connected
 communication. A candidate communication position $p^{\texttt{c}}$ is then
 generated between $p_{i_{\texttt{e}}}^{\texttt{f}}$ and $p_{j_n}^{\texttt{c}}$
-through the routine $\texttt{SelCom}$. As illustrated in
-Fig.~\ref{ch05:fig:comm-event}, this candidate moves the communication
+through the routine $\texttt{SelCom}$. This candidate moves the communication
 position of robot $i_{\texttt{e}}$ toward a more balanced configuration in
 time, while remaining compatible with the underlying communication geometry.
 
@@ -730,8 +726,7 @@ times, motion costs, and communication feasibility.
 \label{ch05:subsubsec:online-execution}
 
 To accommodate dynamically emerging tasks, the coordination framework is
-executed online. As illustrated in Fig.~\ref{ch05:fig:framework}, robots
-discover new tasks while moving in the workspace, and the detected task set is
+executed online. Robots discover new tasks while moving in the workspace, and the detected task set is
 updated incrementally as $\Omega_t$. During execution, each robot follows its
 current local plan $\tau_i$ and proceeds toward either the next assigned task
 or the next communication location. In this way, planning and execution remain

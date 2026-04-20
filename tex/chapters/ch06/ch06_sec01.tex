@@ -657,8 +657,7 @@ The construction follows the semi-MDP and option framework in
 \cite{sutton1999between}. Each abstract transition represents a motion policy
 between two feature states. As in the baseline method, the return policy is
 synthesized first, because its value function is required when building the
-task-level abstraction. The overall structure is illustrated in
-Fig.~\ref{ch06:fig:proposed_framework}.
+task-level abstraction. The overall structure is hierarchical: the return policy is computed first, then used to construct the task-level abstraction for outbound planning.
 
 
 \subsubsection{Hierarchical synthesis of the return policy}
@@ -957,8 +956,7 @@ reaches \(S'_{\textup{\texttt{o}},\Xi}\), after which the suffix policy
 \(\boldsymbol{\pi}'_{\textup{\texttt{o}},\texttt{suf}}\) is used. The
 safe-return policy is invoked only when a return request is issued. Its
 execution is analogous, except that it terminates after reaching
-\(S'_{\textup{\texttt{r}},\Xi}\). The execution structure is shown in
-Fig.~\ref{ch06:fig:execution}.
+\(S'_{\textup{\texttt{r}},\Xi}\). The execution therefore consists of an outbound phase that switches from prefix to suffix control after entering \(S'_{\textup{\texttt{o}},\Xi}\), and a return phase that terminates upon reaching \(S'_{\textup{\texttt{r}},\Xi}\).
 The algorithmic difference between
 Algorithm~\ref{ch06:alg:direct} and
 Algorithm~\ref{ch06:alg:all} is as follows. The baseline method

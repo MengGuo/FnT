@@ -350,8 +350,7 @@ reduce this conservatism, two partial relations are introduced.
 \begin{example}
 \label{ch04:example:subtask}
 Consider the accepting run
-$\rho=q_{1}q_{2}q_{4}q_{5}$ in
-Fig.~\ref{ch04:fig:example_decomposable}. The corresponding decomposition is
+$\rho=q_{1}q_{2}q_{4}q_{5}$. The corresponding decomposition is
 $\Omega_{\varphi}=
 \bigl\{
 (1,\{\texttt{sweep}_{\texttt{p}_{21}}\},\{\texttt{p}_{24}\}),
@@ -395,9 +394,7 @@ simultaneous execution cannot be ignored. The two relations can distinguish
 the main temporal situations between two subtasks: one may start before the
 other and still overlap with it, one may have to finish before the other
 starts, two may be mutually exclusive without a fixed order, or they may be
-fully parallel. This interpretation is illustrated in
-Fig.~\ref{ch04:fig:partial} and
-Fig.~\ref{ch04:fig:example_remark_4}. The construction also contains the
+fully parallel. The two relations therefore distinguish start-order constraints, finish-before-start constraints, mutual exclusion without fixed order, and fully parallel execution. The construction also contains the
 decomposable-state abstraction in~\cite{schillinger2018simultaneous} as a
 special case, but allows independent subtasks to appear even within the same
 segment of an accepting run.
@@ -698,8 +695,7 @@ As in a Hasse diagram~\cite{simovici2008mathematical}, one can construct a
 graphical representation of an R-poset. The graph
 $\mathcal{G}_{P_{\varphi}}$ provides a compact representation of the
 temporal structure of the decomposition. Directed edges encode precedence,
-whereas hyperedges encode mutual exclusion. As shown in
-Fig.~\ref{ch04:fig:poset_language}, the graph may be disconnected and may
+whereas hyperedges encode mutual exclusion. The graph may be disconnected and may
 contain multiple root nodes.
 
 
@@ -756,8 +752,7 @@ late optimal one.
 Motivated by these considerations, an anytime assignment procedure based on
 branch and bound is adopted; see~\cite{morrison2016branch}. The method remains
 complete and optimal, while also returning progressively better feasible
-solutions as time permits. As illustrated in
-Fig.~\ref{ch04:fig:bnb_search_logic}, the key ingredients are node expansion,
+solutions as time permits. The key ingredients are node expansion,
 branching, and the construction of upper and lower bounds.
 
 (I) \emph{Node expansion.}

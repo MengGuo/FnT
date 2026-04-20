@@ -477,8 +477,7 @@ Different accepting R-posets may correspond to the same task formula,
 since the retained temporal relations need not be unique. In practice,
 the R-poset in \eqref{ch06:eq:r-poset} is computed by the anytime
 procedure $\texttt{compute\_poset}(\cdot)$ in
-Algorithm~\ref{ch04:alg:compute-poset}. An illustration of the resulting
-structure is shown in Fig.~\ref{ch06:fig:fra}.
+Algorithm~\ref{ch04:alg:compute-poset}. The resulting structure is an R-poset that retains the essential precedence and synchronization relations needed for assignment and execution.
 
 
 
@@ -670,8 +669,7 @@ $\mathrm{CVaR}_{\alpha}(\Pi_{\texttt{c}}) \triangleq
 \mathbf{\overline{T}}_{\texttt{c}} \geq
 \mathrm{VaR}_{\alpha}(\Pi_{\texttt{c}})
 \bigr]$.
-As illustrated in Fig.~\ref{ch06:fig:CVaR},
-$\mathrm{VaR}_{\alpha}$ identifies a tail threshold, whereas
+Here, $\mathrm{VaR}_{\alpha}$ identifies a tail threshold, whereas
 $\mathrm{CVaR}_{\alpha}$ measures the expected cost beyond that
 threshold and is therefore more informative for risk-sensitive
 assignment. Accordingly, the evaluation metric of a complete plan is
@@ -725,8 +723,7 @@ first ignores target motion and treats all targets as stationary, which
 yields the no-trajectory-prediction baseline NTP. The second uses the
 nominal predictions $\widehat{Y}_{\mathcal{H}_t}$ but ignores the
 uncertainty regions $G_{\mathcal{H}_t}$, which yields the
-no-uncertainty baseline NU. Representative comparisons are shown in
-Fig.~\ref{ch06:fig:offline_cases}. Relative to these baselines, the
+no-uncertainty baseline NU. Relative to these baselines, the
 risk-sensitive CVaR criterion captures both motion forecast and
 uncertainty growth in the assignment process.
 
@@ -876,7 +873,7 @@ adaptation framework of Chapter~\ref{chap:top-down}, the current plan is
 executed non-preemptively, while replanning is triggered only when new
 task information becomes available or when the quality of the current
 assignment deteriorates sufficiently.
-As illustrated in Fig.~\ref{ch06:fig:fra} and summarized in
+As summarized in
 Algorithm~\ref{ch06:alg:ta}, the execution logic has two stages. The
 first is initial planning. The second is online adaptation. After the
 initial assignment has been computed, each robot

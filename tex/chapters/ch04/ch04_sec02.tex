@@ -193,8 +193,7 @@ currently reachable automaton states for all missions. The root node is
 $\nu_0 \triangleq
 \bigl(\emptyset,\{\widehat{Q}_m^0\}_{m\in\mathcal{M}}\bigr)$,
 where $\widehat{Q}_m^0 \triangleq Q_0^m$. As summarized in
-Algorithm~\ref{ch04:alg:ss-TaskAssign} and illustrated in
-Fig.~\ref{ch04:fig:Tree}, the procedure consists of four stages: selection,
+Algorithm~\ref{ch04:alg:ss-TaskAssign}, the procedure consists of four stages: selection,
 expansion, bounding, and termination, as detailed below.
 
 
@@ -427,7 +426,7 @@ assignment.
 
 \begin{example}
 \label{ch04:example:task-decomp}
-As illustrated in Fig.~\ref{ch04:fig:Tree}, suppose the mission automata
+Suppose the mission automata
 contain the task symbols
 $\omega_1,\omega_2,\omega_3,\omega_4,\omega_5$. The optimal leaf node
 $\nu_{K^\star}^\star$ assigns these five tasks to three teams, so that
@@ -619,7 +618,7 @@ with the team assignment and the mission-level decomposition.
 
 \begin{example}
 \label{ch04:example:formation}
-Figure~\ref{ch04:fig:formation} illustrates the team formation induced by the
+Consider the team formation induced by the
 optimal abstract assignment $\nu_{K^\star}^\star$. In that example, the team
 $\mathcal{N}_1=\{2,4,6,7,9\}$ executes the sequence
 $\omega_2\omega_3\omega_6\omega_8$, the team
@@ -746,8 +745,8 @@ $\{x_i^\ell\}_{i\in\mathcal{N}_k}$.
 
 \begin{example}
 \label{ch04:example:StaticKnown}
-Figure~\ref{ch04:fig:StaticKnown} shows one instance of the static and known
-case. A total of $14$ delivery subtasks are assigned to $5$ robots with
+In one static and known
+case, a total of $14$ delivery subtasks are assigned to $5$ robots with
 different dynamic constraints. The resulting assignments and trajectories differ
 substantially between the holonomic and non-holonomic settings.
 \end{example}
@@ -795,8 +794,8 @@ in the static and known case is used to ensure trajectory feasibility.
 
 \begin{example}
 \label{ch04:example:StaticUnknown}
-Figure~\ref{ch04:fig:StaticUnknown} shows one instance of the static and
-unknown case. Five robots are assigned to a task containing $8$ initially
+In one static and
+unknown case, five robots are assigned to a task containing $8$ initially
 unknown targets. The initial trajectories are chosen for coverage, and the
 plans are then updated as targets are discovered. The resulting execution
 simultaneously explores the task region and completes all revealed subtasks.
@@ -867,8 +866,8 @@ time windows is enough to recover a consistent coalition configuration.
 
 \begin{example}
 \label{ch04:example:DynamicKnown}
-Figure~\ref{ch04:fig:DynamicKnown} shows one instance of the dynamic and known
-case. Five robots are assigned to five moving targets through the distributed
+In one dynamic and known
+case, five robots are assigned to five moving targets through the distributed
 coalition updates. Initially, each
 robot is assigned to one target. Later, robots $2$ and $3$ exchange targets,
 and once target $3$ is completed, robots $2$ and $4$ form a coalition for

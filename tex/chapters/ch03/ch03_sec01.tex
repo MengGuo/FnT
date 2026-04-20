@@ -113,8 +113,7 @@ $l \in 2^{AP}$ to~$\chi$ as:
 \end{cases}
 \label{ch03:eq:setdist}
 \end{equation}
-which is well defined only when $\chi \neq \emptyset$. An illustration of
-\eqref{ch03:eq:setdist} is shown in Figure~\ref{ch03:distexam}.
+which is well defined only when $\chi \neq \emptyset$. In particular, the value is zero whenever $l \in \chi$, and otherwise it equals the smallest distance from $l$ to any alphabet in $\chi$.
 Then, the transition weight of the relaxed product automaton is
 \begin{equation}
 \begin{aligned}
@@ -143,7 +142,7 @@ $\alpha$ imposes a stronger penalty on such violations yielding
 a stronger preference for preserving the original task.
 
 \begin{example}\label{ch03:examp:dist}
-Consider the NBA in Figure~\ref{ch02:fig:Buchi} and the transition from $q_1$
+Consider the NBA introduced in Example~\ref{ch02:examp:NBA} and the transition from $q_1$
 to $q_3$. In this case,
 $\chi(q_1,\, q_3)
 = \{\{a_2\},\, \{a_1,\, a_2\},\, \{a_2,\, a_3\},\,
@@ -314,8 +313,7 @@ $\tau_{\textup{bal}} \models \varphi$ holds.
 
 
 \begin{example}\label{ch03:examp:singleRS}
-Consider the example in Figure~\ref{ch03:fig:toyExamSingle}. The robot starts
-from region~$\pi_0$ and should eventually reach~$\pi_3$ and remain there, while
+Consider a robot that starts from region~$\pi_0$ and should eventually reach~$\pi_3$ and remain there, while
 avoiding every region that satisfies $a_2$ or $a_3$. By varying $\alpha$ with
 $\gamma = 5$, three distinct balanced plans are obtained:
 
@@ -673,8 +671,7 @@ In practice, the transition-system model is rarely fully consistent with the
 actual workspace or the robot dynamics throughout execution. As a result, a
 motion and task plan synthesized off-line may later become invalid, unsafe, or
 suboptimal once new information is acquired. This motivates an on-line planning
-framework in which execution and planning are interleaved, as illustrated in
-Figure~\ref{ch03:fig:online}. The essential requirement is that the robot
+framework in which execution and planning are interleaved. The essential requirement is that the robot
 should monitor plan execution, update its workspace model from real-time
 observations, and revise the current plan whenever necessary while preserving
 validity and safety.
@@ -903,7 +900,7 @@ where $\texttt{last}(R)$ is the last state of the finite run~$R$.
 By construction, $R_{\textup{past}} \in R_{\tau_{\textup{past}}}$ and the
 current product state recorded during execution belongs to
 $Q'_{\tau_{\textup{past}}}$.
-Figure~\ref{ch03:fig:tworevise} illustrates the local revision idea. Rather
+The local revision idea is as follows. Rather
 than recomputing a new run globally at every update, the algorithm first tries
 to repair the current run by inserting a bridging segment around each invalid
 or unsafe transition. This idea is close in spirit to the revision scheme

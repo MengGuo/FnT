@@ -47,8 +47,7 @@ workspace together with the relevant features, a single operator and a fleet of
 autonomous robots are deployed in $\mathcal{A}$. Let
 $\mathcal{N} \triangleq \{1,\cdots,N\}$ denote the robot index set, and let
 $\mathcal{T} \triangleq \{\texttt{h}\} \cup \mathcal{N}$ denote the overall
-operator-fleet system, where $\texttt{h}$ is the human operator. As illustrated
-in Fig.~\ref{ch05:fig:scenario} and Fig.~\ref{ch05:fig:comm_model}, each robot
+operator-fleet system, where $\texttt{h}$ is the human operator. Each robot
 $i \in \mathcal{N}$ is equipped with sensing devices such as IMU, LiDAR, and
 RGB-D cameras, together with the actuators required for mobility in the
 workspace. These capabilities support simultaneous localization and mapping, as
@@ -88,7 +87,7 @@ exploration process.
 \subsubsection{Communication Model under Limited Connectivity}
 \label{ch05:subsec:com}
 
-As illustrated in Fig.~\ref{ch05:fig:comm_model}, each robot and the operator
+Each robot and the operator
 are equipped with wireless communication devices for robot-robot and
 robot-operator information exchange, such as ad-hoc networks, UWB, radio, or
 5G-based communication \cite{klaesson2020planning,xia2023relink}. The same
@@ -341,7 +340,7 @@ $(k_\ell, k_{\ell+1}) \in \mathcal{E}_{\texttt{r}}$ for
 $\ell = 1,\cdots,N$ with $k_{N+1} \triangleq k_1$, and
 $\mathcal{E}_{\texttt{h}} \triangleq
 \{(\texttt{h}, i) \mid i \in \mathcal{N}\}$.
-As illustrated in Fig.~\ref{ch05:fig:joint-wheel}, the term
+Here, the term
 \emph{joint-wheel} refers to joint connectivity over time rather than to a
 static wheel graph. At any given time, the protocol activates at most one rim
 edge in $\mathcal{E}_{\texttt{r}}$, so only one robot pair communicates.
@@ -400,8 +399,7 @@ exchange yields the merged latency vector
 \end{equation}
 where the maximum is taken component-wise. The subsequent coordination
 computation proceeds in three stages, summarized in
-Algorithm~\ref{ch05:alg:coordination} and
-Fig.~\ref{ch05:fig:pairopt}.
+Algorithm~\ref{ch05:alg:coordination}.
 
 \textbf{Stage-I: determine the return event}.
 Define
@@ -643,8 +641,7 @@ distributed detach-and-rejoin procedure that preserves the wheel topology and
 respects the latency constraint. A key design choice is that the rewiring is
 completed through two consecutive meeting events. In this way, the successor
 robots receive consistent plan and adjacency updates before a robot leaves or
-rejoins the wheel, as illustrated in
-Fig.~\ref{ch05:fig:detach-rejoin}.
+rejoins the wheel.
 
 (I) \emph{Detaching from the wheel}.
 Consider three consecutive robots $(i,j,k)$ along the wheel, where robot $j$

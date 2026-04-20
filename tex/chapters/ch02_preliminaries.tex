@@ -546,7 +546,7 @@ labels~\citep{akers1978binary}.
 Consider the specification
 $\varphi = (\square\Diamond a_1) \wedge (\square\Diamond a_2)
 \wedge (\square\Diamond a_3) \wedge (\square \neg a_4)$.
-A corresponding automaton is shown in Figure~\ref{ch02:fig:Buchi}. If an edge
+A corresponding automaton contains states that encode repeated satisfaction of the required surveillance propositions together with permanent exclusion of $a_4$. If an edge
 from $q_1$ to $q_3$ is labeled by the Boolean expression
 $a_2 \wedge \neg a_4$, then every symbol in $2^{AP}$ satisfying that
 expression enables the same transition. Hence a single symbolic label may
@@ -813,8 +813,7 @@ $R_{\textup{opt}} \leftarrow \emptyset$\;
 %==============================
 %==============================
 
-Algorithm~\ref{ch02:alg:optimal} is illustrated in
-Figure~\ref{ch02:fig:accPath}. The algorithm first computes the shortest suffix
+Algorithm~\ref{ch02:alg:optimal} proceeds as follows. The algorithm first computes the shortest suffix
 cycle for each accepting state in $\mathcal{F}'$. It then computes, for each
 $q_s' \in S'$, the shortest prefix paths from $q_s'$ to all reachable
 accepting states. Each feasible pair $(q_s',q_f')$ defines a candidate lasso
@@ -971,12 +970,36 @@ the optimal accepting run on the fully constructed product automaton. The
 quantity $t_{\textup{fly}}$ denotes the time required when the product automaton
 is generated on the fly during search.
 The associated B\"uchi automaton has $75$ states and
-$877$ transitions. Table~\ref{ch02:tab:complexity} indicates that, for this
+$877$ transitions. Figure~\ref{fig:ex34_barchart} indicates that, for this
 task class, product construction dominates the total computation time, whereas
 the graph search itself is relatively inexpensive. This observation explains
 why symbolic and on-the-fly constructions are important in practice.
 \end{example}
 
+
+%------------------------------
+%------------------------------
+%------------------------------
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\linewidth]{figures/ch02/single_robot_complexity_bar_chart.pdf}
+\caption{
+Computation times $t_{\textup{full}}$, $t_{\textup{syn}}$, and
+$t_{\textup{fly}}$ in Example~\ref{ch02:exam:complexity}, plotted
+against the problem size $n^2$. The quantity $t_{\textup{full}}$
+denotes the time required to construct the product automaton fully,
+$t_{\textup{syn}}$ denotes the time required to synthesize the optimal
+accepting run on the fully constructed product automaton, and
+$t_{\textup{fly}}$ denotes the time required when the product automaton
+is generated on the fly during search. A logarithmic $y$-axis is used so
+that all three quantities remain visible on the same scale.
+}
+\label{fig:ch02:single_robot_complexity}
+\end{figure}
+
+%------------------------------
+%------------------------------
+%------------------------------
 
 \subsection{Scalability in the multi-robot setting}
 \label{ch02:sssec:multi_robot_scalability}
@@ -1015,21 +1038,327 @@ graph search. This observation motivates the decentralized and compositional
 developments presented in the later chapters. Similar scalability issues have
 been reported in the multi-robot temporal-logic literature
 \citep{kloetzer2010automatic,chen2012formal,kloetzer2011multi,guo2015multi}.
+A numeric example is shown in Example~\ref{ch02:exam:multi_robot_complexity}.
 
+\begin{example}
+\label{ch02:exam:multi_robot_complexity}
+To illustrate the centralized growth in the multi-robot setting, consider
+$N$ identical robots, each modeled by the same $5 \times 5$ grid-based
+transition system, so that $|\Pi_i| = 25$ for every
+$i \in \{1,\cdots,N\}$. Let the team task be specified by the same
+B\"uchi automaton as in Example~\ref{ch02:exam:complexity}, which has
+$75$ states and $877$ transitions.
+The centralized team transition system then has
+$|\Pi_{\textup{team}}| = 25^N$ states, and the corresponding product
+automaton has
+$|Q'_{\textup{team}}| = 75 \cdot 25^N$ states. Hence the state space
+grows exponentially with the number of robots even though the local
+model and the task automaton remain unchanged.
+To obtain indicative CPU times, the single-robot benchmark data from
+Example~\ref{ch02:exam:complexity} are extrapolated by linear fits in the
+team-transition-system size. The resulting estimates show that both
+product construction and plan synthesis become rapidly impractical under
+centralized scaling. In particular, with only six robots, the estimated
+product-construction time already reaches about $58$ days, while the
+estimated synthesis time exceeds $2.7$ days. This example makes explicit
+why direct centralized synthesis is not a viable approach for
+multi-robot systems beyond very small team sizes.
+\end{example}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\linewidth]{figures/ch02/multi_robot_complexity_plot.pdf}
+\caption{
+Centralized growth in the multi-robot setting for identical robots with
+local state size $|\Pi_i|=25$ and a fixed B\"uchi automaton of size
+$75$. Top: exact growth of the team transition system
+$|\Pi_{\textup{team}}|$ and the product automaton
+$|Q'_{\textup{team}}|$. Bottom: extrapolated CPU times for full product
+construction and optimal-run synthesis, based on the single-robot
+benchmark in Example~\ref{ch02:exam:complexity}. The ordinary linear
+$y$-axes make the explosive growth with respect to the number of robots
+visually explicit.
+}
+\label{fig:ch02:multi_robot_complexity}
+\end{figure}
+
+
+
+%==============================
 %==============================
 %==============================
 %==============================
 \section{Case Study}
 \label{ch02:sec:case_study}
 
+This case study instantiates the nominal synthesis pipeline on a concrete
+single-robot planning problem. The objective is not to introduce new modeling
+ingredients, but to show how workspace abstraction, temporal-task
+specification, product construction, and hybrid execution combine in one
+complete synthesis instance. The example also serves as a baseline for the
+multi-robot developments presented later.
 
-The nominal pipeline developed above is illustrated next on a
-representative single-robot temporal-task planning example. The purpose
-of the case study is not to introduce new modeling ingredients, but to
-show how workspace abstraction, task specification, product
-construction, and hybrid execution fit together in a concrete synthesis
-instance. In this way, the example serves as a baseline for the more
-elaborate multi-robot developments that follow in later chapters.
+%==============================
+\subsection{Workspace and platform}
+\label{ch02:subsec:case_workspace}
+
+The workspace is a structured indoor environment of size
+$2.4\,\mathrm{m} \times 2.1\,\mathrm{m}$, consisting of two rows of rooms
+separated by a corridor. Each row contains three rooms, and the corridor is
+partitioned into three smaller segments. The resulting region set is defined by
+$\Pi \triangleq \{r_1,\cdots,r_6,c_1,c_2,c_3\}$. More specifically, the rooms
+$r_1,r_2,r_3$ are located on one side of the corridor, the rooms
+$r_4,r_5,r_6$ are located on the other side, and the corridor itself is
+represented by the three intermediate regions $c_1,c_2,c_3$. This partition
+provides a compact workspace abstraction while preserving the adjacency
+relations needed for motion planning.
+The atomic propositions associated with the regions are
+$\textsf{r1},\cdots,\textsf{r6},\textsf{c1},\textsf{c2},\textsf{c3}$, together
+with the object propositions $\textsf{rball}$, $\textsf{gball}$, and
+$\textsf{basket}$. The labeling map is specified by
+$L_c(r_1)=\{\textsf{r1}\}$,
+$L_c(r_2)=\{\textsf{r2},\textsf{basket}\}$,
+$L_c(r_3)=\{\textsf{r3},\textsf{gball}\}$,
+$L_c(c_1)=\{\textsf{c1}\}$,
+$L_c(c_2)=\{\textsf{c2}\}$,
+$L_c(c_3)=\{\textsf{c3}\}$,
+$L_c(r_4)=\{\textsf{r4},\textsf{basket}\}$,
+$L_c(r_5)=\{\textsf{r5},\textsf{rball}\}$, and
+$L_c(r_6)=\{\textsf{r6}\}$.
+The cost of a transition between adjacent regions is taken as the Euclidean
+distance between their centers.
+
+The platform considered in this chapter is TIAGo. At the abstraction level of
+the present case study, the execution model is represented by the weighted
+transition system $\mathcal{T}_c$, while the low-level realization is handled
+through the platform-specific motion and action interface discussed in
+Sec.~\ref{ch02:subsec:tiago_execution}. In particular, the generic
+controller $\mathcal{U}(x(t),\pi_i,\pi_j)$ in \eqref{ch02:eq:control} is
+instantiated on TIAGo so that each discrete transition between adjacent regions
+can be executed by the underlying navigation and action stack. This
+construction yields a weighted transition system $\mathcal{T}_c$ with $9$
+states and $16$ transitions. In simulation, Gaussian perturbations are added
+to the actuation signal in order to represent execution noise.
+
+%==============================
+\subsection{Representative task instances}
+\label{ch02:subsec:case_tasks}
+
+The synthesized plans are illustrated on four representative temporal tasks.
+Together, these cases cover one-time delivery, constrained delivery,
+location-dependent delivery, and persistent surveillance.
+
+\emph{Case I.}
+The robot is required to pick up the red ball, carry it to one of the baskets,
+and then stay in room $r_1$. The specification is
+$\varphi_1 \triangleq
+\Diamond(\textsf{rball} \wedge \Diamond\,\textsf{basket})
+\wedge \Diamond \square\,\textsf{r1}$.
+Algorithm~\ref{ch02:alg:optimal} computes the optimal accepting run in
+$0.03\,\mathrm{s}$ and returns the plan
+$r_1\,c_1\,c_2\,r_5\,c_2\,r_2\,c_2\,c_1\,r_1\,(r_1)^\omega$.
+The prefix cost is $581$, and the suffix cost is $1$.
+Algorithm~\ref{ch02:alg:hybrid} then executes the plan by hybrid control.
+
+\emph{Case II.}
+The delivery task is extended to two objects, with the additional requirement
+that the robot is not allowed to carry both objects simultaneously. The task is
+specified by
+\begin{equation}
+\label{ch02:eq:case_two_delivery}
+\begin{aligned}
+\varphi_2 \triangleq {} &
+\Diamond\bigl(\textsf{rball} \wedge \Diamond\,\textsf{basket}\bigr)
+\wedge
+\Diamond\bigl(\textsf{gball} \wedge \Diamond\,\textsf{basket}\bigr)
+\wedge
+\Diamond \square\,\textsf{r1}
+\\
+& \wedge\,
+\square\Bigl(
+\textsf{rball}
+\Rightarrow
+\bigcirc\bigl(\neg \textsf{gball}\ \mathsf{U}\ \textsf{basket}\bigr)
+\Bigr)
+\\
+& \wedge\,
+\square\Bigl(
+\textsf{gball}
+\Rightarrow
+\bigcirc\bigl(\neg \textsf{rball}\ \mathsf{U}\ \textsf{basket}\bigr)
+\Bigr),
+\end{aligned}
+\end{equation}
+where the last two clauses in \eqref{ch02:eq:case_two_delivery} enforce the
+single-object carrying constraint.
+The optimal plan is obtained in $0.86\,\mathrm{s}$:
+$r_1\,c_1\,c_2\,c_3\,r_3\,c_3\,c_2\,r_2\,c_2\,r_5\,c_2\,r_2\,c_2\,c_1$
+$(r_1)^\omega$.
+The prefix cost is $1021$, and the suffix cost is $1$.
+The corresponding execution first transports the green ball to the basket in
+$r_2$, then returns for the red ball and completes the second delivery. The
+trajectories for Cases I and II are shown in
+Fig.~\ref{ch02:fig:case_tasks12}.
+
+\begin{figure}[t!]
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{figures/ch02/task1.pdf}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{figures/ch02/task3.pdf}
+\end{minipage}
+\caption{
+Trajectories generated by the synthesized hybrid controller. Left: execution
+for Case I, associated with $\varphi_1$. Right: execution for Case II,
+associated with $\varphi_2$.
+}
+\label{ch02:fig:case_tasks12}
+\end{figure}
+
+\emph{Case III.}
+The previous task is refined further by assigning a different basket to each
+object. In particular, the red ball must be delivered to the basket in $r_2$,
+while the green ball must be delivered to the basket in $r_4$. The
+corresponding specification is
+\begin{equation}
+\label{ch02:eq:case_separate_delivery}
+\begin{aligned}
+\varphi_3 \triangleq {} &
+\Diamond\bigl(
+\textsf{rball} \wedge
+\Diamond(\textsf{basket} \wedge \textsf{r2})
+\bigr)
+\wedge
+\Diamond\bigl(
+\textsf{gball} \wedge
+\Diamond(\textsf{basket} \wedge \textsf{r4})
+\bigr)
+\\
+& \wedge\,
+\square\Bigl(
+\textsf{rball}
+\Rightarrow
+\bigcirc\bigl(\neg \textsf{gball}\ \mathsf{U}\ \textsf{basket}\bigr)
+\Bigr)
+\\
+& \wedge\,
+\square\Bigl(
+\textsf{gball}
+\Rightarrow
+\bigcirc\bigl(\neg \textsf{rball}\ \mathsf{U}\ \textsf{basket}\bigr)
+\Bigr)
+\wedge
+\Diamond \square\,\textsf{r1},
+\end{aligned}
+\end{equation}
+where the first line of \eqref{ch02:eq:case_separate_delivery} imposes the
+location-dependent delivery requirements.
+The optimal plan is found in $1.39\,\mathrm{s}$:
+$r_1\,c_1\,c_2\,r_5\,c_2\,r_2\,c_2\,c_3\,r_3\,c_3\,c_2\,c_1\,r_4\,c_1$
+$(r_1)^\omega$.
+The prefix cost is again $1021$, and the suffix cost is $1$.
+The resulting execution first delivers the red ball to $r_2$ and then
+delivers the green ball to $r_4$.
+
+\emph{Case IV.}
+A persistent surveillance task is considered next. The robot must visit rooms
+$r_3$, $r_4$, and $r_6$ infinitely often. The specification is
+$\varphi_4 \triangleq
+(\square \Diamond\,\textsf{r3})
+\wedge
+(\square \Diamond\,\textsf{r4})
+\wedge
+(\square \Diamond\,\textsf{r6})$.
+Algorithm~\ref{ch02:alg:optimal} returns an accepting run in
+$0.01\,\mathrm{s}$:
+$r_1\,c_1\,r_4\,c_1\,c_2\,c_3\,r_3\,c_3$
+$(r_6\,c_3\,c_2\,c_1\,r_4\,c_1\,c_2\,c_3\,r_3\,c_3)^\omega$.
+The prefix cost is $1021$, and the suffix cost is $1$.
+The suffix cycle realizes the required recurrent patrol over the three
+designated rooms. The trajectories for Cases III and IV are shown in
+Fig.~\ref{ch02:fig:case_tasks34}.
+
+\begin{figure}[t!]
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{figures/ch02/task4.pdf}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{figures/ch02/task5.pdf}
+\end{minipage}
+\caption{
+Trajectories generated by the synthesized hybrid controller. Left: execution
+for Case III, associated with $\varphi_3$. Right: execution for Case IV,
+associated with $\varphi_4$.
+}
+\label{ch02:fig:case_tasks34}
+\end{figure}
+
+These four cases confirm the qualitative behavior predicted by the preceding
+sections. Once the workspace abstraction and task automaton have been
+constructed, Algorithms~\ref{ch02:alg:optimal} and \ref{ch02:alg:hybrid}
+produce and execute correct plans for finite-time delivery objectives as well
+as recurrent surveillance tasks.
+
+
+%==============================
+\subsection{Platform-level execution on TIAGo}
+\label{ch02:subsec:tiago_execution}
+
+The repository \texttt{tiago\_ltl\_flexbe}~\citep{guo_tiago_ltl_flexbe}
+provides a deployment-oriented illustration of the nominal framework on the
+TIAGo platform. Its role in the present monograph is to show that the symbolic
+plans synthesized from temporal logic need not remain at the level of abstract
+region transitions. Instead, they can be grounded in a platform-specific
+execution stack that combines navigation, supervisory behavior coordination,
+and pre-defined robot actions. In this sense, the repository serves as an
+application-facing bridge between the formal synthesis procedure of this
+chapter and platform-level autonomy.
+A central feature of this implementation is that temporal tasks can involve
+both motion objectives and robot actions. Thus the synthesized plan is no
+longer restricted to visiting regions of interest, but can also require the
+execution of actions such as grasping, gesturing, or inspection behaviors at
+designated locations. This example therefore illustrates the practical purpose
+of the framework in a hardware-oriented setting: high-level temporal
+specifications can be translated into executable plans that coordinate motion
+and actions within a unified task logic; see
+\citep{guo_tiago_ltl_flexbe} for the associated implementation details and
+demonstration environment.
+A representative execution scene is shown in
+Fig.~\ref{ch02:fig:tiago_execution}, where the Gazebo and RViz views are
+presented in a top-bottom layout.
+
+
+\begin{figure}[t!]
+\centering
+\begin{minipage}[t]{0.88\linewidth}
+\centering
+\includegraphics[width=\linewidth]%
+{figures/ch02/tiago_ltl_flexbe_gazebo.png}
+\end{minipage}
+
+\vspace{0.8em}
+
+\begin{minipage}[t]{0.88\linewidth}
+\centering
+\includegraphics[width=\linewidth]%
+{figures/ch02/tiago_ltl_flexbe_rviz.png}
+\end{minipage}
+\caption{
+Execution views associated with the repository
+\texttt{tiago\_ltl\_flexbe}~\citep{guo_tiago_ltl_flexbe}. Top: Gazebo view of
+the TIAGo platform in the simulated environment. Bottom: corresponding RViz
+view used for workspace, mapping, and navigation monitoring. Together, these
+views illustrate how temporally specified tasks can be executed through a
+platform-level stack that combines motion and action primitives.
+}
+\label{ch02:fig:tiago_execution}
+\end{figure}
 
 
  %==============================
