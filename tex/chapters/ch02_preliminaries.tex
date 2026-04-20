@@ -1326,12 +1326,34 @@ execution of actions such as grasping, gesturing, or inspection behaviors at
 designated locations. This example therefore illustrates the practical purpose
 of the framework in a hardware-oriented setting: high-level temporal
 specifications can be translated into executable plans that coordinate motion
-and actions within a unified task logic; see
-\citep{guo_tiago_ltl_flexbe} for the associated implementation details and
-demonstration environment.
+and actions within a unified task logic.
 A representative execution scene is shown in
 Fig.~\ref{ch02:fig:tiago_execution}, where the Gazebo and RViz views are
 presented in a top-bottom layout.
+An illustrative task example from the TIAGo implementation is
+\begin{equation}
+\phi_{\textup{ex}}
+\triangleq
+\Diamond\Bigl(
+(\textsf{r2} \wedge \textsf{pick\_from\_floor})
+\wedge
+\Diamond(\textsf{r3} \wedge \textsf{reach\_max})
+\Bigr),
+\label{ch02:eq:tiago_example}
+\end{equation}
+where the robot is required first to reach region $r_2$ and execute the
+action \textsf{pick\_from\_floor}, and then to reach region $r_3$ and
+execute the action \textsf{reach\_max}. At the symbolic level, a
+corresponding plan therefore has the form
+$\pi_{\textup{init}}
+\rightarrow
+(r_2,\textsf{pick\_from\_floor})
+\rightarrow
+(r_3,\textsf{reach\_max})$,
+which shows explicitly how temporal goals over regions and actions are
+combined in the platform-level execution stack; see
+\citep{guo_tiago_ltl_flexbe} for the associated implementation details and
+demonstration environment.
 
 
 \begin{figure}[t!]
