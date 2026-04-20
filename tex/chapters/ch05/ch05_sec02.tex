@@ -1,6 +1,6 @@
 %==============================
 \section{Exploration and Coordination via Intermittent Communication}
-\label{ch05:sec:ch04_case_study}
+\label{ch05:sec:intermittent_comm}
 
 The previous section considered communication and collaboration as a
 joint planning problem under online temporal requests. The present
@@ -34,10 +34,12 @@ continuous end-to-end communication.
 %==============================
 %==============================
 
-\subsection{Operator-fleet System under Limited Communication}
+\subsection{Operator-fleet system under limited communication}
 \label{ch05:sec:problem-exploration}
 
-\subsubsection{Workspace, Robot Model and Operator Model}
+This subsection introduces the operator-fleet model used throughout the intermittent-communication framework. The discussion proceeds from the workspace and communication assumptions to the request model and the resulting local planning objective.
+
+\subsubsection{Workspace, robot model, and operator model}
 \label{ch05:subsec:ws}
 
 Consider a three-dimensional workspace
@@ -84,7 +86,7 @@ Consequently, communication with the robotic fleet is required for the operator
 to obtain updated local maps and maintain situational awareness during the
 exploration process.
 
-\subsubsection{Communication Model under Limited Connectivity}
+\subsubsection{Communication model under limited connectivity}
 \label{ch05:subsec:com}
 
 Each robot and the operator
@@ -138,7 +140,7 @@ intermittent data exchange, whereas the communication chain in
 to a robot for some duration, for instance in remote supervision or
 tele-operation.
 
-\subsubsection{Online and Contingent Requests}
+\subsubsection{Online and contingent requests}
 \label{ch05:subsec:robot-human}
 
 Both the operator and the robots can send and receive online requests through
@@ -204,7 +206,7 @@ Accordingly, the set of all requests received by time $t \geq 0$ is denoted by:
 where the individual requests are not known beforehand and are removed from
 $\Xi(t)$ once fulfilled.
 
-\subsubsection{Local Plans and Mission Objective}
+\subsubsection{Local plans and mission objective}
 \label{ch05:subsec:problem}
 
 Consequently, the behavior of each robot and the operator can be represented by
@@ -282,8 +284,7 @@ Section~\ref{ch05:subsec:online}.
 %==============================
 %==============================
 %==============================
-\subsection{Latency-bounded Intermittent Communication Protocol with
-Dynamic Resizing}
+\subsection{Latency-bounded intermittent communication protocol with dynamic resizing}
 \label{ch05:subsec:spread}
 
 Timely information sharing between the operator and the fleet is essential for
@@ -294,7 +295,7 @@ dynamic resizing. Together, these two components provide the communication
 backbone for the request-instantiation and online coordination layers developed
 later in this section.
 
-\subsubsection{Latency-bounded Intermittent Communication Protocol}
+\subsubsection{Latency-bounded intermittent communication protocol}
 \label{ch05:subsubsec:spread-problem}
 
 Consider a single operator-fleet system
@@ -633,7 +634,7 @@ Update embeddings through \eqref{ch05:eq:embed-update}\;
 %==============================
 
 
-\subsubsection{Distributed Detach-and-Rejoin Mechanism}
+\subsubsection{Distributed detach-and-rejoin mechanism}
 \label{ch05:sec:detach-join}
 
 Flexible resizing under intermittent communication is enabled through a

@@ -28,12 +28,13 @@ information and newly released tasks during execution.
 %==============================
 %==============================
 %==============================
-\subsection{Task Coordination over Dynamic Temporal Tasks}
+\subsection{Task coordination over dynamic temporal tasks}
 \label{ch06:sec:problem}
 
+This subsection introduces the dynamic task-coordination model used throughout the section. It specifies the robots, targets, temporal-task language, and problem statement before the predictive and assignment layers are developed.
 
 %==============================
-\subsubsection{Robots and Targets}
+\subsubsection{Robots and targets}
 \label{ch06:subsec:robots}
 
 Consider a team of $N$ autonomous robots operating in a workspace
@@ -81,7 +82,7 @@ the target states. For convenience, static task regions and obstacles
 are modeled as targets with zero velocity.
 
 %==============================
-\subsubsection{Task Specification}
+\subsubsection{Task specification}
 \label{ch06:subsec:task-specification}
 
 The task formulas are defined over two classes of atomic propositions.
@@ -163,7 +164,7 @@ tasks released up to time $t$. The average makespan is then defined by:
 which is the performance metric used in the sequel.
 
 %==============================
-\subsubsection{Problem Statement}
+\subsubsection{Problem statement}
 \label{ch06:subsec:prob-statement}
 
 Given the task formulas $\varphi(t)$ and the observations
@@ -254,11 +255,12 @@ is observed.
 %==============================
 %==============================
 %==============================
-\subsection{Trajectory Estimation of Dynamic Targets}
+\subsection{Trajectory estimation of dynamic targets}
 \label{ch06:subsec:trajectory}
 
+The coordination problem depends on forecasts of target motion rather than on instantaneous observations alone. The two parts below introduce the trajectory predictor and the conformal prediction regions used to quantify forecast uncertainty.
 
-\subsubsection{Trajectory Predictor}
+\subsubsection{Trajectory predictor}
 \label{ch06:subsec:traj-predictor}
 
 Given a task horizon $T_{\varphi}$ and the observation history
@@ -310,7 +312,7 @@ $v_m^{\ast}(t) \triangleq \max \{|V_{\varsigma,m}| : \varsigma \leq t\}$
 as the maximum recorded speed of target $m$ up to time $t$. This
 quantity is used later as a velocity bound in the planning stage.
 
-\subsubsection{Conformal Prediction Regions}
+\subsubsection{Conformal prediction regions}
 \label{ch06:subsec:cpr}
 
 Conformal prediction is used to construct uncertainty regions around the
@@ -419,7 +421,7 @@ $G_{\mathcal{H}_t} \triangleq
 %==============================
 %==============================
 %==============================
-\subsection{R-posets for Task Formulas}
+\subsection{R-posets for task formulas}
 \label{ch06:subsec:poset}
 
 The notion of an R-poset was introduced in
@@ -500,7 +502,7 @@ Algorithm~\ref{ch04:alg:compute-poset}. The resulting structure is an R-poset th
 %==============================
 %==============================
 %==============================
-\subsection{Uncertainty-Aware Task Assignment}
+\subsection{Uncertainty-aware task assignment}
 \label{ch06:subsec:assignment}
 
 Given the target-motion estimates
@@ -515,7 +517,7 @@ the assignment perspective of Chapter~\ref{chap:top-down} to the present
 setting, where completion times depend on predicted target motion and its
 associated uncertainty.
 
-\subsubsection{CP-based Monte Carlo Tree Search}
+\subsubsection{CP-based Monte Carlo tree search}
 \label{ch06:sec:cp-mcts}
 
 A centralized task-assignment procedure based on Monte Carlo Tree Search
@@ -862,10 +864,12 @@ $G_{\widehat{T}_{\omega},m}/
 %==============================
 %==============================
 %==============================
-\subsection{Overall Analyses}
+\subsection{Overall analyses}
 \label{ch06:subsec:execution}
 
-\subsubsection{Online Execution and Adaptation}
+The preceding assignment method is intended for repeated use inside a receding-horizon loop. The two parts below summarize the resulting online execution scheme and the corresponding complexity and generalization properties.
+
+\subsubsection{Online execution and adaptation}
 
 The assignment method developed above is embedded into an online
 execution scheme with receding-horizon replanning. As in the online
@@ -932,7 +936,7 @@ $\Pi^{\star}$ is retained, and the value $\eta^{\star}$ is decreased
 monotonically to reflect the progress already achieved. This procedure
 is repeated until the mission terminates.
 
-\subsubsection{Complexity and Generalization}
+\subsubsection{Complexity and generalization}
 
 The complexity of Algorithm~\ref{ch06:alg:ta} follows from the
 individual components introduced in the preceding subsections. The

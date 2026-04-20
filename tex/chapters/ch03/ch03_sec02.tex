@@ -6,7 +6,7 @@ Thus in this chapter, we first introduce a new method to construct the model of 
 Based on this model, we can specify a local temporal task as the desired robot motion and actions.
 Then a planning scheme for both robot motion and actions is proposed as an extension to the nominal solution presented in Chapter~\ref{chap:preliminaries}.
 Furthermore, inter-robot collaborations are essential for many multi-robot applications to improve system capability, efficiency and robustness.
-Thus we start from defining a dependency relation among the robots using collaborative and assisting actions. Then a distributed and on-line coordination scheme is proposed where each robot sends requests to its neighbors for collaborative tasks, confirms others' requests   and adapts its local plan to fulfill the confirmed collaboration. All decisions are made locally
+Thus we start from defining a dependency relation among the robots using collaborative and assisting actions. Then a distributed and online coordination scheme is proposed where each robot sends requests to its neighbors for collaborative tasks, confirms others' requests   and adapts its local plan to fulfill the confirmed collaboration. All decisions are made locally
 by each robot based on local computation and communication between neighboring robots. This scheme is scalable and resilient to robot failures as the dependency relation is formed and removed dynamically according to the plan execution status and robot capabilities, instead of pre-assigned robot identities.
 Numerical simulations are provided in the end to validate the proposed scheme.
 
@@ -475,13 +475,13 @@ collaboration from other robots.
 
 This subsection develops a bottom-up coordination scheme for multi-robot systems
 with dependent local tasks. The scheme consists of off-line initial plan
-synthesis, an on-line request-and-reply protocol, real-time plan adaptation,
+synthesis, an online request-and-reply protocol, real-time plan adaptation,
 and a recovery mechanism for robot failures.
 
 (I) \emph{Initial plan synthesis}.
 Given the complete model $\mathcal{R}_i$ and the local task $\varphi_i$, an
 initial motion-and-action plan can first be synthesized off-line. This plan
-serves as the starting point for the on-line coordination mechanism described
+serves as the starting point for the online coordination mechanism described
 later.
 Let
 $\mathcal{A}_{\varphi_i} \triangleq
@@ -559,7 +559,7 @@ $\tau_{\mathcal{R},\textup{init}}^i$ can then be executed by following its
 motion and action states in sequence. If the plan contains collaborative
 actions from $\Sigma_c^i$, however, successful execution depends on assistance
 from other robots, which is not guaranteed by the local off-line synthesis
-alone. This motivates the on-line coordination mechanism described next.
+alone. This motivates the online coordination mechanism described next.
 
 (II) \emph{Plan in a finite horizon and request generation}.
 Let $\pi_{\mathcal{R},t}^i \in \Pi_{\mathcal{R}}^i$ denote the current state of

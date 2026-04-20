@@ -664,13 +664,13 @@ $\tau_{\textup{safe}}$ satisfies $\varphi$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{On-line sensing and plan adaptation}
+\subsection{Online sensing and plan adaptation}
 \label{ch03:sec:partial}
 
 In practice, the transition-system model is rarely fully consistent with the
 actual workspace or the robot dynamics throughout execution. As a result, a
 motion and task plan synthesized off-line may later become invalid, unsafe, or
-suboptimal once new information is acquired. This motivates an on-line planning
+suboptimal once new information is acquired. This motivates an online planning
 framework in which execution and planning are interleaved. The essential requirement is that the robot
 should monitor plan execution, update its workspace model from real-time
 observations, and revise the current plan whenever necessary while preserving
@@ -982,7 +982,7 @@ extends $\tau_{\textup{past}}$. Theorem~\ref{ch03:theo:safety} then implies
 that the complete trajectory $\tau_{\textup{comp}}$ is valid and safe.
 \end{proof}
 
-The overall on-line planning architecture is completed later by
+The overall online planning architecture is completed later by
 Algorithm~\ref{ch03:alg:scheme}, in which the current accepting run $R^t$ is
 updated through both the revision procedure of
 Algorithm~\ref{ch03:alg:revise} and the optimal search routine of
@@ -1006,7 +1006,7 @@ controller is updated accordingly.
 \subsection{Collaborative knowledge transfer}
 \label{ch03:sec:multi-partial}
 
-The previous subsection considered on-line sensing and plan adaptation for a
+The previous subsection considered online sensing and plan adaptation for a
 single robot. In a multi-robot setting, each robot may still maintain its own
 local task and synthesize its own local plan, yet information gathered by one
 robot may improve the workspace model used by others. When the local tasks are
@@ -1128,7 +1128,7 @@ This avoids repeated request messages and reduces unnecessary traffic. The same
 mechanism can be implemented over either multicast or unicast wireless
 communication.
 
-\subsubsection{On-line plan verification and adaptation}
+\subsubsection{Online plan verification and adaptation}
 \label{ch03:subsec:multi-revise}
 
 Upon receiving local sensing information $\textbf{Sense}_i^t$ and reply
@@ -1183,7 +1183,7 @@ The next goal region changes  whenever the current accepting run is
 updated or the current goal region is reached.
 
 \begin{algorithm}[t]
-\caption{Cooperative on-line planning for each robot $i \in \mathcal{N}$}
+\caption{Cooperative online planning for each robot $i \in \mathcal{N}$}
 \label{ch03:alg:scheme}
 \DontPrintSemicolon
 \KwIn{$\mathcal{T}_i^0$, $\tilde{\mathcal{A}}_{\varphi_i}$,

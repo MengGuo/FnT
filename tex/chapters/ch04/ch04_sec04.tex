@@ -10,8 +10,39 @@ formation, and replanning interact in a single execution flow, and to
 provide empirical context for the complexity discussion of the
 preceding sections.
 
+Consider a mission specified initially at the team level through a global
+temporal formula that combines ordered service requirements, allocation
+constraints, and limited concurrency. In the first stage, the accepted behavior
+of the task automaton is pruned and converted into subtask occurrences together
+with a compact precedence structure. This relaxed partially ordered view
+separates the logical dependencies that must be preserved from the robot-level
+details that can be optimized later. The resulting structure is then used to
+assign subtasks to heterogeneous robots while minimizing the mission-level
+completion metric. At this stage, the role of top-down synthesis is explicit:
+the global specification is not approximated by ad hoc task splitting, but is
+systematically refined into allocable components whose temporal relations remain
+traceable to the original formula.
 
+In the second stage, the assigned subtasks are grouped into teams and refined
+through the hierarchical fleet-coordination machinery of
+Section~\ref{ch04:subsec:task}. High-level decomposition determines which robots
+should cooperate, team formation enforces capability and redundancy conditions,
+and local coordination within each team resolves the motion-level realization of
+the assigned subtask sequence. The hierarchy becomes especially valuable when
+the fleet is large or heterogeneous, because it prevents the global mission from
+being reintroduced as a single fully coupled planning object at every level.
+Instead, each layer exposes only the information required by the next one.
 
+Finally, suppose that a new mission element or operator request arrives during
+execution. The current global plan is then updated through the online product of
+R-posets, and the receding-horizon mechanism of
+Section~\ref{ch04:sec:online_continual_tasks} revises only the unexecuted suffix
+of the plan. Tasks already in progress are preserved whenever possible, while
+new obligations are incorporated into the evolving precedence structure. This
+case-study view makes clear that the top-down framework is not merely an
+offline decomposition procedure. It is a persistent coordination architecture in
+which global temporal structure, hierarchical allocation, and online revision
+remain coupled throughout execution.
 
 %==============================
 \section{Summary}

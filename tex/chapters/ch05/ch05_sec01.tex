@@ -260,10 +260,12 @@ team-wise communication condition in \eqref{ch05:eq:comm-graph}.
 
 % ==============================================================
 % ==============================================================
-\subsection{Adaptive Coordination for Communication and Collaboration}
+\subsection{Adaptive coordination for communication and collaboration}
 \label{ch05:subsec:coord-framework}
 
-\subsubsection{Design of Adaptive Optimization Objective}
+This subsection develops the replanning layer that couples task selection with scheduled communication restoration. It first introduces the horizon-wise objective used to score candidate collective plans and then presents the branch-and-bound procedure used to optimize task allocation and the next communication event jointly.
+
+\subsubsection{Design of adaptive optimization objective}
 \label{ch05:subsubsec:new-obj}
 
 To address unknown spatio-temporal task distributions while still pursuing the
@@ -324,7 +326,7 @@ task sequences without requiring an explicit model of the future task
 distribution. The resulting metric balances task throughput against the time
 needed to complete the selected tasks and restore team-wise communication.
 
-\subsubsection{Overall Algorithm}
+\subsubsection{Overall algorithm}
 \label{ch05:subsubsec:algorithm-description}
 
 Let $\mathcal{T}$ denote the branch-and-bound search tree used by
@@ -507,10 +509,12 @@ feasible collective plan even when the available computation time is limited.
 % ================================
 % ================================
 % ================================
-\subsection{Optimization of Fleet-wise Communication Events}
+\subsection{Optimization of fleet-wise communication events}
 \label{ch05:subsec:comm-event}
 
-\subsubsection{Fleet-wise Communication Events}
+Once a candidate non-communication task sequence has been fixed, the next fleet-wise communication event must be optimized explicitly. The two parts below define the event model and then describe the iterative refinement routine used to reduce waiting time while preserving connectivity.
+
+\subsubsection{Fleet-wise communication events}
 \label{ch05:subsubsec:comm-event-opt}
 
 Given the non-communication plan $J_{\nu_+}$ obtained in the previous step,
@@ -571,7 +575,7 @@ post-processing step. It is part of the same coordination objective, because
 the time at which communication is restored directly influences the effective
 task-completion rate of the collective plan.
 
-\subsubsection{Optimization by Iterative Refinement}
+\subsubsection{Optimization by iterative refinement}
 \label{ch05:subsubsec:comm-event-algorithm}
 
 \begin{algorithm}[!t]
@@ -719,10 +723,12 @@ times, motion costs, and communication feasibility.
 
 
 % ================================
-\subsection{Overall Analysis}
+\subsection{Overall analysis}
 \label{ch05:subsec:online}
 
-\subsubsection{Online Execution}
+The preceding constructions define a closed online coordination loop rather than a one-shot offline optimizer. The two parts below discuss how the scheme is executed during deployment and how its computational burden scales with team size and detected tasks.
+
+\subsubsection{Online execution}
 \label{ch05:subsubsec:online-execution}
 
 To accommodate dynamically emerging tasks, the coordination framework is
@@ -753,7 +759,7 @@ execution logic is therefore cyclic: task execution, task discovery,
 communication, and replanning are repeated in succession as new information
 becomes available.
 
-\subsubsection{Complexity Analysis}
+\subsubsection{Complexity analysis}
 \label{ch05:subsubsec:complexity}
 
 The computational complexity of

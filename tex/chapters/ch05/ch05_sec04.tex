@@ -1,11 +1,44 @@
 %==============================
-\section{Case Study}
+\section{Case study}
 \label{sec:ch05_case_study}
 
+A representative scenario for this chapter combines the three technical themes
+of communication-aware planning, intermittent connectivity, and online temporal
+requests within a single exploration-and-service mission. Consider a robot
+fleet deployed in a partially known workspace, where the team must continue
+exploration, satisfy latency bounds on information propagation, and remain able
+to accommodate operator-issued requests during execution. At the outset, the
+robots share only a partial map and therefore cannot rely on a fixed
+communication infrastructure or on complete prior knowledge of the relevant task
+locations. The communication topology must instead be planned together with the
+team behavior.
 
+The mission begins with the communication-and-collaboration mechanism of
+Section~\ref{ch05:sec:ch05_interm_team}. The robots execute their current local
+tasks while scheduling communication events that are informative enough to keep
+the distributed plans mutually consistent. As exploration proceeds, the setting
+transitions naturally to the intermittent-communication regime of
+Section~\ref{ch05:sec:intermittent_comm}. Rather than enforcing persistent
+connectivity, the team maintains bounded-delay information fusion through the
+embedded joint-wheel topology and the detach-and-rejoin strategy. This allows
+subgroups to move away from the backbone temporarily to inspect frontiers or
+service nearby objectives, while still guaranteeing that accumulated data and
+plan updates are reintegrated after scheduled meetings.
 
-
-
+Now suppose that an operator introduces a temporal request during execution,
+for example by requiring a particular subgroup to inspect a newly designated
+region, deliver a payload, or provide local assistance under a precedence
+constraint. The request-fulfillment mechanism of
+Section~\ref{ch05:sec:ch05_human} evaluates whether the current wheel backbone
+already supports the new requirement or whether a temporary request-specific
+subtopology must be instantiated. If the request is topology-preserving, it is
+absorbed into the existing structure through an embedding update. If it is
+topology-changing, a compatible subgroup is detached, executes the request, and
+later rejoins the backbone so that exploration and communication maintenance can
+continue. This case-study synthesis clarifies the main message of the chapter:
+under partial knowledge and sparse communication, coordination is governed not
+only by what the robots do, but also by how and when the information needed for
+those actions is exchanged.
 
 %==============================
 \section{Summary}

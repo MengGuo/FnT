@@ -56,13 +56,13 @@ framework for tightly coupled multi-robot trajectory synthesis.
 %==============================
 %==============================
 %==============================
-\subsection{Problem Formulation}
-\label{sec:preliminary}
-\label{sec:problem}
+\subsection{Problem formulation}
+\label{ch06:subsec:problem_formulation}
 
+This subsection introduces the continuous multi-robot planning model, the STL task semantics, and the collaborative motion-planning problem solved in the remainder of the section.
 
 %==============================
-\subsubsection{Multi-Robot System}
+\subsubsection{Multi-robot system}
 \label{sec:multi-robot-system}
 
 Consider a system of $N$ robots indexed by
@@ -123,9 +123,8 @@ Both penalties vanish when the corresponding clearance requirement is met.
 
 
 %==============================
-\subsubsection{Signal Temporal Logic Tasks and Robustness}
-\label{subsec:stl}
-\label{subsec:robust}
+\subsubsection{Signal temporal logic tasks and robustness}
+\label{ch06:subsubsec:stl_robustness}
 
 Let $\mathbf{s}:\mathbb{N}\rightarrow\mathcal{X}$ be a discrete-time signal,
 where $\mathcal{X}$ denotes the signal space.
@@ -242,7 +241,7 @@ Hence, minimizing \eqref{eq:state-cost} encourages both safety and
 task fulfillment.
 
 %==============================
-\subsubsection{Collaborative Motion Planning Problem}
+\subsubsection{Collaborative motion planning problem}
 
 Given initial and target states
 $\mathbf{x}_{\texttt{s}},\mathbf{x}_{\texttt{g}}\in\mathbb{R}^{DN}$ and an
@@ -317,7 +316,7 @@ liu2022stlq,kurtz2022mixed}.
 %==============================
 %==============================
 %==============================
-\subsection{Batch Computation of STL Perturbed Robustness}
+\subsection{Batch computation of STL perturbed robustness}
 \label{ch06:subsec:batch-stl}
 
 Efficient batch evaluation of STL robustness is required by the
@@ -327,7 +326,7 @@ changes when a single waypoint is perturbed along multiple probing
 directions.
 
 %%===================
-\subsubsection{STL Tree Representation}
+\subsubsection{STL tree representation}
 \label{ch06:subsec:stl-tree}
 
 An STL formula $\phi$ can be decomposed recursively into subformulas and
@@ -358,10 +357,10 @@ robustness evaluation over the formula tree.
 
 
 %%===================
-\subsubsection{Batched Evaluation of Perturbed Robustness}
+\subsubsection{Batched evaluation of perturbed robustness}
 \label{ch06:subsec:stl-robustness}
 
-As recalled in Section~\ref{subsec:robust}, the standard STL robustness is
+As recalled in Section~\ref{ch06:subsubsec:stl_robustness}, the standard STL robustness is
 computed by evaluating the predicates at the leaves of
 $\mathcal{T}^{\phi}$ and then applying $\min$ and $\max$ recursively to
 conjunction and disjunction nodes.
@@ -423,7 +422,7 @@ steps.
 The surrogate robustness in \eqref{ch06:eq:perturbed-robustness} is used
 to guide the local update, while the satisfaction of the final
 trajectory is verified using the standard STL robustness in
-Section~\ref{subsec:robust}.
+Section~\ref{ch06:subsubsec:stl_robustness}.
 
 
 
@@ -455,7 +454,7 @@ Section~\ref{subsec:robust}.
 %==============================
 %==============================
 %==============================
-\subsection{Sequential Local Optimal Transport}
+\subsection{Sequential local optimal transport}
 \label{ch06:sec:local}
 
 Given the batched evaluation of perturbed STL robustness in
@@ -471,7 +470,7 @@ chosen planning order, since earlier trajectory decisions restrict the
 feasible and low-cost regions available to the later robots.
 
 %==============================
-\subsubsection{Design of Planning Sequence}
+\subsubsection{Design of planning sequence}
 \label{ch06:subsec:sequence-design}
 
 To encode the couplings that must be respected during sequential
@@ -526,7 +525,7 @@ whereas arbitrary orderings can easily produce incompatible local
 subproblems.
 
 %==============================
-\subsubsection{Constrained Trajectory Optimization for Each Robot}
+\subsubsection{Constrained trajectory optimization for each robot}
 \label{ch06:subsec:sequential-planning}
 
 Fix a valid planning sequence
@@ -621,7 +620,7 @@ used in the optimization of the subsequent robots.
 
 
 %%===================
-\subsubsection{Local Optimal Transport via Sinkhorn Step}
+\subsubsection{Local optimal transport via Sinkhorn step}
 \label{ch06:subsec:sinkhorn}
 
 The local problem in \eqref{ch06:eq:local-problem} remains nonlinear and
@@ -760,7 +759,7 @@ iterations focus on local refinement and stabilization
 %==============================
 %==============================
 %==============================
-\subsection{Hybrid Search for Sequence and Collective Trajectory}
+\subsection{Hybrid search for sequence and collective trajectory}
 \label{ch06:sec:hybrid}
 
 The sequential local transport scheme in Section~\ref{ch06:sec:local}
@@ -774,7 +773,7 @@ combines discrete exploration over partial planning sequences with
 continuous local optimization through the Sinkhorn-based updates. The two components are tightly coupled, since each partial sequence restricts the feasible local transports and each local transport evaluation influences subsequent sequence expansion.
 
 %==============================
-\subsubsection{Hybrid Search Framework}
+\subsubsection{Hybrid search framework}
 \label{ch06:subsec:search-algorithm}
 
 The search is organized as a rooted tree
@@ -895,7 +894,7 @@ orders while preserving the continuous local refinement of the
 trajectories at each expansion step.
 
 %==============================
-\subsubsection{Parallelization and Practical Improvements}
+\subsubsection{Parallelization and practical improvements}
 
 The hybrid search is naturally amenable to parallel computation.
 During expansion, the local trajectory optimization problems associated
@@ -1038,11 +1037,13 @@ cascading failures, and accelerate convergence.
 %==============================
 %==============================
 %==============================
-\subsection{Overall Analyses}
+\subsection{Overall analyses}
 \label{ch06:subsec:overall}
 
+The construction above yields a complete pipeline from surrogate robustness computation to hybrid search over planning orders. The two parts below summarize how candidate trajectories are verified for execution and how the dominant computational costs scale.
+
 %==============================
-\subsubsection{Verification and Execution}
+\subsubsection{Verification and execution}
 \label{ch06:subsubsec:execute}
 
 After each local optimization step, a candidate trajectory is retained
@@ -1069,7 +1070,7 @@ model predictive control scheme, depending on the sensing, actuation,
 and computation capabilities of the robotic platform.
 
 %==============================
-\subsubsection{Complexity Analysis}
+\subsubsection{Complexity analysis}
 \label{ch06:subsubsec:complexity}
 
 The dominant computational cost of

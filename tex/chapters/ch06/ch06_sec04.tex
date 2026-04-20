@@ -1,5 +1,5 @@
 %==============================
-\section{Case Study}
+\section{Case study}
 \label{ch06:sec:case}
 
 %==============================
@@ -23,6 +23,21 @@ optimal transport updates, the batch size is fixed at
 $400$ trajectories. The resulting trajectories and robustness traces are
 shown in Figs.~\ref{ch06:fig:split-merge} and
 \ref{ch06:fig:alternative-visitation}.
+
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.9\linewidth]%
+{figures/ch06/case_split_merge_navigation.png}
+\caption{
+Split-and-merge navigation under staged connectivity constraints. Left:
+planned trajectories for the three subgroups and their subsequent merge
+into a connected team. Right: robustness traces of the regional,
+subgroup-chain, and global-connectivity predicates associated with
+\eqref{ch06:eq:case_split_merge}. The red dashed line marks the
+transition between the split phase and the merge phase.
+}
+\label{ch06:fig:split-merge}
+\end{figure}
 
 %==============================
 \subsubsection{Split-and-merge navigation under staged connectivity}
@@ -71,24 +86,9 @@ the switching time and stays positive thereafter. In this
 representative trial, a feasible plan is obtained in
 $26.13\,\mathrm{s}$.
 
-\begin{figure}[t!]
-\centering
-\includegraphics[width=0.9\linewidth]%
-{figures/ch06/case_split_merge_navigation.png}
-\caption{
-Split-and-merge navigation under staged connectivity constraints. Left:
-planned trajectories for the three subgroups and their subsequent merge
-into a connected team. Right: robustness traces of the regional,
-subgroup-chain, and global-connectivity predicates associated with
-\eqref{ch06:eq:case_split_merge}. The red dashed line marks the
-transition between the split phase and the merge phase.
-}
-\label{ch06:fig:split-merge}
-\end{figure}
 
 %==============================
-\subsubsection{Alternative target visitation under persistent chain
-constraints}
+\subsubsection{Alternative target visitation under persistent chain constraints}
 \label{ch06:subsubsec:case_alternative_visitation}
 
 The second scenario considers a team of $12$ robots moving through a
