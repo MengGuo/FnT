@@ -2,43 +2,180 @@
 \section{Case study}
 \label{sec:ch05_case_study}
 
-A representative scenario for this chapter combines the three technical themes
-of communication-aware planning, intermittent connectivity, and online temporal
-requests within a single exploration-and-service mission. Consider a robot
-fleet deployed in a partially known workspace, where the team must continue
-exploration, satisfy latency bounds on information propagation, and remain able
-to accommodate operator-issued requests during execution. At the outset, the
-robots share only a partial map and therefore cannot rely on a fixed
-communication infrastructure or on complete prior knowledge of the relevant task
-locations. The communication topology must instead be planned together with the
-team behavior.
+%==============================
+\subsection{Case Study: Dual-team Exploration with Online Requests}
+\label{sec:ch05_case_study}
 
-The mission begins with the communication-and-collaboration mechanism of
-Section~\ref{ch05:sec:ch05_interm_team}. The robots execute their current local
-tasks while scheduling communication events that are informative enough to keep
-the distributed plans mutually consistent. As exploration proceeds, the setting
-transitions naturally to the intermittent-communication regime of
-Section~\ref{ch05:sec:intermittent_comm}. Rather than enforcing persistent
-connectivity, the team maintains bounded-delay information fusion through the
-embedded joint-wheel topology and the detach-and-rejoin strategy. This allows
-subgroups to move away from the backbone temporarily to inspect frontiers or
-service nearby objectives, while still guaranteeing that accumulated data and
-plan updates are reintegrated after scheduled meetings.
+This subsection illustrates the combined use of the latency-bounded
+intermittent communication protocol in
+Sec.~\ref{ch05:subsec:spread} and the topology-adaptive
+request-fulfillment mechanism in Sec.~\ref{ch05:sec:ch05_human}
+through a representative dual-team exploration mission.
 
-Now suppose that an operator introduces a temporal request during execution,
-for example by requiring a particular subgroup to inspect a newly designated
-region, deliver a payload, or provide local assistance under a precedence
-constraint. The request-fulfillment mechanism of
-Section~\ref{ch05:sec:ch05_human} evaluates whether the current wheel backbone
-already supports the new requirement or whether a temporary request-specific
-subtopology must be instantiated. If the request is topology-preserving, it is
-absorbed into the existing structure through an embedding update. If it is
-topology-changing, a compatible subgroup is detached, executes the request, and
-later rejoins the backbone so that exploration and communication maintenance can
-continue. This case-study synthesis clarifies the main message of the chapter:
-under partial knowledge and sparse communication, coordination is governed not
-only by what the robots do, but also by how and when the information needed for
-those actions is exchanged.
+%==============================
+\subsubsection{Workspace and task description}
+\label{ch05:subsubsec:case_description}
+
+Consider a dual-team exploration mission in an indoor office
+environment of size \(90\,\mathrm{m}\times 70\,\mathrm{m}\). Each team
+consists of four robots and one operator. In addition to the
+exploration objective, four online service tasks are distributed in the
+environment. These tasks include local inspection of target regions,
+direct assistance to a robot, and remote tele-operation for opening an
+access door. In accordance with the request model in
+\eqref{ch05:eq:requests}, each operator may issue requests of types
+\(\xi_2\), \(\xi_3\), and \(\xi_4\), together with migration commands,
+whereas a robot that detects a service opportunity may trigger
+\(\xi_5^i\) or \(\xi_6^i\). Both teams are initially deployed near the
+top corridor of the map and begin exploration immediately after the
+first communication round. The latency bounds for operator-fleet
+communication and inter-team information exchange are set to
+\(120\,\mathrm{s}\) and \(600\,\mathrm{s}\), respectively.
+
+Figure~\ref{ch05:fig:case-overview} shows representative mission
+snapshots together with the explored workspace. The figure includes the
+priority regions induced by \(\xi_2\), the service-task locations, the
+operator motions, and the explored areas of the two teams. In
+particular, the region-priority request \(\xi_2\), implemented through
+the frontier reweighting in \eqref{ch05:eq:frontier_weight}, biases the
+local exploration process toward the designated areas while preserving
+the latency-bounded wheel backbone from
+Sec.~\ref{ch05:subsec:spread}. The mission further involves operator
+relocation, chain-based service execution, and migration, thereby
+activating the main realization modes introduced in
+Sec.~\ref{ch05:subsubsec:request_modes}.
+
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.96\linewidth]
+{figures/ch05/ch05_case_dual_team_overview.png}
+\caption{
+Dual-team exploration under intermittent communication and online
+requests. The figure shows representative mission snapshots together
+with the explored map. The request-induced priority regions,
+operator relocations, service-task locations, and completed exploration
+areas illustrate how the latency-bounded wheel backbones from
+Sec.~\ref{ch05:subsec:spread} support both persistent exploration and
+online request fulfillment.
+}
+\label{ch05:fig:case-overview}
+\end{figure}
+
+%==============================
+\subsubsection{Results}
+\label{ch05:subsubsec:case_results}
+
+The execution results are consistent with the analytical development in
+Secs.~\ref{ch05:subsec:spread} and \ref{ch05:sec:ch05_human}. First,
+the effect of the region-priority request is clearly visible in the
+final coverage pattern: the neighborhoods of the designated priority
+regions are explored only by the corresponding requesting team.
+Moreover, because the two teams maintain different local frontier
+sequences under intermittent communication, their feasible exploration
+domains evolve differently, which in turn permits the two operators to
+relocate in distinct directions. In the representative execution,
+operator~1 completes three feasible relocations and eventually reaches
+the lower part of the workspace, while operator~2 also completes three
+feasible relocations and reaches the left portion of the map. These
+relocations are consistent with the two realization modes of \(\xi_3\)
+described in Sec.~\ref{ch05:subsubsec:request_modes}: whenever
+\eqref{ch05:eq:base-location} is satisfied, only the embeddings are
+updated; otherwise, a temporary migration topology is instantiated and
+later merged back into the wheel backbone.
+
+During the mission, team~1 detects and completes tasks~3 and~4, and
+then executes a migration at \(t=1378\,\mathrm{s}\) toward the
+lower-left area in order to continue exploration of the remaining free
+space. Throughout this migration, all robots in team~1 remain connected
+to operator~1. The remaining two tasks are detected and completed by
+team~2, and all four online service tasks are finished by
+\(t=1100\,\mathrm{s}\). Among them, one task is triggered by a
+robot-initiated request, whereas the other three tasks are specified by
+the two operators. To realize these service tasks, the method
+instantiates communication-ensured chains according to
+\eqref{ch05:eq:cec} with lengths \(2\) and \(3\), respectively. The
+average computation time for generating a feasible chain is
+approximately \(0.3\,\mathrm{s}\), and the average time for assigning
+robots to the anchor points of the chain is about \(0.1\,\mathrm{s}\),
+which is consistent with the lightweight role-assignment and topology
+selection procedure in Algorithm~\ref{ch05:alg:topologymatch}.
+
+The service durations depend on the task semantics once the chain has
+been established. Inspection tasks require more sustained visual
+interaction and therefore last between \(39\,\mathrm{s}\) and
+\(152\,\mathrm{s}\), whereas the direct-assistance task and the door
+operation last about \(25\,\mathrm{s}\). The exploration objective
+continues after all online tasks have been fulfilled: operator~1
+obtains the complete map at \(t=1624\,\mathrm{s}\), and operator~2
+obtains the complete map at \(t=1782\,\mathrm{s}\). Hence the delays
+between total task completion and full map completion are
+\(524\,\mathrm{s}\) and \(682\,\mathrm{s}\), respectively. This
+difference indicates that the online requests consume only part of the
+mission time and that the exploration backbone continues to operate
+effectively after the temporary request-specific subtopologies have been
+removed.
+
+A second observation concerns the inter-team information exchange. Over
+the full execution, the two teams communicate with each other five
+times, at \(504\,\mathrm{s}\), \(843\,\mathrm{s}\), \(1167\,\mathrm{s}\),
+\(1594\,\mathrm{s}\), and \(2103\,\mathrm{s}\). The corresponding
+inter-event gaps are \(339\,\mathrm{s}\), \(324\,\mathrm{s}\),
+\(427\,\mathrm{s}\), and \(509\,\mathrm{s}\), so that the maximum
+inter-team delay remains below the prescribed bound of
+\(600\,\mathrm{s}\). The average inter-team exchange interval is
+\(399.75\,\mathrm{s}\). Therefore, in this representative execution,
+both the operator-fleet latency requirement and the imposed inter-team
+communication bound are satisfied throughout the mission while online
+requests continue to arrive and be executed.
+
+Figure~\ref{ch05:fig:case-modes} shows the evolution of the operating
+modes and the corresponding communication topologies. Both teams switch
+among spread mode, chain mode, and migrate mode \(11\) times during the
+execution. For team~1, the first switch occurs at \(446\,\mathrm{s}\),
+when robot~4 detaches from the wheel backbone and becomes a messenger
+node, while the remaining three robots preserve a smaller cyclic
+structure and continue exploration. Later, in order to complete
+task~3, the system undergoes a \(32\,\mathrm{s}\) transition to
+construct a three-robot chain in chain mode. After task~3 has been
+completed, the system switches directly to task~4 at
+\(942\,\mathrm{s}\), so that the two tasks are served consecutively by
+operator~1 with only \(21\,\mathrm{s}\) of switching time. This is
+substantially shorter than the average \(38\,\mathrm{s}\) required for a
+generic transition between spread mode and chain mode, corresponding to
+a reduction of approximately \(44.7\%\). For team~2, chains of length
+\(2\) are instantiated at \(275\,\mathrm{s}\) and
+\(905\,\mathrm{s}\) to complete tasks~1 and~2. In these intervals,
+operator~2 tele-operates the terminal robot through the chain while
+performing local inspection around the task region. The experiment also
+shows that the framework remains well-defined in degenerate cases where
+the active communication topology in spread mode or chain mode contains
+only one or two robots.
+
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.96\linewidth]
+{figures/ch05/ch05_case_dual_team_modes.png}
+\caption{
+Evolution of the operating modes and embedded communication topologies
+for the two teams. The switches among spread mode, chain mode, and
+migrate mode correspond, respectively, to latency-bounded exploration on
+the wheel backbone, request-consistent instantiation of
+communication-ensured chains, and connectivity-preserving operator
+relocation or group migration.
+}
+\label{ch05:fig:case-modes}
+\end{figure}
+
+Overall, the case study shows that the intermittent-communication
+backbone maintains bounded-delay information propagation during
+exploration, while the request-adaptive topology layer introduces only
+temporary and localized reconfiguration when online service tasks
+require additional structure. The results therefore demonstrate that
+frontier-based exploration, operator relocation, chain-based
+tele-operation, and direct robot assistance can be executed within a
+common coordination architecture without sacrificing communication
+feasibility.
+
 
 %==============================
 \section{Summary}
