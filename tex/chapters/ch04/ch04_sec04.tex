@@ -2,70 +2,54 @@
 \section{Case Study}
 \label{sec:ch04_case_study}
 
+This section illustrates the top-down coordination framework of this
+chapter through two representative studies. The first is a large-scale
+continual mission with heterogeneous robots, intended to show how
+hierarchical decomposition, abstract team assignment, team formation,
+and local coordination interact under persistent online demand. The
+second is a hardware validation in an industrial emergency-response
+scenario, used to verify that the same framework remains implementable
+under real sensing, communication, and execution constraints.
+
 %==============================
-\subsection{Large-scale continual mission with heterogeneous agents}
+\subsection{Large-scale continual mission with heterogeneous robots}
 \label{ch04:subsec:case_large_scale}
 
-This case study illustrates the hierarchical coordination framework
-developed in Sec.~\ref{ch04:subsec:task}, with particular emphasis on
-the uncertain mission model in
-Subsec.~\ref{ch04:subsec:uncertain_mission}, the simultaneous
-decomposition and assignment method in
-Subsec.~\ref{ch04:subsubsec:simultaneous_assignment}, the
-capacity-based team-formation procedure in
-Subsec.~\ref{ch04:subsubsec:team_formation}, and the local coordination
-mechanisms of Subsec.~\ref{ch04:subsec:local_coordination}. The mission
-contains a sustained stream of heterogeneous demands, so that newly
-released tasks must be absorbed while previously assigned tasks are
-still under execution.
+This simulation study focuses on the hierarchical coordination framework
+of Section~\ref{ch04:subsec:task}. In particular, it illustrates the
+uncertain mission model of Section~\ref{ch04:subsec:uncertain_mission},
+the simultaneous decomposition and assignment method of
+Section~\ref{ch04:subsubsec:simultaneous_assignment}, the
+capacity-based team-formation procedure of
+Section~\ref{ch04:subsubsec:team_formation}, and the local
+coordination strategies of Section~\ref{ch04:subsec:local_coordination}.
+The mission contains a sustained stream of heterogeneous demands, so
+newly released tasks must be absorbed while previously assigned tasks
+are still under execution.
 
-The simulation is carried out in a two-dimensional environment of size
+%==============================
+\subsubsection{Workspace and system description}
+\label{ch04:subsubsec:case_large_scale_workspace}
+
+The simulation is conducted in a two-dimensional environment of size
 $130\,\mathrm{m} \times 40\,\mathrm{m}$. The fleet contains
-$80$ agents of three heterogeneous types, denoted by
-\texttt{uavA}, \texttt{uavB}, and \texttt{uavC}. Since the three types
-have different capability sets, they are not interchangeable at the
-planning level. Instead, the assignment and regrouping procedures must
-respect both task requirements and collaboration structure. The overall
-workload contains $30$ collaborative tasks, further refined into
-$450$ subtasks, so that the average decomposition ratio is
-$15$ subtasks per collaborative task. The persistent task stream is
-therefore an evolving instance of the uncertain mission model in
-Subsec.~\ref{ch04:subsec:uncertain_mission}, and the system
-performance is evaluated in the sense of the objective
+$80$ robots of three heterogeneous types, denoted by \texttt{uavA},
+\texttt{uavB}, and \texttt{uavC}. Since these three types have
+different capability sets, they are not interchangeable in the planning
+and regrouping stages. The overall workload contains $30$
+collaborative tasks, further refined into $450$ subtasks, so that the
+average decomposition ratio is $15$ subtasks per collaborative task.
+The persistent task stream is therefore an evolving instance of the
+uncertain mission model of
+Section~\ref{ch04:subsec:uncertain_mission}, and system performance is
+evaluated with respect to the objective
 \eqref{ch04:eq:mission_set_objective}.
 
-The workload contains three classes of collaborative tasks. The first is
-static and known tasks, for which the locations and subtask structures
-are available before execution. The second is static and unknown tasks,
-for which the regions are known but the internal targets or subtasks are
-revealed only during execution. The third is dynamic and known tasks,
-for which the initial target identities are known but the target states
-evolve over time. These classes correspond directly to the local
-coordination regimes of Subsubsecs.~\ref{ch04:sec:static-known},
-\ref{ch04:sec:staticunknown}, and \ref{ch04:sec:dynamicknown}. To
-emulate a persistent mission, the tasks are not released at once.
-Instead, six release waves occur at
-$0.0\,\mathrm{s}$, $30.0\,\mathrm{s}$, $55.0\,\mathrm{s}$,
-$80.0\,\mathrm{s}$, $105.0\,\mathrm{s}$, and
-$130.0\,\mathrm{s}$. Around each of these instants, the planner updates
-the mission decomposition, adjusts the subteam structure, and generates
-new local execution sequences.
 
-Figure~\ref{ch04:fig:case_large_scale_overview} provides an overview of
-the mission instance. The labeled nodes
-$\omega_1,\cdots,\omega_{30}$ denote the collaborative tasks, and the
-different shapes indicate different task classes. The grouped nodes on
-the right summarize the higher-level structures formed by hierarchical
-coordination. The dense set of gray links illustrates the coupling and
-inheritance relations that make direct flat assignment unattractive at
-this scale. The purpose of the simultaneous decomposition and assignment
-procedure of Subsec.~\ref{ch04:subsubsec:simultaneous_assignment} is
-precisely to compress this combinatorial structure into a tractable
-hierarchy of task groups and execution teams.
-
+%------------------------------
 \begin{figure}[t!]
 \centering
-\includegraphics[width=\linewidth]%
+\includegraphics[width=0.9\linewidth]%
 {figures/ch04/case_large_scale_overview.png}
 \caption{
 Overview of the large-scale persistent mission. The nodes
@@ -76,14 +60,46 @@ inter-task couplings and the induced resource-flow structure.
 }
 \label{ch04:fig:case_large_scale_overview}
 \end{figure}
+%------------------------------
+
+The workload contains three classes of collaborative tasks. The first
+class consists of static and known tasks, for which the locations and
+subtask structures are available before execution. The second class
+consists of static and unknown tasks, for which the execution regions
+are known but the internal targets or subtasks are revealed only during
+execution. The third class consists of dynamic and known tasks, for
+which the initial target identities are known but the target states
+evolve over time. These classes correspond directly to the three local
+coordination cases developed in
+Subsubsecs.~\ref{ch04:sec:static-known},
+\ref{ch04:sec:staticunknown}, and
+\ref{ch04:sec:dynamicknown}. To emulate a persistent mission, the tasks
+are not released simultaneously. Instead, six release waves occur at
+$0.0\,\mathrm{s}$, $30.0\,\mathrm{s}$, $55.0\,\mathrm{s}$,
+$80.0\,\mathrm{s}$, $105.0\,\mathrm{s}$, and
+$130.0\,\mathrm{s}$. Around each of these instants, the planner
+updates the mission decomposition, adjusts the subteam structure, and
+generates new local execution sequences.
+
+Figure~\ref{ch04:fig:case_large_scale_overview} provides an overview of
+the mission instance. The labeled nodes
+$\omega_1,\cdots,\omega_{30}$ denote the collaborative tasks, and the
+different shapes indicate different task classes. The grouped nodes on
+the right summarize the higher-level structures formed by hierarchical
+coordination. The dense set of gray links illustrates the coupling and
+inheritance relations that make direct flat assignment unattractive at
+this scale. The role of the simultaneous decomposition and assignment
+procedure of Section~\ref{ch04:subsubsec:simultaneous_assignment} is
+therefore to compress this combinatorial structure into a tractable
+hierarchy of task groups and execution teams.
 
 %==============================
-\subsubsection{Overall performance and replanning efficiency}
+\subsubsection{Performance and replanning efficiency}
 \label{ch04:subsubsec:case_large_scale_performance}
 
 The simulation completes all $30$ collaborative tasks successfully,
-yielding a task success rate of $1.0$. The final makespan is
-$154.4\,\mathrm{s}$, and the average task response time is
+yielding a task success rate of $100\%$. The final makespan is
+$154.4\,\mathrm{s}$, and the reported average task response time is
 $17.81\,\mathrm{s}$. Measured at the workload level, the effective
 throughput is approximately $0.194$ collaborative tasks per second.
 Measured at the subtask level, the execution rate is approximately
@@ -95,13 +111,13 @@ A more detailed view is obtained by grouping the response times by
 release wave. For the six task waves, the average response times are
 $24.7\,\mathrm{s}$, $24.2\,\mathrm{s}$, $22.6\,\mathrm{s}$,
 $18.9\,\mathrm{s}$, $33.1\,\mathrm{s}$, and $24.4\,\mathrm{s}$,
-respectively, with a batch average of $24.65\,\mathrm{s}$. The largest
-value occurs at the release wave around $105.0\,\mathrm{s}$, where the
-response time rises to $33.1\,\mathrm{s}$. Relative to the batch
-average, this is an increase of about $34.3\%$, which indicates that
-this stage is the most congested portion of the mission. Even so, the
-system remains feasible and eventually absorbs the arriving workload
-without leaving unresolved tasks at the end of execution.
+respectively, with a wave-averaged value of $24.65\,\mathrm{s}$. The
+largest value occurs at the release wave around $105.0\,\mathrm{s}$,
+where the response time rises to $33.1\,\mathrm{s}$. Relative to the
+wave-averaged value, this is an increase of about $34.3\%$, which
+indicates that this stage is the most congested portion of the mission.
+Even so, the system remains feasible and eventually absorbs the arriving
+workload without leaving unresolved tasks at the end of execution.
 
 Online replanning is triggered $8$ times in total. The corresponding
 replanning times are
@@ -112,27 +128,26 @@ replanning time is $3.555\,\mathrm{s}$, the average replanning time is
 $0.444\,\mathrm{s}$, and the maximum single replanning time is
 $0.752\,\mathrm{s}$. Relative to the overall makespan, the cumulative
 replanning overhead is only about $2.30\%$. When normalized by workload
-size, the average replanning cost is $0.0967\,\mathrm{s}$ per
+size, the average replanning cost is $0.1185\,\mathrm{s}$ per
 collaborative task, or about $0.0079\,\mathrm{s}$ per subtask. These
 values show that the online adaptation layer does not dominate the total
 execution time, which is consistent with the complexity control built
-into the decomposition and assignment procedure of
-Subsec.~\ref{ch04:subsubsec:simultaneous_assignment}.
-
-Figure~\ref{ch04:fig:case_large_scale_gantt} shows the task Gantt chart.
+into the decomposition-and-assignment procedure of
+Section~\ref{ch04:subsubsec:simultaneous_assignment}.
+Moreover, Figure~\ref{ch04:fig:case_large_scale_gantt} shows the task Gantt chart.
 The four colors represent release, navigation, synchronization, and
 execution, respectively. The red polyline reports the number of active
 subteams over time. Its peak value is approximately $6$, which indicates
 that the planner activates only a limited number of concurrent execution
 units even though the fleet itself is much larger. This behavior is
 consistent with the capacity-aware team-formation policy of
-Subsec.~\ref{ch04:subsubsec:team_formation}: many candidate teams may be
-generated, but only a bounded subset is activated in parallel at a given
-time.
+Section~\ref{ch04:subsubsec:team_formation}: many candidate teams
+may be generated, but only a bounded subset is activated in parallel at
+a given time.
 
 \begin{figure}[t!]
 \centering
-\includegraphics[width=\linewidth]%
+\includegraphics[width=0.7\linewidth]%
 {figures/ch04/case_large_scale_gantt.png}
 \caption{
 Task Gantt chart for the large-scale persistent mission. The colored
@@ -150,14 +165,12 @@ active subteams over time, whose peak value is approximately $6$.
 The aggregate system states provide additional evidence of stable
 execution. The average occupancy levels of the principal execution
 states are $8.64$ for travelling, $3.98$ for ready, and $25.33$ for
-working. Meanwhile, the number of effective agents remains equal to
-$80$ throughout the simulation, and the final effective fleet size is
-still $80$. Thus, no large-scale resource loss or unrecoverable team
+working. In addition, all $80$ robots remain available throughout the
+simulation. Thus, no large-scale resource loss or unrecoverable team
 collapse occurs during the mission. The dominant time consumption lies
 in motion and coordinated execution rather than in replanning, which is
 again consistent with the design goal of separating expensive
 mission-level reasoning from local execution updates.
-
 Figure~\ref{ch04:fig:case_large_scale_states} reports the stacked state
 statistics. Each major workload injection produces a characteristic
 cycle: newly arrived tasks first appear as unassigned workload, then
@@ -168,17 +181,17 @@ accumulate a growing unresolved backlog over time. Instead, each task
 wave is absorbed before the next one creates a persistent overload. The
 most prominent disturbance again appears near $105.0\,\mathrm{s}$,
 where the rise in unassigned and assigned workload coincides with the
-largest batch response time. The red dashed lines in the figure mark all
-$8$ replanning instants, including both the $6$ task-release updates and
-the additional threshold-triggered replanning events.
+largest wave-level response time. The red dashed lines in the figure
+mark all $8$ replanning instants, including both the $6$ task-release
+updates and the additional threshold-triggered replanning events.
 
 \begin{figure}[t!]
 \centering
-\includegraphics[width=\linewidth]%
+\includegraphics[width=0.8\linewidth]%
 {figures/ch04/case_large_scale_states.png}
 \caption{
 Stacked system-state statistics for the persistent mission. The figure
-shows the time-varying numbers of agents in the principal execution
+shows the time-varying numbers of robots in the principal execution
 states, together with the unassigned and assigned task counts. The red
 dashed lines mark the replanning instants, including both task-release
 updates and additional threshold-triggered replanning events.
@@ -188,12 +201,12 @@ updates and additional threshold-triggered replanning events.
 
 A complementary view is provided by the Sankey diagram in
 Fig.~\ref{ch04:fig:case_large_scale_sankey}. The left side represents
-individual agents, the middle layers represent intermediate subteams
+individual robots, the middle layers represent intermediate subteams
 formed during planning and regrouping, and the right side represents the
 high-level execution units that carry the mission through its later
 stages. The varying edge widths indicate different amounts of member
 flow and capability transfer. This figure makes explicit a central claim
-of Sec.~\ref{ch04:subsec:task}: hierarchical coordination is not merely
+of Section~\ref{ch04:subsec:task}: hierarchical coordination is not merely
 a static partition of the fleet, but a dynamic reorganization process in
 which subteams may be created, inherited, merged, or reconfigured as the
 mission evolves. Compared with a flat individual-level scheduler, such a
@@ -202,10 +215,10 @@ mixed static-known, static-unknown, and dynamic-known workloads.
 
 \begin{figure}[t!]
 \centering
-\includegraphics[width=\linewidth]%
+\includegraphics[width=0.8\linewidth]%
 {figures/ch04/case_large_scale_sankey.png}
 \caption{
-Sankey diagram of resource flow from individual agents to intermediate
+Sankey diagram of resource flow from individual robots to intermediate
 subteams and final execution units. The widths of the links indicate the
 scale of member or capability transfer during hierarchical
 reorganization.
@@ -214,7 +227,7 @@ reorganization.
 \end{figure}
 
 Taken together, these results confirm the practical role of the methods
-developed in Sec.~\ref{ch04:subsec:task}. The uncertain mission model
+developed in Section~\ref{ch04:subsec:task}. The uncertain mission model
 supports persistent online arrivals, the simultaneous decomposition and
 assignment stage controls the combinatorial growth of the planning
 problem, the team-formation layer enables bounded parallel execution,
@@ -223,24 +236,27 @@ team level. In combination, these mechanisms yield a scalable and
 computationally efficient coordination architecture for large-scale
 heterogeneous fleets under sustained mission demand.
 
-%==============================
+%==============================%==============================
 \subsection{Hardware validation in an industrial emergency-response
 scenario}
 \label{ch04:subsec:hardware_validation}
 
-To complement the simulation studies, a hardware validation was
-conducted in a realistic industrial emergency-response scenario. The
-purpose is to verify that the hierarchical coordination framework
-developed in Sec.~\ref{ch04:subsec:task} can be implemented on a
-heterogeneous physical system under real sensing, communication, and
-execution constraints. In particular, the deployment instantiates the
-uncertain mission model of
-Subsec.~\ref{ch04:subsec:uncertain_mission}, the decomposition and
-assignment mechanism of
-Subsec.~\ref{ch04:subsubsec:simultaneous_assignment}, the team-formation
-logic of Subsec.~\ref{ch04:subsubsec:team_formation}, and the local
-coordination procedures of
-Subsec.~\ref{ch04:subsec:local_coordination}.
+To complement the simulation study, a hardware validation was conducted
+in a realistic industrial emergency-response scenario. The purpose is to
+verify that the hierarchical coordination framework developed in
+Section~\ref{ch04:subsec:task} can be implemented on a heterogeneous
+physical system under real sensing, communication, and execution
+constraints. In particular, the deployment instantiates the uncertain
+mission model of Subsec.~\ref{ch04:subsec:uncertain_mission}, the
+simultaneous decomposition-and-assignment mechanism of
+Section~\ref{ch04:subsubsec:simultaneous_assignment}, the
+team-formation logic of
+Section~\ref{ch04:subsubsec:team_formation}, and the local
+coordination procedures of Subsec.~\ref{ch04:subsec:local_coordination}.
+
+%==============================
+\subsubsection{Workspace and system description}
+\label{ch04:subsubsec:hardware_validation_workspace}
 
 The experimental site measures
 $16\,\mathrm{m} \times 14\,\mathrm{m}$ and emulates a compact
@@ -259,7 +275,7 @@ of the physical platforms.
 
 \begin{figure}[t!]
 \centering
-\includegraphics[width=0.92\linewidth]%
+\includegraphics[width=0.9\linewidth]%
 {figures/ch04/hardware_validation_architecture.png}
 \caption{
 Hardware-validation platform and deployment architecture. The figure
@@ -270,6 +286,10 @@ robot-side execution.
 }
 \label{ch04:fig:hardware_validation_architecture}
 \end{figure}
+
+%==============================
+\subsubsection{Experimental results}
+\label{ch04:subsubsec:hardware_validation_results}
 
 The full hardware trial lasts $10$ minutes and contains $8$ tasks with
 $33$ subtasks in total. During execution, the system identifies the
@@ -287,10 +307,20 @@ is dispatched to repair a storage-tank leak through a dedicated
 platform-level action primitive. These episodes show that task
 reallocation and capability-aware intervention can be performed online
 in the physical system.
+Across $10$ hardware trials, the framework achieves a task success rate
+of $100\%$. The average end-to-end planning time is
+$21.6\,\mathrm{s}$, the platform-specific planning quality score is
+$9.7$, and the plan consistency is $95\%$. Each trial requires about
+$50$ operator interactions on average. Relative to fully manual
+operation, the reported operator workload decreases by $56\%$, from
+$7.5$ to $3.3$. These results indicate that the framework developed in
+this chapter transfers to the hardware setting without noticeable
+degradation in planning quality, while substantially reducing operator
+burden in a realistic multi-robot emergency-response environment.
 
 \begin{figure}[t!]
 \centering
-\includegraphics[width=0.92\linewidth]%
+\includegraphics[width=0.9\linewidth]%
 {figures/ch04/hardware_validation_results.png}
 \caption{
 Representative hardware-execution results. The figure shows typical
@@ -300,17 +330,6 @@ reallocation and physical intervention by heterogeneous robots.
 }
 \label{ch04:fig:hardware_validation_results}
 \end{figure}
-
-Across $10$ hardware trials, the framework achieves a task success rate
-of $100\%$. The average end-to-end planning time is
-$21.6\,\mathrm{s}$, the planning quality score is $9.7$, and the plan
-consistency is $95\%$. Each trial requires about $50$ operator
-interactions on average. Relative to fully manual operation, the
-reported workload decreases by $56\%$, from $7.5$ to $3.3$. These
-results indicate that the Chapter~4 framework transfers to the
-hardware setting without noticeable degradation in planning quality,
-while substantially reducing operator burden in a realistic
-multi-robot emergency-response environment.
 
 %==============================
 \section{Summary}

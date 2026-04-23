@@ -2,47 +2,7 @@
 \section{Case study}
 \label{sec:ch03_case_study}
 
-The bottom-up coordination framework is illustrated next on a
-representative multi-robot example involving local temporal tasks,
-execution-time dependence, and collaborative actions. The case study is
-intended to show how local plan synthesis, request-reply exchange, and
-online adaptation interact in a concrete setting.
 
-Consider a team in which each robot is assigned a local temporal task over its
-own workspace abstraction, while several task clauses require assistance from
-other robots through collaborative actions. Planning begins independently at
-each robot, using the single-robot synthesis machinery of
-Chapter~\ref{chap:preliminaries}. As execution unfolds, however, two forms of
-coupling arise. First, previously unknown workspace information may invalidate a
-locally feasible transition or reveal that part of a task cannot be completed
-without revision. Second, the realization of a local task may require a support
-action, shared resource, or synchronization event supplied by another robot.
-The bottom-up framework addresses these difficulties without replacing the local
-specifications by a monolithic team formula.
-
-A representative execution therefore proceeds in three stages. The robots first
-synthesize local plans and begin execution under the nominal assumptions of
-known reachability and available assistance. When a robot detects a blocked
-transition, missing proposition, or newly relevant environmental fact, the
-local abstraction is updated and the current plan is re-verified against the
-task logic. If the original task becomes infeasible, the relaxation and
-safety-aware revision mechanisms of
-Section~\ref{ch03:sec:task_relaxation_adaptation} produce a minimally modified
-plan that preserves the hard part of the specification. When the revised local
-plan requires collaboration, the request-reply protocol of
-Section~\ref{ch03:sec:dep-local-collab} is activated, so that neighboring
-robots confirm, reject, or reschedule the requested support actions according
-to their own evolving commitments. In this way, the team maintains correctness
-through incremental negotiation rather than through centralized resynthesis.
-
-This integrated view clarifies the role of the bottom-up perspective. Task
-adaptation remains local whenever the logical disturbance is local, knowledge is
-shared only when it is relevant to feasibility, and execution-time dependence is
-resolved through explicit coordination messages tied to concrete collaborative
-actions. The resulting behavior is therefore neither fully independent nor
-fully centralized. Instead, it is a layered coordination process in which local
-temporal tasks remain the primary planning objects, while collaboration and
-adaptation are introduced only where execution reveals that they are needed.
 
 %==============================
 \section{Summary}

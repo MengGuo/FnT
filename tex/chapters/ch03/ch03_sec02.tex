@@ -1,14 +1,26 @@
 \section{Dependent Local Tasks with Collaborative Actions}
 \label{ch03:sec:dep-local-collab}
 
-Robots are deployed to move around within the workspace and more importantly to perform various actions to interact with it.
-Thus in this chapter, we first introduce a new method to construct the model of both robot motion and actions.
-Based on this model, we can specify a local temporal task as the desired robot motion and actions.
-Then a planning scheme for both robot motion and actions is proposed as an extension to the nominal solution presented in Chapter~\ref{chap:preliminaries}.
-Furthermore, inter-robot collaborations are essential for many multi-robot applications to improve system capability, efficiency and robustness.
-Thus we start from defining a dependency relation among the robots using collaborative and assisting actions. Then a distributed and online coordination scheme is proposed where each robot sends requests to its neighbors for collaborative tasks, confirms others' requests   and adapts its local plan to fulfill the confirmed collaboration. All decisions are made locally
-by each robot based on local computation and communication between neighboring robots. This scheme is scalable and resilient to robot failures as the dependency relation is formed and removed dynamically according to the plan execution status and robot capabilities, instead of pre-assigned robot identities.
-Numerical simulations are provided in the end to validate the proposed scheme.
+Robots are deployed to operate within the workspace and, more importantly,
+to perform various actions that enable interaction with the environment.
+Accordingly, this chapter first introduces a new method for constructing
+a unified model of robot motion and actions. Based on this model, a local
+temporal task can be specified in terms of the desired robot motion and
+actions. An integrated planning scheme for robot motion and actions is
+then proposed as an extension of the nominal solution presented in
+Chapter~\ref{chap:preliminaries}.
+Furthermore, inter-robot collaboration is essential in many multi-robot
+applications for improving system capability, efficiency, and robustness.
+To this end, we first define a dependency relation among robots through
+collaborative and assisting actions. Based on this relation, a distributed
+and online coordination scheme is proposed, in which each robot sends
+requests to its neighbors for collaborative tasks, confirms the requests
+received from others, and adapts its local plan to fulfill the confirmed
+collaborations. All decisions are made locally by each robot based on
+local computation and communication with neighboring robots. The proposed
+scheme is scalable and resilient to robot failures, since the dependency
+relation is formed and removed dynamically according to the plan execution
+status and robot capabilities, rather than pre-assigned robot identities.
 
 
 
@@ -755,47 +767,7 @@ segment $\widehat{R}_{p,+}^j$ with the form \eqref{ch03:segment} that
 minimizes \eqref{ch03:balanced}.
 \end{problem}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{algorithm}[t]
-\caption{Evaluate the request, \texttt{EvalReq}($\cdot$)}
-\label{ch03:adapt}
-\DontPrintSemicolon
 
-\KwIn{$\widehat{R}_{p,-}^j$, $(\pi_v,\sigma_d,T_m)$, $\mathcal{A}_{p,j}$}
-\KwOut{$\widehat{R}_{p,+}^j$, $b_d^j$, $t_d^j$}
-
-$q_{p,t}^j=\widehat{R}_{p,-}^j[1]$,
-$q_{p,f}^j=\widehat{R}_{p,-}^j[\text{-1}]$\;
-
-Compute $S_d$ and $S_c$\;
-
-$\bar{c}=\texttt{Cost}(\widehat{R}_{p,-}^j,\mathcal{A}_{p,j})$\;
-
-$(P_1,C_1)=\texttt{DijksTA}
-(\mathcal{A}_{p,j},q_{p,t}^j,S_d,S_c)$\;
-
-$(P_2,C_2)=\texttt{DijksTA}
-(\texttt{Reverse}(\mathcal{A}_{p,j}),q_{p,f}^j,S_d,\emptyset)$\;
-
-\ForAll{$q_{p,r}^j \in S_d$}{
-  \If{$P_1(q_{p,r}^j)$ and $P_2(q_{p,r}^j)$ exist}{
-    $C_3(q_{p,r}^j)=
-    |C_1(q_{p,r}^j)-T_m|
-    +\alpha_j(C_1(q_{p,r}^j)+C_2(q_{p,r}^j)-\bar{c})$\;
-  }
-}
-
-Find $q_{p,r}^{j,\star} \in S_d$ that minimizes $C_3(q_{p,r}^j)$\;
-
-\If{$q_{p,r}^{j,\star} \neq \emptyset$}{
-  $P=P_1(q_{p,r}^{j,\star})+
-  \texttt{Reverse}(P_2(q_{p,r}^{j,\star}))$\;
-  \Return{$P$, $\top$, $C_1(q_{p,r}^{j,\star})$}\;
-}
-
-\Return{$\emptyset$, $\bot$, $0$}\;
-\end{algorithm}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Algorithm~\ref{ch03:adapt} solves the problem by a bidirectional Dijkstra
 search. The routine \texttt{DijksTA}($\cdot$) computes shortest paths from one
@@ -901,6 +873,48 @@ contains
 $|\mathcal{N}_i| \cdot |\texttt{Depd}_i(\sigma_m)|$
 Boolean decision variables.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{algorithm}[t]
+\caption{Evaluate the request, \texttt{EvalReq}($\cdot$)}
+\label{ch03:adapt}
+\DontPrintSemicolon
+
+\KwIn{$\widehat{R}_{p,-}^j$, $(\pi_v,\sigma_d,T_m)$, $\mathcal{A}_{p,j}$}
+\KwOut{$\widehat{R}_{p,+}^j$, $b_d^j$, $t_d^j$}
+
+$q_{p,t}^j=\widehat{R}_{p,-}^j[1]$,
+$q_{p,f}^j=\widehat{R}_{p,-}^j[\text{-1}]$\;
+
+Compute $S_d$ and $S_c$\;
+
+$\bar{c}=\texttt{Cost}(\widehat{R}_{p,-}^j,\mathcal{A}_{p,j})$\;
+
+$(P_1,C_1)=\texttt{DijksTA}
+(\mathcal{A}_{p,j},q_{p,t}^j,S_d,S_c)$\;
+
+$(P_2,C_2)=\texttt{DijksTA}
+(\texttt{Reverse}(\mathcal{A}_{p,j}),q_{p,f}^j,S_d,\emptyset)$\;
+
+\ForAll{$q_{p,r}^j \in S_d$}{
+  \If{$P_1(q_{p,r}^j)$ and $P_2(q_{p,r}^j)$ exist}{
+    $C_3(q_{p,r}^j)=
+    |C_1(q_{p,r}^j)-T_m|
+    +\alpha_j(C_1(q_{p,r}^j)+C_2(q_{p,r}^j)-\bar{c})$\;
+  }
+}
+
+Find $q_{p,r}^{j,\star} \in S_d$ that minimizes $C_3(q_{p,r}^j)$\;
+
+\If{$q_{p,r}^{j,\star} \neq \emptyset$}{
+  $P=P_1(q_{p,r}^{j,\star})+
+  \texttt{Reverse}(P_2(q_{p,r}^{j,\star}))$\;
+  \Return{$P$, $\top$, $C_1(q_{p,r}^{j,\star})$}\;
+}
+
+\Return{$\emptyset$, $\bot$, $0$}\;
+\end{algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 (V) \emph{Plan adaptation}.
 After sending the confirmation messages, robot $i$ proceeds as follows. If
 \eqref{ch03:integer} is feasible, then the collaborative action $\sigma_m$ can
@@ -926,40 +940,6 @@ task, it becomes an assisting robot by setting $\varphi_i \triangleq \top$ and
 remains at its current region unless it is later confirmed to collaborate with
 another robot.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{algorithm}[t!]
-\caption{Delay collaboration, \texttt{DelayCol}()}
-\label{ch03:alg:delay}
-\DontPrintSemicolon
-
-\KwIn{$\widehat{R}_{p,-}^i$, $(\pi_v,\sigma_m,T_m)$, $D_i$, $\mathcal{A}_{p,i}$}
-\KwOut{$\widehat{R}_{p,+}^i$}
-
-$q_{p,t}^i=\widehat{R}_{p,-}^i[1]$,
-$q_{p,f}^i=\widehat{R}_{p,-}^i[\text{-1}]$\;
-
-Compute
-$S_d=
-\{q_p \in Q_{p,i} \mid
-  q_p|_{\Pi_{\mathcal{R}}^i}
-  = \langle \pi_v,\sigma_m \rangle\}$ and $S_c$\;
-
-$(P_1,C_1)=\texttt{DijksTA}
-(\mathcal{A}_{p,i},q_{p,t}^i,S_d,S_c)$\;
-
-$(P_2,C_2)=\texttt{DijksTA}
-(\texttt{Reverse}(\mathcal{A}_{p,i}),q_{p,f}^i,S_d,\emptyset)$\;
-
-\ForAll{$q_{p,d}^i \in S_d$}{
-  \If{$C_1(q_{p,d}^i)>T_m+D_i$ and $P_2(q_{p,d}^i)$ exists}{
-    $\widehat{R}_{p,+}^i=
-    P_1(q_{p,d}^i)+
-    \texttt{Reverse}(P_2(q_{p,d}^i))$\;
-    \Return{$\widehat{R}_{p,+}^i$}\;
-  }
-}
-\end{algorithm}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{theorem}
 \label{ch03:tm}
@@ -1002,6 +982,42 @@ collaborator by
 where $f_m$ is the previously confirmed finishing time. Third, it sends the
 confirmation $\{(\sigma_d,\top,f_m)\}$ to robot $\hat{h}$. Finally, robot
 $\hat{h}$ adapts its plan according to the nominal procedure.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{algorithm}[t!]
+\caption{Delay collaboration, \texttt{DelayCol}()}
+\label{ch03:alg:delay}
+\DontPrintSemicolon
+
+\KwIn{$\widehat{R}_{p,-}^i$, $(\pi_v,\sigma_m,T_m)$, $D_i$, $\mathcal{A}_{p,i}$}
+\KwOut{$\widehat{R}_{p,+}^i$}
+
+$q_{p,t}^i=\widehat{R}_{p,-}^i[1]$,
+$q_{p,f}^i=\widehat{R}_{p,-}^i[\text{-1}]$\;
+
+Compute
+$S_d=
+\{q_p \in Q_{p,i} \mid
+  q_p|_{\Pi_{\mathcal{R}}^i}
+  = \langle \pi_v,\sigma_m \rangle\}$ and $S_c$\;
+
+$(P_1,C_1)=\texttt{DijksTA}
+(\mathcal{A}_{p,i},q_{p,t}^i,S_d,S_c)$\;
+
+$(P_2,C_2)=\texttt{DijksTA}
+(\texttt{Reverse}(\mathcal{A}_{p,i}),q_{p,f}^i,S_d,\emptyset)$\;
+
+\ForAll{$q_{p,d}^i \in S_d$}{
+  \If{$C_1(q_{p,d}^i)>T_m+D_i$ and $P_2(q_{p,d}^i)$ exists}{
+    $\widehat{R}_{p,+}^i=
+    P_1(q_{p,d}^i)+
+    \texttt{Reverse}(P_2(q_{p,d}^i))$\;
+    \Return{$\widehat{R}_{p,+}^i$}\;
+  }
+}
+\end{algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 \subsubsection{Overall structure}
