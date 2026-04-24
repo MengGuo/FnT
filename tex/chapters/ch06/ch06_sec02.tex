@@ -15,10 +15,10 @@ To address this difficulty, the section develops an online coordination method
 that combines target-trajectory estimation, uncertainty quantification, compact
 task decomposition, and uncertainty-aware task assignment. In particular,
 target-motion predictions and their uncertainty sets are constructed in
-Sec.~\ref{ch06:subsec:trajectory}, the temporal structure of the task is encoded
-through R-posets in Sec.~\ref{ch06:subsec:poset}, and these components are used
-in Sec.~\ref{ch06:subsec:assignment} to guide the assignment process.
-Sec.~\ref{ch06:subsec:execution} then embeds this assignment scheme into an
+Section~\ref{ch06:subsec:trajectory}, the temporal structure of the task is encoded
+through R-posets in Section~\ref{ch06:subsec:poset}, and these components are used
+in Section~\ref{ch06:subsec:assignment} to guide the assignment process.
+Section~\ref{ch06:subsec:execution} then embeds this assignment scheme into an
 online replanning mechanism so that the team can react to updated target
 information and newly released tasks during execution.
 
@@ -426,7 +426,7 @@ $G_{\mathcal{H}_t} \triangleq
 
 The notion of an R-poset was introduced in
 Chapter~\ref{chap:top-down}, especially in
-Sec.~\ref{ch04:subsec:task-decompose-posets}, as a compact abstraction
+Section~\ref{ch04:subsec:task-decompose-posets}, as a compact abstraction
 of the temporal constraints induced by a team-level temporal task. That
 construction is reused here. Accordingly, only the ingredients needed
 for the present section are recalled.
@@ -463,7 +463,7 @@ $\widehat{\Omega}$ cannot be executed simultaneously.
 The definition above for $P_{\varphi}$ is the present-section specialization
 of Definition~\ref{ch04:def:partial},
 Definition~\ref{ch04:def:poset}, and \eqref{ch04:eq:poset} to the task
-model in Sec.~\ref{ch06:sec:problem}. The abstraction in
+model in Section~\ref{ch06:sec:problem}. The abstraction in
 \eqref{ch06:eq:r-poset} is less restrictive than the full automaton
 run, since only the essential temporal dependencies are retained. At
 the same time, it remains task-consistent. In Chapter~\ref{chap:top-down},
@@ -749,7 +749,7 @@ where $T_{\omega}$ is the actual completion time of subtask
 $\omega \in \Omega_{\nu^{+}}^{\texttt{s}}$, $m$ is the associated
 target, $\mathcal{I}_{\omega}$ is the robot group assigned to
 $\omega$, and $v_m^{\ast}$ is the target-speed bound defined in
-Sec.~\ref{ch06:subsec:traj-predictor}.
+Section~\ref{ch06:subsec:traj-predictor}.
 \end{lemma}
 
 \begin{proof}

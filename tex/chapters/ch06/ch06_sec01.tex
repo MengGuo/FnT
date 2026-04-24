@@ -9,8 +9,8 @@ captured by a separate safe-return requirement. This separation is important,
 because productive operation and permanent return to a designated safe set are
 generally incompatible on the same infinite execution. Related temporal
 logic background is given in Chapter~\ref{chap:preliminaries}; see in
-particular Sec.~\ref{ch02:sec:LTL} and
-Secs.~\ref{ch02:subsec:NBA}--\ref{ch02:subsec:product}.
+particular Section~\ref{ch02:sec:LTL} and
+Sections~\ref{ch02:subsec:NBA}--\ref{ch02:subsec:product}.
 The present section retains only the material needed for the synthesis
 problem, while omitting repeated preliminaries and auxiliary discussion.
 The resulting model remains consistent with prior work on
@@ -64,9 +64,9 @@ such as exits, victims, charging stations, or hazards.
 
 The nominal mission is specified by an LTL formula $\varphi$ over the
 proposition set $AP$ from \eqref{ch06:eq:mdp}. The syntax and semantics of LTL
-are recalled in Sec.~\ref{ch02:sec:LTL}. The automata-based synthesis used
+are recalled in Section~\ref{ch02:sec:LTL}. The automata-based synthesis used
 later follows the same overall paradigm as in
-Secs.~\ref{ch02:subsec:NBA}--\ref{ch02:subsec:product}, with deterministic
+Sections~\ref{ch02:subsec:NBA}--\ref{ch02:subsec:product}, with deterministic
 automata used here for probabilistic planning
 \cite{baier2008principles,belta2017formal}.
 Typical tasks include persistent surveillance,
@@ -241,7 +241,7 @@ therefore not a standard multi-objective synthesis problem with one policy
 that must satisfy all requirements on a single run.
 Instead, the outbound policy is admissible only when it preserves the existence
 of a return policy satisfying \eqref{ch06:eq:safe}. This distinction is central
-throughout the remainder of Sec.~\ref{ch06:sec:ch06_safe_plan}.
+throughout the remainder of Section~\ref{ch06:sec:ch06_safe_plan}.
 
 
 
@@ -648,7 +648,7 @@ Solve \eqref{ch06:eq:new-problem} for
 \subsection{Hierarchical abstraction and safety-ensured synthesis}
 \label{ch06:sec:solution}
 
-The baseline method in Sec.~\ref{ch06:sec:analysis} becomes expensive because
+The baseline method in Section~\ref{ch06:sec:analysis} becomes expensive because
 both temporal constraints are enforced directly on product automata built over
 the original MDP \(\mathcal{M}\). To reduce this complexity, two feature-based
 abstractions are introduced as semi-MDPs. One abstraction is constructed for
@@ -789,7 +789,7 @@ The optimal abstract return policy
 \(\mathcal{P}'_{\textup{\texttt{r}}}\) in the same manner as
 \(\boldsymbol{\pi}_{\textup{\texttt{r}}}\) was computed from
 \(\mathcal{P}_{\textup{\texttt{r}}}\) in
-Sec.~\ref{ch06:subsec:complexity}. Since the safe-return specification is of
+Section~\ref{ch06:subsec:complexity}. Since the safe-return specification is of
 sc-LTL type, satisfaction reduces to reaching the union of AMECs in the
 abstract product. Denote this set by \(S'_{\textup{\texttt{r}},\Xi}\). Once
 \(S'_{\textup{\texttt{r}},\Xi}\) is reached, the safe-return objective can be

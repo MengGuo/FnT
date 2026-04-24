@@ -63,14 +63,14 @@ This subsection introduces the continuous multi-robot planning model, the STL ta
 
 %==============================
 \subsubsection{Multi-robot system}
-\label{sec:multi-robot-system}
+\label{ch06:sec:multi-robot-system}
 
 Consider a system of $N$ robots indexed by
 $\mathcal{N} \triangleq \{1,\cdots,N\}$ and evolving in a workspace
 $\mathcal{W}\subset\mathbb{R}^D$, where $D\geq 2$.
 Each robot $i\in\mathcal{N}$ follows the discrete-time first-order dynamics
 \begin{equation}
-\label{eq:robot-model}
+\label{ch06:eq:robot-model}
 \mathbf{p}_i(t+1)=\mathbf{p}_i(t)+\mathbf{v}_i(t)\Delta t,
 \end{equation}
 where $\mathbf{p}_i(t),\mathbf{v}_i(t)\in\mathbb{R}^D$ denote,
@@ -97,14 +97,14 @@ stage cost
 $h_i:\mathbb{R}^{2D}\times\mathbb{R}^{2D}\rightarrow\mathbb{R}^+$.
 Using $h_i$, the cumulative control cost over $\mathbf{Z}_i(T)$ is defined by
 \begin{equation}
-\label{eq:control-cost}
+\label{ch06:eq:control-cost}
 c_{\texttt{ctr}}\big(\mathbf{Z}_i(T)\big)
 \triangleq \sum_{t=0}^{T-1}
 h_i\big(\mathbf{q}_i(t),\mathbf{q}_i(t+1)\big),
 \end{equation}
 where the function $h_i$ may differ across robots to capture
 heterogeneous motion characteristics.
-In addition to \eqref{eq:control-cost}, the collective trajectory is
+In addition to \eqref{ch06:eq:control-cost}, the collective trajectory is
 penalized by state-dependent costs associated with obstacle avoidance,
 inter-robot separation, and task satisfaction.
 For obstacle avoidance, define
@@ -146,9 +146,9 @@ $(\mathbf{s},t)\models \phi$.
 
 To quantify the degree of satisfaction, the space robustness
 $\rho^\phi(\mathbf{s},t)\in\mathbb{R}$ is adopted.
-Its recursive definition is given in \eqref{eq:stl-robustness}:
+Its recursive definition is given in \eqref{ch06:eq:stl-robustness}:
 \begin{equation}
-\label{eq:stl-robustness}
+\label{ch06:eq:stl-robustness}
 \begin{aligned}
 \rho^\mu(\mathbf{s},t)
 &\triangleq f(\mathbf{s}(t)), \\
@@ -221,9 +221,9 @@ $\mu\triangleq \{\mu_A^k,\mu_B^k\}$.
 Its trajectory-level penalty is evaluated through the robustness
 $\rho^\phi(\mathbf{Z}(T),0)$ together with the geometric costs defined
 above.
-The resulting state-dependent cost is given by \eqref{eq:state-cost}:
+The resulting state-dependent cost is given by \eqref{ch06:eq:state-cost}:
 \begin{equation}
-\label{eq:state-cost}
+\label{ch06:eq:state-cost}
 \begin{aligned}
 c_{\texttt{tsk}}\big(\mathbf{Z}(T)\big)\triangleq
 &-\rho^\phi\big(\mathbf{Z}(T),0\big) \\
@@ -237,7 +237,7 @@ g_{\texttt{int}}\big(\mathbf{p}_i(t),\mathbf{p}_j(t)\big)
 \end{equation}
 where the first term promotes STL satisfaction, while the remaining terms
 penalize obstacle proximity and inter-robot collisions.
-Hence, minimizing \eqref{eq:state-cost} encourages both safety and
+Hence, minimizing \eqref{ch06:eq:state-cost} encourages both safety and
 task fulfillment.
 
 %==============================
@@ -249,13 +249,13 @@ STL task $\phi$, the collaborative motion planning problem is formulated as
 follows.
 
 \begin{problem}
-\label{prob:multi-robot-control}
+\label{ch06:prob:multi-robot-control}
 Find a system trajectory $\mathbf{Z}(T)$ that minimizes the sum of the
-task-dependent cost in \eqref{eq:state-cost} and the individual control
-costs in \eqref{eq:control-cost}, subject to the boundary conditions and
-the dynamics in \eqref{eq:robot-model}:
+task-dependent cost in \eqref{ch06:eq:state-cost} and the individual control
+costs in \eqref{ch06:eq:control-cost}, subject to the boundary conditions and
+the dynamics in \eqref{ch06:eq:robot-model}:
 \begin{equation}
-\label{eq:prob}
+\label{ch06:eq:prob}
 \begin{aligned}
 \underset{\mathbf{Z}(T)}{\textbf{min}}\quad
 & c_{\texttt{tsk}}\big(\mathbf{Z}(T)\big)
@@ -270,7 +270,7 @@ where the optimization variable is the collective trajectory
 $\mathbf{Z}(T)$ over the horizon $T$.
 \end{problem}
 
-Problem~\ref{prob:multi-robot-control} is a constrained and highly
+Problem~\ref{ch06:prob:multi-robot-control} is a constrained and highly
 non-convex trajectory-optimization problem.
 In particular, STL satisfaction introduces time-indexed conjunctions and
 disjunctions, which are commonly handled through mixed-integer encodings.
@@ -571,7 +571,7 @@ The first term in \eqref{ch06:eq:state-cost-sequential} penalizes
 collisions with the preceding robots and with obstacles, while the last
 term promotes collective task satisfaction.
 Combining \eqref{ch06:eq:state-cost-sequential} with the control cost in
-\eqref{eq:control-cost}, the local optimization problem for robot
+\eqref{ch06:eq:control-cost}, the local optimization problem for robot
 $i_\ell$ is written as
 \begin{equation}
 \label{ch06:eq:local-problem}
@@ -584,7 +584,7 @@ c_{\texttt{ctr}}\big(\mathbf{Z}_{i_\ell}(T)\big)
 \Big\},
 \end{equation}
 where the optimization is subject to the robot dynamics in
-\eqref{eq:robot-model} and to the boundary conditions inherited from the
+\eqref{ch06:eq:robot-model} and to the boundary conditions inherited from the
 global problem.
 After solving \eqref{ch06:eq:local-problem}, the resulting trajectory
 $\mathbf{Z}_{i_\ell}^\star(T)$ is appended to the collective set and is

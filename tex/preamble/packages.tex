@@ -54,6 +54,7 @@
 \makeatletter
 \@addtoreset{algocf}{chapter}
 \renewcommand{\thealgocf}{\thechapter.\arabic{algocf}}
+\renewcommand{\theHalgocf}{\theHchapter.\arabic{algocf}}
 \makeatother
 \crefname{algocf}{Algorithm}{Algorithms}
 
@@ -126,3 +127,15 @@
   qed=\ensuremath{\blacksquare},
   name=Example
 ]{example}
+
+\makeatletter
+\renewcommand*{\theHtheorem}{\theHchapter.\arabic{theorem}}
+\renewcommand*{\theHlemma}{\theHchapter.\arabic{lemma}}
+\renewcommand*{\theHproposition}{\theHchapter.\arabic{proposition}}
+\renewcommand*{\theHcorollary}{\theHchapter.\arabic{corollary}}
+\renewcommand*{\theHdefinition}{\theHchapter.\arabic{definition}}
+\renewcommand*{\theHproblem}{\theHchapter.\arabic{problem}}
+\renewcommand*{\theHassumption}{\theHchapter.\arabic{assumption}}
+\renewcommand*{\theHremark}{\theHchapter.\arabic{remark}}
+\renewcommand*{\theHexample}{\theHchapter.\arabic{example}}
+\makeatother
