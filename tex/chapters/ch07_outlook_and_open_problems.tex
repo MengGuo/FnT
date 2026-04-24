@@ -16,16 +16,16 @@ fixed abstractions to broader questions of scalability, adaptation, semantic
 robustness, and system-level correctness.
 
 Rather than revisiting the earlier chapters one by one, this chapter isolates
-five lines of difficulty that cut across the entire monograph. Section
-\ref{sec:ch07_scalability} examines scalability and compositional synthesis
+five lines of difficulty that cut across the entire monograph. Section~\ref{sec:ch07_scalability}
+examines scalability and compositional synthesis
 beyond monolithic constructions. Section~\ref{sec:ch07_continual} turns to
 continual and reactive coordination in nonstationary environments, where
-replanning is intrinsic rather than exceptional. Section
-\ref{sec:ch07_open_world} addresses uncertainty, partial knowledge, and
+replanning is intrinsic rather than exceptional. Section~\ref{sec:ch07_open_world}
+addresses uncertainty, partial knowledge, and
 open-world semantics, with emphasis on the limits of fixed symbolic models.
 Section~\ref{sec:ch07_learning} considers how learning-based components may be
-incorporated without dissolving meaningful formal guarantees. Finally, Section
-\ref{sec:ch07_deployment} discusses verification, human interaction, and
+incorporated without dissolving meaningful formal guarantees. Finally, Section~\ref{sec:ch07_deployment}
+discusses verification, human interaction, and
 deployment-level evaluation, where the practical validity of temporal-task
 planning frameworks is ultimately tested.
 
@@ -42,8 +42,8 @@ and~\ref{chap:top-down} show that this difficulty does not disappear when the
 problem is distributed across multiple robots. Instead, it reappears through
 dependence among local tasks, through assignment and decomposition under
 shared temporal constraints, and through the need to preserve consistency
-between local decisions and global task semantics. Chapters
-\ref{chap:communication} and~\ref{chap:uncertainty} further indicate that once
+between local decisions and global task semantics. Chapters~\ref{chap:communication}
+and~\ref{chap:uncertainty} further indicate that once
 communication limits, online requests, uncertainty, and dynamic constraints
 are incorporated, scalability is no longer a question of state count alone. It
 also depends on how formal structure is preserved across multiple layers, time
@@ -203,8 +203,8 @@ closed-world view of the planning problem: the relevant states, propositions,
 task predicates, and transition relations are assumed to be specified in
 advance with sufficient precision to support symbolic reasoning. That
 assumption is methodologically useful and often unavoidable, but its
-limitations become increasingly visible as the discussion moves from Chapter
-\ref{chap:preliminaries} toward Chapters~\ref{chap:communication}
+limitations become increasingly visible as the discussion moves from
+Chapter~\ref{chap:preliminaries} toward Chapters~\ref{chap:communication}
 and~\ref{chap:uncertainty}. In realistic deployments, the planner may operate
 with incomplete maps, delayed observations, uncertain labels, evolving
 constraints, or task-relevant entities that are not known at design time.
@@ -396,8 +396,8 @@ A second difficulty appears once human operators are treated not merely as
 task designers, but as continuing participants in the coordination loop.
 Requests may arrive during execution, priorities may be revised in light of
 external concerns, and autonomous decisions may be overridden for reasons that
-lie outside the original symbolic specification. Chapter
-\ref{chap:communication} already points toward this difficulty through online
+lie outside the original symbolic specification. Chapter~\ref{chap:communication}
+already points toward this difficulty through online
 request fulfillment, but the broader challenge is more general.
 Temporal-task planning must increasingly account for supervisory authority,
 shared autonomy, and the need to explain or justify decisions in a form that
