@@ -15,21 +15,26 @@ and deployment settings become more complex, the central questions shift from
 nominal satisfaction on fixed abstractions to scalability, continual adaptation, semantic
 incompleteness, data-driven modeling, and system-level validation.
 This chapter organizes these questions by their distinct sources of
-difficulty. Section~\ref{sec:ch07_scalability} focuses on computational and
-structural scale: when and how temporal-task problems can be decomposed
-without losing the dependencies that make the specification meaningful.
-Section~\ref{sec:ch07_continual} considers nonstationary execution, where the
-modeling framework remains fixed but tasks, targets, resources, or
-communication conditions change over time. Section~\ref{sec:ch07_open_world}
-addresses a different issue: partial knowledge and open-world semantics, in
-which the symbolic model itself may be incomplete or extensible.
-Section~\ref{sec:ch07_learning} then discusses how learned components may be
-introduced into this formal pipeline. Finally,
+difficulty. Section~\ref{sec:ch07_research_challenges} groups five research
+challenges and open problems. Section~\ref{sec:ch07_scalability} focuses on
+computational and structural scale: when and how temporal-task problems can be
+decomposed without losing the dependencies that make the specification
+meaningful. Section~\ref{sec:ch07_continual} considers nonstationary
+execution, where the modeling framework remains fixed but tasks, targets,
+resources, or communication conditions change over time.
+Section~\ref{sec:ch07_open_world} addresses a different issue: partial
+knowledge and open-world semantics, in which the symbolic model itself may be
+incomplete or extensible. Section~\ref{sec:ch07_learning} then discusses
+how learned components may be introduced into this formal pipeline.
 Section~\ref{sec:ch07_deployment} turns to runtime assurance, human
-supervision, and benchmark design.
+supervision, and benchmark design. Section~\ref{sec:ch07_concluding}
+concludes the chapter.
 
 %=================================================
-\section{Scalability and Compositional Interfaces}
+\section{Research challenges and open problems}
+\label{sec:ch07_research_challenges}
+
+\subsection{Scalability and compositional interfaces}
 \label{sec:ch07_scalability}
 
 A recurring theme throughout this monograph is that the expressive strength of
@@ -81,7 +86,7 @@ goal is a cross-layer synthesis architecture in which local refinements do not
 force complete recomputation of the full coordination policy.
 
 %=================================================
-\section{Continual Coordination under Nonstationarity}
+\subsection{Continual coordination under nonstationarity}
 \label{sec:ch07_continual}
 
 Scalability concerns the size and structure of the planning problem. A
@@ -129,7 +134,7 @@ formal task logic is combined with resource, communication, and motion
 constraints.
 
 %=================================================
-\section{Open-World Task Semantics}
+\subsection{Open-world task semantics}
 \label{sec:ch07_open_world}
 
 Nonstationarity concerns changes within an identifiable modeling framework.
@@ -177,7 +182,7 @@ is distinct from learning or runtime verification; it concerns the semantics
 of planning under incomplete and extensible symbolic descriptions.
 
 %=================================================
-\section{Learning-Augmented Planning with Formal Guarantees}
+\subsection{Learning-augmented planning with formal guarantees}
 \label{sec:ch07_learning}
 
 Learning-based components are attractive because many quantities needed for
@@ -221,13 +226,13 @@ classical formal guarantees as closely as possible, or develop guarantee
 notions tailored to systems whose models are partly inferred from data.
 
 %=================================================
-\section{Runtime Assurance and Deployment Evaluation}
+\subsection{Runtime assurance and deployment evaluation}
 \label{sec:ch07_deployment}
 
 The final set of open problems arises at the level of deployed systems.
 Planning algorithms may be correct relative to their models and still fail to
 support dependable operation when sensing, communication, human input, and
-execution constraints interact. This section therefore focuses on evaluation
+execution constraints interact. This subsection therefore focuses on evaluation
 and assurance during operation, rather than on the internal semantics of model
 incompleteness or the statistical properties of learned modules.
 
@@ -263,7 +268,8 @@ possible to compare symbolic, optimization-based, and learning-augmented
 methods on shared scenarios rather than on isolated demonstrations.
 
 %==============================
-\section*{Concluding Perspective}
+\section{Concluding perspective}
+\label{sec:ch07_concluding}
 
 The open problems above are connected, but they are not interchangeable.
 Scalability concerns structural decomposition; continual coordination concerns
