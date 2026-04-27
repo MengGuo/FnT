@@ -111,7 +111,7 @@ shared capabilities, and resource-flow dependencies. These couplings
 make a direct flat assignment unattractive at this scale, since each
 robot-to-subtask decision would have to account simultaneously for
 temporal feasibility, team capacity, motion cost, and online task
-release. .
+release.
 
 %------------------------------
 \begin{figure}[t!]
@@ -138,7 +138,7 @@ inter-task couplings and the induced resource-flow structure.
 The simulation completes all $30$ collaborative tasks successfully,
 yielding a task success rate of $100\%$. The final makespan is
 $154.4\,\mathrm{s}$, and the reported average task response time is
-$17.81\,\mathrm{s}$. Measured at the workload level, the effective
+$24.65\,\mathrm{s}$. Measured at the workload level, the effective
 throughput is approximately $0.194$ collaborative tasks per second.
 Measured at the subtask level, the execution rate is approximately
 $2.91$ subtasks per second. These figures indicate that the proposed
@@ -214,9 +214,10 @@ cycle: newly arrived tasks first appear as unassigned workload, then
 migrate into the assigned set after replanning, and finally decrease as
 the corresponding teams complete execution. This recurring
 arrival--replan--assign--execute pattern shows that the system does not
-accumulate a growing unresolved backlog over time. Instead, each task
-wave is absorbed before the next one creates a persistent overload. The
-most prominent disturbance again appears near $105.0\,\mathrm{s}$,
+accumulate a growing unresolved backlog over time.
+Instead, the system prevents the released workload from accumulating into a
+persistent backlog, even when some waves overlap temporally with later releases.
+The most prominent disturbance again appears near $105.0\,\mathrm{s}$,
 where the rise in unassigned and assigned workload coincides with the
 largest wave-level response time. The red dashed lines in the figure
 mark all $8$ replanning instants, including both the $6$ task-release
@@ -425,9 +426,8 @@ primitive. These episodes verify that the formal task hierarchy is not
 only synthesized offline, but also updated online when new task instances,
 new resources, or platform-specific execution requirements appear. Across
 $10$ hardware trials, the framework achieves a task success rate of
-$100\%$. The average end-to-end planning time is $21.6\,\mathrm{s}$, the
-platform-specific planning quality score is $9.7$, and the plan
-consistency is $95\%$. Each trial requires about $50$ operator
+$100\%$. The average end-to-end planning time is $21.6\,\mathrm{s}$,
+and the plan consistency is $95\%$. Each trial requires about $50$ operator
 interactions on average. Relative to fully manual operation, the reported
 operator workload decreases by $56\%$, from $7.5$ to $3.3$. These results
 indicate that the framework developed in this chapter transfers to the

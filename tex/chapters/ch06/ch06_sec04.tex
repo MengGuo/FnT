@@ -105,8 +105,8 @@ assignments under predicted target motion and uncertainty.
 Figure~\ref{ch06:fig:case_dynamic_tasks_timeline} reports the execution
 timeline in the form of a Gantt chart. The initial plan is synthesized
 from the offline component \eqref{ch06:eq:case_dynamic_static}. The
-mission contains $10$ tasks in total, namely $6$ offline tasks and
-$4$ reactive scouting tasks. During execution, the task assignments are
+mission contains $10$ tasks in total, namely $8$ offline tasks and
+$2$ reactive scouting tasks. During execution, the task assignments are
 updated at $t=40\,\mathrm{s}$ and $t=80\,\mathrm{s}$ when new reactive
 tasks are released, in accordance with \eqref{ch06:eq:task-update}.
 Between these events, performance-triggered replanning checks are also
@@ -151,8 +151,8 @@ responsive to evolving conditions, but does not introduce unnecessary
 plan churn.
 The system terminates at $t=136\,\mathrm{s}$ and completes all
 $10$ tasks with an average makespan of $66.9\,\mathrm{s}$. Since
-$4$ of the $10$ tasks are reactive scouting tasks, the online component
-accounts for $40\%$ of the total mission workload. Moreover, the ratio
+$2$ of the $10$ tasks are reactive scouting tasks, the online component
+accounts for $20\%$ of the total mission workload. Moreover, the ratio
 between the average makespan and the total mission duration is
 approximately $66.9/136 \approx 0.492$, which indicates that the team
 maintains a substantial degree of parallelism instead of resolving the
@@ -182,7 +182,7 @@ $T = 48$. The workspace is defined on a
 $14 \times 9$ planar domain with static obstacles. For the local
 optimal transport updates, the batch size is fixed at
 $400$ trajectories. The resulting trajectories and robustness traces are
-shown in Figures.~\ref{ch06:fig:split-merge} and
+shown in Figures~\ref{ch06:fig:split-merge} and
 \ref{ch06:fig:alternative-visitation}.
 
 \begin{figure}[t!]
