@@ -1,29 +1,22 @@
 \chapter{Bottom-Up Coordination under Local Temporal Tasks}
 \label{chap:bottom-up}
 
-The previous chapter showed that centralized automata-based planning for
-multi-robot systems faces a basic scalability limitation. When a global
-temporal specification is synchronized with the joint transition system of all
-robots, the resulting product construction grows rapidly with both the team size
-and the task complexity. This growth is not only a computational issue in
-offline synthesis, but also a structural limitation when coordination must be
-maintained under incomplete information, inter-robot dependence, and online
-changes. For this reason, the present chapter adopts a bottom-up perspective on
-multi-robot coordination, in which each robot is assigned a local temporal task
-and coordination is established through relations among these local tasks rather
-than through a single monolithic team specification.
-
-From this viewpoint, the main question is how local temporal tasks can be
-planned, coordinated, and revised while preserving the logical structure
-required for correct team behavior. Section~\ref{ch03:sec:task_relaxation_adaptation}
-first studies task relaxation and plan adaptation when workspace information is
-incomplete and feasibility cannot be determined in advance. Then,
-Section~\ref{ch03:sec:dep-local-collab} introduces dependent local tasks with
-explicit collaborative actions, so that the execution of one robot may require
-functional support from others. Together, these
-developments extend the discrete planning framework from isolated local task
-execution to structured multi-robot coordination under dynamic and uncertain
-conditions.
+Centralized automata-based planning scales poorly when a global temporal
+specification is synchronized with the joint transition system of all robots.
+The resulting product construction grows with both team size and task
+complexity, and becomes especially restrictive under incomplete information,
+inter-robot dependence, and online model changes. This chapter therefore adopts
+a bottom-up perspective: each robot is assigned a local temporal task, and
+coordination is induced by relations among these local tasks rather than by a
+single monolithic team specification.
+The central question is how local temporal tasks can be planned, coordinated,
+and revised while preserving the logical structure needed for correct team
+behavior. Section~\ref{ch03:sec:task_relaxation_adaptation} studies task
+relaxation and plan adaptation under incomplete workspace information.
+Section~\ref{ch03:sec:dep-local-collab} then introduces dependent local tasks
+with collaborative actions, where one robot's execution may require functional
+support from others. Together, these developments extend discrete planning from
+isolated local execution to structured bottom-up coordination.
 
 %==============================
 %==============================

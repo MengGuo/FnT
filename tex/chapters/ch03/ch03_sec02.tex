@@ -1,26 +1,17 @@
 \section{Dependent Local Tasks with Collaborative Actions}
 \label{ch03:sec:dep-local-collab}
 
-Robots are deployed to operate within the workspace and, more importantly,
-to perform various actions that enable interaction with the environment.
-Accordingly, this chapter first introduces a new method for constructing
-a unified model of robot motion and actions. Based on this model, a local
-temporal task can be specified in terms of the desired robot motion and
-actions. An integrated planning scheme for robot motion and actions is
-then proposed as an extension of the nominal solution presented in
-Chapter~\ref{chap:preliminaries}.
-Furthermore, inter-robot collaboration is essential in many multi-robot
-applications for improving system capability, efficiency, and robustness.
-To this end, we first define a dependency relation among robots through
-collaborative and assisting actions. Based on this relation, a distributed
-and online coordination scheme is proposed, in which each robot sends
-requests to its neighbors for collaborative tasks, confirms the requests
-received from others, and adapts its local plan to fulfill the confirmed
-collaborations. All decisions are made locally by each robot based on
-local computation and communication with neighboring robots. The proposed
-scheme is scalable and resilient to robot failures, since the dependency
-relation is formed and removed dynamically according to the plan execution
-status and robot capabilities, rather than pre-assigned robot identities.
+Robots must not only navigate the workspace, but also execute actions that
+interact with the environment. This section first builds a unified model of
+motion and actions, so that local temporal tasks can specify both where the
+robot moves and which actions it performs. The resulting planning scheme extends
+the nominal automata-based solution of Chapter~\ref{chap:preliminaries}.
+The section then addresses dependent local tasks. Dependencies are represented
+through collaborative and assisting actions rather than fixed robot identities.
+Each robot requests assistance from neighbors, evaluates incoming requests,
+confirms feasible collaborations, and adapts its local plan using only local
+computation and communication. Since dependencies are formed and removed during
+execution, the scheme remains scalable and resilient to robot failures.
 
 
 
@@ -31,18 +22,12 @@ status and robot capabilities, rather than pre-assigned robot identities.
 \subsection{Motion and action planning}
 \label{ch03:sec:action-plan}
 
-The task specifications considered so far describe only sequences of regions to
-be visited. In many robotic applications, however, reaching a region serves the
-purpose of enabling one or more operations at that location. The planning
-problem therefore involves both motion and action. These two aspects should not
-be treated independently, because action feasibility depends on the current
-region and its properties, while executed actions may modify internal robot
-states that affect later decisions.
-A convenient modeling principle is to separate workspace-dependent information
-from workspace independent action knowledge. The former concerns the workspace
-structure and the robot's mobility. The latter concerns the conditions under
-which actions are enabled and the resulting state updates. This separation
-improves modularity and facilitates reuse when the workspace or the task
+The specifications considered so far describe region visits. In many robotic
+tasks, however, reaching a region enables operations whose feasibility depends
+on regional properties, while executed actions modify internal robot states.
+Motion and action therefore have to be modeled jointly. The construction below
+separates workspace-dependent mobility information from workspace-independent
+action knowledge, which improves modularity and reuse when the workspace or
 specification changes \cite{van2008handbook}.
 
 (I) \emph{Mobility abstraction}.
@@ -54,70 +39,50 @@ The robot mobility is modeled by the weighted finite transition system below:
  \Pi_{\mathcal{M},0}, \Psi_{\mathcal{M}}, L_{\mathcal{M}},
  W_{\mathcal{M}}),
 \end{equation}
-where $\Sigma_{\mathcal{M}} \triangleq \{\sigma_{\mathcal{M}}\}$.
-The structure in \eqref{ch03:eq:M} follows
-Definition~\ref{ch02:def:FTS}. The set $\Pi_{\mathcal{M}}$ contains the
-abstract workspace regions, and $\Pi_{\mathcal{M},0}$ denotes the initial
-region set. The proposition set is
-$\Psi_{\mathcal{M}} \triangleq \Psi_r \cup \Psi_p$, where
-$\Psi_r \triangleq \{\Psi_{r,1}, \cdots, \Psi_{r,N}\}$ collects region names,
-and $\Psi_p \triangleq \{\Psi_{p,1}, \cdots, \Psi_{p,I}\}$ collects workspace
-properties relevant to task execution. For instance, the proposition
-``the room contains product \textsf{A}'' is relevant to the action
-``pickup \textsf{A}''. The action $\sigma_{\mathcal{M}}$ is the symbolic
-counterpart of the continuous navigation controller in
+where $\Sigma_{\mathcal{M}} \triangleq \{\sigma_{\mathcal{M}}\}$ and the
+structure follows Definition~\ref{ch02:def:FTS}. The set
+$\Pi_{\mathcal{M}}$ contains workspace regions, $\Pi_{\mathcal{M},0}$ contains
+initial regions, and
+$\Psi_{\mathcal{M}} \triangleq \Psi_r \cup \Psi_p$ combines region names with
+workspace properties relevant to actions. The action $\sigma_{\mathcal{M}}$ is
+the symbolic counterpart of the continuous navigation controller in
 \eqref{ch02:eq:control}.
 
 (II) \emph{Action model}.
-Action description languages provide a natural way to encode the preconditions
-and effects of task-level actions \cite{gelfond1998action}. Classical
-formalisms such as STRIPS and ADL offer concise models for such action
-descriptions \cite{fikes1972strips,pednault1989adl}. Suppose that the robot can
-perform $K$ actions
-$\{\sigma_{\mathcal{B},1}, \cdots, \sigma_{\mathcal{B},K}\}$ through the
-low-level controllers $\{\mathcal{K}_1, \cdots, \mathcal{K}_K\}$. Define
+Action description languages encode preconditions and effects of task-level
+actions \cite{gelfond1998action}, including STRIPS and ADL models
+\cite{fikes1972strips,pednault1989adl}. Suppose the robot can perform
+$K$ actions
+$\{\sigma_{\mathcal{B},1}, \cdots, \sigma_{\mathcal{B},K}\}$ through
+controllers $\{\mathcal{K}_1, \cdots, \mathcal{K}_K\}$, and define
 $\Sigma_{\mathcal{B}} \triangleq
 \{\sigma_{\mathcal{B},0}, \sigma_{\mathcal{B},1}, \cdots,
-  \sigma_{\mathcal{B},K}\}$,
-where $\sigma_{\mathcal{B},0} \triangleq \texttt{None}$ indicates that no
-task-level action is currently executed.
-Two additional proposition sets are introduced. The set
-$\Psi_s \triangleq \{\Psi_{s,1}, \cdots, \Psi_{s,J}\}$ represents internal
-robot states, such as ``the robot holds product \textsf{A}''. The set
-$\Psi_b \triangleq \{\Psi_{b,0}, \Psi_{b,1}, \cdots, \Psi_{b,K}\}$ records the
-currently executed action. More precisely, $\Psi_{b,k} = \top$ means that
-$\sigma_{\mathcal{B},k}$ is active. Only one proposition in $\Psi_b$ can be
-true at any time, reflecting the non-concurrency assumption.
-The enabledness of actions is characterized by the precondition function:
+  \sigma_{\mathcal{B},K}\}$ with
+$\sigma_{\mathcal{B},0} \triangleq \texttt{None}$. The set $\Psi_s$ represents
+internal robot states, and $\Psi_b$ records the single active task-level action
+under the non-concurrency assumption. Action enabledness is characterized by:
 \begin{equation}
 \label{ch03:eq:cond}
 \texttt{Cond} :
 \Sigma_{\mathcal{B}} \times 2^{\Psi_p} \times 2^{\Psi_s}
 \longrightarrow \{\top,\bot\},
 \end{equation}
-where the value of \eqref{ch03:eq:cond} indicates whether a given action is
-admissible under the current workspace properties and internal robot state.
-For example, ``pickup \textsf{A}'' may be enabled only when the current region
-contains product \textsf{A}. By definition,
+where the value indicates whether an action is admissible under the current
+workspace properties and internal state. By definition,
 $\texttt{Cond}(\sigma_{\mathcal{B},0}, w_p, w_s)=\top$ for all
-$w_p \subseteq \Psi_p$ and $w_s \subseteq \Psi_s$.
-The state update induced by an action is captured by the effect function:
+$w_p \subseteq \Psi_p$ and $w_s \subseteq \Psi_s$. The action-induced state
+update is captured by:
 \begin{equation}
 \label{ch03:eq:eff}
 \texttt{Eff} :
 \Sigma_{\mathcal{B}} \times 2^{\Psi_s} \times \Psi_b
 \longrightarrow 2^{\Psi_s} \times \Psi_b,
 \end{equation}
-where \eqref{ch03:eq:eff} modifies the internal state valuation and the active
-action indicator. In particular,
-$\texttt{Eff}(\sigma_{\mathcal{B},0}, w_s, \Psi_{b,\ell})
-= (w_s, \Psi_{b,0})$ for every $\Psi_{b,\ell} \in \Psi_b$, so that the special
-action $\sigma_{\mathcal{B},0}$ preserves the internal state and resets the
-action status to \texttt{None}. For $k \geq 1$, the expression
-$\texttt{Eff}(\sigma_{\mathcal{B},k}, w_s, \Psi_{b,\ell})
-= (w_s', \Psi_{b,k})$ specifies the updated internal state $w_s'$ resulting
-from the execution of $\sigma_{\mathcal{B},k}$. The effect function does not
-modify workspace properties, which are treated as external inputs.
+where \eqref{ch03:eq:eff} updates the internal state valuation and the active
+action indicator. The null action preserves the internal state and resets the
+action status to \texttt{None}; other actions update the internal state and
+activate the corresponding action proposition. Workspace properties are treated
+as external inputs and are not modified by \texttt{Eff}.
 
 \begin{definition}
 Given $\Psi_p$, $\Psi_s$, $\Psi_b$, $\Sigma_{\mathcal{B}}$,
@@ -152,17 +117,13 @@ according to the cost of the corresponding action.
 \end{definition}
 
 
-Note that the state space of $\mathcal{B}$ is defined as
-$2^{\Psi_s} \times \Psi_b$, rather than $2^{\Psi_s} \times 2^{\Psi_b}$,
-because at most one proposition in $\Psi_b$ can be true at any time.
-The action map is nondeterministic in the following sense. At a given state,
-any action whose precondition evaluates to true may be selected. Once a
-specific valuation of the workspace properties is fixed, all conditional
-transitions in $\hookrightarrow_{\mathcal{B}}$ become either enabled or
-disabled, and the resulting structure is a standard weighted finite transition
-system \cite{baier2008principles}. An important feature is that
-$\mathcal{B}$ is defined independently of the workspace geometry and can
-therefore be reused across different environments.
+The state space of $\mathcal{B}$ is $2^{\Psi_s} \times \Psi_b$, rather than
+$2^{\Psi_s} \times 2^{\Psi_b}$, because only one action proposition can be true.
+The map is nondeterministic before workspace properties are fixed: any enabled
+action may be selected. Once the external valuation is fixed, the conditional
+transitions define a standard weighted finite transition system
+\cite{baier2008principles}. Since $\mathcal{B}$ is independent of workspace
+geometry, it can be reused across environments.
 
 (III) \emph{Complete functionality model}.
 The mobility abstraction in \eqref{ch03:eq:M} and the action map in
@@ -222,32 +183,23 @@ while task transitions use the corresponding weight from $W_{\mathcal{B}}$.
 \end{definition}
 
 
-Whenever a mobility transition is executed, the auxiliary action
-$\sigma_{\mathcal{B},0}$ is applied automatically in the action component.
-This represents the fact that no task-level action is active during motion and
-is consistent with the non-concurrency assumption.
-The composition in \eqref{ch03:eq:R} pairs each region of the mobility model with
-a copy of the action map. The workspace properties associated with that region
-then determine which conditional action transitions are enabled.
+Note that during a mobility transition, the auxiliary action $\sigma_{\mathcal{B},0}$ is
+applied automatically, meaning that no task-level action is active during
+motion. The composition in \eqref{ch03:eq:R} attaches a copy of the action map
+to each region, whose workspace properties determine the enabled action
+transitions.
 
 (IV) \emph{Local task over motion and action}.
-The composed model $\mathcal{R}$ is a weighted finite transition system over
-$\Psi_{\mathcal{R}} = \Psi_r \cup \Psi_p \cup \Psi_s \cup \Psi_b$. The sets
-$\Psi_r$ and $\Psi_p$ describe the robot location and workspace properties.
-The additional sets $\Psi_s$ and $\Psi_b$ allow task formulas to refer directly
-to internal robot states and executed actions. This supports richer
-specifications concerning both action ordering and the locations where actions
-should occur \cite{bhatia2010sampling,kloetzer2010automatic,smith2011optimal}.
-For example, the requirement that the robot should execute
-``drop \textsf{A}'' at region \textsf{1} infinitely often can be expressed as
-$\varphi = \square \Diamond (\Psi_{r,1} \wedge \Psi_{b,2})$. Here
-$\Psi_{r,1}$ denotes ``the robot is in region \textsf{1}'', and
-$\Psi_{b,2}$ denotes ``the action \texttt{drop \textsf{A}} is executed''.
-The location where \textsf{A} is picked up need not be specified explicitly,
-because this dependency is already enforced by the action preconditions.
-
-(V) \emph{Planning for hybrid control strategy}.
-The planning problem addressed in this subsection is stated as follows.
+The composed model $\mathcal{R}$ above is a weighted finite transition system over
+$\Psi_{\mathcal{R}} = \Psi_r \cup \Psi_p \cup \Psi_s \cup \Psi_b$. Thus task
+formulas can refer to locations, workspace properties, internal states, and
+executed actions, enabling specifications over both action ordering and action
+locations \cite{bhatia2010sampling,kloetzer2010automatic,smith2011optimal}. For
+example, executing ``drop \textsf{A}'' at region \textsf{1} infinitely often is
+expressed as $\varphi = \square \Diamond (\Psi_{r,1} \wedge \Psi_{b,2})$, while
+preconditions enforce where \textsf{A} may be picked up.
+Finally, the planning problem for hybrid control strategy
+addressed in this subsection is stated as follows.
 
 \begin{problem}
 \label{ch03:pro:full}
@@ -257,37 +209,21 @@ $\varphi$, determine a motion-and-action plan that minimizes the cost in
 executes this plan.
 \end{problem}
 
+
 Since $\mathcal{R}$ in \eqref{ch03:eq:R} is a standard weighted finite
-transition system, the synthesis procedure developed in
-Chapter~\ref{chap:preliminaries} applies directly. Let $R_{\text{opt}}$ denote
-the optimal accepting run of the product automaton
-$\mathcal{R} \otimes \mathcal{A}_{\varphi}$ computed by
-Algorithm~\ref{ch02:alg:optimal}. Its projection onto $\Pi_{\mathcal{R}}$
-yields the optimal motion-and-action plan
-$\tau_{\text{opt}} \triangleq R_{\text{opt}}|_{\Pi_{\mathcal{R}}}$.
-For every consecutive pair of states
-$(\pi_{\mathcal{R},s}, \pi_{\mathcal{R},s+1})$ in $\tau_{\text{opt}}$, there
-exists an action $\alpha_{\mathcal{R}} \in \Sigma_{\mathcal{R}}$ such that
-$(\pi_{\mathcal{R},s}, \alpha_{\mathcal{R}}, \pi_{\mathcal{R},s+1})
-\in \longrightarrow_{\mathcal{R}}$. The hybrid control strategy is then
-obtained by sequentially executing the corresponding low-level controller along
-$\tau_{\text{opt}}$, in the same spirit as
-Algorithm~\ref{ch02:alg:hybrid}. If
-$\alpha_{\mathcal{R}} = \sigma_{\mathcal{B},k}$, the controller
-$\mathcal{K}_k$ associated with the action $\sigma_{\mathcal{B},k}$ is
-activated. If
-$\alpha_{\mathcal{R}} = \sigma_{\mathcal{M}}$, the navigation controller in
-\eqref{ch02:eq:control} is used to drive the robot from the current region to
-the next one.
-The resulting framework has four stages. First, construct the mobility model
-$\mathcal{M}$ and the action map $\mathcal{B}$. Second, compose them into the
-complete functionality model $\mathcal{R}$. Third, synthesize the optimal run
-and project it to $\tau_{\text{opt}}$. Fourth, execute the plan by the hybrid
-control strategy. The modularity of this structure is useful in practice. Once
-$\mathcal{B}$ has been defined for a given robot, it can be reused across
-different workspaces. When the workspace changes, only the mobility abstraction
-$\mathcal{M}$ needs to be updated. When the task specification changes,
-$\mathcal{R}$ remains unchanged and only the synthesis step must be repeated.
+transition system, the synthesis procedure of Chapter~\ref{chap:preliminaries}
+applies directly. Algorithm~\ref{ch02:alg:optimal} computes an optimal
+accepting run $R_{\text{opt}}$ of
+$\mathcal{R} \otimes \mathcal{A}_{\varphi}$, whose projection yields
+$\tau_{\text{opt}} \triangleq R_{\text{opt}}|_{\Pi_{\mathcal{R}}}$. Each
+transition of $\tau_{\text{opt}}$ is then implemented by the corresponding
+low-level action or navigation controller, as in
+Algorithm~\ref{ch02:alg:hybrid}. The framework therefore consists of building
+$\mathcal{M}$ and $\mathcal{B}$, composing $\mathcal{R}$, synthesizing
+$\tau_{\text{opt}}$, and executing it by hybrid control. Its modularity allows
+$\mathcal{B}$ to be reused across workspaces, while changes in workspace or task
+specification affect only the mobility abstraction or synthesis step.
+
 
 
 
@@ -314,12 +250,10 @@ $\mathcal{R}$ remains unchanged and only the synthesis step must be repeated.
 \subsection{Multi-robot systems with dependent local tasks}
 \label{ch03:sec:collaborative}
 
-The previous subsection considered the case in which each robot can fulfill its
-local task independently. A more involved setting arises when the completion of
-one robot's task requires assistance from other robots. This subsection treats
-that case for a team of $N$ heterogeneous robots indexed by
-$i \in \mathcal{N} \triangleq \{1,2,\cdots,N\}$, as introduced in
-Section~\ref{ch03:sec:multi-partial}.
+The previous subsection considered independent local tasks. The next setting
+allows the completion of one robot's task to require assistance from others, for
+a heterogeneous team indexed by
+$i \in \mathcal{N} \triangleq \{1,2,\cdots,N\}$.
 
 (I) \emph{Mobility abstraction}.
 The workspace is partitioned into $M$ regions of interest,
@@ -347,20 +281,15 @@ $\mathcal{N}_i \subseteq \mathcal{N}$. Messages can be exchanged directly
 between robot $i$ and any robot $j \in \mathcal{N}_i$.
 
 (II) \emph{Action model}.
-In addition to motion, robot $i$ can execute a set of actions
-$\Sigma_i \triangleq \Sigma_l^i \cup \Sigma_c^i \cup \Sigma_h^i$, where
-$\Sigma_l^i$ contains local actions that robot $i$ can complete on its own,
-$\Sigma_c^i$ contains collaborative actions initiated by robot $i$ but
-requiring assistance, and $\Sigma_h^i$ contains assisting actions that
-robot $i$ can provide to other robots. The active actions that can be initiated
-by robot $i$ are
-$\Sigma_a^i \triangleq \Sigma_l^i \cup \Sigma_c^i$. By convention,
-$\sigma_0 \triangleq \texttt{None} \in \Sigma_l^i$ denotes the absence of an
-active task-level action.
-Let $\Sigma_h^{\sim i}$ denote the set of external assisting actions on which
-robot $i$ may depend. This set satisfies
-$\Sigma_h^{\sim i} \subseteq \bigcup_{j \in \mathcal{N}_i}\Sigma_h^j$.
-The action model of robot $i$ is given by:
+In addition to motion, robot $i$ has actions
+$\Sigma_i \triangleq \Sigma_l^i \cup \Sigma_c^i \cup \Sigma_h^i$, consisting
+of local actions, collaborative actions initiated by robot $i$, and assisting
+actions that robot $i$ can provide. The active actions initiated by robot $i$
+are $\Sigma_a^i \triangleq \Sigma_l^i \cup \Sigma_c^i$, with
+$\sigma_0 \triangleq \texttt{None}$. Let $\Sigma_h^{\sim i}$ denote the
+external assisting actions on which robot $i$ may depend, where
+$\Sigma_h^{\sim i} \subseteq \bigcup_{j \in \mathcal{N}_i}\Sigma_h^j$. The
+action model is
 \begin{equation}
 \label{ch03:A}
 \mathcal{B}_i \triangleq
@@ -378,17 +307,13 @@ The function
 $\texttt{Cond}_i : \Sigma_i \times 2^{\Psi_{\mathcal{M}}^i}
 \rightarrow \{\top,\bot\}$ specifies the region properties required for an
 action to be enabled. The function
-$\texttt{Dura}_i : \Sigma_i \rightarrow \mathbb{R}^+$ assigns an execution
-duration to each action, with $\texttt{Dura}_i(\sigma_0)=T_0>0$ as a design
-parameter. The dependence function
-$\texttt{Depd}_i : \Sigma_i \rightarrow 2^{\Sigma_h^{\sim i}}$
-describes the assisting actions required by each action of robot $i$. It
-satisfies $\texttt{Depd}_i(\sigma_s)=\emptyset$ for all
-$\sigma_s \in \Sigma_l^i \cup \Sigma_h^i$, while
-$\texttt{Depd}_i(\sigma_c)\subseteq \Sigma_h^{\sim i}$ for all
-$\sigma_c \in \Sigma_c^i$. Defining dependency at the level of actions, rather
-than directly at the level of robot identities, preserves flexibility because
-the assisting robot need not be fixed in advance.
+$\texttt{Dura}_i : \Sigma_i \rightarrow \mathbb{R}^+$ assigns durations, with
+$\texttt{Dura}_i(\sigma_0)=T_0>0$. The dependence function
+$\texttt{Depd}_i : \Sigma_i \rightarrow 2^{\Sigma_h^{\sim i}}$ lists the
+assisting actions required by each action. Local and assisting actions have
+empty dependence sets, whereas collaborative actions may depend on elements of
+$\Sigma_h^{\sim i}$. Because dependencies are defined over actions rather than
+robot identities, the assisting robot need not be fixed in advance.
 
 \begin{definition}
 \label{ch03:done}
@@ -408,7 +333,7 @@ model into a single finite transition system.
 
 \begin{definition}
 \label{ch03:full-model}
-Given $\mathcal{M}_i$ and $\mathcal{B}_i$, define the complete robot model by
+Given $\mathcal{M}_i$ and $\mathcal{B}_i$, define the complete robot model by:
 \begin{equation}
 \label{ch03:eq:Ri}
 \mathcal{R}_i \triangleq
@@ -452,27 +377,18 @@ $\texttt{Dura}_i(\sigma_n)$, and action-completion transitions use the fixed
 duration $T_0$.
 \end{definition}
 
-Note that the model $\mathcal{R}_i$ is therefore a standard finite
-transition system \cite{baier2008principles}.
-A finite path of $\mathcal{R}_i$ is written as
+The model $\mathcal{R}_i$ is a standard finite transition system
+\cite{baier2008principles}. A finite path is written
 $\tau_i=\pi_{\mathcal{R},0}\pi_{\mathcal{R},1}\cdots\pi_{\mathcal{R},P}$,
-where $\pi_{\mathcal{R},0}\in \Pi_{\mathcal{R},0}^i$ and
-$(\pi_{\mathcal{R},s},\pi_{\mathcal{R},s+1})
-\in \longrightarrow_{\mathcal{R}}^i$ for all $s=0,\cdots,P-1$. Its trace is
+with trace
 $\texttt{trace}(\tau_i)\triangleq
 L_{\mathcal{R}}^i(\pi_{\mathcal{R},0})
 L_{\mathcal{R}}^i(\pi_{\mathcal{R},1}) \cdots
-L_{\mathcal{R}}^i(\pi_{\mathcal{R},P})$.
-The local task of robot $i$, denoted by $\varphi_i$, is an sc-safe LTL formula
-over the proposition set $\Psi_{\mathcal{R}}^i$ from
-Definition~\ref{ch03:full-model}. Hence $\varphi_i$ can impose requirements on
-motion, local actions, and collaborative actions. The syntax and semantics of
-sc-LTL were introduced in Section~\ref{ch02:sec:LTL}. Since an sc-safe formula
-admits satisfaction by a finite prefix, a finite path $\tau_i$ of
-$\mathcal{R}_i$ fulfills $\varphi_i$ if
-$\texttt{trace}(\tau_i)\models \varphi_i$. The special case
-$\varphi_i \triangleq \top$ corresponds to a robot without an individual task,
-which then acts purely as an assisting robot.
+L_{\mathcal{R}}^i(\pi_{\mathcal{R},P})$. The local task $\varphi_i$ is an
+sc-safe LTL formula over $\Psi_{\mathcal{R}}^i$, and may constrain motion,
+local actions, and collaborative actions. A path fulfills $\varphi_i$ if
+$\texttt{trace}(\tau_i)\models \varphi_i$; the case
+$\varphi_i \triangleq \top$ represents a pure assisting robot.
 
 \begin{problem}
 \label{ch03:big-problem}
@@ -485,17 +401,14 @@ collaboration from other robots.
 \subsection{Distributed task coordination}
 \label{ch03:sec:coordination}
 
-This subsection develops a bottom-up coordination scheme for multi-robot systems
-with dependent local tasks. The scheme consists of off-line initial plan
-synthesis, an online request-and-reply protocol, real-time plan adaptation,
-and a recovery mechanism for robot failures.
+This subsection develops the bottom-up coordination scheme: local initial
+synthesis, online request and reply, real-time plan adaptation, and recovery
+from robot failures.
 
 (I) \emph{Initial plan synthesis}.
-Given the complete model $\mathcal{R}_i$ and the local task $\varphi_i$, an
-initial motion-and-action plan can first be synthesized off-line. This plan
-serves as the starting point for the online coordination mechanism described
-later.
-Let
+Given $\mathcal{R}_i$ and $\varphi_i$, robot $i$ first synthesizes an initial
+motion-and-action plan off-line. This plan is the starting point for the online
+coordination mechanism. Let
 $\mathcal{A}_{\varphi_i} \triangleq
 (Q_i, 2^{\Psi_{\mathcal{R}}^i}, \delta_i, Q_{i,0}, \mathcal{F}_i)$
 be the NBA associated with $\varphi_i$, as in
@@ -554,24 +467,18 @@ state, ends at an accepting state, and minimizes the cost in
 \eqref{ch03:eq:init-cost}.
 \end{problem}
 
-Denote by $R_{p,\textup{init}}^i$ the solution of
-Problem~\ref{ch03:prob-accept}. Algorithm~\ref{ch02:alg:optimal} yields this
-path by a shortest-path search on the product automaton
-\cite{guo2013motion,lavalle2006planning,korf1987planning}. Its worst-case
-complexity is
+Let $R_{p,\textup{init}}^i$ solve Problem~\ref{ch03:prob-accept}.
+Algorithm~\ref{ch02:alg:optimal} computes it by shortest-path search on the
+product automaton \cite{guo2013motion,lavalle2006planning,korf1987planning},
+with worst-case complexity
 $\mathcal{O}(|\delta_{p,i}| \cdot \log |Q_{p,i}| \cdot |Q_{p,i,0}|)$.
-Projecting $R_{p,\textup{init}}^i$ onto $\Pi_{\mathcal{R}}^i$ produces the
-initial motion-and-action plan
+Projection gives
 $\tau_{\mathcal{R},\textup{init}}^i \triangleq
 R_{p,\textup{init}}^i|_{\Pi_{\mathcal{R}}^i}$, which fulfills $\varphi_i$.
-The initial plans are synthesized locally by the robots, rather than by a
-central coordinator or a cluster-level planner
-\cite{chen2012formal,guo2012infeasible}. The plan
-$\tau_{\mathcal{R},\textup{init}}^i$ can then be executed by following its
-motion and action states in sequence. If the plan contains collaborative
-actions from $\Sigma_c^i$, however, successful execution depends on assistance
-from other robots, which is not guaranteed by the local off-line synthesis
-alone. This motivates the online coordination mechanism described next.
+These plans are synthesized locally rather than by a central coordinator
+\cite{chen2012formal,guo2012infeasible}. If
+$\tau_{\mathcal{R},\textup{init}}^i$ contains collaborative actions, execution
+requires online assistance from other robots.
 
 (II) \emph{Plan in a finite horizon and request generation}.
 Let $\pi_{\mathcal{R},t}^i \in \Pi_{\mathcal{R}}^i$ denote the current state of
@@ -616,15 +523,11 @@ T_{\mathcal{R}}^i\!\left(
 \tau_{\mathcal{R},H}^i[s+1]
 \right)$,
 which is the elapsed time from the current state to the requested
-collaboration. Each element $(\sigma_d,\pi_v,T_m)$ in \eqref{ch03:request}
-means that robot $i$ requests the assisting action $\sigma_d$ at region
-$\pi_v$ at time $T_m$ from the current moment. The message sent to each
-neighbor $j \in \mathcal{N}_i$ is identical and is denoted by
-$\textbf{Request}_j^i$.
-Only the first collaborative action within the horizon is considered in
-Algorithm~\ref{ch03:alg:request}. The outcome may
-alter the rest of the plan and affect all later collaborative
-actions within the same horizon.
+collaboration. Thus $(\sigma_d,\pi_v,T_m)$ requests assisting action
+$\sigma_d$ at region $\pi_v$ after time $T_m$, and the same message
+$\textbf{Request}_j^i$ is sent to each neighbor. Only the first collaborative
+action in the horizon is considered, because its outcome may alter later plan
+segments.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{algorithm}[t]
@@ -672,24 +575,15 @@ reply message from robot $j$ to robot $i$ is given by:
 \{(\sigma_d,b_d^j,t_d^j) \mid
   (\sigma_d,\pi_v,T_m) \in \textbf{Request}_j^i\},
 \end{equation}
-where $b_d^j \in \{\top,\bot\}$ indicates whether robot $j$ can provide the
-assisting action $\sigma_d$ at region $\pi_v$, and $t_d^j \ge 0$ is the time
-at which the assistance can be provided.
-Let $\overline{T}_j \ge 0$ denote the finishing time of the collaboration in
-which robot $j$ is currently engaged. Initially $\overline{T}_j=0$. If
-$\overline{T}_j>0$, then robot $j$ is unavailable and returns the rejection
-reply $\{(\sigma_d,\bot,0)\}$ for all requested actions. If
-$\overline{T}_j=0$, then robot $j$ is available and evaluates each request.
-Let $\tau_{\mathcal{R},t^-}^j$ denote the current plan of robot $j$ before any
-potential revision, and let $R_{p,t^-}^j$ be its corresponding accepting run in
-$\mathcal{A}_{p,j}$. Suppose the current product state $q_{p,t}^j$ is the
-$\ell$th state of $R_{p,t^-}^j$, and the accepting state $q_{p,f}^j$ is its
-last state. The remaining segment is
-$\widehat{R}_{p,-}^j \triangleq R_{p,t^-}^j[\ell\!:\!f]$. The objective is to
-find an alternative segment $\widehat{R}_{p,+}^j$ from $q_{p,t}^j$ to
-$q_{p,f}^j$ such that robot $j$ reaches the state
-$\langle \pi_v,\sigma_d \rangle$, does so at a time close to $T_m$, and incurs
-only a small additional cost.
+where $b_d^j \in \{\top,\bot\}$ indicates feasibility and $t_d^j \ge 0$ is the
+available assistance time. Let $\overline{T}_j$ be the finishing time of the
+collaboration currently assigned to robot $j$. If $\overline{T}_j>0$, robot
+$j$ rejects all requests; otherwise it evaluates them. With current accepting
+run $R_{p,t^-}^j$, current product state $q_{p,t}^j$, accepting state
+$q_{p,f}^j$, and remaining segment
+$\widehat{R}_{p,-}^j$, the objective is to find an alternative segment
+$\widehat{R}_{p,+}^j$ that reaches $\langle \pi_v,\sigma_d \rangle$ near time
+$T_m$ with limited additional cost.
 Let
 $S_d \triangleq
 \{q_p \in Q_{p,j} \mid
@@ -769,10 +663,9 @@ minimizes \eqref{ch03:balanced}.
 
 
 
-Algorithm~\ref{ch03:adapt} solves the problem by a bidirectional Dijkstra
-search. The routine \texttt{DijksTA}($\cdot$) computes shortest paths from one
-source state to all states in a target set while avoiding a specified set of
-states. Let
+Algorithm~\ref{ch03:adapt} solves this problem by bidirectional Dijkstra
+search. The routine \texttt{DijksTA}($\cdot$) computes shortest paths from a
+source to a target set while avoiding specified states. Let
 \begin{equation}
 \label{ch03:eq:Sc}
 S_c \triangleq
@@ -781,26 +674,16 @@ S_c \triangleq
   = \langle \pi_{\mathcal{R}}^j,\sigma_n \rangle,\,
   \sigma_n \in \Sigma_c^j \cup \Sigma_h^j\},
 \end{equation}
-which excludes collaborative and assisting actions other than the requested one
-from the forward search. Then
-\texttt{DijksTA}$(\mathcal{A}_{p,j},q_{p,t}^j,S_d,S_c)$ computes the shortest
-paths from $q_{p,t}^j$ to all states in $S_d$ while avoiding the states in
-$S_c$, and
-\texttt{DijksTA}$(\texttt{Reverse}(\mathcal{A}_{p,j}),q_{p,f}^j,S_d,\emptyset)$
-computes shortest paths in the reversed graph from $q_{p,f}^j$ to all states
-in $S_d$. The state that minimizes the balanced cost in
-\eqref{ch03:balanced} determines the revised run $\widehat{R}_{p,+}^j$. If no
-such state exists, then robot $j$ cannot provide the requested assistance.
-The complexity of \texttt{DijksTA} over $\mathcal{A}_{p,j}$ is
-$\mathcal{O}(|\delta_{p,j}| \cdot \log |Q_{p,j}|)$, while constructing the
-reversed automaton is linear in $|\delta_{p,j}|$
-\cite{baier2008principles,lavalle2006planning,korf1987planning}. The run
-$\widehat{R}_{p,+}^j$ is only a potential revision. Robot $j$ does not
-immediately change its current plan. Instead, it stores the candidate revised
-run in $\widehat{P}$ and waits for a confirmation message from robot $i$.
-If robot $i$ receives requests from several robots at the same time, it replies
-to one request first and waits for the corresponding confirmation before
-processing the next request.
+which excludes other collaborative and assisting actions from the forward
+search. The forward and reversed calls to \texttt{DijksTA} identify candidate
+paths through $S_d$, and the state minimizing \eqref{ch03:balanced} determines
+$\widehat{R}_{p,+}^j$. If no such state exists, robot $j$ cannot assist. The
+complexity of \texttt{DijksTA} is
+$\mathcal{O}(|\delta_{p,j}| \cdot \log |Q_{p,j}|)$, and reversing the automaton
+is linear in $|\delta_{p,j}|$
+\cite{baier2008principles,lavalle2006planning,korf1987planning}. The candidate
+run is stored in $\widehat{P}$ until robot $i$ sends confirmation; simultaneous
+requests are processed sequentially.
 
 \begin{lemma}
 \label{ch03:td}
@@ -828,18 +711,13 @@ of the form:
 \{(\sigma_d,c_d^j,f_m) \mid
   \sigma_d \in \texttt{Depd}_i(\sigma_m)\},
 \end{equation}
-where $c_d^j \in \{\top,\bot\}$ indicates whether robot $j$ is confirmed to
-provide the assisting action $\sigma_d$, and $f_m$ is the time at which the
-collaborative action $\sigma_m$ is scheduled to finish.
-The confirmation decision must satisfy two conditions. First, each required
-assisting action must be assigned to exactly one robot. Second, each neighbor
-may be assigned to at most one assisting action for the current collaboration.
-The finishing time should be as early as possible.
-Let $|\mathcal{N}_i|=N_1$ and
-$|\texttt{Depd}_i(\sigma_m)|=N_2$. Without loss of generality, write
-$\mathcal{N}_i=\{1,\cdots,N_1\}$ and
-$\texttt{Depd}_i(\sigma_m)=\{\sigma_1,\cdots,\sigma_{N_2}\}$. The assignment
-problem can then be written as the integer program below:
+where $c_d^j \in \{\top,\bot\}$ indicates confirmation and $f_m$ is the
+scheduled finishing time. Each assisting action must be assigned to exactly one
+robot, each neighbor may support at most one assisting action for this
+collaboration, and the finishing time is minimized. Let
+$|\mathcal{N}_i|=N_1$, $|\texttt{Depd}_i(\sigma_m)|=N_2$,
+$\mathcal{N}_i=\{1,\cdots,N_1\}$, and
+$\texttt{Depd}_i(\sigma_m)=\{\sigma_1,\cdots,\sigma_{N_2}\}$. The assignment is
 \begin{equation}
 \label{ch03:integer}
 \begin{aligned}
@@ -861,17 +739,11 @@ problem can then be written as the integer program below:
 where $(\sigma_d,b_d^j,t_d^j) \in \textbf{Reply}_i^j$ from
 \eqref{ch03:eq:reply}. Any standard integer-programming solver can be used once
 \eqref{ch03:integer} has been formed.
-If \eqref{ch03:integer} is feasible, then $f_m$ and the decision variables
-$c_d^j$ are obtained. In that case, robot $i$ sends
-$(\sigma_d,\top,f_m)$ to the robot selected for action $\sigma_d$, and sends
-$(\sigma_d,\bot,0)$ to the remaining robots. If \eqref{ch03:integer} is
-infeasible, robot $i$ sends $(\sigma_d,\bot,0)$ to all neighbors for all
-requested assisting actions. This indicates that $\sigma_m$ cannot be executed
-as currently planned and must be delayed. This integer optimization is
-solved locally by robot $i$ for the collaborative action $\sigma_m$ and
-contains
-$|\mathcal{N}_i| \cdot |\texttt{Depd}_i(\sigma_m)|$
-Boolean decision variables.
+If \eqref{ch03:integer} is feasible, robot $i$ confirms the selected helper for
+each assisting action and rejects the others. If it is infeasible, all helpers
+are rejected and $\sigma_m$ must be delayed. The optimization is local to robot
+$i$ and contains
+$|\mathcal{N}_i| \cdot |\texttt{Depd}_i(\sigma_m)|$ Boolean variables.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{algorithm}[t]
@@ -916,29 +788,14 @@ Find $q_{p,r}^{j,\star} \in S_d$ that minimizes $C_3(q_{p,r}^j)$\;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 (V) \emph{Plan adaptation}.
-After sending the confirmation messages, robot $i$ proceeds as follows. If
-\eqref{ch03:integer} is feasible, then the collaborative action $\sigma_m$ can
-be executed as planned, the current accepting run of robot $i$ remains
-unchanged, and $\overline{T}_i$ is set to $f_m$ to indicate that robot $i$ is
-engaged in the collaboration until time $f_m$. If \eqref{ch03:integer} is
-infeasible, then the collaborative action cannot be executed at the originally
-planned time and the run of robot $i$ must be revised by delaying $\sigma_m$.
-The delayed run is computed by Algorithm~\ref{ch03:alg:delay}. The idea is to
-find a new segment from the current state to the accepting state that reaches
-the collaborative action state $\langle \pi_v,\sigma_m \rangle$ no earlier than
-$T_m + D_i$, where $D_i > 0$ is a design parameter. The existence of such a
-path is guaranteed by the availability of the idle action $\sigma_0$, whose
-duration $T_0$ allows waiting to be inserted as needed.
-When a neighbor $j \in \mathcal{N}_i$ receives a confirmation message, it also
-updates its plan. If $c_d^j=\top$, then robot $j$ is confirmed to provide the
-assisting action $\sigma_d$ and replaces the current segment by the stored
-candidate run from $\widehat{P}$. In this case, $\overline{T}_j$ is set to
-$f_m$. If $c_d^j=\bot$ for all requested actions, then robot $j$ keeps its
-current plan and resets $\overline{T}_j$ to $0$.
-Each robot has a finite motion-and-action plan. Once a robot finishes its own
-task, it becomes an assisting robot by setting $\varphi_i \triangleq \top$ and
-remains at its current region unless it is later confirmed to collaborate with
-another robot.
+After confirmation, robot $i$ either executes $\sigma_m$ as planned and sets
+$\overline{T}_i=f_m$, or, if \eqref{ch03:integer} is infeasible, delays
+$\sigma_m$ by Algorithm~\ref{ch03:alg:delay}. The delayed segment reaches
+$\langle \pi_v,\sigma_m \rangle$ no earlier than $T_m+D_i$; waiting is enabled
+by the idle action $\sigma_0$. A confirmed neighbor replaces its current
+segment with the stored run in $\widehat{P}$ and sets $\overline{T}_j=f_m$;
+otherwise it keeps its plan. After completing its own finite task, a robot sets
+$\varphi_i \triangleq \top$ and remains available for assistance.
 
 
 \begin{theorem}
@@ -961,18 +818,11 @@ $\sigma_m$ is accomplished at time $f_m$.
 
 
 (VI) \emph{Failure detection and recovery}.
-Physical robots may fail at any time, which makes failure detection especially
-important in collaborative tasks. Consider robot $i$, which has confirmed the
-collaborative action $\sigma_m$. Until $\sigma_m$ is completed, robot $i$
-periodically monitors the status of each confirmed collaborator associated with
-an assisting action in $\texttt{Depd}_i(\sigma_m)$. If a confirmed collaborator
-$h \in \mathcal{N}_i$ fails to acknowledge the inquiry within a bounded time,
-robot $i$ treats robot $h$ as failed.
-Robot $i$ then reassigns the affected assisting action $\sigma_d$ as follows.
-First, it sends a new request $\{(\sigma_d,\pi_v,T_m)\}$ to its neighbors.
-Second, based on the replies
-$\{(\sigma_d,b_d^j,t_d^j)\mid j \in \mathcal{N}_i\}$, it selects the new
-collaborator by
+For collaborative tasks, robot $i$ monitors confirmed helpers until
+$\sigma_m$ is completed. If a helper $h \in \mathcal{N}_i$ fails to acknowledge
+within a bounded time, it is treated as failed and the affected assisting action
+$\sigma_d$ is reassigned. Robot $i$ sends a new request and selects the
+replacement by
 \begin{equation}
 \label{ch03:eq:reassign}
 \hat{h} \triangleq
@@ -1023,10 +873,16 @@ $(P_2,C_2)=\texttt{DijksTA}
 \subsubsection{Overall structure}
 \label{ch03:structure}
 
-The proposed coordination scheme is intended for loosely coupled multi-robot
+The coordination scheme is intended for loosely coupled multi-robot
 systems, in which collaborations are local and relatively sparse compared with
 the total number of robot activities. This property is formalized by the
 following assumption.
+Assumption~\ref{ch03:assump:loose} below states that every collaborative action
+needed for a local task can eventually be supported in finite time. During
+execution, each robot either evaluates incoming requests and adapts after
+confirmation, or examines its own plan, sends requests, solves
+\eqref{ch03:integer}, and delays the collaboration by
+Algorithm~\ref{ch03:alg:delay} when needed. The correctness statement follows.
 
 \begin{assumption}
 \label{ch03:assump:loose}
@@ -1036,18 +892,6 @@ robot $i$ at time $t_m>0$, the integer program in~\eqref{ch03:integer}
 becomes feasible no
 later than time $t_m+{T}$.
 \end{assumption}
-
-Assumption~\ref{ch03:assump:loose} states that every collaborative action needed
-for the fulfillment of a local task can eventually be supported, in finite
-time, by the requesting robot and its neighbors.
-During execution, each robot first checks whether it has received a request. If
-so, it evaluates the request using Algorithm~\ref{ch03:alg:reply}, waits for a
-confirmation, and updates its plan if necessary. Otherwise, it examines its own
-plan by Algorithm~\ref{ch03:alg:request}, sends any required request, collects
-the replies, solves the assignment optimization in~\eqref{ch03:integer}, and, if
-needed, delays the collaborative action by
-Algorithm~\ref{ch03:alg:delay}. The correctness of the overall scheme is stated
-next.
 
 \begin{theorem}
 \label{ch03:all}

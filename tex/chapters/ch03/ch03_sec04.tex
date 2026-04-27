@@ -2,67 +2,40 @@
 \section{Case Study}
 \label{sec:ch03_case_study}
 
-This section illustrates the local-task formulation and the distributed
-coordination mechanism developed in this chapter through a representative
-heterogeneous multi-robot simulation. The objective is to show how
-motion-and-action planning, collaborative request generation, reply evaluation,
-local assignment, and online plan adaptation interact in a single execution,
-rather than to introduce an additional planning layer beyond the framework of
-Section~\ref{ch03:sec:task_relaxation_adaptation}
+This section illustrates the local-task formulation and distributed
+coordination mechanism through a heterogeneous multi-robot simulation. The
+purpose is to show how motion--action planning, request generation, reply
+evaluation, local assignment, and online adaptation interact within the
+framework of Sections~\ref{ch03:sec:task_relaxation_adaptation}
 and~\ref{ch03:sec:dep-local-collab}.
 
 %==============================
 \subsection{Workspace and system description}
 \label{ch03:subsec:case_workspace}
 
-The simulation is conducted in a two-dimensional workspace of size
-$60\,\mathrm{m} \times 60\,\mathrm{m}$ containing six task regions, three
-storage areas, four base locations, and multiple obstacles, as shown in
-Figures~\ref{ch03:fig:case_two_layer} and
-\ref{ch03:fig:case_execution_snapshots}. The team contains $N=20$ robots
-partitioned into four groups of five robots each. One group is modeled as
-aerial robots, whereas the other three groups are modeled as ground robots. The
-labels \texttt{g1},\dots,\texttt{g4} in the figures denote the corresponding
-base locations, the labels \texttt{R1},\dots,\texttt{R6} denote task regions,
-and the labels \texttt{S1},\texttt{S2},\texttt{S3} denote storage areas. This
-setup is chosen so that spatial motion constraints, action-dependent
-collaboration, and communication-mediated helper selection all appear during
-execution.
-Each robot is assigned a local temporal task over the integrated
-motion-and-action model of Section~\ref{ch03:sec:action-plan}. Hence the
-execution of a local task may involve navigation among regions, local actions,
-collaborative actions, and assisting actions in the sense of
-Section~\ref{ch03:sec:collaborative}. During execution, collaborative
-dependencies are generated online rather than being fixed to robot identities in
-advance. Whenever a collaborative action appears in the finite horizon computed
-by Algorithm~\ref{ch03:alg:request}, the requesting robot forms a request of
-the form~\eqref{ch03:request}. Candidate helpers evaluate the request through
-Algorithm~\ref{ch03:alg:reply} and transmit replies of the form
-\eqref{ch03:eq:reply}. Once feasible helpers have been identified, the
-requesting robot solves the local assignment problem in \eqref{ch03:integer}
-and sends confirmations according to \eqref{ch03:eq:confirm}. In this way, the
-simulation directly instantiates the request--reply--confirm structure developed
-in Section~\ref{ch03:sec:coordination}.
-
-The simulator uses two message routes to realize the candidate-helper search.
-The first route uses direct local-neighbor communication, while the second route
-forwards the request through group representatives when the required assisting
-actions are not available from local neighbors alone. This two-route
-implementation should be understood as a communication realization of the
-neighbor-query mechanism in Section~\ref{ch03:sec:coordination}, not as an
-additional centralized planner. After replies are collected, the requesting
-robot still performs the same local assignment in \eqref{ch03:integer} and the
-confirmed helpers still update their plans according to the same adaptation
-logic.
-Figure~\ref{ch03:fig:case_two_layer} shows two representative coordination
-events extracted from the execution log. The left panel corresponds to a request
-resolved through direct local coordination, whereas the right panel shows a
-request whose information is routed through group representatives. Although
-these two cases differ in the way candidate helpers are reached, both are
-governed by the same local decision logic of request generation, reply
-evaluation, confirmation, and plan adaptation. They therefore serve as concrete
-realizations of the bottom-up coordination principle adopted throughout this
-chapter.
+The simulation uses a $60\,\mathrm{m} \times 60\,\mathrm{m}$ workspace with six
+task regions, three storage areas, four base locations, and obstacles, as shown
+in Figures~\ref{ch03:fig:case_two_layer} and
+\ref{ch03:fig:case_execution_snapshots}. The team contains $N=20$ robots in
+four groups, one aerial and three ground. The notation \texttt{g1}--\texttt{g4},
+\texttt{R1}--\texttt{R6}, and \texttt{S1}--\texttt{S3} denotes bases, task
+regions, and storage areas. The setup induces spatial constraints,
+action-dependent collaboration, and communication-mediated helper selection.
+Each robot is assigned a local temporal task over the integrated motion--action
+model of Section~\ref{ch03:sec:action-plan}. Collaborative dependencies are
+generated online: when a collaborative action enters the horizon of
+Algorithm~\ref{ch03:alg:request}, the requesting robot sends
+\eqref{ch03:request}; helpers reply using Algorithm~\ref{ch03:alg:reply}; and
+the requester solves \eqref{ch03:integer} before sending confirmations
+\eqref{ch03:eq:confirm}. Thus the simulation directly instantiates the
+request--reply--confirm structure of Section~\ref{ch03:sec:coordination}.
+Candidate-helper search uses two message routes: direct local-neighbor
+communication, and forwarding through group representatives when local neighbors
+cannot provide the required assisting actions. This is only a communication
+realization of the neighbor-query mechanism, not an additional centralized
+planner; assignment and adaptation remain local. Figure~\ref{ch03:fig:case_two_layer}
+shows one directly resolved event and one representative-routed event, both
+following the same request, reply, confirmation, and adaptation logic.
 
 \begin{figure}[t!]
 \centering
@@ -82,32 +55,37 @@ request event.
 \subsection{Execution results and communication statistics}
 \label{ch03:subsec:case_results}
 
-All $20$ robots complete their assigned local tasks by
-$t_f=156.2\,\mathrm{s}$. Over the full run, the simulator records
-$N_{\mathrm{req}}=46$ coordination-request events. Among them, $15$ requests
-are resolved through direct local-neighbor interaction and $31$ require
-coordinator-mediated propagation. Hence approximately $32.6\%$ of all requests
-are handled locally, whereas the remaining $67.4\%$ require broader
-coordination. The run contains $40$ local actions, $46$ collaborative actions,
-and $64$ assisting actions, for a total of $150$ executed actions. Thus the
-average number of executed actions is $7.5$ per robot, and the overall
-execution rate is approximately $150/156.2 \approx 0.96$ actions per second.
-Moreover, the ratio $64/46 \approx 1.39$ indicates that a collaborative action
-requires more than one assisting action on average, which is consistent with the
-action-level dependency relation introduced through $\texttt{Depd}_i$ in
-Section~\ref{ch03:sec:collaborative}.
-Figure~\ref{ch03:fig:case_execution_snapshots} shows three representative
-execution snapshots at $t=31.2\,\mathrm{s}$, $t=93.7\,\mathrm{s}$, and
-$t=156.2\,\mathrm{s}$. The faded curves indicate the trajectories already
-traveled by the robots. The snapshots show a progressive transition from early
-deployment near the base locations, to the dense middle stage in which multiple
-collaborative dependencies are active simultaneously, and finally to the
-completion stage at which all local tasks have been satisfied. In particular,
-the intermediate snapshot at $t=93.7\,\mathrm{s}$ shows several concurrent
-dependencies across multiple regions, which demonstrates that the scheme does
-not rely on a single global synchronization point. Instead, collaborations are
-formed, confirmed, executed, and removed asynchronously according to the local
-progress of the involved robots.
+All $20$ robots complete their local tasks by $t_f=156.2\,\mathrm{s}$. The run
+contains $N_{\mathrm{req}}=46$ coordination requests: $15$ are resolved by direct
+local-neighbor interaction and $31$ by representative-mediated propagation. It
+also contains $40$ local actions, $46$ collaborative actions, and $64$ assisting
+actions, for $150$ executed actions in total, or about $0.96$ actions per
+second. The ratio $64/46 \approx 1.39$ shows that collaborative actions require
+more than one assisting action on average, consistent with the dependency map
+$\texttt{Depd}_i$.
+Figure~\ref{ch03:fig:case_execution_snapshots} shows snapshots at
+$t=31.2\,\mathrm{s}$, $t=93.7\,\mathrm{s}$, and $t=156.2\,\mathrm{s}$. They
+capture early deployment, a dense middle stage with concurrent dependencies,
+and final task completion. The intermediate snapshot shows that coordination is
+not driven by a single global synchronization point; collaborations are formed,
+confirmed, executed, and removed asynchronously.
+
+Moreover, a detailed view of the
+asynchronous execution is provided in Figure~\ref{ch03:fig:case_actions_timeline}.
+Local actions are marked by labels such as \texttt{p},
+\texttt{d}, \texttt{record}, and \texttt{circle}, while \texttt{help\_} labels
+denote assisting actions. Collaborative actions appear when the requesting robot
+reaches the relevant plan state, and only the affected segments are revised;
+unrelated robots continue their own local tasks.
+The overall communication load is reported Figure~\ref{ch03:fig:case_messages_over_time}.
+The run exchanges $N_{\mathrm{msg}}=782$ messages: $714$ through the
+representative-mediated route and $68$ through direct local-neighbor
+communication. Thus the local route uses only $8.7\%$ of the messages while
+resolving $32.6\%$ of the requests. The average load is about $17.0$ messages
+per request, with approximately $23.0$ for mediated requests and $4.5$ for
+local requests. Message bursts occur near request, reply, and confirmation
+events, showing that broader coordination is event-driven rather than
+persistent.
 
 \begin{figure}[t!]
 \centering
@@ -122,20 +100,6 @@ collaborative actions become coupled during the execution.
 \label{ch03:fig:case_execution_snapshots}
 \end{figure}
 
-A more detailed view of the asynchronous execution structure is given in
-Figure~\ref{ch03:fig:case_actions_timeline}. The horizontal axis denotes time,
-and the vertical axis denotes the robot index used in the simulator log. The
-labels \texttt{p}, \texttt{d}, \texttt{record}, and \texttt{circle} denote
-representative local action types, while labels prefixed by \texttt{help\_}
-denote assisting actions executed in support of a collaborative action. The
-timeline shows that collaborative actions are not inserted by a centralized
-global schedule. Instead, they appear when the relevant robot reaches a state at
-which collaboration is required, and are then accompanied by the corresponding
-assisting actions supplied by other robots. This pattern is consistent with the
-finite-horizon request mechanism of Algorithm~\ref{ch03:alg:request} and the
-delayed adaptation procedure of Algorithm~\ref{ch03:alg:delay}: only the
-affected plan segments are revised, while unrelated robots continue to progress
-on their own local tasks.
 
 \begin{figure}[t!]
 \centering
@@ -150,24 +114,6 @@ assisting actions executed for collaborative tasks.
 \label{ch03:fig:case_actions_timeline}
 \end{figure}
 
-The communication statistics further support this interpretation.
-Figure~\ref{ch03:fig:case_messages_over_time} reports the number of messages
-exchanged over time. The total number of exchanged messages is
-$N_{\mathrm{msg}}=782$, of which $714$ belong to the coordinator-mediated route
-and $68$ belong to the direct local-neighbor route. Hence the local route
-accounts for only about $8.7\%$ of all messages even though it resolves
-$32.6\%$ of all requests. Conversely, coordinator-mediated communication
-accounts for about $91.3\%$ of the messages and $67.4\%$ of the requests.
-Normalized by the number of requests, the average communication load is about
-$17.0$ messages per request, including approximately $23.0$ messages for each
-coordinator-mediated request and $4.5$ messages for each local request. The mean
-message rate over the full run is approximately
-$782/156.2 \approx 5.01$ messages per second. These numbers show that local
-coordination is relatively cheap when it is available, while broader
-coordination remains event-driven rather than persistent. The message bursts
-therefore occur primarily near the instants at which collaborative dependencies
-are requested, evaluated, and confirmed, which is precisely the behavior
-intended by the distributed online coordination scheme.
 
 \begin{figure}[t!]
 \centering
@@ -188,13 +134,11 @@ which shows the event-driven nature of the proposed coordination mechanism.
 \section{Summary}
 \label{sec:ch03_summary}
 
-This chapter developed a bottom-up view of multi-robot coordination
-under local temporal tasks. Section~\ref{ch03:sec:task_relaxation_adaptation}
-addressed task relaxation, safety-aware plan revision, online sensing,
-and collaborative knowledge transfer in partially known workspaces.
-Section~\ref{ch03:sec:dep-local-collab} then introduced dependent local
-tasks with collaborative actions and a distributed execution-time
-coordination mechanism for request, reply, assignment, and adaptation.
-These developments show how correctness can be
-maintained without a monolithic global mission, by coordinating locally
-specified tasks whose interactions arise during execution.
+This chapter developed bottom-up multi-robot coordination under local temporal
+tasks. Section~\ref{ch03:sec:task_relaxation_adaptation} treated task
+relaxation, safety-aware revision, online sensing, and collaborative knowledge
+transfer in partially known workspaces. Section~\ref{ch03:sec:dep-local-collab}
+introduced dependent local tasks with collaborative actions and a distributed
+execution-time mechanism for request, reply, assignment, and adaptation. The
+result is a coordination framework that preserves correctness without a
+monolithic global mission.
