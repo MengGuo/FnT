@@ -1,36 +1,20 @@
 \chapter{Top-Down Synthesis for Global Temporal Tasks}
 \label{chap:top-down}
 
-The previous Chapter~\ref{chap:bottom-up} considered a bottom-up coordination framework in which
-temporal tasks are assigned locally and coordination emerges through
-execution-time dependence among the robots. That perspective is natural when
-task coupling is sparse and collaboration is triggered only when local plans
-intersect through shared actions, resources, or newly acquired information.
-In many applications, however, the mission is specified from the outset at the
-level of the whole team. The central problem is then no longer how local tasks
-can be coordinated after they are assigned, but how a global temporal
-specification should be decomposed, distributed, and refined so that the
-resulting robot behaviors remain jointly correct. This top-down setting is
-conceptually complementary to the bottom-up perspective of the previous
-chapter, but it raises a different technical difficulty. The logical structure
-of the team task must be preserved during decomposition and assignment, while
-the resulting planning problem must remain computationally manageable for
-heterogeneous teams and large workspaces.
-
-This chapter develops a top-down synthesis framework for such global temporal
-tasks. Section~\ref{ch04:sec:po_decomp_assignment} begins with
-partial-order-based task decomposition and assignment, where the accepted
-behavior of the global task automaton is converted into subtask occurrences
-together with a compact temporal-dependence structure, which then supports
-efficient allocation over the robot team. Section~\ref{ch04:subsec:task}
-extends this perspective to hierarchical coordination of large-scale fleets,
-where abstraction across multiple planning layers is used to reduce
-computational growth while preserving mission-level consistency.
-Section~\ref{ch04:sec:online_continual_tasks} then addresses online adaptation
-for continual tasks, in which new demands may arise during execution and the
-team plan must be revised without losing the global temporal structure. The
-case study and summary at the end illustrate how these
-components fit together within a unified top-down coordination framework.
+The previous Chapter~\ref{chap:bottom-up} developed a bottom-up coordination
+framework in which temporal tasks are assigned locally and execution-time
+couplings are resolved as they arise. In contrast, many missions are specified
+from the outset at the level of the whole team. The central problem is then to
+decompose, distribute, and refine a global temporal specification while
+preserving its logical structure and keeping the resulting planning problem
+tractable for heterogeneous teams and large workspaces.
+This chapter develops a top-down synthesis framework for such global tasks.
+Section~\ref{ch04:sec:po_decomp_assignment} converts accepted automaton
+behaviors into subtask occurrences and compact temporal-dependence structures
+for assignment. Section~\ref{ch04:subsec:task} extends the construction to
+large fleets through hierarchical abstraction. Section~\ref{ch04:sec:online_continual_tasks}
+then addresses continual operation, where new demands require online revision
+without discarding the executed prefix or the global temporal structure.
 
 
 %==============================

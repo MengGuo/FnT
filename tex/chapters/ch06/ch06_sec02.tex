@@ -3,25 +3,13 @@
 \section{Reactive Coordination under Dynamic Temporal Tasks}
 \label{ch06:sec:ch06_uncertain}
 
-The previous section addressed uncertainty at the motion-planning level through
-probabilistic safety and return guarantees. The emphasis in this section is on a
-different source of difficulty. Here, the task-relevant targets are dynamic, their
-future motion is only partially predictable, and additional tasks may be released
-online in response to newly observed events. Consequently, a task assignment that
-is feasible and efficient at one time instant may soon become inadequate as the
-target configuration evolves. The coordination problem must therefore be updated
-online while preserving the temporal and collaborative structure of the mission.
-To address this difficulty, the section develops an online coordination method
-that combines target-trajectory estimation, uncertainty quantification, compact
-task decomposition, and uncertainty-aware task assignment. In particular,
-target-motion predictions and their uncertainty sets are constructed in
-Section~\ref{ch06:subsec:trajectory}, the temporal structure of the task is encoded
-through R-posets in Section~\ref{ch06:subsec:poset}, and these components are used
-in Section~\ref{ch06:subsec:assignment} to guide the assignment process.
-Section~\ref{ch06:subsec:execution} then embeds this assignment scheme into an
-online replanning mechanism so that the team can react to updated target
-information and newly released tasks during execution.
-
+The previous section addressed uncertainty through probabilistic safety and
+return guarantees. This section considers dynamic targets, partial motion
+forecasts, and online task releases. A task assignment that is feasible at one
+instant may become inadequate as target configurations evolve. The coordination
+method therefore combines target-trajectory estimation, conformal uncertainty
+sets, R-poset task abstraction, and uncertainty-aware assignment, and then embeds
+these components in a receding-horizon replanning loop.
 
 
 %==============================
@@ -31,7 +19,6 @@ information and newly released tasks during execution.
 \subsection{Task coordination over dynamic temporal tasks}
 \label{ch06:sec:problem}
 
-This subsection introduces the dynamic task-coordination model used throughout the section. It specifies the robots, targets, temporal-task language, and problem statement before the predictive and assignment layers are developed.
 
 %==============================
 \subsubsection{Robots and targets}
@@ -76,19 +63,18 @@ positions and velocities are assumed to be available throughout
 execution. They are denoted by
 $Y_{0:t} \triangleq (Y_0,\cdots,Y_t)$ and
 $V_{0:t} \triangleq (V_0,\cdots,V_t)$, where
-$V_t \triangleq (V_{t,1},\cdots,V_{t,M})$. A centralized estimation
-scheme aggregates these measurements and produces real-time estimates of
-the target states. For convenience, static task regions and obstacles
-are modeled as targets with zero velocity.
+$V_t \triangleq (V_{t,1},\cdots,V_{t,M})$. A centralized estimator aggregates
+these measurements. Static task regions and obstacles are modeled as
+zero-velocity targets.
 
 %==============================
 \subsubsection{Task specification}
 \label{ch06:subsec:task-specification}
 
-The task formulas are defined over two classes of atomic propositions.
-For each robot $n \in \mathcal{N}$ and target $m \in \mathcal{M}$, the
-proposition $p_n^m$ is \textit{true} when the distance between robot $n$
-and target $m$ is below a prescribed threshold. Let
+The task formulas are defined over two classes of atomic propositions. For
+robot $n \in \mathcal{N}$ and target $m \in \mathcal{M}$, the proposition
+$p_n^m$ is \textit{true} when their distance is below a prescribed threshold.
+Let
 $\textbf{p} \triangleq
 \{p_n^m \mid m \in \mathcal{M},\, n \in \mathcal{N}\}$. For each
 collaboration $C_k \in \mathcal{C}$ and target $m \in \mathcal{M}$, the
@@ -121,12 +107,11 @@ task, also expressed as an sc-LTL formula. According to
 \eqref{ch06:eq:reactive-task}, whenever
 $\varphi_{\texttt{obs}}^{\bar{e}}$ holds, the response task
 $\varphi_{\texttt{rep}}^{\bar{e}}$ must eventually be satisfied.
-The standard LTL syntax and semantics introduced in
-Chapter~\ref{chap:preliminaries} are adopted here; see also
-\cite{baier2008principles}. The fragment used in this section is sc-LTL,
-which admits satisfaction by finite traces and is written in positive
-normal form using the temporal operators $\bigcirc$, $\textsf{U}$, and
-$\Diamond$ \cite{belta2017formal}.
+The standard LTL syntax and semantics from
+Chapter~\ref{chap:preliminaries} are adopted here
+\cite{baier2008principles}. The fragment is sc-LTL, which admits finite-trace
+satisfaction and is written in positive normal form using $\bigcirc$,
+$\textsf{U}$, and $\Diamond$ \cite{belta2017formal}.
 
 Thus, given the robot model and the task specification,
 the task plan for the robot team is defined by:
@@ -169,7 +154,8 @@ which is the performance metric used in the sequel.
 
 Given the task formulas $\varphi(t)$ and the observations
 $\{Y_{0:t},V_{0:t}\}$, the objective is to synthesize the team plan
-$\boldsymbol{\tau}_{\mathcal{N}}$ such that $\boldsymbol{\tau}_{\mathcal{N}} \models \varphi(t)$
+$\boldsymbol{\tau}_{\mathcal{N}}$ such that
+$\boldsymbol{\tau}_{\mathcal{N}} \models \varphi(t)$
 and the average makespan in \eqref{ch06:eq:avg-makespan} is minimized.
 
 %==============================
@@ -213,52 +199,15 @@ is observed.
 \end{example}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 %==============================
 %==============================
 %==============================
 \subsection{Trajectory estimation of dynamic targets}
 \label{ch06:subsec:trajectory}
 
-The coordination problem depends on forecasts of target motion rather than on instantaneous observations alone. The two parts below introduce the trajectory predictor and the conformal prediction regions used to quantify forecast uncertainty.
+The coordination problem uses target-motion forecasts, not only instantaneous
+observations. The following parts define the trajectory predictor and the
+conformal prediction regions used for uncertainty quantification.
 
 \subsubsection{Trajectory predictor}
 \label{ch06:subsec:traj-predictor}
@@ -286,12 +235,10 @@ $\Upsilon_m(Y_{0:t,m}) \triangleq
 Let
 $\mathbf{\Upsilon} \triangleq (\Upsilon_1,\cdots,\Upsilon_M)$ denote the
 collection of all target-wise predictors.
-In principle, any suitable trajectory predictor may be used, including
-long short-term memory networks, denoted by LSTM,
-\cite{Hochreiter1997LSTM}, recurrent neural networks~\cite{rnn}, and
-gated recurrent units~\cite{gru}. In the present setting, an LSTM
-network is adopted for each target. The training objective is given by
-\eqref{ch06:eq:traj-loss}:
+Any suitable trajectory predictor may be used, including LSTMs
+\cite{Hochreiter1997LSTM}, recurrent neural networks~\cite{rnn}, and gated
+recurrent units~\cite{gru}. Here, one LSTM is adopted per target, with the
+training objective:
 \begin{equation}
 \label{ch06:eq:traj-loss}
 \min_{\Upsilon_m}
@@ -315,11 +262,9 @@ quantity is used later as a velocity bound in the planning stage.
 \subsubsection{Conformal prediction regions}
 \label{ch06:subsec:cpr}
 
-Conformal prediction is used to construct uncertainty regions around the
-nominal trajectory forecasts. These regions provide finite-sample
-coverage guarantees for the true target trajectories; see
-\cite{Angelopoulos2021CP} for background. Following
-\cite{Lars2023CP}, the prediction regions are constructed
+Conformal prediction constructs uncertainty regions around the nominal
+forecasts and provides finite-sample coverage guarantees
+\cite{Angelopoulos2021CP}. Following \cite{Lars2023CP}, the regions are built
 independently for each target.
 Given observations $Y_{0:t}$ at time $t$, the predictors
 $\mathbf{\Upsilon}$ generate the nominal forecasts
@@ -398,25 +343,6 @@ $G_{\mathcal{H}_t} \triangleq
 %=======================================
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 %==============================
 %==============================
 %==============================
@@ -424,12 +350,10 @@ $G_{\mathcal{H}_t} \triangleq
 \subsection{R-posets for task formulas}
 \label{ch06:subsec:poset}
 
-The notion of an R-poset was introduced in
-Chapter~\ref{chap:top-down}, especially in
-Section~\ref{ch04:subsec:task-decompose-posets}, as a compact abstraction
-of the temporal constraints induced by a team-level temporal task. That
-construction is reused here. Accordingly, only the ingredients needed
-for the present section are recalled.
+R-posets were introduced in Chapter~\ref{chap:top-down}, especially
+Section~\ref{ch04:subsec:task-decompose-posets}, as compact abstractions of
+team-level temporal constraints. The construction is reused here, so only the
+needed ingredients are recalled.
 Given the sc-LTL formula $\varphi$, first translate it into the
 Nondeterministic B\"uchi Automaton
 $\mathcal{A}_{\varphi} \triangleq (S,\Sigma,\delta,S_0,S_F)$, where
@@ -442,7 +366,7 @@ finite set of indexed subtasks $\Omega_{\varphi}$ together with the
 relevant temporal relations. The subsequent relaxation step retains only
 those constraints that are essential for correctness, rather than the
 full sequential order of the automaton run.
-Recall that an R-poset associated with $\varphi$ is the triple
+Recall that an R-poset associated with $\varphi$ is the triple:
 \begin{equation}
 \label{ch06:eq:r-poset}
 P_{\varphi} \triangleq
@@ -460,38 +384,19 @@ $\widehat{\Omega} \subseteq \Omega_{\varphi}$ means that the subtasks in
 $\widehat{\Omega}$ cannot be executed simultaneously.
 
 
-The definition above for $P_{\varphi}$ is the present-section specialization
-of Definition~\ref{ch04:def:partial},
-Definition~\ref{ch04:def:poset}, and \eqref{ch04:eq:poset} to the task
-model in Section~\ref{ch06:sec:problem}. The abstraction in
-\eqref{ch06:eq:r-poset} is less restrictive than the full automaton
-run, since only the essential temporal dependencies are retained. At
-the same time, it remains task-consistent. In Chapter~\ref{chap:top-down},
-Definition~\ref{ch04:def:language-poset} and
-\eqref{ch04:eq:poset-language} define the language $L(P_{\varphi})$
-induced by an R-poset, and Lemma~\ref{ch04:lemma:accepting-poset}
-shows that, for every accepting R-poset returned by
-Algorithm~\ref{ch04:alg:compute-poset}, one has
-$L(P_{\varphi}) \subseteq \mathcal{L}_{\varphi}$. Therefore, any plan
-synthesized to satisfy the relations encoded by $P_{\varphi}$ is
-consistent with the original task formula $\varphi$.
-Different accepting R-posets may correspond to the same task formula,
-since the retained temporal relations need not be unique. In practice,
-the R-poset in \eqref{ch06:eq:r-poset} is computed by the anytime
-procedure $\texttt{compute\_poset}(\cdot)$ in
-Algorithm~\ref{ch04:alg:compute-poset}. The resulting structure is an R-poset that retains the essential precedence and synchronization relations needed for assignment and execution.
-
-
-
-
-
-
-
-
-
-
-
-
+The definition of $P_{\varphi}$ specializes
+Definition~\ref{ch04:def:partial}, Definition~\ref{ch04:def:poset}, and
+\eqref{ch04:eq:poset} to the task model in
+Section~\ref{ch06:sec:problem}. It is less restrictive than the full automaton
+run because it retains only essential temporal dependencies, but it remains
+task-consistent: by Definition~\ref{ch04:def:language-poset},
+\eqref{ch04:eq:poset-language}, and
+Lemma~\ref{ch04:lemma:accepting-poset}, every accepting R-poset returned by
+Algorithm~\ref{ch04:alg:compute-poset} satisfies
+$L(P_{\varphi}) \subseteq \mathcal{L}_{\varphi}$. In practice,
+$P_{\varphi}$ is computed by
+$\texttt{compute\_poset}(\cdot)$ and retains the precedence and
+synchronization relations needed for assignment and execution.
 
 
 %==============================
@@ -505,38 +410,25 @@ Algorithm~\ref{ch04:alg:compute-poset}. The resulting structure is an R-poset th
 \subsection{Uncertainty-aware task assignment}
 \label{ch06:subsec:assignment}
 
-Given the target-motion estimates
-$(\widehat{Y}_{\mathcal{H}_t},G_{\mathcal{H}_t})$ and the R-poset
-$P_{\varphi} \triangleq
-(\Omega_{\varphi},\preceq_{\varphi},\neq_{\varphi})$, the objective is
-to assign all subtasks in $\Omega_{\varphi}$ to the robot team
-$\mathcal{N}$ so that the temporal relations in
-$\preceq_{\varphi}$ and $\neq_{\varphi}$ are respected and the average
-makespan $\overline{T}_{\varphi}$ is minimized. This subsection extends
-the assignment perspective of Chapter~\ref{chap:top-down} to the present
-setting, where completion times depend on predicted target motion and its
-associated uncertainty.
+Given $(\widehat{Y}_{\mathcal{H}_t},G_{\mathcal{H}_t})$ and
+$P_{\varphi}=(\Omega_{\varphi},\preceq_{\varphi},\neq_{\varphi})$, the
+objective is to assign all subtasks to the team while respecting
+$\preceq_{\varphi}$ and $\neq_{\varphi}$ and minimizing
+$\overline{T}_{\varphi}$. This extends the assignment model of
+Chapter~\ref{chap:top-down} to completion times driven by predicted target
+motion and uncertainty.
 
 \subsubsection{CP-based Monte Carlo tree search}
 \label{ch06:sec:cp-mcts}
 
-A centralized task-assignment procedure based on Monte Carlo Tree Search
-is adopted to address the resulting combinatorial search problem. In
-contrast to the deterministic assignment procedure in
-Chapter~\ref{chap:top-down}, the present method evaluates partial plans
-through predicted target trajectories together with their conformal
-uncertainty regions. The resulting scheme is referred to as CP-based
-Monte Carlo Tree Search, abbreviated as CP-MCTS. As summarized in
-Algorithm~\ref{ch06:alg:cp-mcts}, the search proceeds through four
-stages, namely selection, expansion, simulation, and backpropagation,
-until the prescribed time budget is exhausted. A principal difficulty is
-that the number of child nodes generated during expansion grows rapidly
-with the numbers of robots and subtasks. If every expanded node were
-forwarded to simulation, the search would become excessively
-breadth-oriented and would devote insufficient effort to deeper and more
-informative branches. To mitigate this effect, a prediction-based
-screening metric is introduced after expansion so that only the most
-promising nodes are passed to the simulation stage.
+A centralized Monte Carlo Tree Search addresses the combinatorial assignment
+problem. Unlike the deterministic assignment procedure in
+Chapter~\ref{chap:top-down}, the method evaluates partial plans using predicted
+target trajectories and conformal uncertainty regions. The resulting CP-based
+MCTS, summarized in Algorithm~\ref{ch06:alg:cp-mcts}, alternates selection,
+expansion, simulation, and backpropagation under a fixed time budget. Because
+expansion can generate many child nodes, a prediction-based screening metric
+retains only promising nodes for simulation.
 
 (I) \emph{Selection and Expansion}.
 Each node of the search tree represents a partial assignment of
@@ -635,25 +527,15 @@ subtask $\omega \in \Omega_{\nu^{+}}$.
 
 
 (II) \emph{Simulation}.
-The simulation stage consists of three components. First, a rollout
-policy completes the current partial assignment. Second, the resulting
-complete plan is evaluated under samples drawn from the prediction
-regions. Third, a risk metric is computed from the induced
-average-makespan distribution. Starting from the selected child node,
-rollout is applied recursively until all subtasks are assigned. At each
-iteration, the next subtask is chosen from the admissible set in
-\eqref{ch06:eq:admissible} and is assigned to a feasible robot group.
-To preserve rollout diversity, an $\epsilon$-randomized rule is used.
-With probability $\epsilon$, a feasible robot group is selected
-uniformly at random. With probability $1-\epsilon$, the group predicted
-to start the subtask earliest is selected. Once a complete plan
-$\Pi_{\texttt{c}}$ has been obtained, a sampling-based procedure
-approximates its average-makespan distribution
-$\mathbf{\overline{T}}_{\texttt{c}}$ through stepwise simulation under
-$z \in \mathbb{N}$ samples drawn from the prediction regions
-$(\widehat{Y}_{\mathcal{H}_t},G_{\mathcal{H}_t})$. The corresponding
-risk assessment is then performed through the value-at-risk and
-conditional value-at-risk criteria.
+The simulation stage completes the partial assignment by rollout, evaluates the
+resulting plan under samples from the prediction regions, and computes a risk
+metric from the induced average-makespan distribution. Rollout recursively
+chooses admissible subtasks from \eqref{ch06:eq:admissible} and assigns them to
+feasible robot groups. An $\epsilon$-randomized rule selects a random feasible
+group with probability $\epsilon$ and the earliest-start group otherwise. The
+complete plan $\Pi_{\texttt{c}}$ is then evaluated by stepwise simulation over
+$z$ samples from
+$(\widehat{Y}_{\mathcal{H}_t},G_{\mathcal{H}_t})$.
 
 For a complete plan $\Pi_{\texttt{c}}$ and a risk level
 $\alpha \in (0,1]$, the value at risk is defined by
@@ -720,14 +602,10 @@ assigned robots may fail to close the distance to the target. In that
 case, the node is treated as infeasible by setting
 $\widehat{T}_{\omega} = \infty$, which yields
 $\zeta_{\nu^{+}} = \infty$. Such nodes are excluded before simulation.
-For comparison, two simpler evaluation schemes are also considered. The
-first ignores target motion and treats all targets as stationary, which
-yields the no-trajectory-prediction baseline NTP. The second uses the
-nominal predictions $\widehat{Y}_{\mathcal{H}_t}$ but ignores the
-uncertainty regions $G_{\mathcal{H}_t}$, which yields the
-no-uncertainty baseline NU. Relative to these baselines, the
-risk-sensitive CVaR criterion captures both motion forecast and
-uncertainty growth in the assignment process.
+For comparison, the no-trajectory-prediction baseline NTP treats all targets
+as stationary, while the no-uncertainty baseline NU uses
+$\widehat{Y}_{\mathcal{H}_t}$ but ignores $G_{\mathcal{H}_t}$. The CVaR
+criterion captures both motion forecasts and uncertainty growth.
 
 
 \begin{lemma}
@@ -781,26 +659,6 @@ $G_{\widehat{T}_{\omega},m}/
 (\min_{n \in \mathcal{I}_{\omega}} v_n - v_m^{\ast})$, which yields
 \eqref{ch06:eq:key-bound}.
 \end{proof}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 %=======================================
@@ -867,28 +725,18 @@ $G_{\widehat{T}_{\omega},m}/
 \subsection{Overall analyses}
 \label{ch06:subsec:execution}
 
-The preceding assignment method is intended for repeated use inside a receding-horizon loop. The two parts below summarize the resulting online execution scheme and the corresponding complexity and generalization properties.
+The assignment method is used inside a receding-horizon loop. The following
+parts summarize online execution, complexity, and generalization.
 
 \subsubsection{Online execution and adaptation}
 
-The assignment method developed above is embedded into an online
-execution scheme with receding-horizon replanning. As in the online
-adaptation framework of Chapter~\ref{chap:top-down}, the current plan is
-executed non-preemptively, while replanning is triggered only when new
-task information becomes available or when the quality of the current
-assignment deteriorates sufficiently.
-As summarized in
-Algorithm~\ref{ch06:alg:ta}, the execution logic has two stages. The
-first is initial planning. The second is online adaptation. After the
-initial assignment has been computed, each robot
-$n \in \mathcal{N}$ executes its local plan $\tau_n$ by moving toward
-the targets associated with its assigned subtasks and then performing
-the required actions. If the current action belongs to a multi-robot
-collaboration $C_k$ with $|C_k|>1$, the participating robot must wait
-for the other collaborators before execution. This partial
-synchronization accommodates uncertainty in travel time and action
-duration. If the action is not collaborative, the robot proceeds
-independently.
+The assignment method is embedded in receding-horizon execution. As in
+Chapter~\ref{chap:top-down}, the current plan is executed non-preemptively,
+and replanning is triggered only by new task information or sufficient
+assignment-quality degradation. Algorithm~\ref{ch06:alg:ta} has two stages:
+initial planning and online adaptation. Robots execute local plans by moving to
+assigned targets and performing the required actions. Multi-robot actions wait
+for all collaborators, while non-collaborative actions proceed independently.
 At each time step $t>0$, the team state $x_t$ and the target
 observations $Y_t$ are updated, and new target predictions
 $\widehat{Y}_{\mathcal{H}_t}$ are generated from $Y_{0:t}$ by the
@@ -953,19 +801,9 @@ stepwise simulation is
 $\mathcal{O}\bigl(zT(J+N)/\Delta t\bigr)$, where $z$ is the number of
 samples, $T$ is the makespan, and $\Delta t$ is the simulation step
 size.
-
-Two immediate extensions of the execution scheme are worth noting. The
-first concerns robot failures. If one or more robots fail during
-execution, a modified CP-MCTS procedure may be used to generate a new
-assignment. The root node is updated by removing the failed robots and
-retaining the subtasks that have already been completed. Any subtask
-interrupted by a failure is returned to the set of pending tasks, after
-which the standard search procedure is applied to compute a revised
-assignment.
-The second extension concerns task priorities. If the tasks are
-associated with weights $\alpha_{\ell}$, the optimization criterion can
-be changed from the average makespan $\overline{T}_{\varphi}$ to the
-weighted makespan
+Two extensions are immediate. For robot failures, CP-MCTS can be restarted
+after removing failed robots, retaining completed subtasks, and returning
+interrupted subtasks to the pending set. For task priorities, weights
+$\alpha_{\ell}$ replace the average makespan by
 $\widetilde{T}_{\varphi} \triangleq
-\sum_{\ell=1}^{|\varphi(t)|} \alpha_{\ell} T_{\varphi_{\ell}}$,
-which places greater emphasis on high-priority tasks.
+\sum_{\ell=1}^{|\varphi(t)|} \alpha_{\ell} T_{\varphi_{\ell}}$.

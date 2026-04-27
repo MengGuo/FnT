@@ -2,32 +2,15 @@
 \section{Exploration and Coordination via Intermittent Communication}
 \label{ch05:sec:intermittent_comm}
 
-The previous section considered communication and collaboration as a
-joint planning problem under online temporal requests. The present
-section turns to a complementary setting in which exploration itself
-is the primary mechanism for acquiring new information, while
-communication among the operator and the robot fleet is available only
-intermittently. The environment is initially unknown, so map
-information, task-relevant observations, and request-dependent updates
-must be generated and fused online under sparse communication events
-rather than under persistent connectivity.
-This setting introduces a distinct coordination challenge. Since
-robots cannot rely on continuously shared global knowledge, coherent
-exploration must be maintained despite delayed information exchange,
-partial local awareness, and communication opportunities that depend
-on the evolving team topology. At the same time, operator requests and
-newly discovered workspace information must still propagate through
-the fleet with bounded delay whenever possible. These requirements
-motivate a framework in which exploration, intermittent
-communication, and online coordination are treated within a unified
-planning and execution architecture.
-The development in this section therefore centers on an embedded
-communication topology that supports frontier-based exploration while
-preserving periodic information fusion between the operator and the
-fleet. On top of this topology, local exploration plans, map updates,
-and request-triggered coordination decisions are integrated so that
-the team can continue to explore efficiently without assuming
-continuous end-to-end communication.
+The previous section treated communication and collaboration as a joint planning
+problem. This section considers unknown-environment exploration, where map
+information, task observations, and request-dependent updates are generated
+online while operator-fleet communication is only intermittent. The goal is to
+maintain coherent exploration under delayed information exchange and partial
+local knowledge, while ensuring that operator requests and newly discovered
+information propagate with bounded delay. The framework uses an embedded
+communication topology that supports frontier-based exploration and periodic
+information fusion without assuming continuous end-to-end connectivity.
 
 
 %==============================
@@ -37,9 +20,8 @@ continuous end-to-end communication.
 \subsection{Operator-fleet system under limited communication}
 \label{ch05:sec:problem-exploration}
 
-This subsection introduces the operator-fleet model used throughout the intermittent
-communication framework. The discussion proceeds from the workspace and communication
-assumptions to the request model and the resulting local planning objective.
+This subsection introduces the operator-fleet model, including workspace,
+communication, request, and planning assumptions.
 
 \subsubsection{Workspace, robot model, and operator model}
 \label{ch05:subsec:ws}
@@ -75,27 +57,19 @@ $p_i^+(t')$ is the updated pose, close to $p_{\texttt{g}}$ when navigation
 succeeds.
 \end{definition}
 
-The exact map representation depends on the underlying SLAM algorithm and
-software implementation, for instance an occupancy map
-\cite{thrun2002probabilistic} or a semantic map \cite{tian2022kimera}. These
-details are not essential to the coordination model here, provided that each
-robot can update its local map and generate collision-free motion within the
-known part of the workspace.
-The operator $\texttt{h}$ does not construct a map directly, but can localize
-itself with pose $p_{\texttt{h}}(t) \in \mathcal{A}$ and move within its
-current local map $M_{\texttt{h}}(t) \subset \mathcal{A}$ for all $t \geq 0$.
-Consequently, communication with the robotic fleet is required for the operator
-to obtain updated local maps and maintain situational awareness during the
-exploration process.
+The map representation may be occupancy-based~\cite{thrun2002probabilistic} or
+semantic~\cite{tian2022kimera}; the coordination model only requires local map
+updates and collision-free motion in the known workspace. The operator
+$\texttt{h}$ localizes with pose $p_{\texttt{h}}(t)$ and moves within
+$M_{\texttt{h}}(t)$, but relies on fleet communication to obtain updated maps
+and maintain situational awareness.
 
 \subsubsection{Communication model under limited connectivity}
 \label{ch05:subsec:com}
 
-Each robot and the operator
-are equipped with wireless communication devices for robot-robot and
-robot-operator information exchange, such as ad-hoc networks, UWB, radio, or
-5G-based communication \cite{klaesson2020planning,xia2023relink}. The same
-communication model is used throughout the operator-fleet system.
+Robots and the operator exchange information through wireless communication,
+such as ad-hoc networks, UWB, radio, or 5G-based links
+\cite{klaesson2020planning,xia2023relink}.
 
 \begin{definition}
 Two communicating entities $x, y \in \mathcal{N} \cup \{\texttt{h}\}$ can
@@ -145,12 +119,9 @@ tele-operation.
 \subsubsection{Online and contingent requests}
 \label{ch05:subsec:robot-human}
 
-Both the operator and the robots can send and receive online requests through
-the communication model above. These requests are contingent in the sense that
-they are not known a priori, but arise during exploration as the map evolves,
-new features are revealed, and unforeseen operational needs appear. In the
-single-operator setting considered here, six request types are modeled across
-two directions of interaction.
+Both the operator and the robots can issue contingent online requests as the map
+evolves and operational needs appear. In the single-operator setting, six
+request types are modeled across two interaction directions.
 
 (I) \emph{Operator-to-robot requests}.
 The operator can issue four types of requests.
@@ -211,9 +182,9 @@ $\Xi(t)$ once fulfilled.
 \subsubsection{Local plans and mission objective}
 \label{ch05:subsec:problem}
 
-Consequently, the behavior of each robot and the operator can be represented by
-a timed sequence of navigation and communication events.
-The communication-aware local plan of robot $i \in \mathcal{N}$ is denoted by:
+The behavior of each robot and the operator is represented by a timed sequence
+of navigation and communication events. For robot $i \in \mathcal{N}$, the
+communication-aware local plan is:
 \begin{equation}
 \Gamma_i \triangleq
 \boldsymbol{\tau}_i^0 \mathbf{c}_i^0
@@ -259,15 +230,11 @@ mapped and the resulting map is available to the operator, as required by
 together with the fulfillment of all requests received up to time
 $\overline{T}$.
 
-The optimization problem in~\eqref{ch05:eq:problem} defines the overall mission
-objective. In the online setting considered here, however, the request set is
-revealed only incrementally during execution, and future operator motions,
-robot encounters, and communication opportunities are not known a priori. For this reason,
-the coordination framework does not solve \eqref{ch05:eq:problem} directly as a
-globally optimal offline planning problem. Instead, it realizes this objective
-through a sequence of online feasible coordination decisions over the current
-communication backbone, as detailed later in
-Section~\ref{ch05:subsec:online}.
+Problem~\eqref{ch05:eq:problem} states the mission objective, but the online
+setting reveals requests, operator motions, robot encounters, and communication
+opportunities only incrementally. The framework therefore realizes the objective
+through feasible online decisions over the current communication backbone rather
+than solving \eqref{ch05:eq:problem} as an offline global optimization problem.
 
 
 
@@ -289,13 +256,11 @@ Section~\ref{ch05:subsec:online}.
 \subsection{Latency-bounded intermittent communication protocol with dynamic resizing}
 \label{ch05:subsec:spread}
 
-Timely information sharing between the operator and the fleet is essential for
-handling online requests. The framework therefore first establishes a
+Timely operator-fleet information sharing is enforced through a
 latency-bounded intermittent communication backbone on an embedded joint-wheel
-graph, and then augments it with a distributed detach-and-rejoin mechanism for
-dynamic resizing. Together, these two components provide the communication
-backbone for the request-instantiation and online coordination layers developed
-later in this section.
+graph, augmented by a distributed detach-and-rejoin mechanism for dynamic
+resizing. These components support the request-instantiation and online
+coordination layers.
 
 \subsubsection{Latency-bounded intermittent communication protocol}
 \label{ch05:subsubsec:spread-problem}
@@ -319,11 +284,10 @@ completion time of $\mathcal{F}$ is minimized and the latency constraint
 $\delta_{\texttt{h}}(t) \leq T_{\texttt{h}}$ holds for all $t > 0$.
 \end{problem}
 
-The latency bound is enforced through scheduled pairwise communication.
-Robots exchange information at communication events and replan the next event
-so that a timely return to the operator remains feasible within
-$T_{\texttt{h}}$. This mechanism is represented through an embedded
-joint-wheel coordination graph.
+The latency bound is enforced by scheduled pairwise communication. Robots
+exchange information and replan the next event so that a timely return to the
+operator remains feasible within $T_{\texttt{h}}$. This mechanism is encoded by
+an embedded joint-wheel coordination graph.
 An embedded graph is a tuple
 $\mathcal{G} \triangleq (\mathcal{V}, \mathcal{E}, \sigma, x)$, where
 $\mathcal{V}$ is the vertex set, $\mathcal{E} \subseteq
@@ -343,17 +307,12 @@ $(k_\ell, k_{\ell+1}) \in \mathcal{E}_{\texttt{r}}$ for
 $\ell = 1,\cdots,N$ with $k_{N+1} \triangleq k_1$, and
 $\mathcal{E}_{\texttt{h}} \triangleq
 \{(\texttt{h}, i) \mid i \in \mathcal{N}\}$.
-Here, the term
-\emph{joint-wheel} refers to joint connectivity over time rather than to a
-static wheel graph. At any given time, the protocol activates at most one rim
-edge in $\mathcal{E}_{\texttt{r}}$, so only one robot pair communicates.
-However, over any time interval longer than $T_{\texttt{h}}$, the union of the
-activated rim edges together with the hub edges in
-$\mathcal{E}_{\texttt{h}}$ induces a wheel-like connectivity pattern. This is
-different from the static line and star graphs used later.
-The embedded graph $\mathcal{G}^{\texttt{w}}$ is constructed and maintained in
-a fully distributed manner through local coordination at intermittent
-communication events, as described next.
+The term \emph{joint-wheel} denotes connectivity over time rather than a static
+wheel graph. At any instant, at most one rim edge is active, but over any
+interval longer than $T_{\texttt{h}}$ the activated rim edges and hub edges
+induce a wheel-like pattern. The embedded graph
+$\mathcal{G}^{\texttt{w}}$ is maintained distributively through local
+coordination at intermittent events.
 
 (I) \emph{Initialization}.
 The vertex embedding records the local coordination state:
@@ -639,12 +598,10 @@ Update embeddings through \eqref{ch05:eq:embed-update}\;
 \subsubsection{Distributed detach-and-rejoin mechanism}
 \label{ch05:sec:detach-join}
 
-Flexible resizing under intermittent communication is enabled through a
-distributed detach-and-rejoin procedure that preserves the wheel topology and
-respects the latency constraint. A key design choice is that the rewiring is
-completed through two consecutive meeting events. In this way, the successor
-robots receive consistent plan and adjacency updates before a robot leaves or
-rejoins the wheel.
+Flexible resizing is handled by a distributed detach-and-rejoin procedure that
+preserves the wheel topology and latency constraint. Rewiring uses two
+consecutive meetings so that successor robots receive consistent plan and
+adjacency updates before any robot leaves or rejoins the wheel.
 
 (I) \emph{Detaching from the wheel}.
 Consider three consecutive robots $(i,j,k)$ along the wheel, where robot $j$

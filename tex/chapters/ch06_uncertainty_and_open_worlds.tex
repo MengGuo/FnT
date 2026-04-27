@@ -2,30 +2,19 @@
 \label{chap:uncertainty}
 
 Chapters~\ref{chap:bottom-up}, \ref{chap:top-down}, and
-\ref{chap:communication} established coordination frameworks for temporal-task
+\ref{chap:communication} developed coordination frameworks for temporal-task
 planning under local interactions, global specifications, and limited
-communication. In many robotic deployments, however, the main difficulty is not
-only combinatorial coordination, but also the fact that the environment is
-partially uncertain and the operative constraints evolve during execution.
-Relevant propositions may be stochastic, targets may move, feasible motions may
-change with time, and safety may depend on the continued availability of
-recovery or return actions rather than on simple state avoidance alone.
-Chapter~\ref{chap:uncertainty} addresses this next layer of difficulty by
-studying temporal-task planning and coordination when uncertainty, dynamic
-constraints, and reactive adaptation must be incorporated directly into the
-decision process.
-
-The chapter is organized around three complementary problem classes.
-Section~\ref{ch06:sec:ch06_safe_plan} considers probabilistic temporal tasks
-with safe-return requirements, where task fulfillment must be balanced against
-the ability to retreat to designated safe states. Section~\ref{ch06:sec:ch06_uncertain}
-then studies reactive coordination under dynamic
-temporal-logic tasks, with particular emphasis on prediction, online
-reassignment, and adaptation to evolving targets and mission conditions.
-Section~\ref{ch06:sec:ch06_stl} turns to continuous multi-robot motion planning
-under signal temporal logic specifications and dynamic couplings, using
-collaborative optimal transport to handle nonlinear trajectory constraints. The
-resulting methods are illustrated through the case study in
+communication. This chapter considers the additional difficulty caused by
+uncertain environments and time-varying constraints: propositions may be
+stochastic, targets may move, feasible motions may change, and safety may
+require recoverability rather than state avoidance alone.
+The chapter is organized around three problem classes.
+Section~\ref{ch06:sec:ch06_safe_plan} studies probabilistic temporal tasks with
+safe-return requirements. Section~\ref{ch06:sec:ch06_uncertain} considers
+reactive coordination under dynamic temporal tasks with prediction, online
+reassignment, and moving targets. Section~\ref{ch06:sec:ch06_stl} addresses
+continuous multi-robot motion planning under STL specifications using
+collaborative optimal transport. The resulting methods are illustrated in
 Section~\ref{ch06:sec:case}.
 
 %==============================

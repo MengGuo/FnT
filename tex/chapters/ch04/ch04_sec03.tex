@@ -2,31 +2,16 @@
 \label{ch04:sec:online_continual_tasks}
 
 The previous sections considered mission decomposition, team formation, and
-local coordination for a mission set that is fixed during each planning stage.
-Continual operation introduces a different requirement: new mission formulas may
-be specified after part of the current plan has already been executed, and the
-updated plan should preserve that valid executed prefix rather than recomputing
-the whole coordination structure from the beginning. Direct reconstruction from
-the conjunction of all active temporal formulas is generally undesirable, since
-the associated automaton construction, partial-order extraction, and team
-assignment can become prohibitively expensive as the number of active missions
-grows
+local coordination for mission sets that are fixed during each planning stage.
+Continual operation requires new mission formulas to be inserted after part of
+the current plan has already been executed, while preserving that valid prefix.
+Rebuilding the conjunction of all active formulas is generally expensive because
+automaton construction, partial-order extraction, and team assignment grow with
+the active mission set
 \cite{schillinger2018simultaneous,kantaros2020stylus,luo2022temporal,
-liu2024time,luo2025hulk}. A more suitable approach is therefore to maintain the
-high-level task structure online and to update only the portion affected by the
-newly specified missions.
-
-This section develops such an online synthesis mechanism for continual tasks.
-The first subsection introduces an incremental construction of relaxed partially
-ordered sets through online products, by which newly specified temporal missions
-are merged into the current global task structure while preserving completed
-progress. The second subsection presents a receding-horizon procedure that
-solves only a finite subset of currently relevant subtasks at each planning
-cycle, thereby maintaining tractability during long-duration execution. The
-third subsection treats human requests as a special class of online tasks and
-shows how they can be incorporated into the same update-and-replan framework.
-Together, these components extend the top-down synthesis architecture
-from fixed mission sets to continually evolving temporal tasks.
+liu2024time,luo2025hulk}. This section therefore maintains the high-level task
+structure online and updates only the portion affected by new missions, using
+R-poset products, receding-horizon replanning, and request-driven updates.
 
 
 %==============================
@@ -34,15 +19,12 @@ from fixed mission sets to continually evolving temporal tasks.
 \subsection{Online product of R-posets}
 \label{ch04:subsec:online_poset_product}
 
-To incorporate a newly specified mission without rebuilding the entire global
-task structure from the beginning, an online product operation is introduced
-for R-posets. The new mission formula is first translated into a B\"uchi
-automaton and then converted into a set of R-posets by the construction in
-Section~\ref{ch04:sec:po_decomp_assignment}.
-The online update then combines this newly generated
-R-poset structure with the current global R-poset inherited from the previous
-planning cycle. In this way, the already executed portion of the plan is
-preserved, while only the unexecuted portion is updated.
+An online product operation incorporates a new mission without rebuilding the
+entire global task structure. The new formula is translated into a B\"uchi
+automaton, converted into R-posets by
+Section~\ref{ch04:sec:po_decomp_assignment}, and merged with the current global
+R-poset so that the executed prefix is preserved and only the residual structure
+is updated.
 Let the current global R-poset be
 $P_1 \triangleq (\Omega_1,\preceq_1,\neq_1)$, and let the R-poset induced by
 the new mission be
@@ -69,15 +51,14 @@ $w_0w \in \bigcup_{P' \in \mathcal{P}^{r}} L(P')$;
 $w_0w \in L(P_1)$ and $w \in L(P_2)$.
 \end{definition}
 
-Definition~\ref{ch04:def:product_of_r_posets} requires the product to preserve
-exactly those continuations that are compatible with both the current task
-structure and the newly introduced task structure. The construction consists of
-two stages: composition of subtasks and calculation of partial relations,
-as detailed below.
+Definition~\ref{ch04:def:product_of_r_posets} preserves exactly the
+continuations compatible with both the current and newly introduced task
+structures. The construction has two stages: subtask composition and partial-
+relation calculation.
 
 (I) \emph{Composition of subtasks}.
-The first stage generates candidate subtask sets that can simultaneously
-satisfy $\Omega_1$ and $\Omega_2$. For two subtasks
+The first stage generates candidate subtask sets satisfying both $\Omega_1$ and
+$\Omega_2$. For two subtasks
 $\omega'=(j,\sigma',{\sigma'}^{s})$ and
 $\omega=(i,\sigma,\sigma^{s})$, write $\omega' \models \omega$ if
 $\sigma \subseteq \sigma'$ and $\sigma^{s}\subseteq {\sigma'}^{s}$. This means
@@ -213,12 +194,10 @@ The resulting product R-poset
 $P' \triangleq (\Omega',\preceq,\neq)$ is then added to the product set
 $\mathcal{P}^{r}$.
 
-The two-stage construction above can be executed in an anytime manner. It may
-stop as soon as the first feasible product R-poset is obtained, or it may
-continue until the search queue is exhausted or a prescribed time budget is
-reached. In the online continual setting, this construction is repeated each
-time a new mission is specified, thereby maintaining an updated family of
-R-posets while preserving the already executed prefix of the current plan.
+The two-stage construction is anytime: it may stop after the first feasible
+product R-poset or continue until the queue or time budget is exhausted. Repeating
+this update whenever a mission arrives maintains the R-poset family while
+preserving the executed prefix.
 
 
 
@@ -233,9 +212,8 @@ R-posets while preserving the already executed prefix of the current plan.
 \subsection{Online execution and receding-horizon adaptation}
 \label{ch04:subsec:online_execution}
 
-After the mission set has been decomposed, the abstract teams have been
-instantiated, and the local coordination strategies have been selected, the
-resulting plans must be executed online. Let
+After decomposition, team instantiation, and local coordination, the resulting
+plans are executed online. Let
 $\overline{\mathcal{N}}=\{\mathcal{N}_1,\cdots,\mathcal{N}_{K^\star}\}$ be the
 current team formation, and let
 $\Gamma_k=(\omega_k^1,\omega_k^2,\cdots,\omega_k^{L_k})$ be the task sequence
@@ -248,59 +226,34 @@ cycle.
 \subsubsection{Online execution of the current team plans}
 \label{ch04:subsubsec:online_exec_model}
 
-The execution of one team alternates among navigation, synchronization, and
-action execution. First, the robots assigned to team $\mathcal{N}_k$ navigate
-toward the region $S_k^\ell$ of the current task $\omega_k^\ell$. Second,
-synchronization is performed whenever the task requires simultaneous actions
-within the team or whenever temporal constraints across tasks require waiting.
-Third, the local subtasks in $\Xi_k^\ell$ are carried out according to the
-coordination strategy selected in
-Section~\ref{ch04:subsec:local_coordination}. Execution is concurrent across
-teams and parallel within each team whenever the global temporal structure
-permits it.
-This execution mechanism also determines how progress is represented for future
-replanning. If a task has not started, it may be reassigned in a later planning
-cycle. If a task is already under execution, however, it is not preempted. This
-non-preemption rule is important for preserving execution continuity and for
-avoiding inconsistent intermediate allocations when the number of active tasks
-exceeds the number of currently available teams. Hence, replanning is applied
-only to the unfinished and not-yet-started portion of the plan, while the
-currently executing tasks continue without interruption.
-
-\begin{example}
-\label{ch04:example:Assign_Time}
-Suppose the teams
+A team alternates among navigation, synchronization, and action execution. The
+robots move to $S_k^\ell$, synchronize when simultaneous actions or cross-task
+waiting are required, and then execute the local subtasks in $\Xi_k^\ell$ using
+the strategy of Section~\ref{ch04:subsec:local_coordination}. Execution is
+concurrent across teams and parallel within teams when permitted by the temporal
+structure. Tasks that have not started may be reassigned, whereas tasks already
+under execution are not preempted; replanning therefore affects only the
+unfinished and not-yet-started portion of the plan.
+For instances, suppose the teams
 $\mathcal{N}_1$ and $\mathcal{N}_2$ are formed from the corresponding capacity
 profiles obtained in the team-formation stage. After task $\omega_2$, team
 $\mathcal{N}_2$ must wait until team $\mathcal{N}_1$ reaches the required
 coordination point for task $\omega_5$. This waiting interval is generated by
 the synchronization state and enforces the temporal coupling between the two
 tasks.
-\end{example}
 
 \subsubsection{Receding-horizon replanning upon new missions}
 \label{ch04:subsubsec:receding_horizon_replan}
 
-Let $H>0$ denote the receding-horizon length. To accommodate long-duration
-missions and continual task arrivals, execution is combined with a receding-
-horizon replanning mechanism. At each planning cycle, only a finite set of $H$
-tasks is committed for detailed assignment and team formation, while the
-remaining tasks are deferred to later cycles. The horizon therefore limits the
-size of the assignment problem solved at each update and keeps the online
-computation tractable.
-Replanning is triggered under three conditions: sufficient execution progress
-within the current committed horizon, the arrival of newly specified missions,
-or the detection of infeasibility in the current execution due to failure or
-resource loss. When a replanning event is triggered, the assignment and
-team-formation stages are recomputed from the current system state rather than
-from the initial one.
-The candidate task pool includes three categories: tasks that have been
-assigned but have not yet started, tasks that are not yet assigned, and newly
-specified tasks. Tasks already under execution are excluded from this pool by
-the non-preemption rule. Let $\Omega^{\mathrm{ns}}$ denote the set of assigned
-but not-yet-started tasks, let $\Omega^{\mathrm{ua}}$ denote the set of
-currently unassigned tasks, and let $\Omega^{\mathrm{new}}$ denote the set of
-newly introduced tasks. The replanning pool is then
+Let $H>0$ denote the receding-horizon length. At each planning cycle, only $H$
+tasks are committed for detailed assignment and team formation; the remainder is
+deferred, which keeps each update finite. Replanning is triggered by sufficient
+progress, new missions, or infeasibility caused by failure or resource loss, and
+uses the current system state. The candidate pool contains assigned-but-not-
+started tasks, unassigned tasks, and newly introduced tasks; tasks already under
+execution are excluded by non-preemption. Let $\Omega^{\mathrm{ns}}$,
+$\Omega^{\mathrm{ua}}$, and $\Omega^{\mathrm{new}}$ denote these three sets. The
+replanning pool is then:
 \begin{equation}
 \label{ch04:eq:replanning_pool}
 \Omega^{\mathrm{rh}} \triangleq
@@ -318,7 +271,7 @@ The rolling state of each robot is updated from the current execution status.
 Suppose the current team sequence is
 $(\omega_k^0,\cdots,\omega_k^{L_k})$, and that $\omega_k^{L_k}$ is the task
 currently in execution. Then, for each robot $i\in\mathcal{N}_k$, the rolling
-availability time and rolling position are updated by
+availability time and rolling position are updated by:
 \begin{equation}
 \label{ch04:eq:rolling_state}
 \widehat{t}_i \triangleq t_{\mathrm{e}}(\omega_k^{L_k}), \qquad
@@ -329,15 +282,10 @@ currently executing task. The state update in
 \eqref{ch04:eq:rolling_state} ensures that the next team-formation and
 assignment cycle remains consistent with the executed prefix of the current
 plan.
-Note that the choice of the horizon length $H$, the redundancy margin $\alpha_j$, and the
-replanning trigger threshold determines the balance between look-ahead
-efficiency and responsiveness. A small horizon leads to frequent updates and
-high responsiveness but can fragment the task sequence. A large horizon reduces
-replanning frequency but increases the computational burden and can introduce
-more rework when the active mission set changes substantially. The receding-
-horizon mechanism above provides a practical compromise: it preserves the
-executed prefix, avoids unsafe preemption of ongoing tasks, and limits each
-replanning step to a manageable finite problem.
+The horizon length $H$, redundancy margin $\alpha_j$, and replanning threshold
+control the tradeoff between look-ahead efficiency and responsiveness. The
+mechanism preserves the executed prefix, avoids preemption of ongoing tasks, and
+keeps each replanning step finite.
 
 
 
@@ -362,21 +310,13 @@ replanning step to a manageable finite problem.
 \subsection{Human requests as online task updates}
 \label{ch04:subsec:human_requests}
 
-In continual operation, a human operator may introduce, remove, or modify
-missions while execution is ongoing. Rather than treating such interventions as
-an external interface layer, this subsection models them as online task updates
-that modify the active mission set or the admissible fleet allocation. This
-viewpoint keeps the operator within the same mathematical framework as the
-online mission updates considered in
-Sections~\ref{ch04:subsec:online_poset_product}
-and~\ref{ch04:subsec:online_execution}, and it allows the same product and
-receding-horizon mechanisms to be reused for adaptive planning
-\cite{ferreira2021survey,swamy2020scaledautonomy}.
-Let $\Phi_t$ denote the set of active missions at time $t \geq 0$. A request
-issued by the operator changes either $\Phi_t$ itself or the constraints under
-which the active missions are executed. The purpose of the present subsection is
-to formalize these requests and to state how they are incorporated into the
-online product of R-posets and the non-preemptive receding-horizon procedure.
+During continual operation, a human operator may insert, remove, or modify
+missions. These interventions are modeled as online task updates that change the
+active mission set or admissible fleet allocation, allowing the same R-poset
+product and receding-horizon mechanisms to be reused
+\cite{ferreira2021survey,swamy2020scaledautonomy}. Let $\Phi_t$ denote the
+active missions at time $t\geq0$; an operator request changes either $\Phi_t$ or
+the constraints under which it is executed.
 
 \subsubsection{Request model}
 \label{ch04:subsubsec:request_model}
@@ -406,33 +346,20 @@ The set of active requests at time $t$ is denoted by:
 \end{equation}
 where each $\kappa(t)$ is of one of the four types above, and completed or
 inactive requests are removed from $\mathcal{U}(t)$.
-The model of requests above reuses the uncertain-mission model of
-Section~\ref{ch04:subsec:uncertain_mission}. Thus, a newly inserted mission
-may still contain collaborative tasks whose internal subtasks, locations, or
-durations are only partially known at the time of specification. The role of
-the request model is not to redefine that mission structure, but to describe
-how operator interventions modify the active planning problem during execution.
-The four request types have distinct effects. A request of type $\kappa_1$
-expands the active mission set by adding a new temporal objective. A request of
-type $\kappa_2$ removes an objective that is no longer relevant. A request of
-type $\kappa_3$ leaves the logical content of a mission unchanged but alters its
-urgency in the subsequent selection and assignment stages. A request of type
-$\kappa_4$ does not change the mission language itself, but modifies the
-admissible use of fleet resources by prescribing which robots must be reserved
-for a designated mission.
+The request model reuses the uncertain-mission model of
+Section~\ref{ch04:subsec:uncertain_mission}; newly inserted missions may still
+have partially known subtasks, locations, or durations. The four request types
+respectively add a temporal objective, remove an obsolete objective, change a
+mission's urgency, or constrain the admissible use of fleet resources.
 
 \subsubsection{Integration into online planning}
 \label{ch04:subsubsec:request_integration}
 
-Each request in \eqref{ch04:eq:request_set} is handled through the same online
-pipeline used for continual missions. A new mission request $\kappa_1$ is first
-translated into a B\"uchi automaton as in
-Definition~\ref{ch02:def:NBA}, then converted into a set of R-posets by the
-construction of Section~\ref{ch04:sec:po_decomp_assignment}, and finally merged
-with the current global R-poset through the online product in
-\eqref{ch04:eq:product_of_r_posets}. In this way, the already executed prefix
-is preserved, while the newly inserted mission is incorporated into the
-remaining task structure.
+Each request in \eqref{ch04:eq:request_set} is handled by the same online
+pipeline. A new mission request $\kappa_1$ is translated into a B\"uchi
+automaton, converted into R-posets by Section~\ref{ch04:sec:po_decomp_assignment},
+and merged with the current global R-poset through
+\eqref{ch04:eq:product_of_r_posets}, preserving the executed prefix.
 (I) A cancellation request $\kappa_2$ removes the corresponding mission from the
 active set $\Phi_t$ and deletes its contribution from the currently maintained
 task structure. Since the execution process in
@@ -456,13 +383,9 @@ subsequent team-formation step is then recomputed from the rolling robot state
 in \eqref{ch04:eq:rolling_state}, so that the revised assignment remains
 consistent with the current execution status.
 
-Conflicting requests may render the online planning problem infeasible. This
-occurs, for example, when a priority update requires urgent completion of a
-mission while a simultaneous robot-reassignment request removes the only robots
-capable of satisfying its capacity requirements. Such infeasibility is detected
-at the stage where it first appears, namely the online product, the abstract
-assignment, or the concrete team-formation stage. In that case, the planning
-stack preserves the current non-preemptive execution prefix and reports that the
-new request set is inconsistent with the active mission and capacity
-constraints. The operator may then revise $\mathcal{U}(t)$ before a new
-replanning cycle is initiated.
+Conflicting requests may make the online problem infeasible, for example when a
+high-priority mission is combined with a reassignment that removes the required
+capabilities. Such infeasibility is detected at the online-product, abstract-
+assignment, or concrete team-formation stage. The planner then preserves the
+current non-preemptive prefix and reports that $\mathcal{U}(t)$ is inconsistent
+with the active mission and capacity constraints.

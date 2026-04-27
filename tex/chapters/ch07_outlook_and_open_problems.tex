@@ -2,460 +2,280 @@
 \label{chap:outlook}
 
 The preceding chapters developed a progression of temporal-task planning and
-coordination frameworks, beginning with single-robot automata-based synthesis
-in Chapter~\ref{chap:preliminaries}, extending to bottom-up and top-down
-multi-robot coordination in Chapters~\ref{chap:bottom-up}
-and~\ref{chap:top-down}, and then addressing partial knowledge, limited
-communication, and dynamic uncertainty in Chapters~\ref{chap:communication}
-and~\ref{chap:uncertainty}. Collectively, these developments establish a
-coherent methodological foundation, but they also reveal several unresolved
-difficulties that cannot be treated as isolated technical refinements. As task
-models become richer, environments less predictable, and decision processes
-more distributed, the main obstacles shift from nominal task satisfaction on
-fixed abstractions to broader questions of scalability, adaptation, semantic
-robustness, and system-level correctness.
-
-Rather than revisiting the earlier chapters one by one, this chapter isolates
-five lines of difficulty that cut across the entire monograph. Section~\ref{sec:ch07_scalability}
-examines scalability and compositional synthesis
-beyond monolithic constructions. Section~\ref{sec:ch07_continual} turns to
-continual and reactive coordination in nonstationary environments, where
-replanning is intrinsic rather than exceptional. Section~\ref{sec:ch07_open_world}
-addresses uncertainty, partial knowledge, and
-open-world semantics, with emphasis on the limits of fixed symbolic models.
-Section~\ref{sec:ch07_learning} considers how learning-based components may be
-incorporated without dissolving meaningful formal guarantees. Finally, Section~\ref{sec:ch07_deployment}
-discusses verification, human interaction, and
-deployment-level evaluation, where the practical validity of temporal-task
-planning frameworks is ultimately tested.
+coordination frameworks, starting from the single-robot automata-based
+synthesis reviewed in Chapter~\ref{chap:preliminaries}, extending to
+bottom-up and top-down multi-robot coordination in
+Chapters~\ref{chap:bottom-up} and~\ref{chap:top-down}, and then addressing
+partial knowledge, limited communication, and dynamic uncertainty in
+Chapters~\ref{chap:communication} and~\ref{chap:uncertainty}. Together,
+these developments establish a methodological foundation for formal
+multi-robot coordination, while also exposing limits that cannot be resolved
+by incremental algorithmic improvements alone. As task structures, robot teams,
+and deployment settings become more complex, the central questions shift from
+nominal satisfaction on fixed abstractions to scalability, continual adaptation, semantic
+incompleteness, data-driven modeling, and system-level validation.
+This chapter organizes these questions by their distinct sources of
+difficulty. Section~\ref{sec:ch07_scalability} focuses on computational and
+structural scale: when and how temporal-task problems can be decomposed
+without losing the dependencies that make the specification meaningful.
+Section~\ref{sec:ch07_continual} considers nonstationary execution, where the
+modeling framework remains fixed but tasks, targets, resources, or
+communication conditions change over time. Section~\ref{sec:ch07_open_world}
+addresses a different issue: partial knowledge and open-world semantics, in
+which the symbolic model itself may be incomplete or extensible.
+Section~\ref{sec:ch07_learning} then discusses how learned components may be
+introduced into this formal pipeline. Finally,
+Section~\ref{sec:ch07_deployment} turns to runtime assurance, human
+supervision, and benchmark design.
 
 %=================================================
-\section{Scalability and Compositional Synthesis}
+\section{Scalability and Compositional Interfaces}
 \label{sec:ch07_scalability}
 
 A recurring theme throughout this monograph is that the expressive strength of
-formal temporal-task planning is inseparable from its computational burden. In
-Chapter~\ref{chap:preliminaries}, the product construction between robot
-dynamics and task automata already reveals a basic combinatorial growth, even
-before multi-robot coupling is introduced. Chapters~\ref{chap:bottom-up}
-and~\ref{chap:top-down} show that this difficulty does not disappear when the
-problem is distributed across multiple robots. Instead, it reappears through
-dependence among local tasks, through assignment and decomposition under
-shared temporal constraints, and through the need to preserve consistency
-between local decisions and global task semantics. Chapters~\ref{chap:communication}
-and~\ref{chap:uncertainty} further indicate that once
-communication limits, online requests, uncertainty, and dynamic constraints
-are incorporated, scalability is no longer a question of state count alone. It
-also depends on how formal structure is preserved across multiple layers, time
-scales, and information regimes.
+temporal-task specifications comes with a substantial computational burden.
+Product constructions, joint transition systems, and centralized assignment
+models remain conceptually clean, but their size grows quickly with the number
+of robots, task clauses, workspace regions, and synchronization requirements.
+Chapters~\ref{chap:bottom-up} and~\ref{chap:top-down} show that distribution
+alone does not remove this difficulty: the coupling reappears through local
+subtasks, shared resources, ordering constraints, and heterogeneous
+capabilities. The open problem is therefore not simply to design faster
+solvers, but to understand which formal structures admit compact
+compositional representations.
 
-\textbf{(I) Limits of monolithic synthesis.}
-One unresolved issue concerns the precise boundary beyond which monolithic
-planning architectures cease to be useful. Product automata, joint transition
-systems, and centralized optimization remain conceptually clean, but their
-growth becomes difficult to control as the team size, task horizon, or
-workspace complexity increases. The natural response is to seek
-decomposition, yet the central question is not decomposition in itself. The
-question is whether a decomposition exposes enough structure to reduce
-complexity without discarding the logical dependencies that determine
-correctness. In some settings, temporal coupling is sparse only locally or
-only over part of the execution horizon. In others, coupling is dense in
-principle but weak in effect, in the sense that only a small subset of
-interactions is critical for feasibility or performance. A mature theory of
-scalable synthesis therefore requires more than asymptotic complexity bounds.
-It requires structural criteria that identify when a temporal-task problem
-admits a compact compositional representation and when such a representation
-is fundamentally unavailable.
+(I) \emph{Structural limits of monolithic synthesis.}
+A first unresolved issue is to characterize when monolithic synthesis is
+fundamentally unavoidable. Some tasks contain sparse temporal coupling, so
+that only a few robots or subtasks interact at any time. Others appear large
+but have weak effective coupling, because most interactions are irrelevant to
+feasibility or quality. In contrast, tightly synchronized specifications may
+force centralized reasoning regardless of implementation. A mature
+scalability theory should identify these regimes through structural criteria,
+not only through worst-case complexity bounds. Such criteria would clarify
+when decomposition is sound, when it is merely heuristic, and when it cannot
+preserve the intended task semantics.
 
-\textbf{(II) Correctness-preserving decomposition.}
-A second difficulty lies in the certification of decomposition itself. The
-methods in Chapters~\ref{chap:bottom-up} and~\ref{chap:top-down} suggest that
-useful structure can be extracted through local tasks, dependency relations,
-relaxed orderings, and hierarchical abstractions. Yet the general problem
-remains unsettled. When a global task is decomposed into subtasks, which
-logical properties must be preserved at each interface between subproblems?
-Which forms of temporal dependence can be relaxed, approximated, or postponed
-without altering the admissible team behaviors in a harmful way? Conversely,
-which dependencies are non-separable and therefore require centralized
-reasoning or explicit synchronization? These questions become sharper in
-heterogeneous teams, where robots differ not only in motion capabilities but
-also in sensing, communication range, endurance, and access to task-relevant
-actions. What is still missing is a unified notion of compositional soundness
-that applies across symbolic decomposition, task assignment,
-communication-aware coordination, and continuous trajectory coupling.
+(II) \emph{Compositional contracts for tasks and teams.}
+A second difficulty is the certification of interfaces between subproblems.
+When a global specification is decomposed into local tasks, the planner must
+specify what each local solution promises to the rest of the system and what
+assumptions it requires in return. These contracts may involve temporal
+ordering, resource availability, communication events, safety margins, or
+capability constraints. The challenge becomes sharper for heterogeneous
+teams, where robots differ in sensing, mobility, endurance, and access to
+task-relevant actions. A general notion of compositional soundness remains
+missing across symbolic decomposition, task assignment, communication-aware
+coordination, and continuous trajectory coupling.
 
-\textbf{(III) Cross-layer abstraction and refinement.}
-A related challenge concerns the interaction among planning layers. Several
-chapters exploit abstraction as a practical means of controlling complexity,
-but abstraction is rarely static in realistic deployments. Discrete task
-planning, motion planning, communication planning, and uncertainty handling
-often operate on different models and at different resolutions. The difficulty
-is therefore not only how to abstract, but how to refine and revise
-abstractions when the assumptions under which they were constructed cease to
-hold. This raises a broader question: what kinds of interface variables or
-contracts are sufficient to connect symbolic task logic with geometric motion,
-resource constraints, and information flow in a way that remains tractable
-under revision? A satisfactory answer would support cross-layer synthesis in
-which each layer can evolve without forcing complete recomputation of the
-entire coordination policy.
-
-\textbf{(IV) Scalability under continual revision.}
-The problem of scale also changes once planning is no longer a one-shot
-operation. When tasks arrive online, targets move, constraints change, or
-communication becomes intermittent, a coordination architecture may be
-computationally acceptable in an offline sense and still be unusable in
-practice. The relevant question is then no longer the cost of solving a
-single planning problem, but the cost of maintaining logical consistency
-across a sequence of related problems. This suggests the need for
-incremental, warm-started, or anytime variants of formal synthesis and
-coordination, together with principled criteria for what information can be
-reused safely across replanning stages. In that sense, scalability should be
-understood not as a narrow implementation concern, but as a structural
-question about how logical, dynamical, and informational couplings interact
-over time. For that reason, scalability and compositional synthesis remain one
-of the central open problems for temporal-task planning as a whole.
+(III) \emph{Cross-layer abstraction and refinement.}
+A related challenge concerns the interaction among planning layers. Discrete
+task planning, motion planning, communication planning, and resource
+allocation are usually modeled at different resolutions and time scales. If
+these layers are connected only through case-specific interfaces, local refinements
+may invalidate decisions made elsewhere. Future methods should therefore provide
+abstractions that are both compact and refinable: they should expose enough
+information to support symbolic reasoning, while retaining the geometric,
+resource, and communication constraints needed for execution. The long-term
+goal is a cross-layer synthesis architecture in which local refinements do not
+force complete recomputation of the full coordination policy.
 
 %=================================================
-\section{Continual and Reactive Coordination in Nonstationary Environments}
+\section{Continual Coordination under Nonstationarity}
 \label{sec:ch07_continual}
 
-If Section~\ref{sec:ch07_scalability} concerns the growth of the planning
-problem, the next difficulty concerns the persistence of change during
-execution. Several developments in this monograph already point in that
-direction. Chapter~\ref{chap:top-down} considers continual tasks whose
-requirements may evolve during execution. Chapter~\ref{chap:communication}
-shows that communication opportunities, information availability, and external
-requests may all change online. Chapter~\ref{chap:uncertainty} further
-demonstrates that targets, constraints, and safety conditions may vary in
-ways that directly affect the feasibility and quality of a current plan.
-These examples suggest that continual revision is not merely an implementation
-detail added after synthesis. In many realistic deployments, it is the
-dominant operating condition. The central challenge is therefore to
-understand how formal temporal-task planning should be reformulated when task
-evolution, environmental change, and online coordination are treated as
-intrinsic features of the problem.
+Scalability concerns the size and structure of the planning problem. A
+separate difficulty arises when the planning problem changes during execution.
+Here the relevant model class may still be known, but targets move,
+communication conditions vary, resources are consumed, risks change, or new
+requests arrive while the team is already committed to ongoing actions.
+Several chapters point in this direction, especially through online task
+updates, intermittent communication, and dynamic constraints. The open problem
+is to treat revision as part of the formal problem rather than as an external
+repair step.
 
-\textbf{(I) Task persistence and continual arrival.}
-Many missions do not terminate cleanly after the satisfaction of a fixed
-specification. New subtasks may arrive while earlier commitments are still
-being executed, temporary priorities may need to be elevated, and part of the
-team may already be engaged in actions whose interruption is costly or unsafe.
-Under such conditions, the planning problem is no longer adequately captured
-by a single synthesis stage followed by execution. Instead, coordination must
-account for temporal overlap among completed, ongoing, and newly introduced
-obligations. This creates a theoretical gap between classical task
-satisfaction and continual task management. What is needed is a richer notion
-of feasibility that accounts not only for whether a new task can eventually be
-incorporated, but also for whether it can be incorporated without invalidating
-the logical and operational commitments that are already in force. More
-generally, the field still lacks a systematic framework for representing
-temporal-task queues, persistent mission contexts, and controlled revision of
-priorities at the level of formal specification.
+(I) \emph{Persistent obligations and online task arrival.}
+Many missions do not end after a single specification has been satisfied. New
+subtasks may arrive before earlier commitments are complete, priorities may be
+revised, and interrupting an ongoing action may be costly or unsafe.
+Coordination must therefore reason over completed, active, and pending
+obligations simultaneously. This calls for specification models that can
+represent task queues, persistent mission context, and controlled priority
+revision. Feasibility should then mean more than eventual satisfaction of a
+new request; it should also account for whether the request can be integrated
+without invalidating commitments already in force.
 
-\textbf{(II) Reactive replanning under changing targets and constraints.}
-A second source of difficulty lies in the triggers for replanning. In
-nonstationary environments, revision is driven not only by new task requests,
-but also by changes in targets, workspace accessibility, communication
-topology, resource availability, and predicted risk. A coordination strategy
-that is correct for a nominal model may therefore become suboptimal, overly
-conservative, or even infeasible after the environment changes. The issue is
-not simply how to recompute a new plan after such a change is detected. The
-deeper issue is how to represent environmental variation in a form that can be
-incorporated into temporal-task reasoning without forcing complete
-reconstruction of the planning problem at every update. This includes the
-question of which changes should be handled by local repair, which require
-global reassignment, and which invalidate the underlying symbolic abstraction
-itself. Existing methods often exploit specific structures, such as moving
-targets, dynamic couplings, or safe-return conditions, but a general theory
-of task-level replanning under heterogeneous forms of nonstationarity is still
-missing.
+(II) \emph{Local repair, reassignment, and global revision.}
+A second open question is how to choose the appropriate scale of reaction.
+Some changes can be handled by local trajectory repair, others require task
+reassignment, and still others invalidate the current symbolic plan. Treating
+all changes by full replanning is usually too expensive, while treating all
+changes locally can miss global conflicts. Future coordination methods need
+criteria that distinguish these cases. Such criteria should depend on the
+location of the change, the temporal role of the affected task, the available
+team redundancy, and the coupling between the affected component and the remaining
+mission.
 
-\textbf{(III) Correctness, stability, and performance under repeated adaptation.}
-Once adaptation becomes continual, the relevant guarantees also change. In
-one-shot planning, correctness is usually expressed in terms of task
-satisfaction, optimality, or feasibility with respect to a fixed model. Under
-repeated adaptation, these notions are no longer sufficient by themselves. A
-sequence of individually valid replanning steps may still produce undesirable
-collective behavior, such as oscillatory task reassignment, excessive
-sensitivity to transient disturbances, or progressive degradation of
-long-horizon mission quality. For this reason, the relevant guarantees must be
-expanded to include stability of coordination, bounded disruption to ongoing
-execution, and performance criteria that reflect cumulative behavior over
-extended horizons. This raises several unresolved questions. How should
-logical progress be measured when the specification or environment is itself
-evolving? What notion of robustness is appropriate when the main failure mode
-is not immediate infeasibility, but repeated loss of coherence across
-replanning stages? Which performance objectives should take precedence when
-adaptation improves short-term feasibility but degrades global mission
-efficiency or interpretability? These questions indicate that the analysis of
-reactive coordination must move beyond isolated replanning events toward a
-longer-horizon view in which correctness, stability, and performance are
-evaluated jointly.
+(III) \emph{Guarantees over adaptation sequences.}
+Repeated adaptation changes the meaning of performance and correctness. A
+sequence of individually feasible repairs may still produce oscillatory task
+assignments, excessive disruption, or poor long-horizon mission quality. The
+analysis should therefore move from isolated replanning events to adaptation
+sequences. Relevant properties include bounded disruption to ongoing
+execution, monotonic or recoverable logical progress, stability of team
+assignments, and cumulative performance over extended horizons. These
+properties remain underdeveloped for temporal-task planning, especially when
+formal task logic is combined with resource, communication, and motion
+constraints.
 
 %=================================================
-\section{Uncertainty, Partial Knowledge, and Open-World Semantics}
+\section{Open-World Task Semantics}
 \label{sec:ch07_open_world}
 
-Nonstationarity concerns change over time; a different challenge concerns
-incompleteness of the model itself. Much of the formal synthesis literature,
-including several constructions used throughout this monograph, relies on a
-closed-world view of the planning problem: the relevant states, propositions,
-task predicates, and transition relations are assumed to be specified in
-advance with sufficient precision to support symbolic reasoning. That
-assumption is methodologically useful and often unavoidable, but its
-limitations become increasingly visible as the discussion moves from
-Chapter~\ref{chap:preliminaries} toward Chapters~\ref{chap:communication}
-and~\ref{chap:uncertainty}. In realistic deployments, the planner may operate
-with incomplete maps, delayed observations, uncertain labels, evolving
-constraints, or task-relevant entities that are not known at design time.
-Under such conditions, uncertainty is not only a perturbation of a fixed
-model. It becomes part of the semantics of the planning problem itself. The
-resulting challenge is therefore deeper than robust optimization or
-stochastic control in the usual sense. It is the challenge of preserving
-meaningful temporal-task reasoning when the world description remains
-incomplete, revisable, and only partially aligned with the symbolic
-structures used by the planner.
+Nonstationarity concerns changes within an identifiable modeling framework.
+Open-world planning concerns a deeper form of incompleteness: the relevant
+states, propositions, objects, or constraints may not be fully known when
+planning begins. This distinction is important. A nonstationary problem asks
+how to react when known quantities change; an open-world problem asks how to
+reason when the symbolic description itself is provisional. In realistic
+multi-robot missions, maps may be incomplete, task-relevant objects may be
+discovered during execution, and the meaning of a proposition may depend on
+context or newly acquired information.
 
-\textbf{(I) Limits of fixed symbolic models under partial knowledge.}
-One limitation of many formal planning frameworks is that the relevant
-propositions are assumed to be evaluated over a model that already exists,
-even if transition outcomes remain uncertain. In practice, however,
-uncertainty often enters earlier in the pipeline. The workspace may be only
-partially mapped, the accessibility of regions may become known only through
-exploration, and the truth of task-relevant conditions may depend on
-information that is distributed across the team or acquired only during
-execution. The difficulty is then not merely that the planner lacks
-confidence in a known quantity, but that the symbolic model itself is
-incomplete. This creates a tension with classical automata-based synthesis,
-which presupposes a sufficiently stable state and proposition structure before
-planning begins. The underlying question is how symbolic planning models
-should be represented and updated when knowledge is accumulated
-incrementally and when parts of the abstraction must remain provisional. A
-satisfactory treatment would require more than uncertainty annotations
-attached to a fixed transition system. It would require formal mechanisms for
-expansion, correction, and revision of the symbolic model while preserving
-enough logical continuity for planning to remain interpretable and
-correctness claims to remain meaningful.
+(I) \emph{Provisional symbolic models.}
+Many formal planning frameworks assume that the proposition set and state
+abstraction are fixed before synthesis. In exploration, inspection, or search
+missions, this assumption is often too strong. The team may discover new
+regions, revise traversability, or add task-relevant entities after execution
+has started. The planner therefore needs symbolic models that can be expanded
+and corrected while retaining a traceable relation to earlier decisions. This
+requires mechanisms for recording which commitments were made under which
+model assumptions, and for identifying when a model update preserves,
+weakens, or invalidates those commitments.
 
-\textbf{(II) Semantic uncertainty and evolving task meaning.}
-Another difficulty is that uncertainty may affect not only the state of the
-environment, but also the meaning of the propositions used to specify the
-task. In many robotic settings, a proposition is not a primitive fact given
-directly by the environment. It is a semantic assertion whose truth depends on
-perception, classification, context, or operational convention. Conditions
-such as whether a location is safe, whether an object is relevant, whether a
-region is traversable, or whether a request has been fulfilled may admit
-borderline or time-varying interpretations. The central difficulty is that
-such propositions are often treated as stable atomic labels within temporal
-logic, whereas their truth conditions may in fact change as information is
-updated or as mission context evolves. This leads to a broader question: what
-should temporal-task correctness mean when the semantics of the task
-vocabulary is itself uncertain or revisable? Addressing that question may
-require formal models in which propositions are associated not only with
-states, but also with confidence, provenance, context, or levels of semantic
-commitment. More fundamentally, it suggests that a significant part of future
-research will concern the interface between formal task languages and the
-perceptual or inferential processes by which task-relevant meaning is
-constructed.
+(II) \emph{Semantic status of task propositions.}
+A proposition in temporal logic is often treated as an atomic truth value, but
+in robotic deployment it may encode a semantic judgment: a region is safe, an
+object is relevant, a victim has been found, or a request has been fulfilled.
+Such judgments may depend on context, evidence quality, operational
+convention, or information shared across the team. Open-world semantics should
+therefore make the status of propositions explicit, for example through
+confidence, provenance, validity conditions, or levels of commitment. The
+central question is what temporal-task satisfaction should mean when the task
+vocabulary is not simply observed, but constructed and revised during
+execution.
 
-\textbf{(III) Open-world temporal-task planning.}
-The broader issue is how temporal-task planning should be formulated in an
-open-world setting. In such a setting, it cannot be assumed that all relevant
-objects, constraints, agents, and modes of interaction are known in advance
-or remain fixed throughout execution. New entities may appear, old
-assumptions may become invalid, and parts of the task structure may need to
-be introduced only after additional information is obtained. This is a more
-radical departure from standard synthesis assumptions than ordinary model
-uncertainty, because it affects the very boundary of what the planner is
-expected to reason about. The central question is no longer only how to find
-a correct strategy on a given symbolic model, but how to maintain a coherent
-task-directed decision process while the model, the proposition set, and even
-the relevant interaction structure continue to evolve. At present, there is
-no general framework that fully resolves this difficulty. What is needed is a
-theory of open-world temporal-task planning in which symbolic abstractions can be revised without dissolving task-level guarantees, and in which model growth
-is treated as a first-class aspect of coordination rather than as an external
-preprocessing step.
+(III) \emph{Controlled expansion of task models.}
+The broad open problem is to formulate temporal-task planning when the model
+boundary itself can grow. New objects, propositions, agents, and constraints
+may enter the mission after planning has begun. Unrestricted expansion would
+make formal reasoning unstable; forbidding expansion would make the framework
+unrealistic. A useful theory must therefore specify how model growth is
+controlled: which additions are conservative, which require revalidation of
+past decisions, and which force a change of task interpretation. This problem
+is distinct from learning or runtime verification; it concerns the semantics
+of planning under incomplete and extensible symbolic descriptions.
 
 %=================================================
 \section{Learning-Augmented Planning with Formal Guarantees}
 \label{sec:ch07_learning}
 
-Once the symbolic model, the environment, and even the task vocabulary become
-less stable, the attraction of learning-based components becomes evident.
-Their role, however, is not straightforward. The methods developed in this
-monograph are largely grounded in explicit models, symbolic abstractions, and
-formally specified task semantics. That emphasis is methodologically
-important, because it is precisely such structure that makes correctness,
-feasibility, and coordination properties amenable to analysis. At the same
-time, many of the components required in realistic deployments are difficult
-to specify accurately in advance. Perception pipelines must interpret noisy
-and context-dependent observations, models of environmental evolution may be
-only approximate, and predictions about moving targets, external agents, or
-human requests may depend on data-driven inference rather than analytic
-modeling. Future progress is therefore unlikely to come from preserving a
-strict separation between formal planning and learning-based adaptation. The
-deeper question is how learning should be incorporated so that the resulting
-system retains the task-level discipline, interpretability, and reliability
-that motivate formal methods in the first place.
+Learning-based components are attractive because many quantities needed for
+deployment cannot be modeled accurately in advance. Perception may
+supply task labels, predictors may estimate target motion or risk evolution,
+and data-driven heuristics may accelerate assignment or motion planning. The
+open problem is not whether learning can improve temporal-task planning, but
+how learned quantities should enter a formal architecture without obscuring
+which assumptions support each decision.
 
-\textbf{(I) Learning across planning layers.}
-The first difficulty is that learning is not a single operation inserted
-uniformly into the planning pipeline. Different components may be learned for
-different reasons and with different implications for certification.
-Perception modules may infer the truth of task-relevant propositions from raw
-sensory data. Predictive models may estimate the motion of external agents,
-the evolution of workspace occupancy, or the likelihood of request arrival.
-Data-driven representations may also be used to construct abstractions,
-estimate costs, or shape heuristics for planning and assignment. The issue is
-therefore not simply whether learning should be used, but where it should
-enter and what kind of uncertainty it is meant to reduce. Learning a motion
-primitive, for example, is conceptually different from learning a semantic
-label or a model of environmental change, because the effect on task-level
-reasoning arises at a different layer of the synthesis process. A systematic
-theory of learning-augmented temporal-task planning would need to distinguish
-these roles carefully and to specify which learned quantities may be treated
-as auxiliary guidance, which may enter directly into the symbolic model, and
-which should remain outside the core correctness logic.
+(I) \emph{Roles of learning in the planning pipeline.}
+Learning can appear at several layers, and these roles should not be
+conflated. A learned perception module affects the truth evaluation of
+propositions. A learned dynamics or risk model affects prediction. A learned
+abstraction or heuristic affects computational search. A learned motion
+primitive affects execution feasibility. Each role has different consequences
+for formal reasoning. Future frameworks should classify learned components by
+where they enter the pipeline, whether they alter the symbolic model or only
+guide search, and how their errors propagate to task-level decisions.
 
-\textbf{(II) Integration of learned components with formal guarantees.}
-Even when the role of learning is clear, integration remains difficult. A
-learned predictor may improve responsiveness but also introduce systematic
-bias. A perception module may enable richer task semantics but also produce
-classification errors whose effect propagates through the symbolic planner. A
-learned abstraction may reduce computational cost, yet its failure modes may
-be difficult to characterize using the same formal language in which the task
-is specified. The methodological question is therefore how interfaces between
-learned and symbolic components should be designed. This includes the need
-for confidence-aware planning, explicit monitoring of model validity, fallback
-or recovery mechanisms when learned outputs become unreliable, and principled
-criteria for when a planner may trust learned information strongly enough to
-act upon it. More broadly, it raises the issue of modular certification:
-under what assumptions can the correctness or safety properties of a planning
-architecture be preserved when part of the model is produced statistically
-rather than analytically? At present, answers to this question remain
-fragmented and highly application-dependent.
+(II) \emph{Interfaces between learned and symbolic components.}
+The central integration problem is the design of interfaces. A planner should
+not treat learned outputs as exact symbolic facts unless their reliability is
+specified. Useful interfaces may include calibrated confidence,
+validity domains, uncertainty sets, abstention mechanisms, and recovery
+policies when learned outputs become unreliable. These interfaces should be
+modular, so that the formal planner can reason about the effect of a learned
+component without requiring a complete internal model of that component. This
+is especially important when multiple learned modules influence different
+parts of the same temporal-task specification.
 
-\textbf{(III) Guarantee notions for data-driven temporal-task planning.}
-At a deeper level, the notion of guarantee itself may need to be reformulated
-once learning becomes a central component of the decision process. In
-classical automata-based synthesis, correctness is typically expressed against
-a fixed abstraction and a stable task semantics. In a hybrid
-formal--learning architecture, however, model uncertainty, distribution shift,
-and context dependence may make such guarantees either too strong to be
-realistic or too weak to be operationally useful. The challenge is therefore
-not merely to preserve nominal correctness under approximation, but to define
-guarantees that remain meaningful when some task-relevant quantities are
-inferred from data and remain only partially reliable. Possible directions
-include guarantees conditioned on calibrated confidence, bounded classes of
-model mismatch, runtime-detectable failure modes, or verified adaptation
-within restricted regions of the state and task space. Yet even these
-directions leave open a broader conceptual question: should the goal be to
-recover classical formal guarantees as closely as possible, or to develop a
-new class of guarantees tailored to hybrid symbolic-statistical systems? The
-answer is likely to shape the next generation of temporal-task planning
-methods.
+(III) \emph{Guarantee notions for symbolic and probabilistic systems.}
+Classical guarantees are usually stated with respect to a fixed abstraction.
+Learning introduces statistical error, distribution shift, and context
+dependence, so the guarantee language itself may need to change. Possible
+forms include guarantees conditioned on calibrated confidence, bounds over
+specified mismatch classes, probabilistic task satisfaction under verified
+assumptions, or safety envelopes that restrict when learned information may be
+used. The unresolved question is whether hybrid planning should approximate
+classical formal guarantees as closely as possible, or develop guarantee
+notions tailored to systems whose models are partly inferred from data.
 
 %=================================================
-\section{Verification, Human Interaction, and Deployment-Level Evaluation}
+\section{Runtime Assurance and Deployment Evaluation}
 \label{sec:ch07_deployment}
 
-The final set of open questions arises not at the level of an isolated
-planning algorithm, but at the level of deployment. The preceding chapters
-develop methods that offer formal structure, explicit task semantics, and in
-several cases correctness or feasibility guarantees relative to the adopted
-models. Those features remain essential, but they do not by themselves
-resolve the broader question of system-level dependability. Once planning is
-performed under partial knowledge, intermittent communication, dynamic
-constraints, continual revision, or learned inference, the relevant issue is
-no longer only whether a synthesized policy is correct with respect to a fixed
-model. The issue is whether correctness, interpretability, and operational
-reliability can still be maintained when the system is executed as part of a
-larger decision architecture that includes uncertain perception, online
-supervision, and real-time intervention.
+The final set of open problems arises at the level of deployed systems.
+Planning algorithms may be correct relative to their models and still fail to
+support dependable operation when sensing, communication, human input, and
+execution constraints interact. This section therefore focuses on evaluation
+and assurance during operation, rather than on the internal semantics of model
+incompleteness or the statistical properties of learned modules.
 
-\textbf{(I) Verification beyond offline correctness.}
-Classical correctness claims are often established under assumptions that
-become fragile once the system is deployed. A task policy may be proven
-correct relative to an abstraction, yet the abstraction itself may be
-approximate, partially outdated, or revised online in response to new
-information. Communication assumptions may fail intermittently, sensor inputs
-may not support exact proposition evaluation, and part of the decision
-process may depend on prediction or learning modules whose outputs are not
-fixed in advance. Under such conditions, verification can no longer be
-treated as a single offline step performed before execution begins. What is
-needed are verification frameworks that remain meaningful under revision,
-adaptation, and model mismatch. This includes runtime monitoring of logical
-progress, detection of assumption violations, certification of fallback
-behaviors, and principled criteria for when a system should continue, repair,
-or suspend a plan. More fundamentally, it raises the question of what form of
-verification is appropriate for a planning architecture whose symbolic model
-and operative assumptions may evolve during deployment.
+(I) \emph{Runtime assurance and assumption monitoring.}
+Offline verification should be complemented by mechanisms that monitor the
+assumptions under which a plan remains valid. These assumptions may concern
+communication availability, proposition evaluation, localization accuracy,
+resource margins, or the validity domain of a learned component. Runtime
+assurance should detect violations, estimate their effect on task progress,
+and select among continuation, repair, fallback, or suspension. This shifts
+verification from a single pre-execution certificate to an operational process
+that tracks whether the deployed system remains inside the conditions for
+which its formal claims are meaningful.
 
-\textbf{(II) Human interaction and supervisory intervention.}
-A second difficulty appears once human operators are treated not merely as
-task designers, but as continuing participants in the coordination loop.
-Requests may arrive during execution, priorities may be revised in light of
-external concerns, and autonomous decisions may be overridden for reasons that
-lie outside the original symbolic specification. Chapter~\ref{chap:communication}
-already points toward this difficulty through online
-request fulfillment, but the broader challenge is more general.
-Temporal-task planning must increasingly account for supervisory authority,
-shared autonomy, and the need to explain or justify decisions in a form that
-remains legible to human users. This creates a tension between formal
-consistency and operational flexibility. A human intervention may be
-reasonable at the mission level while appearing disruptive from the viewpoint
-of the current task automaton, and a planner that is logically correct may
-still be difficult to trust if its decisions cannot be interpreted or modified
-coherently by a supervisor. Future temporal-task frameworks will therefore
-need to treat supervisory interaction as part of the formal problem
-formulation rather than as an external disturbance applied after planning.
+(II) \emph{Human-supervised temporal-task execution.}
+Human operators are often continuing participants rather than only task
+designers. They may add requests, change priorities, override autonomous
+decisions, or ask for explanations during execution. Future temporal-task
+frameworks should model supervisory authority explicitly: which decisions can
+be overridden, how intervention affects existing commitments, and how the
+planner explains the consequences of a requested change. The goal is not to
+replace formal consistency with unstructured human control, but to make human
+supervision a structured part of the coordination problem.
 
-\textbf{(III) Evaluation and benchmarking for system-level temporal-task planning.}
-The final question concerns how progress in the field should be assessed. The
-current literature often reports correctness, task completion, or
-computation time on problem instances that are informative but still limited
-in scope. Such metrics remain useful, yet they do not fully capture the
-demands of multi-robot temporal-task planning under uncertainty,
-communication limits, online adaptation, and human interaction. What is still
-missing are benchmark families and evaluation criteria that reflect the
-integrated nature of these difficulties. A method may perform well under
-nominal execution but degrade severely under repeated replanning; another may
-scale well computationally but offer only weak interpretability or poor
-recoverability after supervisory intervention. The field therefore needs
-richer system-level metrics, including measures of coordination stability,
-adaptation cost, robustness to model revision, communication burden,
-explainability, and cumulative mission quality over long horizons. It also
-needs reproducible benchmark suites that enable meaningful comparison across
-symbolic, optimization-based, and learning-based approaches.
+(III) \emph{Benchmarks and deployment metrics.}
+Progress in this area also requires better evaluation practice. Correctness,
+completion rate, and computation time remain useful metrics, but they do not
+capture long-horizon behavior under uncertainty, communication limits,
+revision, and supervision. Benchmark suites should therefore measure
+coordination stability, adaptation cost, communication burden, recoverability,
+interpretability, and cumulative mission quality. They should also make it
+possible to compare symbolic, optimization-based, and learning-augmented
+methods on shared scenarios rather than on isolated demonstrations.
 
 %==============================
 \section*{Concluding Perspective}
 
-The developments surveyed in this chapter indicate that the future of
-temporal-task planning will not be determined by progress along a single
-technical axis. The main challenge is broader: to preserve the logical
-discipline of formal task specification while extending planning and
-coordination methods to larger teams, richer task structures, weaker modeling
-assumptions, and more persistent forms of online adaptation. Across
-Chapters~\ref{chap:preliminaries} through~\ref{chap:uncertainty}, the methods
-developed in this monograph move from nominal synthesis on fixed abstractions
-to coordination under communication limits, dynamic constraints, and
-uncertain environments. That progression also reveals the boundaries of the
-current theory. Scalability remains constrained by the lack of general
-compositional principles, reactive coordination remains difficult to analyze
-over long horizons, open-world settings challenge the stability of symbolic
-models, and the integration of learning raises unresolved questions about what
-system-level guarantees should mean in the first place.
-
-The outlook for the field is therefore best understood not as a departure from
-formal methods, but as a demand for their extension. Future frameworks will
-likely need to combine symbolic reasoning, adaptive abstraction, runtime
-verification, learned inference, and human supervision within a unified
-decision architecture. The long-term objective is not merely to satisfy
-temporal specifications more efficiently, but to develop planning systems
-whose correctness, robustness, and interpretability remain meaningful as the
-world, the model, and the coordination structure all evolve during execution.
-In that sense, temporal-task planning remains an open and expanding research
-area, whose most important advances may come from clarifying how formal
-guarantees can be preserved under increasingly realistic conditions of
-deployment.
+The open problems above are connected, but they are not interchangeable.
+Scalability concerns structural decomposition; continual coordination concerns
+change over time; open-world semantics concerns incomplete symbolic models;
+learning concerns data-driven components inside the planning pipeline; and
+deployment evaluation concerns assurance in the executed system. Keeping
+these distinctions clear is essential for future progress.
+The long-term objective is to extend the discipline of formal temporal-task
+planning without assuming away the conditions that make robotic deployment
+difficult. Future frameworks will likely combine compositional synthesis,
+adaptive abstraction, learned inference, runtime assurance, and human
+supervision. Their success should be measured not only by whether temporal
+specifications can be satisfied efficiently, but also by whether correctness,
+robustness, and interpretability remain meaningful as the world, the model,
+and the coordination structure evolve during execution.

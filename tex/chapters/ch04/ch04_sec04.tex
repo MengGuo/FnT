@@ -34,17 +34,84 @@ are still under execution.
 The simulation is conducted in a two-dimensional environment of size
 $130\,\mathrm{m} \times 40\,\mathrm{m}$. The fleet contains
 $80$ robots of three heterogeneous types, denoted by \texttt{uavA},
-\texttt{uavB}, and \texttt{uavC}. Since these three types have
-different capability sets, they are not interchangeable in the planning
-and regrouping stages. The overall workload contains $30$
-collaborative tasks, further refined into $450$ subtasks, so that the
-average decomposition ratio is $15$ subtasks per collaborative task.
-The persistent task stream is therefore an evolving instance of the
-uncertain mission model of
-Section~\ref{ch04:subsec:uncertain_mission}, and system performance is
-evaluated with respect to the objective
-\eqref{ch04:eq:mission_set_objective}.
+\texttt{uavB}, and \texttt{uavC}. These types differ in their
+primitive action sets. In the considered instance, the relevant actions
+are perception, delivery, and grasping, with
+$A_{\mathrm{uavA}} = \{\textsf{perception},\textsf{delivery}\},
+A_{\mathrm{uavB}} = \{\textsf{perception},\textsf{grasping}\}$,
+$A_{\mathrm{uavC}} = \{\textsf{delivery},\textsf{grasping}\}$,
+where the three robot types are not interchangeable in either the
+global assignment stage or the local coordination stage. Surveillance
+tasks require perception-capable robots, whereas delivery and
+capture-related tasks require delivery or grasping capabilities,
+possibly from several robots acting collaboratively.
 
+The overall workload contains $30$ collaborative tasks, further
+refined into $450$ subtasks, so that the average decomposition ratio
+is $15$ subtasks per collaborative task. Each collaborative task
+$\omega_m$ follows the model introduced in
+Section~\ref{ch04:subsec:uncertain_mission}.
+The mission contains three
+classes of collaborative tasks. The first class consists of static and
+known delivery tasks, for which the required subtasks and their
+locations are available before execution. The second class consists of
+static and unknown surveillance tasks, for which the execution region
+is known but the actual targets or inspection points are revealed only
+during execution. The third class consists of dynamic and known
+capture tasks, for which the target identities are known initially but
+their states evolve over time. These classes correspond directly to the
+local coordination cases developed in
+Section~\ref{ch04:sec:static-known}.
+The temporal specification of each released mission is expressed over
+collaborative task propositions. A representative mission template is
+given by:
+\[ \varphi_r =
+\Diamond\!\left(
+\varphi^r_{\mathrm{del}}
+\wedge
+\Diamond \varphi^r_{\mathrm{surv}}
+\right)
+\wedge
+\left(
+\neg \varphi^r_{\mathrm{cap}}\,
+\mathsf{U}\,
+\varphi^r_{\mathrm{surv}}
+\right),
+\]
+where $\varphi^r_{\mathrm{del}}$ encodes delivery requirements,
+$\varphi^r_{\mathrm{surv}}$ encodes surveillance requirements, and
+$\varphi^r_{\mathrm{cap}}$ encodes capture-related requirements.
+Each of these formulas is grounded by one or more collaborative tasks
+$\omega_m$, and each task further induces concrete subtask
+requirements of the form $(n_{mj},a_{mj},s_{mj})$. Thus, the
+temporal formula specifies the ordering and logical dependencies among
+task classes, whereas the collaborative task model specifies the
+capability, cardinality, and spatial requirements that must be
+satisfied by the assigned team.
+
+To emulate a persistent mission, the tasks are not released
+simultaneously. Instead, six release waves occur at
+$0.0\,\mathrm{s}$, $30.0\,\mathrm{s}$, $55.0\,\mathrm{s}$,
+$80.0\,\mathrm{s}$, $105.0\,\mathrm{s}$, and
+$130.0\,\mathrm{s}$. Around each release instant, the active mission
+set is updated, the planner revises the task decomposition, and the
+subteam structure is recomputed for the unstarted and newly released
+tasks. Tasks that are already under execution are not preempted. This
+non-preemptive rule preserves execution continuity while still
+allowing the fleet to react to newly released tasks and changing
+resource requirements.
+Figure~\ref{ch04:fig:case_large_scale_overview} provides an overview
+of the mission instance. The labeled nodes
+$\omega_1,\cdots,\omega_{30}$ denote the collaborative tasks, and the
+different shapes indicate the different task classes. The grouped
+nodes on the right summarize the higher-level structures produced by
+hierarchical coordination. The dense set of gray links illustrates the
+coupling and inheritance relations induced by temporal precedence,
+shared capabilities, and resource-flow dependencies. These couplings
+make a direct flat assignment unattractive at this scale, since each
+robot-to-subtask decision would have to account simultaneously for
+temporal feasibility, team capacity, motion cost, and online task
+release. .
 
 %------------------------------
 \begin{figure}[t!]
@@ -62,36 +129,7 @@ inter-task couplings and the induced resource-flow structure.
 \end{figure}
 %------------------------------
 
-The workload contains three classes of collaborative tasks. The first
-class consists of static and known tasks, for which the locations and
-subtask structures are available before execution. The second class
-consists of static and unknown tasks, for which the execution regions
-are known but the internal targets or subtasks are revealed only during
-execution. The third class consists of dynamic and known tasks, for
-which the initial target identities are known but the target states
-evolve over time. These classes correspond directly to the three local
-coordination cases developed in
-Subsubsecs.~\ref{ch04:sec:static-known},
-\ref{ch04:sec:staticunknown}, and
-\ref{ch04:sec:dynamicknown}. To emulate a persistent mission, the tasks
-are not released simultaneously. Instead, six release waves occur at
-$0.0\,\mathrm{s}$, $30.0\,\mathrm{s}$, $55.0\,\mathrm{s}$,
-$80.0\,\mathrm{s}$, $105.0\,\mathrm{s}$, and
-$130.0\,\mathrm{s}$. Around each of these instants, the planner
-updates the mission decomposition, adjusts the subteam structure, and
-generates new local execution sequences.
 
-Figure~\ref{ch04:fig:case_large_scale_overview} provides an overview of
-the mission instance. The labeled nodes
-$\omega_1,\cdots,\omega_{30}$ denote the collaborative tasks, and the
-different shapes indicate different task classes. The grouped nodes on
-the right summarize the higher-level structures formed by hierarchical
-coordination. The dense set of gray links illustrates the coupling and
-inheritance relations that make direct flat assignment unattractive at
-this scale. The role of the simultaneous decomposition and assignment
-procedure of Section~\ref{ch04:subsubsec:simultaneous_assignment} is
-therefore to compress this combinatorial structure into a tractable
-hierarchy of task groups and execution teams.
 
 %==============================
 \subsubsection{Performance and replanning efficiency}
@@ -106,7 +144,6 @@ Measured at the subtask level, the execution rate is approximately
 $2.91$ subtasks per second. These figures indicate that the proposed
 hierarchical scheme remains operational even when fleet size, task
 heterogeneity, and online release are all substantial.
-
 A more detailed view is obtained by grouping the response times by
 release wave. For the six task waves, the average response times are
 $24.7\,\mathrm{s}$, $24.2\,\mathrm{s}$, $22.6\,\mathrm{s}$,
@@ -128,8 +165,8 @@ replanning time is $3.555\,\mathrm{s}$, the average replanning time is
 $0.444\,\mathrm{s}$, and the maximum single replanning time is
 $0.752\,\mathrm{s}$. Relative to the overall makespan, the cumulative
 replanning overhead is only about $2.30\%$. When normalized by workload
-size, the average replanning cost is $0.1185\,\mathrm{s}$ per
-collaborative task, or about $0.0079\,\mathrm{s}$ per subtask. These
+size, the average replanning cost is $0.12\,\mathrm{s}$ per
+collaborative task, or about $0.008\,\mathrm{s}$ per subtask. These
 values show that the online adaptation layer does not dominate the total
 execution time, which is consistent with the complexity control built
 into the decomposition-and-assignment procedure of
@@ -236,6 +273,105 @@ team level. In combination, these mechanisms yield a scalable and
 computationally efficient coordination architecture for large-scale
 heterogeneous fleets under sustained mission demand.
 
+
+%==============================%==============================
+\subsection{Hardware validation in an industrial emergency-response
+scenario}
+\label{ch04:subsec:hardware_validation}
+
+To complement the simulation study, a hardware validation was conducted
+in a realistic industrial emergency-response scenario. The purpose is to
+verify that the hierarchical coordination framework developed in
+Section~\ref{ch04:subsec:task} can be implemented on a heterogeneous
+physical system under real sensing, communication, and execution
+constraints. In particular, the deployment instantiates the uncertain
+mission model of Section~\ref{ch04:subsec:uncertain_mission}, the
+simultaneous decomposition-and-assignment mechanism of
+Section~\ref{ch04:subsubsec:simultaneous_assignment}, the
+team-formation logic of
+Section~\ref{ch04:subsubsec:team_formation}, and the local
+coordination procedures of Section~\ref{ch04:subsec:local_coordination}.
+
+%==============================
+%==============================
+\subsubsection{Workspace and system description}
+The experimental site measures $16\,\mathrm{m} \times 18\,\mathrm{m}$ and
+emulates an industrial plant with pipelines, storage tanks, fire events,
+injured personnel, and chemical leaks, as shown in
+Figure~\ref{ch04:fig:hardware_validation_architecture}.
+The validation instance uses $8$
+robots, including $2$ UAVs, $4$ UGVs, and $2$ legged robots, supervised
+by $3$ tablet-equipped operators. The task set contains four event
+classes: fire suppression, casualty handling, chemical containment, and
+equipment protection. Representative mission fragments are
+\begin{align*}
+\varphi_{\mathrm{af}}
+&=\Diamond(\mathrm{af}\wedge
+\Diamond(\mathrm{insp}_{\mathrm{af}}\wedge
+\Diamond((\mathrm{cut}_{\mathrm{valve}}\vee
+\mathrm{cool}_{\mathrm{water}})\wedge
+\Diamond\mathrm{monitor}_{\mathrm{af}}))),\\
+\varphi_{\mathrm{tp}}
+&=\Diamond(\mathrm{tp}\wedge
+\Diamond(\mathrm{insp}_{\mathrm{tp}}\wedge
+\Diamond(\mathrm{clean\_up}_{\mathrm{tp}}\wedge
+\Diamond(\mathrm{rescue}_{\mathrm{tp}}\wedge
+\Diamond\mathrm{monitor}_{\mathrm{tp}})))),\\
+\varphi_{\mathrm{tank}}
+&=\Diamond(\mathrm{tank}\wedge
+\Diamond(\mathrm{cool}_{\mathrm{tank}}\wedge
+\Diamond(\mathrm{fix}_{\mathrm{tank}}\wedge
+\Diamond\mathrm{monitor}_{\mathrm{tank}}))),
+\end{align*}
+where $\Diamond$ denotes eventual satisfaction; $\mathrm{af}$,
+$\mathrm{tp}$, and $\mathrm{tank}$ denote an alkane flame, a trapped
+person, and a damaged tank; and the subscripts specify the event to which
+each inspection, intervention, rescue, repair, or monitoring action
+belongs. The full mission specification conjoins these fragments with the
+remaining fire, leakage, and casualty formulas and is converted into an
+R-poset for scheduling and monitoring.
+The induced priority and concurrency relations are summarized as
+$\{\omega_{\mathrm{tp}},\omega_{\mathrm{poi}}\}
+\prec \Omega_{\mathrm{hw}}\setminus
+\{\omega_{\mathrm{tp}},\omega_{\mathrm{poi}}\},
+\omega_{\mathrm{af}}\prec\omega_{\mathrm{htlf}},
+\omega_{\mathrm{hvf}}\parallel\omega_{\mathrm{h2s}}\parallel
+\omega_{\mathrm{tank}}$,
+where $\Omega_{\mathrm{hw}}$ is the active hardware-mission set,
+$\omega_{\mathrm{poi}}$ denotes poisoned-person rescue,
+$\omega_{\mathrm{htlf}}$ denotes high-temperature liquid-fire response,
+$\omega_{\mathrm{hvf}}$ denotes high-voltage fire response, and
+$\prec$ and $\parallel$ denote precedence and admissible parallelism.
+Thus life-saving missions have highest priority, alkane-flame mitigation
+precedes high-temperature liquid-fire handling, and high-voltage fire,
+hydrogen-sulfide leakage, and tank protection may proceed concurrently
+when resources do not conflict. The corresponding collaboration
+requirements are encoded as skill-count constraints, e.g.,
+$
+\mathcal{C}_{\mathrm{af}}
+=\{(\mathrm{inspect},2),(\mathrm{operate},1),
+(\mathrm{liquid\_spray},1),(\mathrm{monitor},2)\},
+\mathcal{C}_{\mathrm{tp}}
+=\{(\mathrm{inspect},2),(\mathrm{clean\_up},2),
+(\mathrm{rescue},1),(\mathrm{monitor},2)\},
+\mathcal{C}_{\mathrm{h2s}}
+=\{(\mathrm{inspect},2),(\mathrm{ignite},1),
+(\mathrm{solid\_spray},1)$,
+$(\mathrm{monitor},2)\},\mathcal{C}_{\mathrm{tank}}
+=\{(\mathrm{liquid\_spray},1),(\mathrm{monitor},2),
+(\mathrm{fix},1)\}$,
+where each pair gives a required skill and the number of robots that must
+provide it. A subtask is released only when the selected group satisfies
+these counts and has the required resource. The cloud layer maintains the
+mission DAG, priorities, and shared resource state; the edge layer solves
+local subtask allocation under precedence and skill-count constraints; and
+the robot layer executes platform-specific primitives. In implementation,
+cloud and edge programs run on a workstation operated through tablets,
+while ROS1 UAVs/UGVs and ROS2 legged robots communicate through dedicated
+TCP/UDP bridges and execute their own perception, localization, and motion
+planning stacks.
+
+
 \begin{figure}[t!]
 \centering
 \includegraphics[width=0.9\linewidth]%
@@ -250,74 +386,6 @@ robot-side execution.
 \label{ch04:fig:hardware_validation_architecture}
 \end{figure}
 
-%==============================%==============================
-\subsection{Hardware validation in an industrial emergency-response
-scenario}
-\label{ch04:subsec:hardware_validation}
-
-To complement the simulation study, a hardware validation was conducted
-in a realistic industrial emergency-response scenario. The purpose is to
-verify that the hierarchical coordination framework developed in
-Section~\ref{ch04:subsec:task} can be implemented on a heterogeneous
-physical system under real sensing, communication, and execution
-constraints. In particular, the deployment instantiates the uncertain
-mission model of Subsection~\ref{ch04:subsec:uncertain_mission}, the
-simultaneous decomposition-and-assignment mechanism of
-Section~\ref{ch04:subsubsec:simultaneous_assignment}, the
-team-formation logic of
-Section~\ref{ch04:subsubsec:team_formation}, and the local
-coordination procedures of Subsection~\ref{ch04:subsec:local_coordination}.
-
-%==============================
-\subsubsection{Workspace and system description}
-\label{ch04:subsubsec:hardware_validation_workspace}
-
-The experimental site measures
-$16\,\mathrm{m} \times 14\,\mathrm{m}$ and emulates a compact
-industrial plant with pipelines, storage tanks, fire events, injured
-personnel, and a chemical leak. The fleet contains $8$ robots, namely
-$2$ UAVs, $4$ UGVs, and $2$ legged robots, supervised by
-$3$ operators equipped with tablets. The software follows a
-cloud--edge--end architecture. The cloud layer maintains the global task
-state and handles cross-group coordination. The edge layer performs
-local task interpretation, subtask generation, and subtask assignment.
-The robot layer executes the assigned subtasks through onboard sensing,
-action primitives, and platform-specific motion planners. In this way,
-the hardware deployment preserves the hierarchical structure of the
-planning architecture while accommodating the heterogeneous capabilities
-of the physical platforms.
-
-%==============================
-\subsubsection{Experimental results}
-\label{ch04:subsubsec:hardware_validation_results}
-
-The full hardware trial lasts $10$ minutes and contains $8$ tasks with
-$33$ subtasks in total. During execution, the system identifies the
-major emergency events, including fires, injured personnel, and a
-storage-tank leak. The cloud layer is invoked $6$ times for mission
-updates and cross-group coordination, whereas the edge layer is
-triggered $44$ times for local task processing. The average edge-side
-assignment time is $0.5\,\mathrm{s}$, the average subtask execution time
-is $20\,\mathrm{s}$, and the average task completion time is
-$82.5\,\mathrm{s}$. Two representative episodes highlight the role of
-hierarchical reorganization. In the first, an injured person is detected
-during fire suppression, and the corresponding rescue task is escalated
-and reassigned to a more suitable group. In the second, a legged robot
-is dispatched to repair a storage-tank leak through a dedicated
-platform-level action primitive. These episodes show that task
-reallocation and capability-aware intervention can be performed online
-in the physical system.
-Across $10$ hardware trials, the framework achieves a task success rate
-of $100\%$. The average end-to-end planning time is
-$21.6\,\mathrm{s}$, the platform-specific planning quality score is
-$9.7$, and the plan consistency is $95\%$. Each trial requires about
-$50$ operator interactions on average. Relative to fully manual
-operation, the reported operator workload decreases by $56\%$, from
-$7.5$ to $3.3$. These results indicate that the framework developed in
-this chapter transfers to the hardware setting without noticeable
-degradation in planning quality, while substantially reducing operator
-burden in a realistic multi-robot emergency-response environment.
-
 \begin{figure}[t!]
 \centering
 \includegraphics[width=0.9\linewidth]%
@@ -330,6 +398,42 @@ reallocation and physical intervention by heterogeneous robots.
 }
 \label{ch04:fig:hardware_validation_results}
 \end{figure}
+
+
+%==============================
+\subsubsection{Experimental results}
+The hardware trial lasts approximately $11$ minutes and contains $8$
+tasks with $33$ subtasks in total. As shown in Figure~\ref{ch04:fig:hardware_validation_results},
+during execution, the system identifies
+major emergency events, including fires, injured personnel, and
+damaged tanks and leakage cues. The cloud layer is invoked $6$ times for mission
+updates and cross-group coordination, whereas the edge layer is triggered
+$44$ times for local task processing. The average edge-side assignment
+time is $0.5\,\mathrm{s}$, the average subtask execution time is
+$20\,\mathrm{s}$, and the average task completion time is
+$82.5\,\mathrm{s}$. These values are consistent with the intended
+separation of time scales: cloud-level reasoning handles relatively
+infrequent mission updates and cross-group resource sharing, edge-level
+reasoning performs repeated local interpretation and scheduling, and the
+robot layer executes physical subtasks in real time. Two representative
+episodes highlight the role of hierarchical reorganization. In the first,
+an injured person is detected during fire suppression; the event is
+interpreted as a higher-priority rescue mission, escalated, and reassigned
+to a more suitable group. In the second, a legged robot is dispatched to
+fix a damaged storage tank through a dedicated platform-level action
+primitive. These episodes verify that the formal task hierarchy is not
+only synthesized offline, but also updated online when new task instances,
+new resources, or platform-specific execution requirements appear. Across
+$10$ hardware trials, the framework achieves a task success rate of
+$100\%$. The average end-to-end planning time is $21.6\,\mathrm{s}$, the
+platform-specific planning quality score is $9.7$, and the plan
+consistency is $95\%$. Each trial requires about $50$ operator
+interactions on average. Relative to fully manual operation, the reported
+operator workload decreases by $56\%$, from $7.5$ to $3.3$. These results
+indicate that the framework developed in this chapter transfers to the
+hardware setting without noticeable degradation in planning quality,
+while substantially reducing operator burden in a realistic multi-robot
+emergency-response environment.
 
 %==============================
 \section{Summary}

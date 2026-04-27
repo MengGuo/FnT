@@ -3,54 +3,22 @@
 \label{ch06:sec:ch06_stl}
 
 
-The preceding sections of this chapter address uncertainty and reactivity
-primarily at the task-planning and coordination levels.
-Section~\ref{ch06:sec:ch06_safe_plan} studies probabilistic temporal tasks
-under safe-return requirements, whereas
-Section~\ref{ch06:sec:ch06_uncertain} develops an online coordination method
-for dynamic temporal tasks with moving targets.
-A complementary difficulty arises when the task specification is fixed,
-but the collective motion must still be synthesized in a continuous
-workspace under nonlinear dynamics, obstacle avoidance, inter-robot
-coupling, and high-level signal temporal logic (STL) constraints.
-In this setting, the central challenge is not merely to decide
-\emph{which} task-relevant behaviors should occur, but to compute
-feasible and high-quality trajectories for all robots in a
-high-dimensional and strongly non-convex search space.
-Existing mixed-integer encodings and analytical planners can model parts
-of this problem, but their scalability often deteriorates rapidly with
-the planning horizon, the number of robots, and the logical structure of
-the task; sampling-based planners, on the other hand, may be less
-effective in exploiting the quantitative information carried by STL
-robustness.
-
-This section addresses that gap by formulating multi-robot motion
-planning under STL tasks as a collaborative trajectory-optimization
-problem.
-Smooth candidate trajectories are represented through Gaussian-process
-priors, while dynamic feasibility, geometric safety requirements, and
-task satisfaction are incorporated into a unified cost through control
-penalties, collision-avoidance terms, and STL robustness measures.
-The resulting solution architecture has three tightly connected parts.
-First, Section~\ref{ch06:subsec:batch-stl} develops a batch evaluation rule
-for STL robustness under waypoint perturbations, so that task-related
-cost variations can be assessed efficiently across many candidate
-updates.
-Second, Section~\ref{ch06:sec:local} introduces a sequential local optimal
-transport procedure that refines robot trajectories through zero-order
-updates while accounting for inter-robot couplings.
-Third, the hybrid search layer in
-Section~\ref{ch06:subsec:search-algorithm} explores alternative planning
-orders and partial trajectory sets to improve scalability and solution
-quality.
-In this way, the section complements the symbolic and reactive methods
-developed earlier in the chapter with a continuous optimization
-framework for tightly coupled multi-robot trajectory synthesis.
-
-
-
-
-
+The preceding sections addressed uncertainty mainly at the task-planning and
+coordination levels. This section considers a complementary problem: the task
+specification is fixed, but the collective motion must be synthesized in a
+continuous workspace under nonlinear dynamics, obstacles, inter-robot coupling,
+and signal temporal logic (STL) constraints. The challenge is to compute
+feasible, high-quality trajectories in a high-dimensional non-convex search
+space. Mixed-integer encodings and analytical planners can model parts of this
+problem, but their scalability degrades with horizon length, team size, and
+formula complexity; sampling-based methods may not exploit quantitative STL
+robustness efficiently.
+This section formulates multi-robot STL motion planning as collaborative
+trajectory optimization. Candidate trajectories are represented through
+Gaussian-process priors, while control effort, geometric safety, and STL
+robustness are combined in a unified cost. The method uses batched perturbed
+robustness evaluation, sequential local optimal transport, and a hybrid search
+over planning orders.
 
 
 %==============================
@@ -59,7 +27,8 @@ framework for tightly coupled multi-robot trajectory synthesis.
 \subsection{Problem formulation}
 \label{ch06:subsec:problem_formulation}
 
-This subsection introduces the continuous multi-robot planning model, the STL task semantics, and the collaborative motion-planning problem solved in the remainder of the section.
+This subsection defines the continuous multi-robot model, STL semantics, and
+collaborative motion-planning problem.
 
 %==============================
 \subsubsection{Multi-robot system}
@@ -121,7 +90,6 @@ where $r_{\texttt{s}}>0$ is the required pairwise safety margin.
 Both penalties vanish when the corresponding clearance requirement is met.
 
 
-
 %==============================
 \subsubsection{Signal temporal logic tasks and robustness}
 \label{ch06:subsubsec:stl_robustness}
@@ -143,7 +111,6 @@ $\mathsf{U}_I$ in the usual way.
 Only bounded-time STL formulas are considered here.
 The satisfaction of $\phi$ by $\mathbf{s}$ at time $t$ is denoted by
 $(\mathbf{s},t)\models \phi$.
-
 To quantify the degree of satisfaction, the space robustness
 $\rho^\phi(\mathbf{s},t)\in\mathbb{R}$ is adopted.
 Its recursive definition is given in \eqref{ch06:eq:stl-robustness}:
@@ -175,7 +142,6 @@ A positive value of $\rho^\phi(\mathbf{s},t)$ implies that
 $(\mathbf{s},t)\models \phi$ holds
 under the standard quantitative semantics of STL
 \cite{fainekos2009robustness,deshmukh2017robust,lindemann2025formal}.
-
 
 
 The task-related term is defined through STL robustness.
@@ -221,7 +187,7 @@ $\mu\triangleq \{\mu_A^k,\mu_B^k\}$.
 Its trajectory-level penalty is evaluated through the robustness
 $\rho^\phi(\mathbf{Z}(T),0)$ together with the geometric costs defined
 above.
-The resulting state-dependent cost is given by \eqref{ch06:eq:state-cost}:
+The resulting state-dependent cost is given by:
 \begin{equation}
 \label{ch06:eq:state-cost}
 \begin{aligned}
@@ -253,7 +219,7 @@ follows.
 Find a system trajectory $\mathbf{Z}(T)$ that minimizes the sum of the
 task-dependent cost in \eqref{ch06:eq:state-cost} and the individual control
 costs in \eqref{ch06:eq:control-cost}, subject to the boundary conditions and
-the dynamics in \eqref{ch06:eq:robot-model}:
+the dynamics in \eqref{ch06:eq:robot-model}, i.e.,
 \begin{equation}
 \label{ch06:eq:prob}
 \begin{aligned}
@@ -270,46 +236,13 @@ where the optimization variable is the collective trajectory
 $\mathbf{Z}(T)$ over the horizon $T$.
 \end{problem}
 
-Problem~\ref{ch06:prob:multi-robot-control} is a constrained and highly
-non-convex trajectory-optimization problem.
-In particular, STL satisfaction introduces time-indexed conjunctions and
-disjunctions, which are commonly handled through mixed-integer encodings.
-As a consequence, direct gradient-based nonlinear programming is generally
-not applicable in a straightforward manner, while MILP and MICP
-formulations typically suffer from exponential and combinatorial growth
-with respect to the formula size, the planning horizon, and the number of
-robots~\cite{fainekos2009robustness,lindemann2025formal,
-liu2022stlq,kurtz2022mixed}.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Problem~\ref{ch06:prob:multi-robot-control} is constrained and highly
+non-convex. STL satisfaction introduces time-indexed conjunctions and
+disjunctions, often handled through mixed-integer encodings. Thus, direct
+gradient-based nonlinear programming is not straightforward, while MILP and
+MICP formulations typically grow exponentially or combinatorially with formula
+size, horizon length, and team size
+\cite{fainekos2009robustness,lindemann2025formal,liu2022stlq,kurtz2022mixed}.
 
 
 %==============================
@@ -319,11 +252,8 @@ liu2022stlq,kurtz2022mixed}.
 \subsection{Batch computation of STL perturbed robustness}
 \label{ch06:subsec:batch-stl}
 
-Efficient batch evaluation of STL robustness is required by the
-waypoint-perturbation procedure used later in the Sinkhorn update.
-The objective of this subsection is to quantify how the robustness
-changes when a single waypoint is perturbed along multiple probing
-directions.
+The Sinkhorn update requires efficient batch evaluation of robustness changes
+caused by perturbing one waypoint along multiple probing directions.
 
 %%===================
 \subsubsection{STL tree representation}
@@ -360,18 +290,12 @@ robustness evaluation over the formula tree.
 \subsubsection{Batched evaluation of perturbed robustness}
 \label{ch06:subsec:stl-robustness}
 
-As recalled in Section~\ref{ch06:subsubsec:stl_robustness}, the standard STL robustness is
-computed by evaluating the predicates at the leaves of
-$\mathcal{T}^{\phi}$ and then applying $\min$ and $\max$ recursively to
-conjunction and disjunction nodes.
-For the present perturbation-based optimization, a direct application of
-this rule may become locally insensitive.
-In particular, if the perturbed child of a conjunction node is not the
-minimizer, the effect of the perturbation can be completely masked by
-another child whose value remains unchanged.
-A surrogate perturbed robustness is therefore introduced to retain
-sensitivity to the local waypoint variation while preserving the
-tree-based structure of the STL formula.
+Standard STL robustness evaluates predicates at the leaves of
+$\mathcal{T}^{\phi}$ and propagates $\min$ and $\max$ through conjunction and
+disjunction nodes. For perturbation-based optimization, this rule can be
+locally insensitive: if the perturbed child of a conjunction is not the
+minimizer, its effect is masked. A surrogate perturbed robustness is therefore
+used to retain sensitivity while preserving the formula tree.
 Let $\widehat{\mathbf{Z}}_{t^\star}(T)$ denote a trajectory obtained by
 perturbing only the $t^\star$-th waypoint of $\mathbf{Z}(T)$.
 For a fixed time index $t^\star$, let
@@ -415,38 +339,10 @@ The same recursion is then applied elementwise to the batch
 $\widehat{\boldsymbol{\mathcal{Z}}}_{t^\star}$, so that the perturbed
 robustness values for all probing directions are obtained in a single
 bottom-up traversal.
-This construction preserves the original tree-based interpretation of
-the formula, improves local sensitivity to waypoint perturbations, and
-supports efficient batched computation in the subsequent optimization
-steps.
-The surrogate robustness in \eqref{ch06:eq:perturbed-robustness} is used
-to guide the local update, while the satisfaction of the final
-trajectory is verified using the standard STL robustness in
-Section~\ref{ch06:subsubsec:stl_robustness}.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+The construction preserves the tree-based formula interpretation, improves
+local sensitivity, and supports batched computation. The surrogate in
+\eqref{ch06:eq:perturbed-robustness} guides local updates, while final
+satisfaction is verified using the standard STL robustness.
 
 
 %==============================
@@ -457,17 +353,11 @@ Section~\ref{ch06:subsubsec:stl_robustness}.
 \subsection{Sequential local optimal transport}
 \label{ch06:sec:local}
 
-Given the batched evaluation of perturbed STL robustness in
-Section~\ref{ch06:subsec:batch-stl}, the multi-robot planning problem is
-decomposed into a sequence of lower-dimensional subproblems.
-At each stage, only one robot trajectory is optimized, while the
-trajectories already computed for the preceding robots are treated as
-time-dependent constraints in the local objective.
-This decomposition greatly reduces the dimension of each optimization
-step and makes local transport updates computationally tractable.
-Its main limitation is that the final collective solution depends on the
-chosen planning order, since earlier trajectory decisions restrict the
-feasible and low-cost regions available to the later robots.
+Using the batched robustness evaluation, the multi-robot problem is decomposed
+into lower-dimensional subproblems. Each stage optimizes one robot trajectory,
+treating previously planned trajectories as time-dependent constraints. This
+reduces local dimension, but the final solution depends on the planning order
+because early trajectories restrict later feasible and low-cost regions.
 
 %==============================
 \subsubsection{Design of planning sequence}
@@ -624,17 +514,12 @@ used in the optimization of the subsequent robots.
 \label{ch06:subsec:sinkhorn}
 
 The local problem in \eqref{ch06:eq:local-problem} remains nonlinear and
-non-convex.
-To compute approximate solutions efficiently, each single-robot update is
-recast as an entropy-regularized optimal transport problem and solved by
-a Sinkhorn-type iteration
-\cite{cuturi2013sinkhorn,peyre2019computational,le2023accelerating}.
-The main idea is to probe a set of local perturbation directions at
-every waypoint, evaluate their costs in parallel, and then transport the
-trajectory toward lower-cost regions by a weighted combination of these
-directions.
-The procedure summarized in Algorithm~\ref{ch06:alg:sinkhorn} consists of four
-stages.
+non-convex. Each single-robot update is therefore recast as an
+entropy-regularized optimal transport problem and solved by a Sinkhorn-type
+iteration \cite{cuturi2013sinkhorn,peyre2019computational,le2023accelerating}.
+The update probes local directions at each waypoint, evaluates their costs in
+parallel, and moves the trajectory toward lower-cost regions. The procedure in
+Algorithm~\ref{ch06:alg:sinkhorn} has four stages.
 (I) \emph{Initialization}.
 At iteration $k$, the current trajectory of robot $i_\ell$ is denoted by
 $\mathbf{Z}_{i_\ell}^{k}(T)$ and is initialized from the
@@ -693,66 +578,24 @@ preceding set.
 In this way, the sequential procedure yields the collective trajectory
 \[
 \Gamma_\kappa\triangleq
-\{\mathbf{Z}_{i_1}^\star(T),\cdots,\mathbf{Z}_{i_N}^\star(T)\}.
+\{\mathbf{Z}_{i_1}^\star(T),\cdots,\mathbf{Z}_{i_N}^\star(T)\},
 \]
-The overall solution quality depends on the planning sequence
+where the overall solution quality depends on the planning sequence
 $\kappa$, because early decisions influence the feasible and
 cost-effective regions available to later robots.
-This interaction between sequence selection and sequential transport motivates the hybrid search
-scheme introduced in the next subsection.
+This interaction between sequence selection and sequential transport
+motivates the hybrid search scheme introduced in the next subsection.
 
-Several implementation heuristics can further improve the numerical
-behavior of Algorithm~\ref{ch06:alg:sinkhorn}.
-(I) \emph{Randomized probing directions}.
-To reduce correlation among the waypoint updates, the probing directions
-in $\boldsymbol{D}_{\mathcal{P}}$ can be randomly rotated at each
-iteration and at each trajectory point.
-(II) \emph{Directional cost averaging}.
-Instead of evaluating only one perturbed point along each probing
-direction, let $N_{\texttt{s}}>0$ denote the number of auxiliary samples
-taken along the same direction.
-The corresponding costs are then averaged to obtain a more stable
-estimate of the directional cost.
-This leads to an extended probing array
+Several heuristics improve the numerical behavior of
+Algorithm~\ref{ch06:alg:sinkhorn}. First, randomly rotating the probing
+directions in $\boldsymbol{D}_{\mathcal{P}}$ reduces correlation among
+waypoint updates. Second, directional cost averaging uses
+$N_{\texttt{s}}>0$ auxiliary samples per direction, producing
 $\widetilde{\boldsymbol{D}}_{\mathcal{P}}
-\in \mathbb{R}^{T\times M\times N_{\texttt{s}}\times 2D}$.
-Such averaging reduces variance in the cost evaluation and, in practice,
-often improves convergence.
-(III) \emph{Annealing of step size and exploration radius}.
-The step size $\alpha_k$ and the exploration radius $\beta_k$ can be
-decreased gradually, for instance through exponential decay schedules,
-so that early iterations emphasize exploration, whereas later
-iterations focus on local refinement and stabilization
+\in \mathbb{R}^{T\times M\times N_{\texttt{s}}\times 2D}$ and reducing
+cost-evaluation variance. Third, annealing $\alpha_k$ and the exploration
+radius $\beta_k$ shifts the iteration from exploration to local refinement
 \cite{altschuler2017near,le2023accelerating}.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 %==============================
@@ -762,15 +605,12 @@ iterations focus on local refinement and stabilization
 \subsection{Hybrid search for sequence and collective trajectory}
 \label{ch06:sec:hybrid}
 
-The sequential local transport scheme in Section~\ref{ch06:sec:local}
-reduces the dimension of the original multi-robot planning problem, but
-its performance depends strongly on the chosen planning sequence.
-Early local decisions restrict the feasible and low-cost regions
-available to the remaining robots, so the final collective solution is
-determined jointly by sequence selection and trajectory refinement.
-To address this coupling, a hybrid search layer is introduced that
-combines discrete exploration over partial planning sequences with
-continuous local optimization through the Sinkhorn-based updates. The two components are tightly coupled, since each partial sequence restricts the feasible local transports and each local transport evaluation influences subsequent sequence expansion.
+The sequential local transport scheme reduces problem dimension, but its
+performance depends on the planning sequence. Early decisions restrict later
+feasible and low-cost regions, so sequence selection and trajectory refinement
+must be treated jointly. A hybrid search layer therefore combines discrete
+exploration over partial sequences with continuous Sinkhorn-based local
+optimization.
 
 %==============================
 \subsubsection{Hybrid search framework}
@@ -896,24 +736,13 @@ trajectories at each expansion step.
 %==============================
 \subsubsection{Parallelization and practical improvements}
 
-The hybrid search is naturally amenable to parallel computation.
-During expansion, the local trajectory optimization problems associated
-with all nodes in $\mathcal{V}_H$ can be solved simultaneously, and the
-resulting child nodes can also be generated in parallel.
-Likewise, the updates in \eqref{ch06:eq:propagation} can be aggregated
-collectively after each expansion round rather than processed one node at
-a time.
-These features substantially reduce runtime and are especially useful
-when the probing-based local updates are executed on modern parallel
-hardware.
-Several practical enhancements further improve scalability.
-First, the number of expanded nodes and the number of retained
-trajectory candidates can be adjusted adaptively during the search.
-A broader expansion is beneficial in the early stages to explore diverse
-planning orders, whereas later stages benefit more from a narrower but
-deeper refinement of the most promising branches.
-Second, when the expansion of a node $\nu$ repeatedly fails, a
-similarity-based pruning rule can be used to remove nearby redundant
+The hybrid search is naturally parallel. During expansion, local trajectory
+optimizations for nodes in $\mathcal{V}_H$ and the resulting child-node
+generation can be processed simultaneously; the updates in
+\eqref{ch06:eq:propagation} can also be aggregated after each round. Adaptive
+expansion improves scalability: early stages benefit from broader exploration,
+whereas later stages favor deeper refinement of promising branches. When a node
+$\nu$ repeatedly fails, similarity-based pruning removes nearby redundant
 nodes,
 $\widetilde{\mathcal{V}}_\nu\triangleq
 \Big\{
@@ -928,50 +757,6 @@ This rule helps avoid repeated exploration of infeasible or nearly
 duplicate branches.
 Together, these implementation choices improve scalability, reduce
 cascading failures, and accelerate convergence.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 %==========
@@ -1040,34 +825,29 @@ cascading failures, and accelerate convergence.
 \subsection{Overall analyses}
 \label{ch06:subsec:overall}
 
-The construction above yields a complete pipeline from surrogate robustness computation to hybrid search over planning orders. The two parts below summarize how candidate trajectories are verified for execution and how the dominant computational costs scale.
+The construction yields a pipeline from surrogate robustness computation to
+hybrid search over planning orders. The following parts summarize verification,
+execution, and dominant computational costs.
 
 %==============================
 \subsubsection{Verification and execution}
 \label{ch06:subsubsec:execute}
 
-After each local optimization step, a candidate trajectory is retained
-only after explicit verification of the hard constraints.
-This verification stage checks collision avoidance, inter-robot
-constraints, and positive robustness under the standard STL semantics,
-rather than under the surrogate perturbed robustness used during the
-local search.
-Consequently, only trajectories that satisfy the required feasibility
-and safety conditions are inserted into the search tree.
-This separation is important: the surrogate robustness is used to guide
-the optimization efficiently, whereas the standard robustness is used to
-certify correctness of the final accepted trajectory.
-For execution, the optimized trajectories
-$\{\mathbf{Z}_i^\star(T)\}_{i\in\mathcal{N}}$ can be refined further
-into denser waypoint sequences with a smaller sampling step.
-This post-processing improves tracking quality, reduces abrupt changes
-between consecutive waypoints, and yields trajectories that are more
-suitable for closed-loop execution.
-If needed, the refined trajectories can be rechecked under the same hard
-constraints before deployment.
-They can then be tracked either by onboard low-level controllers or by a
-model predictive control scheme, depending on the sensing, actuation,
-and computation capabilities of the robotic platform.
+After each local optimization step, a candidate trajectory is retained only
+after explicit verification of collision avoidance, inter-robot constraints,
+and positive robustness under standard STL semantics. Thus, the surrogate
+robustness guides optimization, while standard robustness certifies accepted
+trajectories. For execution, the optimized trajectories
+$\{\mathbf{Z}_i^\star(T)\}_{i\in\mathcal{N}}$ can be refined into denser
+waypoint sequences, rechecked if needed, and tracked by onboard controllers or
+model predictive control.
+The framework extends to larger fleets and dynamic obstacles. For large
+fleets, robots can be partitioned into subgroups
+$\{\mathcal{N}_1,\cdots,\mathcal{N}_G\}$ with local formation constraints,
+while a higher-level STL formula is imposed over the groups. For known or
+predictable dynamic obstacles, their motion is incorporated into
+\eqref{ch06:eq:state-cost-sequential}; under uncertain motion, conservative
+reachable sets or safety buffers can be used instead.
 
 %==============================
 \subsubsection{Complexity analysis}
@@ -1106,30 +886,3 @@ branch pruning.
 Thus, although the worst-case complexity remains high, the combination
 of parallel expansion, local transport updates, and pruning keeps the
 method computationally practical for the scenarios considered here.
-
-%==============================
-\subsubsection{Generalization}
-\label{ch06:subsubsec:generalization}
-
-The framework extends naturally to several more complex scenarios.
-(I) \emph{Split-and-merge coordination for large fleets}.
-A large fleet can be partitioned into subgroups
-$\{\mathcal{N}_1,\cdots,\mathcal{N}_G\}$, each equipped with its own
-local formation constraints.
-A higher-level STL formula can then be imposed over these groups rather
-than over individual robots.
-This allows the subgroups to separate, navigate independently, and later
-merge again while preserving the required collective task logic.
-The same hybrid search principle can then be applied at the group level,
-while the local transport step is retained within each subgroup.
-(II) \emph{Dynamic obstacles}.
-When obstacle trajectories are known in advance or can be predicted with
-sufficient accuracy, they can be incorporated directly into the
-state-dependent cost in \eqref{ch06:eq:state-cost-sequential}.
-In this case, the same planning framework continues to enforce collision
-avoidance and STL robustness in a time-varying environment.
-When obstacle motion is uncertain, conservative reachable sets or safety
-buffers can be used instead so that the resulting plan remains robust to
-prediction errors.
-This extension preserves the overall structure of the method, while
-modifying only the underlying cost evaluation.

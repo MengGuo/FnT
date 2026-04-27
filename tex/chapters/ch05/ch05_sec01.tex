@@ -2,33 +2,15 @@
 \section{Simultaneous Planning for Communication and Collaboration}
 \label{ch05:sec:ch05_interm_team}
 
-In this section, a multi-agent system is considered in which complex tasks with
-temporal constraints are released online. The focus is on an online co-optimization problem in
-which collaborative task execution and communication decisions are synthesized
-simultaneously. In contrast to periodic team-wide communication or intermittent
-pairwise communication schemes, the proposed framework determines
-\emph{when}, \emph{where}, and \emph{how} communication or collaboration
-should occur according to the task information available in real time. To this
-end, a branch-and-bound framework is developed in which task planning and
-communication events are encoded jointly within a unified search structure. The
-resulting objective balances task-execution efficiency against communication
-latency, thereby improving robustness under spatially and temporally varying
-task distributions. In addition, communication events are refined through an
-iterative procedure that selects suitable communication locations and timings.
-The effectiveness of the overall method is demonstrated in large-scale
-simulations and hardware experiments against several strong baselines.
-
-The technical development of this section proceeds as follows.
-Section~\ref{ch05:sec:problem} formulates the workspace model, the online task
-model, the communication constraints, and the associated optimization problem.
-Section~\ref{ch05:subsec:coord-framework} then introduces an adaptive
-coordination framework in which a new objective function supports robust
-online decision making under uncertain task arrivals and dynamic operating
-conditions. Next, Section~\ref{ch05:subsec:comm-event} addresses the
-optimization of communication events by determining appropriate communication
-locations and timings. Finally, Section~\ref{ch05:subsec:online} presents the
-overall execution logic and analyzes the computational properties of the
-proposed method.
+This section considers online collaborative tasks with temporal constraints
+under limited communication. Task execution and communication decisions are
+synthesized simultaneously: the planner determines when, where, and how robots
+collaborate or exchange information using the task information available at the
+current time. A branch-and-bound search encodes task allocation and
+communication events in one structure, while an iterative refinement step
+selects feasible communication locations and timings. The section formulates
+the system model and objective, introduces the adaptive coordination procedure,
+optimizes fleet-wise communication events, and analyzes online execution.
 
 
 
@@ -42,62 +24,42 @@ proposed method.
 \label{ch05:sec:problem}
 
 This subsection formulates the fleet model, the online collaborative-task
-model, and the communication constraints used throughout
-Section~\ref{ch05:sec:ch05_interm_team}. In analogy with the robot-team
-formulations introduced in Chapter~\ref{chap:bottom-up} and
-Chapter~\ref{chap:top-down}, the starting point is again a collection of
-robots evolving in a common workspace and executing timed plans. The present
-setting differs in two important respects. First, collaborative tasks are
-released online and must be completed under temporal relations that are only
-partially known in advance. Second, global information exchange cannot be
-maintained continuously and must itself be coordinated through communication
-events. Consequently, communication is not an auxiliary mechanism added after
-task planning, but an integral part of the planning model.
+model, and the communication constraints used in
+Section~\ref{ch05:sec:ch05_interm_team}. As in
+Chapters~\ref{chap:bottom-up} and~\ref{chap:top-down}, robots evolve in a
+common workspace and execute timed plans. Here, however, tasks are released
+online under partially known temporal relations, and global information
+exchange must be coordinated through explicit communication events.
 
 \subsubsection{Workspace and robot model}
 \label{ch05:subsec:env-task-model}
 
-Following the local-execution viewpoint in
-Chapter~\ref{chap:bottom-up} and the team-level viewpoint in
-Chapter~\ref{chap:top-down}, consider a fleet of $N$ robots operating in a
-common workspace $\mathcal{W} \subset \mathbb{R}^2$. Let
-$\mathcal{N} \triangleq \{1, \cdots, N\}$ denote the robot index set. For each
-robot $i \in \mathcal{N}$, let $\mathcal{W}_i \subseteq \mathcal{W}$ be the
-admissible workspace, let $p_i(t) \in \mathcal{W}_i$ be its position at time
-$t \geq 0$, let $d_i > 0$ be its sensing radius, and let
-$\mathcal{A}_i$ be its set of primitive actions. The action set
-$\mathcal{A}_i$ reflects the heterogeneous capabilities of robot $i$. For
-example, repair and rescue actions require dexterous manipulation, whereas
-delivery actions require transportation capability. The motion of robot $i$ is
-described by its velocity $v_i(t) \in \mathbb{R}^2$, which satisfies the bound
+Consider a fleet of $N$ robots in a common workspace
+$\mathcal{W} \subset \mathbb{R}^2$, with index set
+$\mathcal{N} \triangleq \{1, \cdots, N\}$. For robot
+$i \in \mathcal{N}$, let $\mathcal{W}_i \subseteq \mathcal{W}$ be its
+admissible workspace, $p_i(t) \in \mathcal{W}_i$ its position,
+$d_i > 0$ its sensing radius, and $\mathcal{A}_i$ its primitive-action set.
+The set $\mathcal{A}_i$ captures heterogeneous capabilities, such as
+manipulation, transportation, or sensing. The velocity
+$v_i(t) \in \mathbb{R}^2$ satisfies
 $\|v_i(t)\| \leq v_i^{\texttt{max}}$ for all $t \geq 0$.
-For each robot $i \in \mathcal{N}$, a nominal local plan is a timed sequence
+A nominal local plan is a timed sequence
 $\tau_i \triangleq (t_i^1, g_i^1, a_i^1)(t_i^2, g_i^2, a_i^2)\cdots$,
-where, for every $\ell \geq 1$, the scalar $t_i^\ell \geq 0$ is the execution
-time, the point $g_i^\ell \in \mathcal{W}_i$ is the goal position, and the
-symbol $a_i^\ell \in \mathcal{A}_i$ is the action to be performed. Under
-$\tau_i$, robot $i$ moves toward $g_i^\ell$ and starts action $a_i^\ell$ at
-time $t_i^\ell$. The nominal collective plan is
-$J \triangleq \{\tau_i\}_{i \in \mathcal{N}}$.
-This plan representation plays the same conceptual role as the execution-level
-objects used in Chapter~\ref{chap:bottom-up} and the team-level plan objects
-used in Chapter~\ref{chap:top-down}. The difference is that the present plan
-must also accommodate future communication decisions and online collaborative
-tasks.
+where $t_i^\ell$ is the execution time, $g_i^\ell$ is the goal position, and
+$a_i^\ell$ is the action to be performed. The nominal collective plan is
+$J \triangleq \{\tau_i\}_{i \in \mathcal{N}}$. Compared with the plan objects
+of Chapters~\ref{chap:bottom-up} and~\ref{chap:top-down}, this plan must also
+accommodate future communication decisions and online collaborative tasks.
 
 \subsubsection{Online collaborative temporal tasks}
 \label{ch05:subsec:task-spec}
 
-In analogy with the task formulations developed in the previous chapters, the
-present model still captures collaborative activities together with temporal
-relations among them. The main difference is that the task set is not fixed in
-advance. In Chapter~\ref{chap:bottom-up}, the tasks are assigned locally and
-planned from the outset, whereas in Chapter~\ref{chap:top-down}, the mission is
-specified globally before decomposition and assignment. Here, by contrast,
-collaborative tasks are released online and become known only after detection
-by the fleet.
-Collaborative tasks are released online with unknown, and possibly time-varying,
-spatio-temporal distributions. Each task is represented by
+The model retains collaborative activities and temporal relations, but the task
+set is not fixed in advance. Unlike the local-task and global-mission settings
+of Chapters~\ref{chap:bottom-up} and~\ref{chap:top-down}, collaborative tasks
+are released online and become known only after detection by the fleet. Each
+task is represented by
 $
 \omega_m \triangleq
 \bigl(S_m, \eta_m, \{(n_j, a_j)\}_{j=1}^{J_m}\bigr),
@@ -161,10 +123,10 @@ relations in \eqref{ch05:eq:task-constraints} are a task-level specialization.
 \subsubsection{Communication constraints}
 \label{ch05:subsec:comm-const}
 
-The fleet cannot maintain continuous real-time communication because of physical
-limitations in signal propagation and environmental occlusion. Successful communication between
-robots $i, j \in \mathcal{N}$ requires the communication quality $Q_{ij}(t)$ to
-exceed a threshold $\delta > 0$. The communication quality is modeled by:
+Continuous real-time communication is not available because of signal
+attenuation and environmental occlusion. Communication between robots
+$i, j \in \mathcal{N}$ succeeds only when the quality $Q_{ij}(t)$ exceeds a
+threshold $\delta > 0$, where:
 \begin{equation}
 Q_{ij}(t) \triangleq
 P_t - PL\bigl(d_{ij}(t)\bigr) - \alpha d_{ij}^{\mathrm{obs}}(t),
@@ -263,7 +225,10 @@ team-wise communication condition in \eqref{ch05:eq:comm-graph}.
 \subsection{Adaptive coordination for communication and collaboration}
 \label{ch05:subsec:coord-framework}
 
-This subsection develops the replanning layer that couples task selection with scheduled communication restoration. It first introduces the horizon-wise objective used to score candidate collective plans and then presents the branch-and-bound procedure used to optimize task allocation and the next communication event jointly.
+This subsection develops the replanning layer that couples task selection with
+scheduled communication restoration. It introduces the horizon-wise objective
+and the branch-and-bound procedure used to optimize task allocation and the next
+communication event jointly.
 
 \subsubsection{Design of adaptive optimization objective}
 \label{ch05:subsubsec:new-obj}
@@ -319,12 +284,11 @@ t_{i,\ell+1}^{\texttt{s}}
 \end{equation}
 where $t_m^{\texttt{f}}$ is the completion time of task $\omega_m$, and
 $t^{\texttt{c}}$ is the scheduled time of the next communication event.
-The objective in \eqref{ch05:eq:adaptive_objective} favors task sequences that
-yield a high completion rate before the next communication event. In this way,
-the formulation performs an implicit spatio-temporal filtering of candidate
-task sequences without requiring an explicit model of the future task
-distribution. The resulting metric balances task throughput against the time
-needed to complete the selected tasks and restore team-wise communication.
+The objective in \eqref{ch05:eq:adaptive_objective} favors sequences with high
+completion rate before the next communication event. It thereby filters
+candidate task sequences without requiring an explicit model of future task
+arrivals, and balances task throughput against the time needed to restore
+team-wise communication.
 
 \subsubsection{Overall algorithm}
 \label{ch05:subsubsec:algorithm-description}
@@ -346,15 +310,12 @@ communication event. Let $\Omega_\nu \subseteq \Omega_t$ denote the set of
 tasks already inserted into $J_\nu$. For each node $\nu$, let $LB_\nu$ and
 $UB_\nu$ denote, respectively, a lower bound and an upper bound on the
 objective in \eqref{ch05:eq:adaptive_objective}.
-Algorithm~\ref{ch05:alg:cocoplan} applies a branch-and-bound search to the
-joint optimization of task assignment and communication scheduling for the full
-robot team. For each node $\nu$, the objective is evaluated through
-\eqref{ch05:eq:adaptive_objective}. The search maintains a lower bound
-$LB_\nu$ and an upper bound $UB_\nu$ for every node. A node is pruned whenever
-$UB_\nu \leq LB^\star$, where $LB^\star$ is the best lower bound found so far.
-The procedure terminates when all nodes have been expanded or pruned, or when
-the computation budget is exhausted. It then returns the best collective plan
-$J^\star$ found within that budget.
+Algorithm~\ref{ch05:alg:cocoplan} performs branch-and-bound search over joint
+task assignment and communication scheduling. Each node is scored by
+\eqref{ch05:eq:adaptive_objective}, equipped with bounds $LB_\nu$ and $UB_\nu$,
+and pruned whenever $UB_\nu \leq LB^\star$. The procedure stops when all nodes
+are resolved or the computation budget is exhausted, and returns the best
+collective plan $J^\star$ found.
 
 \begin{algorithm}[!t]
     \caption{$\texttt{CoCoPlan}(\cdot)$}
@@ -410,28 +371,20 @@ $J^\star$ found within that budget.
 \setlength{\textfloatsep}{5pt}
 
 (I) \emph{Initialization}.
-Lines~1--8 initialize the search. The root node $\nu_0$ is created from the
-empty collective plan. Its lower and upper bounds are computed by
-$\texttt{LowBound}$ and $\texttt{UpBound}$, respectively. These values are
-used to initialize the max-heap $\mathcal{Q}$ and the incumbent pair
-$(LB^\star, J^\star)$. The timer $t_{\texttt{start}}$ is then recorded in
-order to enforce the computation budget $T'$.
+Lines~1--8 create the root node, compute its lower and upper bounds, initialize
+the max-heap and incumbent pair, and record the timer for the computation
+budget $T'$.
 
 (II) \emph{Selection}.
 At each iteration, the node with the largest upper bound is extracted from
-$\mathcal{Q}$. This best-first rule prioritizes the nodes with the greatest
-potential to improve the incumbent solution. If $UB_\nu \leq LB^\star$, then
-$\nu$ and all of its descendants are discarded because they cannot improve the
-current best plan.
+$\mathcal{Q}$. Nodes with $UB_\nu \leq LB^\star$ are discarded because neither
+they nor their descendants can improve the incumbent plan.
 
 (III) \emph{Expansion}.
-For each surviving node, the routine $\texttt{GetTasks}$ identifies the set
-$\mathcal{F}$ of feasible tasks that satisfy the temporal constraints
-$\mathcal{C}_t$. The routine $\texttt{ExpNode}$ then generates child nodes by
-assigning each task $\omega \in \mathcal{F}$ to eligible robots and inserting
-it into their local plans before the next communication event. In this way,
-task allocation and communication scheduling are coupled within a single search
-structure.
+For each surviving node, $\texttt{GetTasks}$ identifies feasible tasks under
+$\mathcal{C}_t$, and $\texttt{ExpNode}$ inserts each such task into eligible
+local plans before the next communication event. Thus allocation and
+communication scheduling remain coupled within one search tree.
 
 (IV) \emph{Bounding}.
 Each child node undergoes iterative bound refinement. At iteration $k$, a task
@@ -462,26 +415,20 @@ $LB_{\nu_+} = \max_j b^{(j)}$. The upper bound $UB_{\nu_+}$ is computed by the
 same procedure under the optimistic assumption of instantaneous robot motion.
 
  (V) \emph{Termination}.
-The algorithm stops when the heap $\mathcal{Q}$ becomes empty or the time
-budget $T'$ is exhausted. It then returns the incumbent plan $J^\star$ as the
-best solution found. Since both the bounds and the incumbent are refined
-progressively during the search, the method is anytime and can return a
-feasible collective plan even under early termination.
+The algorithm stops when $\mathcal{Q}$ is empty or the time budget is exhausted,
+and returns the incumbent plan $J^\star$. Because bounds and the incumbent are
+updated throughout the search, the method is anytime.
 
-The novelty of the proposed algorithm lies in its explicit co-optimization of
-task assignment and communication scheduling within a single branch-and-bound
-framework, rather than treating communication as a secondary feasibility check
-after task allocation. By introducing the adaptive objective in
-\eqref{ch05:eq:adaptive_objective}, the method evaluates collective plans
-through the task-completion rate achieved before the next communication event,
-which makes the coordination policy responsive to online task arrivals and
-time-varying operating conditions. A further strength is that lower and upper
-bounds are refined through both task scheduling and communication-event
-optimization, so pruning is guided by a performance metric that reflects the
-interaction between collaboration and information exchange. As a result, the
-algorithm remains computationally effective through selective exploration of
-promising plan branches, while preserving an anytime property that yields a
-feasible collective plan even when the available computation time is limited.
+The algorithm co-optimizes task assignment and communication scheduling within
+a single branch-and-bound framework, instead of treating communication as a
+secondary feasibility check after task allocation. Through the adaptive
+objective in \eqref{ch05:eq:adaptive_objective}, candidate collective plans are
+evaluated by the task-completion rate achieved before the next communication
+event, which links online task arrivals, communication timing, and operating
+conditions. Lower and upper bounds are refined through both task scheduling and
+communication-event optimization, so pruning reflects the interaction between
+collaboration and information exchange. The anytime property is preserved
+because the incumbent remains feasible when the computation budget is exhausted.
 
 
 
@@ -726,38 +673,24 @@ times, motion costs, and communication feasibility.
 \subsection{Overall analysis}
 \label{ch05:subsec:online}
 
-The preceding constructions define a closed online coordination loop rather than a one-shot offline optimizer. The two parts below discuss how the scheme is executed during deployment and how its computational burden scales with team size and detected tasks.
+The preceding constructions define a closed online coordination loop. The next
+paragraphs describe its execution and computational scaling.
 
 \subsubsection{Online execution}
 \label{ch05:subsubsec:online-execution}
 
-To accommodate dynamically emerging tasks, the coordination framework is
-executed online. Robots discover new tasks while moving in the workspace, and the detected task set is
-updated incrementally as $\Omega_t$. During execution, each robot follows its
-current local plan $\tau_i$ and proceeds toward either the next assigned task
-or the next communication location. In this way, planning and execution remain
-interleaved throughout the mission, rather than being separated into a single
-offline synthesis phase and a purely reactive deployment phase.
-To absorb execution uncertainty, simple synchronization rules are imposed at
-the task and communication levels. For each assigned collaborative task, the
-corresponding robots wait at the task region until all required robots have
-arrived, after which task execution begins. Likewise, at each communication
-event, all robots wait until every robot has reached its designated
-communication position. As a result, the connectivity condition
-\eqref{ch05:eq:comm-graph} is enforced at the communication time even when
-travel times or execution durations deviate from their nominal values. These
-waiting rules introduce a basic robustness mechanism without modifying the
-underlying coordination structure.
-At every communication event, the robots exchange information about newly
-detected tasks, current execution progress, and future plan updates. A
-designated robot then aggregates the locally discovered tasks into the global
-set $\Omega_t$ and invokes Algorithm~\ref{ch05:alg:cocoplan} to compute an
-updated collective plan together with the next fleet-wise communication event.
-The robots subsequently execute the revised plan until the next communication
-event is reached, where the same update procedure is repeated. The overall
-execution logic is therefore cyclic: task execution, task discovery,
-communication, and replanning are repeated in succession as new information
-becomes available.
+The framework is executed online as robots discover tasks and update
+$\Omega_t$. Each robot follows its current plan $\tau_i$ toward either the next
+assigned task or the next communication location, so planning and execution
+remain interleaved. Simple synchronization rules absorb execution uncertainty:
+robots wait at collaborative tasks until all required robots arrive, and wait at
+communication events until the full team reaches the designated communication
+configuration. These rules enforce \eqref{ch05:eq:comm-graph} despite nominal
+travel-time deviations. At each communication event, robots exchange detected
+tasks, progress information, and plan updates; a designated robot aggregates
+this information and invokes Algorithm~\ref{ch05:alg:cocoplan}. The team then
+executes the revised plan until the next communication event, where the cycle is
+repeated.
 
 \subsubsection{Complexity analysis}
 \label{ch05:subsubsec:complexity}
@@ -773,15 +706,11 @@ $\mathcal{O}((m \cdot N!)^m)$. For each node, the dominant cost remains the
 evaluation of candidate task expansions and the associated bound computations,
 which again scale as $\mathcal{O}(m \cdot N!)$. Consequently, the overall
 worst-case complexity remains exponential in the number of detected tasks.
-This worst-case bound is conservative and mainly reflects the combinatorial
-nature of online multi-robot task assignment under temporal and communication
-constraints. In practice, the effective search space is typically much smaller.
-The upper and lower bounds computed at each node allow large portions of the
-tree to be discarded early, especially when the adaptive objective in
-\eqref{ch05:eq:adaptive_objective} quickly separates promising task sequences
-from unproductive ones. The branch-and-bound structure is therefore important
-not only for correctness, but also for computational tractability within a
-finite replanning budget.
+This conservative bound reflects the combinatorial structure of online
+multi-robot task assignment with temporal and communication constraints. In
+practice, node bounds prune large parts of the tree, especially when
+\eqref{ch05:eq:adaptive_objective} separates productive sequences from
+unproductive ones early in the search.
 
 \begin{lemma}
 \label{ch05:lem:alg2_graph_connect}
@@ -845,11 +774,8 @@ infinite-horizon average objective, and the local optimum induced by
 \end{proof}
 
 
-This section showed that communication should be treated as a design
-variable of the coordination process rather than as a passive execution
-constraint. Collaborative-task assignment, fleet-wise communication
-events, and online replanning were integrated within a single
-optimization loop, yielding cyclewise feasibility and a principled
-approximation of the long-run objective. The next section studies a
-complementary setting in which intermittent connectivity is not merely
-scheduled, but structurally embedded into the exploration process.
+This section treated communication as a design variable of the coordination
+process. Collaborative-task assignment, fleet-wise communication events, and
+online replanning were integrated into one optimization loop, yielding cyclewise
+feasibility and a local approximation of the long-run objective. The next
+section embeds intermittent connectivity directly into exploration.

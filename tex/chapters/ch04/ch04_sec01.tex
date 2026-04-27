@@ -1,18 +1,12 @@
 \section{Partial-Order-Based Task Decomposition and Assignment}
 \label{ch04:sec:po_decomp_assignment}
 
-This section develops the first component of the top-down synthesis framework
-for global temporal tasks. Subsection~\ref{ch04:subsec:problem_statement}
-introduces the team-level model, the global task specification, and the
-optimization objective. The task-decomposition stage is then developed through
-the pruning step in
-Section~\ref{ch04:subsubsec:NBA-pruning} and the partial-order
-abstraction in Section~\ref{ch04:subsubsec:task-decompose}. Based on the
-resulting temporal structure, Section~\ref{ch04:subsubsec:task-assignment}
-presents an anytime assignment procedure for allocating subtasks to feasible
-robots or coalitions. Together, these components convert a global temporal
-task into an assignment-oriented representation that preserves correctness
-while allowing concurrent execution whenever the task structure permits it.
+This section develops the first component of the top-down synthesis framework.
+It introduces the team model and global task specification, prunes the task
+automaton, extracts a relaxed partial-order representation, and assigns the
+resulting subtasks to feasible robots or coalitions. The outcome is an
+assignment-oriented representation that preserves task correctness while
+allowing concurrency whenever the temporal structure permits it.
 
 
 
@@ -24,14 +18,10 @@ while allowing concurrent execution whenever the task structure permits it.
 \label{ch04:subsec:problem_statement}
 
 This subsection introduces the team-level model, the global task specification,
-and the optimization objective used throughout
-Section~\ref{ch04:sec:po_decomp_assignment}. In contrast to the bottom-up
-setting of Chapter~\ref{chap:bottom-up}, the task is specified directly at the
-team level rather than through a collection of local formulas. The resulting
-model is therefore intentionally compact. It retains the motion capabilities,
-action capabilities, and collaborative requirements needed for global-task
-synthesis, while abstracting away from the richer execution-level details used
-in the local motion-and-action model of the previous chapter.
+and the optimization objective. Unlike the bottom-up setting of
+Chapter~\ref{chap:bottom-up}, the task is specified directly at the team level.
+The model therefore retains only the motion capabilities, action capabilities,
+and collaborative requirements needed for global-task synthesis.
 
 \subsubsection{Team model}
 \label{ch04:subsubsec:team_model}
@@ -63,20 +53,15 @@ $a_{k,j} \in \mathcal{A}^{\mathrm{c}}$ for all
 $j \in \{1, \cdots, \ell_{k}\}$. The duration of behavior $C_{k}$ is denoted by
 $d_{c}(C_{k}) \in \mathbb{R}_{>0}$.
 
-This model characterizes a collaborative behavior through the required action
-capabilities rather than through fixed robot identities. This distinction is
-important in the assignment stage, since any feasible robot or coalition may be
-selected later. Representative examples include formation, herding, consensus,
-and coverage behaviors
+A collaborative behavior is characterized by required action capabilities rather
+than fixed robot identities, so any feasible robot or coalition can be selected
+later. Representative examples include formation, herding, consensus, and
+coverage behaviors
 \cite{chen2005formation,pan2007multi,li2009consensus,mesbahi2010graph}.
-Compared with the motion-and-action model in
-Chapter~\ref{chap:bottom-up}, the present abstraction is coarser in two
-respects. First, the detailed execution logic of local and assisting actions is
-not modeled explicitly at this stage. Second, collaborative behaviors are
-described through capability requirements and execution durations, rather than
-through online request, reply, and confirmation mechanisms. This simplification
-is deliberate, since the present section focuses on global-task decomposition
-and assignment rather than execution-level coordination.
+Compared with Chapter~\ref{chap:bottom-up}, this abstraction omits the detailed
+execution logic of local and assisting actions and describes collaboration only
+through capability requirements and execution durations, which is sufficient for
+global-task decomposition and assignment.
 
 \subsubsection{Global task specification}
 \label{ch04:subsubsec:global_task_spec}
@@ -140,13 +125,12 @@ satisfies $\varphi$ and the completion time $T_{\varphi}$ in
 \eqref{ch04:eq:completion_time} is minimized.
 \end{problem}
 
-The problem above is computationally difficult. Its core already contains
-makespan minimization for multi-stage scheduling, which is NP-hard
-\cite{hochba1997approximation,bovet1994introduction}. Approximate methods for
-multi-robot allocation and scheduling address related aspects of this
-difficulty \cite{khamis2015multi,hoos2004stochastic}. The additional challenge
-here is that mobility constraints, temporal-logic semantics, and collaborative
-behaviors must be handled within one synthesis framework.
+Problem~\ref{ch04:prob:global_task_assignment} is computationally difficult: it
+already contains NP-hard makespan minimization for multi-stage scheduling
+\cite{hochba1997approximation,bovet1994introduction}, with additional mobility,
+temporal-logic, and collaboration constraints. Approximate multi-robot
+allocation and scheduling methods address related aspects of this difficulty
+\cite{khamis2015multi,hoos2004stochastic}.
 
 
 
@@ -168,31 +152,21 @@ behaviors must be handled within one synthesis framework.
 \subsection{Task decomposition based on posets}
 \label{ch04:subsec:task-decompose-posets}
 
-This subsection develops the task-decomposition step that underlies the
-subsequent assignment procedure. Since the global mission is specified by a
-compact temporal formula, it must first be converted into explicit subtask
-occurrences together with the temporal constraints that couple them. The
-original temporal description would be too implicit for assignment, while a
-fully sequential decomposition would be unnecessarily restrictive and would
-exclude many concurrent executions that are in fact admissible. The goal here
-is therefore to construct a decomposition that preserves the temporal
-structure required for correctness, while relaxing unnecessary ordering
-constraints so that the later assignment stage can exploit parallelism.
+This subsection converts the compact global formula into explicit subtask
+occurrences and temporal constraints. The decomposition must be sufficiently
+expressive for assignment but less restrictive than a fully sequential run, so
+that later allocation can exploit admissible parallelism.
 
 \subsubsection{B\"{u}chi automaton pruning}
 \label{ch04:subsubsec:NBA-pruning}
 
 The construction starts from the NBA $\mathcal{B}_{\varphi}$ associated with
-the global task $\varphi$, which can be obtained, for instance, by translation
-tools such as~\cite{gastin2001fast}. The automaton
-$\mathcal{B}_{\varphi}$ has the standard structure in
-Definition~\ref{ch02:def:NBA}. For the present multi-robot setting, however,
-this automaton can contain substantial redundancy. In particular, some
-transitions require alphabets that cannot be generated by the team, some
-states cannot lie on any accepting run, and some transitions encode
-simultaneous requirements that admit equivalent sequential realizations.
-Removing such redundancy yields a smaller automaton and improves the
-efficiency of the later decomposition and assignment steps.
+$\varphi$, obtained by standard translation tools such as~\cite{gastin2001fast}
+and having the structure of Definition~\ref{ch02:def:NBA}. In the multi-robot
+setting, this automaton may contain infeasible alphabets, states outside all
+accepting runs, and simultaneity constraints that admit equivalent sequential
+realizations. Pruning these elements reduces the automaton used for later
+decomposition and assignment.
 The pruning procedure contains three parts. First, a transition
 $q_{j} \in \delta(q_{i}, \sigma)$ is removed if the alphabet $\sigma$ is
 infeasible for the team. This can be checked by verifying whether the
@@ -220,22 +194,13 @@ where the direct transition and the two-step path connect the same pair of
 states.
 \end{definition}
 
-Definition~\ref{ch04:def:decomposable-transition} captures a transition whose
-input alphabet can be split into two parts without changing the logical
-effect of the run. In the present setting, such a transition is
-unnecessarily strict, because it requires several subtask propositions to be
-realized at exactly the same instant. This requirement is typically
-unrealistic in distributed multi-robot execution. Therefore, whenever the
-condition in \eqref{ch04:eq:decomposable_transition} holds, the direct edge
-can be removed and replaced by the corresponding two-step path. The
-decomposability test can be implemented by comparing the propositional
-formulas attached to transitions.
-The pruned automaton is denoted by $\mathcal{B}_{\varphi}^{-}$. It has the
-same general structure as $\mathcal{B}_{\varphi}$, but with fewer states and
-transitions. In practice, this reduction can be substantial for
-representative multi-robot specifications. The key point, however, is not
-only computational saving, but also that the pruned automaton retains the
-accepting behaviors needed for the subsequent decomposition.
+Definition~\ref{ch04:def:decomposable-transition} identifies a transition whose
+alphabet can be split without changing the logical effect of the run. Such a
+transition imposes unnecessary simultaneity on distributed execution, so the
+direct edge can be replaced by the corresponding two-step path whenever
+\eqref{ch04:eq:decomposable_transition} holds. The pruned automaton is denoted
+by $\mathcal{B}_{\varphi}^{-}$; it retains the accepting behaviors needed for
+decomposition while reducing the search space.
 
 \begin{lemma}
 \label{ch04:lemma:pruned_nba_equiv}
@@ -286,26 +251,15 @@ words by $98.6\%$.
 \subsubsection{Task decomposition}
 \label{ch04:subsubsec:task-decompose}
 
-Since the team task is given by a compact temporal formula, an intermediate
-decomposition is needed before assignment can be carried out efficiently.
-Unlike simple reachability objectives, temporal tasks impose logical
-constraints on the relative ordering of multiple subtask occurrences. For
-instance,
+An intermediate decomposition is needed because temporal formulas impose
+logical ordering constraints among subtask occurrences. For instance,
 $\Diamond(\alpha_{1}\land\Diamond(\alpha_{2}\land\Diamond\alpha_{3}))$
-requires $\alpha_{1}$, $\alpha_{2}$, and $\alpha_{3}$ to be satisfied in
-sequence, whereas
-$\Diamond\alpha_{1}\land\Diamond\alpha_{2}\land\Diamond\alpha_{3}$
-does not impose such an order. Therefore, the decomposition step should
-retain the temporal structure needed for correctness while avoiding the
-unnecessary conservatism of a fully sequential execution.
-This subsection extracts subtasks and their temporal relations from the
-pruned automaton $\mathcal{B}_{\varphi}^{-}$. The construction starts from
-one accepting run of $\mathcal{B}_{\varphi}^{-}$ and first derives a
-sequence of indexed subtask occurrences. This sequence is then relaxed into a
-partial-order representation, called an R-poset, which keeps only the
-essential temporal constraints. The resulting abstraction is less
-restrictive than the original run and is therefore better suited for
-concurrent execution and later assignment.
+requires sequential satisfaction of $\alpha_{1}$, $\alpha_{2}$, and
+$\alpha_{3}$, whereas
+$\Diamond\alpha_{1}\land\Diamond\alpha_{2}\land\Diamond\alpha_{3}$ does not.
+The construction therefore extracts indexed subtasks from an accepting run of
+$\mathcal{B}_{\varphi}^{-}$ and relaxes the induced total order into an
+R-poset that keeps only the temporal constraints needed for correctness.
 
 \begin{definition}
 \label{ch04:def:subtasks}
@@ -332,20 +286,12 @@ $\sigma\cap\sigma_{\ell}^{s}=\emptyset$, then
 $q_{\ell-1}\in\delta(q_{\ell-1},\sigma)$.
 \end{definition}
 
-Each subtask $\omega_{\ell}$ contains three components: its index, the
-transition label $\sigma_{\ell}$, and the corresponding self-loop label
-$\sigma_{\ell}^{s}$. The index is essential, since the same proposition set
-may appear more than once along an accepting run and the distinct
-occurrences must be distinguished. The label $\sigma_{\ell}$ records the
-propositions that must be satisfied in order to move from $q_{\ell-1}$ to
-$q_{\ell}$, whereas $\sigma_{\ell}^{s}$ records the propositions that must
-remain inactive before that transition is taken. If no self-loop condition
-is present, one may set $\sigma_{\ell}^{s}=\emptyset$.
-Definition~\ref{ch04:def:subtasks} inherits the full order of the accepting
-run, since the subtasks are indexed according to their appearance in $\rho$.
-This total order is correct but often too restrictive. In particular, it
-forbids concurrent execution of subtasks that are logically independent. To
-reduce this conservatism, two partial relations are introduced.
+Each subtask records its index, transition label, and self-loop label. The
+index distinguishes repeated occurrences of the same proposition set;
+$\sigma_{\ell}$ specifies what must hold for the transition, and
+$\sigma_{\ell}^{s}$ specifies what must remain inactive before it. The induced
+order of the accepting run is correct but often too restrictive, so two partial
+relations are introduced to recover admissible concurrency.
 
 \begin{example}
 \label{ch04:example:subtask}
@@ -382,22 +328,17 @@ $\widehat{\Omega}\subseteq\Omega_{\varphi}$ if the subtasks in
 $\widehat{\Omega}$ cannot all be executed simultaneously.
 \end{definition}
 
-The pair $(\preceq_{\varphi},\neq_{\varphi})$ is needed because the
-propositions associated with actions remain true over a nonzero interval in
-the present model. In much of the related literature, action satisfaction is
-treated as instantaneous, and a single precedence relation is therefore
-sufficient
+The pair $(\preceq_{\varphi},\neq_{\varphi})$ is needed because action
+propositions remain true over nonzero intervals. Unlike models with
+instantaneous action satisfaction, where a single precedence relation often
+suffices
 \cite{kantaros2020stylus,guo2015multi,tumova2016multi,
 luo2021abstraction,luo2022temporal,sahin2019multirobot,
-jones2019scratchs}. Here, however, the distinction between start order and
-simultaneous execution cannot be ignored. The two relations can distinguish
-the main temporal situations between two subtasks: one may start before the
-other and still overlap with it, one may have to finish before the other
-starts, two may be mutually exclusive without a fixed order, or they may be
-fully parallel. The two relations therefore distinguish start-order constraints, finish-before-start constraints, mutual exclusion without fixed order, and fully parallel execution. The construction also contains the
-decomposable-state abstraction in~\cite{schillinger2018simultaneous} as a
-special case, but allows independent subtasks to appear even within the same
-segment of an accepting run.
+jones2019scratchs}, the present model must distinguish start-order constraints,
+finish-before-start constraints, mutual exclusion, and full parallelism. The
+construction contains the decomposable-state abstraction of
+\cite{schillinger2018simultaneous} as a special case, while allowing independent
+subtasks within the same accepting-run segment.
 
 \begin{definition}
 \label{ch04:def:poset}
@@ -412,28 +353,18 @@ where the two relations are given by
 Definition~\ref{ch04:def:partial}.
 \end{definition}
 
-The relation $\preceq_{\varphi}$ is irreflexive, asymmetric, and transitive
-in the usual sense. The relation $\neq_{\varphi}$ is not transitive. For
-example, $\{\omega_{1},\omega_{2}\}\in\neq_{\varphi}$ and
-$\{\omega_{2},\omega_{3}\}\in\neq_{\varphi}$ do not imply
-$\{\omega_{1},\omega_{3}\}\in\neq_{\varphi}$. Similarly,
-$\{\omega_{1},\omega_{2},\omega_{3}\}\in\neq_{\varphi}$ does not imply that
-every pairwise subset belongs to $\neq_{\varphi}$.
-The number of relations retained in an R-poset determines how restrictive
-the execution becomes. At one extreme,
-$\preceq_{\varphi}=\emptyset$ and $\neq_{\varphi}=\emptyset$
-allow arbitrary temporal arrangement of the subtasks. At the other extreme,
-the original sequential order is recovered. For later use, let
+The relation $\preceq_{\varphi}$ is irreflexive, asymmetric, and transitive,
+whereas $\neq_{\varphi}$ is not transitive. The number of retained relations
+determines the restrictiveness of execution: empty relations allow arbitrary
+arrangement, while the full relation recovers the original sequential order.
+For later use, let
 \[
 \mathbb{F}\triangleq
 \{(i,j)\mid i,j\in\{1,\cdots,L\},\,i<j\},
 \]
-denote the full precedence relation. Fewer relations generally allow more
-concurrency and thus greater execution efficiency.
-The language induced by an R-poset is defined next. Since the purpose of an
-R-poset is to relax the original accepting run without violating the task,
-its language must include only those timed subtask words that satisfy the
-partial constraints.
+denote the full precedence relation. Fewer retained relations generally allow
+more concurrency. The language of an R-poset is defined next as the set of
+timed subtask words that satisfy these partial constraints.
 
 \begin{definition}
 \label{ch04:def:language-poset}
@@ -462,17 +393,12 @@ durations of $\omega_{\ell}$ and $\omega_{\ell'}$, respectively.
 \end{definition}
 
 With a slight abuse of notation, $w_{\varphi}$ may also denote the symbolic
-sequence $\omega_{1}\omega_{2}\cdots\omega_{L}$ when the start times are not
-needed. An R-poset $P_{\varphi}$ is called \emph{accepting} if
-$L(P_{\varphi})\subseteq L_{\varphi}$. Therefore, instead of searching
-directly for one accepting word of $\varphi$, the synthesis problem can be
-recast as the search for accepting R-posets that admit efficient execution.
-Generating the complete family of accepting R-posets is, however,
-computationally expensive. Even enumeration of all accepting runs of
-$\mathcal{B}_{\varphi}^{-}$ has worst-case complexity
-$\mathcal{O}(|Q^{-}|!)$. This motivates an anytime construction that returns
-valid R-posets quickly and refines the collection as time permits. For a
-subtask set $\Omega$, let
+sequence $\omega_{1}\omega_{2}\cdots\omega_{L}$. An R-poset is accepting if
+$L(P_{\varphi})\subseteq L_{\varphi}$, so synthesis can search for accepting
+R-posets rather than single accepting words. Since enumerating all accepting
+runs of $\mathcal{B}_{\varphi}^{-}$ has worst-case complexity
+$\mathcal{O}(|Q^{-}|!)$, an anytime construction is used. For a subtask set
+$\Omega$, let
 $2_{\ge 2}^{\Omega}\triangleq \{\widehat{\Omega}\subseteq\Omega \mid |\widehat{\Omega}|\ge 2\}$,
 which is the family of all subsets of $\Omega$ with cardinality at least
 two. Also, for any pair of automaton states $q,q'$, let
@@ -481,7 +407,7 @@ $\delta^{-1}(q,q')\triangleq
 which denotes the set of alphabets that induce the transition from $q$ to
 $q'$.
 
-\begin{algorithm}[h]
+\begin{algorithm}[t!]
 \caption{Anytime computation of accepting R-posets
 $\texttt{compute\_poset}(\cdot)$}
 \label{ch04:alg:compute-poset}
@@ -562,34 +488,14 @@ $(q_{0},q_{f})\in Q_{0}^{-}\times Q_{F}^{-}$.\;
 \Return{$\mathcal{P}_{\varphi},\mathcal{L}_{\varphi}$}.\;
 \end{algorithm}
 
-Algorithm~\ref{ch04:alg:compute-poset} builds on a modified depth-first
-search with local visited sets~\cite{sedgewick2001algorithms}. The search
-generates accepting runs $\rho$ of $\mathcal{B}_{\varphi}^{-}$ over the
-relevant initial-accepting pairs. Each run is then converted into a subtask
-set $\Omega$ and an associated seed word $w$ by
-Definition~\ref{ch04:def:subtasks}; see
-Line~\ref{ch04:alg-line:decompose}. From this word, a fully ordered R-poset
-is initialized in Line~\ref{ch04:alg-line:initial}.
-The first reduction step concerns the precedence relation
-$\preceq_{\varphi}$. The queue $Que$ stores accepting words associated with
-the same subtask set $\Omega$. Adjacent subtasks are switched as in
-Line~\ref{ch04:alg1:switch}. If the resulting word remains accepting, the
-corresponding precedence constraint can be removed; otherwise it must be
-retained. This process continues until the queue is empty or the time budget
-is exhausted. The relation $\preceq_{\varphi}$ is then updated in
-Line~\ref{ch04:alg-line:remove} by removing all relaxable pairs.
-The second reduction step concerns the opposition relation
-$\neq_{\varphi}$. For each candidate subset in
-Line~\ref{ch04:alg-line:calculate_neq}, a new word is formed by replacing the
-corresponding subtasks with their union, which represents simultaneous
-execution. If the resulting word is accepting, the subset does not need to
-remain in $\neq_{\varphi}$ and is removed in
-Line~\ref{ch04:alg-line:remove_neq}. Finally, the self-loop labels
-$\sigma_{\ell}^{s}$ are updated from the feasible words in
-Line~\ref{ch04:alg-line:self-loop}. The resulting $P$ is one accepting
-R-poset, with language $L(P)$ as in
-Definition~\ref{ch04:def:language-poset}. As time permits, the DFS continues
-and returns additional R-posets.
+Algorithm~\ref{ch04:alg:compute-poset} uses a modified depth-first search with
+local visited sets~\cite{sedgewick2001algorithms}. Each accepting run is
+converted into a subtask set and seed word, from which a fully ordered R-poset
+is initialized. Adjacent switches that preserve acceptance remove unnecessary
+precedence constraints, while simultaneous-execution tests remove unnecessary
+opposition constraints. The self-loop labels are then updated from feasible
+words, producing one accepting R-poset; the search continues to return more
+R-posets as time permits.
 
 \begin{example}
 \label{ch04:example:r_poset}
@@ -625,14 +531,10 @@ $\neq_{\varphi}$ preserves acceptance. Hence, any word satisfying the final
 relations of $P$ is accepting, which proves $L(P)\subseteq L_{\varphi}$.
 \end{proof}
 
-Since Algorithm~\ref{ch04:alg:compute-poset} is anytime, the set
-$\mathcal{P}_{\varphi}$ returned within a finite time budget may be only a
-subset of the complete family of accepting R-posets. Consequently, a word
-$w\notin\mathcal{L}_{\varphi}$ may still be accepting. Nevertheless, if the
-algorithm is allowed to continue long enough, the complete family is
-obtained. In that case, any word that satisfies none of the returned
-R-posets is necessarily non-accepting. Thus, the full collection of R-posets
-is as expressive as the original pruned automaton.
+Because Algorithm~\ref{ch04:alg:compute-poset} is anytime, a finite-time output
+may cover only part of the accepting language. With unbounded time, however, the
+complete family of accepting R-posets is obtained, and the union of their
+languages is as expressive as the pruned automaton.
 
 \begin{lemma}
 \label{ch04:lemma:complete-poset}
@@ -691,12 +593,10 @@ $\widehat{\Omega}\in\neq_{\varphi}$. A node belongs to $\Omega_{0}$ if it
 has no incoming directed edge in $E$.
 \end{definition}
 
-As in a Hasse diagram~\cite{simovici2008mathematical}, one can construct a
-graphical representation of an R-poset. The graph
-$\mathcal{G}_{P_{\varphi}}$ provides a compact representation of the
-temporal structure of the decomposition. Directed edges encode precedence,
-whereas hyperedges encode mutual exclusion. The graph may be disconnected and may
-contain multiple root nodes.
+As in a Hasse diagram~\cite{simovici2008mathematical},
+$\mathcal{G}_{P_{\varphi}}$ compactly represents the temporal structure of the
+decomposition: directed edges encode precedence, hyperedges encode mutual
+exclusion, and disconnected components indicate independent roots.
 
 
 %========================================
@@ -721,13 +621,10 @@ contain multiple root nodes.
 \subsubsection{Task assignment}
 \label{ch04:subsubsec:task-assignment}
 
-Given the family of accepting R-posets $\mathcal{P}_{\varphi}$ computed in the
-previous subsubsection, the next step is to assign the subtasks in each
-R-poset to the robot team. Since different R-posets induce different temporal
-constraints, the assignment problem is considered first for one fixed
-R-poset $P_{\varphi}\in\mathcal{P}_{\varphi}$ and then compared across the
-candidate R-posets. The objective is to respect the temporal relations encoded
-by $P_{\varphi}$ while minimizing the overall completion time.
+The next step assigns the subtasks of each accepting R-poset to the robot team.
+For a fixed $P_{\varphi}\in\mathcal{P}_{\varphi}$, the objective is to respect
+its temporal relations while minimizing completion time; candidate R-posets are
+then compared through the resulting assignments.
 
 \begin{problem}
 \label{ch04:prob:task_assignment}
@@ -739,21 +636,14 @@ $\preceq_{\varphi}$ and $\neq_{\varphi}$ are respected and the makespan of the
 resulting team execution is minimized.
 \end{problem}
 
-Even without the temporal relations and collaborative requirements, the problem
-already contains the multi-vehicle routing problem~\cite{khamis2015multi} and
-the job-shop scheduling problem~\cite{morrison2016branch} as special cases.
-Both are NP-hard. Therefore, Problem~\ref{ch04:prob:task_assignment} is also
-NP-hard. A direct mixed-integer linear programming formulation is possible, but
-it is not attractive for large-scale real-time settings. Its complexity grows
-rapidly with the problem size, and a solver typically provides no useful
-intermediate assignment before convergence. In time-critical applications, a
-good feasible solution within a prescribed budget is often more valuable than a
-late optimal one.
-Motivated by these considerations, an anytime assignment procedure based on
-branch and bound is adopted; see~\cite{morrison2016branch}. The method remains
-complete and optimal, while also returning progressively better feasible
-solutions as time permits. The key ingredients are node expansion,
-branching, and the construction of upper and lower bounds.
+Problem~\ref{ch04:prob:task_assignment} contains the multi-vehicle routing
+problem~\cite{khamis2015multi} and job-shop scheduling
+\cite{morrison2016branch} as special cases, and is therefore NP-hard. A direct
+mixed-integer formulation is possible but unsuitable for large real-time
+instances because useful intermediate assignments may not be available before
+convergence. An anytime branch-and-bound procedure is therefore adopted; it
+remains complete while returning progressively better feasible solutions. Its
+main components are node expansion, branching, and upper and lower bounds.
 
 (I) \emph{Node expansion.}
 Each node of the search tree represents one partial assignment of subtasks,
@@ -818,7 +708,7 @@ $\overline{T}_{\nu}$ is its makespan, and $\overline{T}_{\Omega}$ is the vector
 of subtask starting times. Starting from $\nu$, each remaining subtask
 $\omega\in\Omega_{\nu}^{-}$ is tentatively assigned to each admissible robot
 set, thus generating a family of child nodes. For each such node, the
-concurrency index is estimated by
+concurrency index is estimated by:
 \begin{equation}
 \label{ch04:eq:node-makespan}
 T_{\nu}\triangleq\max_{n\in\mathcal{N}}T_{\tau_n}, \qquad
@@ -837,7 +727,7 @@ with the largest value of $\eta_{\nu}$ until all subtasks are assigned.
 Moreover, the lower bound is estimated from two relaxations of the original problem.
 The first retains only the temporal relations and relaxes the robot-capacity
 constraints. The second retains the robot-capacity constraints and relaxes the
-temporal relations. Accordingly, the lower bound is written as
+temporal relations. Accordingly, the lower bound is written as:
 \begin{equation}
 \label{ch04:eq:lower-bound}
 \underline{T}_{\nu}\triangleq \texttt{lower\_bound}(\nu,P_{\varphi})
@@ -854,14 +744,11 @@ in~\cite{liu2022arxiv}. Both the upper-bound and lower-bound routines are
 designed to avoid integer optimization, which helps keep their runtime
 predictable during the search.
 
-Given the components above, the anytime branch-and-bound procedure is stated in
-Algorithm~\ref{ch04:alg:BnB}. The root node is the empty assignment. The queue
-stores unvisited nodes together with their lower bounds. At each iteration, the
-node with smallest lower bound is selected for expansion. Its greedy completion
-provides an upper bound, which is used to update the incumbent solution. The
-child nodes are then generated and evaluated by the lower bound. Any child node
-whose lower bound exceeds the current best makespan is discarded. The procedure
-terminates when the queue becomes empty or the time budget is exhausted.
+Algorithm~\ref{ch04:alg:BnB} summarizes the resulting anytime search. The root
+is the empty assignment, the queue stores unvisited nodes with lower-bound keys,
+and each selected node is greedily completed to update the incumbent. Children
+whose lower bounds exceed the current best makespan are discarded, and the
+search stops when the queue is empty or the time budget is exhausted.
 
 \begin{algorithm}[t]
 \caption{Anytime branch-and-bound search for task assignment}

@@ -3,38 +3,19 @@
 \label{ch05:sec:ch05_human}
 
 
-The previous section established a latency-bounded coordination
-framework in which the operator and the robot fleet maintain
-intermittent communication through an embedded wheel backbone. That
-framework supports exploration and information exchange while keeping
-the communication burden localized in time and space. In practice,
-however, the mission may also be altered online by temporal requests
-that cannot always be realized by updating local plans alone. Some
-requests only modify priorities or timing and can therefore be
-absorbed within the current backbone. Others require a temporary
-reconfiguration of the embedded topology, for instance to maintain a
-communication chain, to support relocation of the operator, or to
-dispatch a robot for external-demand exchange.
+The previous section established latency-bounded exploration through an embedded
+wheel backbone. Online temporal requests may, however, require more than local
+plan updates: some requests modify priorities or timing within the current
+backbone, whereas others require temporary topology reconfiguration for
+communication chains, operator relocation, or external-demand exchange.
 
-This section develops a topology-adaptive coordination layer for such
-requests. The key idea is to treat the wheel backbone as the nominal
-communication structure and to modify it only when the incoming request
-cannot be fulfilled within the current embedding. When a topology
-change is necessary, a subset of robots is detached from the backbone,
-assigned to a request-consistent embedded topology, and later merged
-back after the request has been completed. In this way, request
-fulfillment is incorporated into the same intermittent-communication
-framework as exploration, rather than being handled by a separate
-coordination mechanism.
-The presentation proceeds in two steps.
-Section~\ref{ch05:subsec:requests} formulates the topology
-optimization problem for a single temporal request, including backbone
-resizing, role assignment, and realization cost. It also describes how
-different request classes are instantiated through topology updates
-or changing. Section~\ref{ch05:subsec:online-requests} then extends this
-mechanism to the online setting with multiple simultaneous requests,
-where admissibility, compatibility, and sequential execution must be
-handled on the evolving embedded topology.
+This section develops a topology-adaptive coordination layer. The wheel remains
+the nominal structure and is modified only when the request cannot be fulfilled
+within the current embedding. Then a subset of robots is detached, assigned to a
+request-consistent topology, and merged back after completion. The section first
+formulates single-request topology optimization, including resizing, role
+assignment, and realization cost, and then extends the mechanism to multiple
+online requests through admissibility, compatibility, and sequential execution.
 
 %==============================
 %==============================
@@ -42,23 +23,13 @@ handled on the evolving embedded topology.
 \subsection{Topology optimization for diverse temporal requests}
 \label{ch05:subsec:requests}
 
-This subsection develops the topology-optimization layer for
-request-adaptive coordination. Starting from the current wheel
-backbone, the objective is to determine whether an incoming temporal
-request can be fulfilled by an embedding update alone or whether it
-requires an explicit topology change. In the latter case, the problem
-is to construct a request-consistent embedded topology together with a
-resized backbone, a feasible detachment schedule, and a role
-assignment for the robots involved. The resulting formulation treats
-request fulfillment as a constrained reconfiguration problem over the
-existing communication structure.
-The presentation is organized as follows. It first formulates the
-instantiation problem and the associated realization cost. It then
-describes the optimization procedure used to evaluate candidate
-topologies and select an executable realization. Finally, it
-distinguishes the realization modes induced by different request
-types, separating topology-preserving updates from topology-changing
-instantiations.
+This subsection develops the topology-optimization layer. Starting from the
+current wheel backbone, the planner decides whether a request can be handled by
+an embedding update or requires an explicit topology change. In the latter
+case, it constructs a request-consistent topology, a resized backbone, a
+feasible detachment schedule, and a role assignment. The subsection formulates
+the instantiation cost, gives the optimization procedure, and separates
+topology-preserving from topology-changing realization modes.
 
 % =========================================================
 \subsubsection{Topology match for temporal request}
@@ -191,12 +162,9 @@ Choose an initial candidate
 \subsubsection{Optimization of topology instantiation}
 \label{ch05:subsubsec:request_optimization}
 
-The realization
-procedure is as follows. For a given candidate family
-\(\widehat{\mathcal{G}}^{\xi}\), the procedure evaluates feasible
-backbone-resizing schedules, assigns detached robots to the roles of
-the selected target topology, and returns the candidate that minimizes
-\eqref{ch05:eq:match_objective}.
+For a candidate family \(\widehat{\mathcal{G}}^{\xi}\), the procedure evaluates
+feasible backbone-resizing schedules, assigns detached robots to target roles,
+and returns the candidate minimizing \eqref{ch05:eq:match_objective}.
 Consider a candidate
 \(\mathcal{G}^{\xi}\in\widehat{\mathcal{G}}^{\xi}\). Let
 \(\mathcal{N}^{\xi}\) be the robots assigned to this target topology.
@@ -356,13 +324,10 @@ an executable topology transition that minimizes
 \subsubsection{Realization modes for temporal requests}
 \label{ch05:subsubsec:request_modes}
 
-Requests are realized in one of two ways. For topology-preserving
-requests, the wheel backbone \(\mathcal{G}^{\texttt{w}}\) remains
-unchanged and only its embeddings are updated. For
-topology-changing requests, Algorithm~\ref{ch05:alg:topologymatch} is invoked
-to instantiate a request-consistent subtopology and to compute the
-associated detach schedule and role assignment. In both cases, the
-remaining robots keep the wheel backbone active so that
+Requests are realized either by preserving the wheel backbone and updating only
+its embeddings, or by invoking Algorithm~\ref{ch05:alg:topologymatch} to
+instantiate a request-consistent subtopology with a detach schedule and role
+assignment. In both cases, the remaining robots keep the wheel active so that
 latency-bounded intermittent communication is preserved.
 
 (I) \emph{Intra-fleet communication with bounded latency.}
@@ -375,7 +340,7 @@ latency-bounded information flow. The requests \(\xi_2\) and
 \eqref{ch05:eq:embed-update} while retaining the same topology.
 For \(\xi_2\), frontiers in the prohibited region
 \(\mathcal{P}^{-}\) are excluded, while the remaining frontiers are
-prioritized toward \(\mathcal{P}^{+}\) through the evaluaiton:
+prioritized toward \(\mathcal{P}^{+}\) through the evaluation:
 \begin{equation}
 \label{ch05:eq:frontier_weight}
 J(f)\triangleq
@@ -487,27 +452,13 @@ backbone.
 \subsection{Online topological coordination for multiple requests}
 \label{ch05:subsec:online-requests}
 
-This subsection develops the online coordination layer for handling
-multiple simultaneous temporal requests. While
-Section~\ref{ch05:subsec:requests} addressed the realization of an
-individual request on the current wheel backbone, the online setting is
-more involved because several requests may arrive close in time and may
-compete for the same robots. The coordination problem is therefore no
-longer only whether a given request is feasible, but also how several
-requests should be incorporated into the evolving embedded topology
-without violating the communication structure maintained by the
-remaining backbone.
-The proposed mechanism retains the wheel backbone as the nominal
-coordination structure and processes new requests incrementally as they
-arrive. Depending on the request type, the update may take one of two
-forms. Topology-preserving requests are handled directly through
-embedding updates on the current backbone. Topology-changing requests,
-by contrast, require explicit subtopology instantiation, which detaches
-a subset of robots from the current backbone and assigns them to a
-request-consistent structure. Since several such requests may be active
-at the same time, the embedded topology must be interpreted as a
-combination of the remaining wheel backbone and the instantiated
-subtopologies associated with the currently active requests.
+This subsection handles multiple temporal requests. Several requests may arrive
+close in time and compete for the same robots, so the online problem is to
+incorporate them into the evolving embedded topology without violating the
+remaining communication backbone. The wheel remains the nominal structure:
+topology-preserving requests update embeddings, whereas topology-changing
+requests instantiate subtopologies by detaching robot subsets. The full topology
+is therefore the union of the residual wheel and active request subtopologies.
 
 % =========================================================
 \subsubsection{Compatibility and sequential request processing}
@@ -575,17 +526,13 @@ reason, the migration case of \(\xi_3\) is deferred until all other
 active requests have been completed and the full wheel backbone has
 been restored.
 
-Determining a maximum compatible subset of \(\Xi\) under
-\eqref{ch05:eq:compat} is combinatorial. Solving that additional
-selection problem at every request-activation event is not pursued
-here. Instead, the proposed coordination method adopts a tractable
-sequential policy. The requests in \(\Xi\) are ordered either by
-operator-specified priority or by a default first-in-first-out rule.
-They are then examined one by one on the current wheel backbone. A
-topology-preserving request is retained whenever its embedding update
-is admissible. A topology-changing request is retained only if it is
-admissible on the remaining wheel backbone and
-\(\texttt{TopologyMatch}(\cdot)\) returns an executable instantiation.
+Finding a maximum compatible subset of \(\Xi\) under \eqref{ch05:eq:compat} is
+combinatorial. The method therefore uses a sequential policy: requests are
+ordered by operator priority or first-in-first-out order and examined on the
+current wheel backbone. A topology-preserving request is retained when its
+embedding update is admissible; a topology-changing request is retained only if
+it is admissible on the residual wheel and \(\texttt{TopologyMatch}(\cdot)\)
+returns an executable instantiation.
 Let \(\mathcal{G}^{\texttt{w},0}\) denote the wheel backbone before
 the new request bundle is processed. For \(\ell=1,\cdots,L\), if the
 request \(\xi^{\ell}\) requires topology instantiation and is admissible
@@ -698,22 +645,15 @@ found admissible.
 \subsubsection{Online interaction and execution}
 \label{ch05:subsubsec:interaction}
 
-The interaction interface allows the operator to issue online
-requests to the fleet. At time \(t\), a command from the
-operator \(\texttt{h}\) is parsed into a request bundle
-\(\Xi \triangleq \{\xi^{\ell}\}\), together with the associated
-parameters, and is transmitted to the fleet through the intermittent
-communication mechanism. Execution remains fully distributed and is
-driven by the pairwise coordination law in
-Algorithm~\ref{ch05:alg:coordination}. Initially, the fleet maintains the
-joint-wheel backbone
-\(\mathcal{G}=\mathcal{G}_{0}^{\texttt{w}}\), which satisfies the
-intra-fleet latency bound \(T_{\texttt{h}}\) associated with
-\(\xi_1\). External-demand exchange under \(\xi_7^{\texttt{e}}\) is
-subject to the bound \(T_{\texttt{e}}\). Whenever a robot meeting
-occurs, local embeddings and collected data are fused through
-\(\texttt{IntmCoord}(\cdot)\), thereby maintaining latency-bounded
-information propagation without centralized synchronization.
+The interaction interface parses an operator command at time \(t\) into a
+request bundle \(\Xi \triangleq \{\xi^{\ell}\}\) with parameters and transmits
+it through intermittent communication. Execution remains distributed and is
+driven by Algorithm~\ref{ch05:alg:coordination}. Initially,
+\(\mathcal{G}=\mathcal{G}_{0}^{\texttt{w}}\) satisfies the intra-fleet latency
+bound \(T_{\texttt{h}}\), while external-demand exchange under
+\(\xi_7^{\texttt{e}}\) is subject to \(T_{\texttt{e}}\). At each meeting,
+\(\texttt{IntmCoord}(\cdot)\) fuses embeddings and data, maintaining
+latency-bounded propagation without centralized synchronization.
 
 When a new request bundle \(\Xi\) is received, the online
 coordination layer processes the requests sequentially under the

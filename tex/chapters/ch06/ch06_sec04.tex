@@ -8,13 +8,10 @@
 
 This case study illustrates the reactive coordination framework
 developed in Section~\ref{ch06:sec:ch06_uncertain}. The emphasis is on the
-interaction among target-motion prediction from
-Section~\ref{ch06:subsec:traj-predictor}, conformal prediction regions
-from Section~\ref{ch06:subsec:cpr}, R-poset abstraction from
-Section~\ref{ch06:subsec:poset}, uncertainty-aware task assignment from
-Section~\ref{ch06:subsec:assignment}, and the online adaptation
-mechanism governed by \eqref{ch06:eq:task-update} and
-\eqref{ch06:eq:update_eta}. The environment is a city-like road network
+interaction among target-motion prediction, conformal prediction regions,
+R-poset abstraction, uncertainty-aware task assignment,
+and the online adaptation mechanism governed.
+The environment is a city-like road network
 with static obstacles and multiple moving targets.
 
 
@@ -98,9 +95,9 @@ deployment of the UAV team. The right panel shows the overall
 trajectories generated during execution. In this scenario, the task
 formula in \eqref{ch06:eq:case_dynamic_static}, together with the
 reactive updates in \eqref{ch06:eq:case_dynamic_reactive}, is abstracted
-into an R-poset as in Section~\ref{ch06:subsec:poset}. The resulting
+into an R-poset. The resulting
 precedence structure is then used by the CP-based Monte Carlo tree
-search in Subsubsec.~\ref{ch06:sec:cp-mcts} to generate and revise team
+search to generate and revise team
 assignments under predicted target motion and uncertainty.
 
 
@@ -176,10 +173,9 @@ whenever the task structure permits it.
 This case study reports representative simulation results for the
 collaborative optimal transport framework developed in
 Section~\ref{ch06:sec:ch06_stl}. The aim is to illustrate how the batched
-robustness evaluation in Section~\ref{ch06:subsec:batch-stl}, the
-sequential local transport updates in
-Section~\ref{ch06:sec:local}, and the hybrid search procedure in
-Section~\ref{ch06:sec:hybrid} operate together on collaborative STL
+robustness evaluation, the
+sequential local transport update, and the hybrid search procedure
+operate together on collaborative STL
 tasks of moderate scale.
 In all simulations, the robot radius is set to
 $r = 0.1\,\mathrm{m}$, the discrete time step is
@@ -240,7 +236,6 @@ task is given by:
 \end{equation}
 where the first two terms encode the split phase, and the last term
 imposes global connectivity during the merge-and-traverse phase.
-
 Figure~\ref{ch06:fig:split-merge} shows a representative execution. The
 left panel presents the planned trajectories. The three subgroups first
 separate to visit their intermediate target regions and then merge into
@@ -268,7 +263,7 @@ sufficient.
 Let $\mu_A^{i,j}$ denote the predicate that all robots simultaneously
 enter the~$j$-th candidate region of the~$i$-th visitation objective, and
 let $\mu_{\textup{chain}}$ denote the chain predicate for the whole
-team. The corresponding STL task is
+team. The corresponding STL task is given by:
 \begin{equation}
 \phi_2
 =
