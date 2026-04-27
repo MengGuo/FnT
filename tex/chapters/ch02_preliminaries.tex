@@ -893,8 +893,9 @@ system with $|\Pi_i| = 25$, and let the team task use the $75$-state,
 $877$-transition B\"uchi automaton from Example~\ref{ch02:exam:complexity}.
 Then $|\Pi_{\textup{team}}| = 25^N$ and
 $|Q'_{\textup{team}}| = 75 \cdot 25^N$, so the state space grows exponentially
-even though the local model and task automaton remain fixed. Linear
-extrapolation from the single-robot benchmark shows rapid impracticality: with
+even though the local model and task automaton remain fixed,
+as shown in Figure~\ref{fig:ch02:multi_robot_complexity}.
+Linear extrapolation from the single-robot benchmark shows rapid impracticality: with
 six robots, the estimated product-construction time is about $58$ days and the
 estimated synthesis time exceeds $2.7$ days. Direct centralized synthesis is
 therefore unsuitable beyond small teams.

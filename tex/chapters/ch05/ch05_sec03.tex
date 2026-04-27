@@ -171,7 +171,7 @@ Consider a candidate
 Removing \(\mathcal{N}^{\xi}\) from the current wheel backbone
 \(\mathcal{G}^{\texttt{w}}\) yields the resized backbone
 \(\mathcal{G}^{\texttt{w}'}\). The detachment routine in
-Section~\ref{ch05:sec:detach-join} is then invoked to compute a feasible
+Section~\ref{ch05:subsec:spread} is then invoked to compute a feasible
 timed schedule:
 \begin{equation}
 \label{ch05:eq:topologymatch_trs}
@@ -284,7 +284,7 @@ returns a feasible detachment schedule
 time \(T^{\texttt{trs}}(
 \mathcal{G}^{\texttt{w}},\mathcal{G}^{\texttt{w}'})\). By the
 detachment mechanism developed in
-Section~\ref{ch05:sec:detach-join}, feasibility of this subroutine is
+Section~\ref{ch05:subsec:spread}, feasibility of this subroutine is
 equivalent to executability of the backbone-resizing transition.
 Whenever a feasible detachment schedule is returned, the subsequent
 assignment \(\Pi^{\xi}\) is obtained by solving the bottleneck

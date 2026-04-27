@@ -10,7 +10,7 @@ This case study illustrates the reactive coordination framework
 developed in Section~\ref{ch06:sec:ch06_uncertain}. The emphasis is on the
 interaction among target-motion prediction, conformal prediction regions,
 R-poset abstraction, uncertainty-aware task assignment,
-and the online adaptation mechanism governed.
+and the online adaptation mechanism that governs replanning during execution.
 The environment is a city-like road network
 with static obstacles and multiple moving targets.
 
@@ -38,17 +38,15 @@ The team consists of $12$ UAVs, divided into tracking UAVs and
 interception UAVs. Three suspects move through the urban area with
 different mobility patterns, namely one on foot, one on bike, and one
 by car. These suspects are treated as dynamic targets in the sense of
-Section~\ref{ch06:subsec:robots}, while the scouting regions are
+Section~\ref{ch06:sec:problem}, while the scouting regions are
 modeled as static targets with zero velocity. The future motion of the
-suspects is estimated by the predictor in
-Section~\ref{ch06:subsec:traj-predictor}, and the associated
+suspects is estimated by the predictor, and the associated
 uncertainty is incorporated through the conformal regions in
-Section~\ref{ch06:subsec:cpr}.
+Section~\ref{ch06:subsec:trajectory}.
 The mission combines an offline task component with online reactive
 task releases. Initially, the team is required to scout two designated
 regions and to complete track-before-intercept tasks for the three
-suspects. Using the notation of
-Section~\ref{ch06:subsec:task-specification}, the initial task formula
+suspects. The initial task formula
 is specified by:
 \begin{equation}
 \varphi_{\texttt{static}}
