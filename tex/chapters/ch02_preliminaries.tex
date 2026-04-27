@@ -1,17 +1,12 @@
 \chapter{Preliminaries for Single-Robot Temporal Task Planning}
 \label{chap:preliminaries}
 
-This chapter presents the nominal framework for integrated motion planning and
-task planning for a mobile robot. The robot motion in the workspace is first
-represented by a finite-state transition system, which provides a discrete
-abstraction of the underlying continuous dynamics. On the basis of this
-abstraction, the mission specification is described by temporal logic formulas
-defined over the set of abstract states. A model-checking-based synthesis
-procedure is then employed to compute a discrete plan that satisfies the given
-task while optimizing the associated execution cost. Finally, this discrete
-plan is refined into a hybrid control strategy that steers the robot in the
-continuous workspace and ensures satisfaction of the prescribed task
-specification.
+This chapter presents the nominal single-robot framework for integrated motion
+and task planning. Robot motion is abstracted as a finite-state transition
+system, temporal specifications are interpreted over the resulting symbolic
+states, and automata-based synthesis computes a cost-aware plan. The plan is
+then refined into a hybrid controller that realizes the prescribed task in the
+continuous workspace.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -19,16 +14,12 @@ specification.
 \section{Abstraction of Robot Motion}
 \label{ch02:sec:system_abstraction_task_specification}
 
-This section develops a discrete abstraction of robot motion in the workspace.
-The objective is to derive a symbolic model that is sufficiently expressive for
-task specification and formally correct plan synthesis, while remaining close to
-the underlying continuous dynamics. The construction proceeds in three steps.
-First, the workspace is partitioned into finitely many regions. Second, the
-robot dynamics and the available navigation laws are used to determine which
-inter-region motions are actually feasible. Third, the resulting motion
+This section constructs the discrete motion abstraction used for formal task
+specification and plan synthesis. The workspace is first partitioned into
+finitely many regions; the robot dynamics and available navigation laws then
+determine which inter-region motions are feasible; and the resulting motion
 capability is encoded as a weighted finite-state transition system. This model
-serves as the nominal discrete substrate for the temporal-logic framework used
-in the remainder of the chapter.
+serves as the nominal substrate for the temporal-logic framework used below.
 
 \subsection{Workspace model}
 \label{ch02:subsec:workspacemodel}
@@ -39,13 +30,11 @@ Let
 $\Pi \triangleq \{\pi_1,\cdots,\pi_N\}$
 be a finite collection of regions of interest, where each
 $\pi_i \subset \mathcal{W}_0$.
-The set $\Pi$ is assumed to form a partition of the workspace. Hence, the
-regions jointly cover the entire workspace and do not overlap pairwise. This
-assumption is important because the abstraction should assign each robot
-position to one and only one symbolic state.
-Atomic propositions are introduced to describe properties of the robot and of
-the workspace that are relevant to the planning task. The first class of
-propositions records the robot location. Define
+The set $\Pi$ is assumed to partition the workspace, so the regions jointly
+cover $\mathcal{W}_0$ and are pairwise disjoint. Each robot position is
+therefore assigned to one symbolic state. Atomic propositions describe the
+robot and workspace properties relevant to the task. The first class records
+robot location. Define
 $AP_r \triangleq \{a_{r,1},\cdots,a_{r,N}\}$,
 where each proposition $a_{r,i}$ indicates whether the robot is located in
 region $\pi_i$. Its truth value is given by:
@@ -59,7 +48,6 @@ a_{r,i} \triangleq
 \end{equation}
 where the truth value in \eqref{ch02:eq:region_proposition} can be evaluated
 from the output of a localization or positioning module.
-
 Because $\Pi$ is a partition of $\mathcal{W}_0$, exactly one proposition from
 $AP_r$ is true at every instant. This property is essential for obtaining an
 unambiguous symbolic description of the robot motion. In addition to the
@@ -81,25 +69,16 @@ $a_{r,i} \in L(\pi_i)$
 for every $i \in \{1,\cdots,N\}$.
 \end{definition}
 
-Definition~\ref{ch02:def:labeling} associates semantic information with each
-symbolic state. Once the labeling has been fixed, a motion of the robot through
-the partition induces a corresponding sequence of truth assignments over the
-proposition set. This sequence will later be interpreted against temporal logic
-formulas.
-The labeling is assumed to be uniform within each region. Therefore, partial
-satisfaction of a proposition inside a single region is not permitted. If a
-property holds only on a subset of a region, that region should be refined into
-smaller regions so that the truth assignment becomes uniform on each resulting
-cell. This requirement is standard in symbolic abstraction, since the discrete
-model reasons at the level of regions rather than individual points.
-A practical abstraction also requires each region to admit a compact geometric
-representation. Rectangular regions may be described by center, width, and
-height. Circular regions may be described by center and radius. Polygonal
-regions may be encoded through their vertices. Standard geometric procedures,
-such as Delaunay triangulation~\citep{lee1980two} and Voronoi-based
-decomposition~\citep{lavalle2006planning}, can also be used to generate such a
-partition. At this stage, however, the partition is purely geometric and does
-not yet incorporate the robot dynamics or the controller structure.
+Definition~\ref{ch02:def:labeling} attaches semantic information to each
+symbolic state. A robot motion through the partition then induces a sequence of
+truth assignments, which is later interpreted against temporal logic formulas.
+The labeling is assumed uniform within each region; if a property holds only on
+a subset of a region, the region should be refined until the truth assignment is
+cell-wise uniform. Regions should also admit compact geometric descriptions,
+such as rectangles, disks, or polygons. Standard procedures, including Delaunay
+triangulation~\citep{lee1980two} and Voronoi-based
+decomposition~\citep{lavalle2006planning}, may generate such partitions, but
+this purely geometric step does not yet encode dynamics or controllers.
 
 
 \subsection{Robot dynamics and navigation controller}
@@ -114,19 +93,13 @@ where $x(t) \in \mathbb{R}^{n}$ is the system state,
 $u(t) \in \mathbb{R}^{m}$ is the control input, and
 $f : \mathbb{R}^{n} \times \mathbb{R}^{m} \to \mathbb{R}^{n}$
 is assumed to be Lipschitz continuous~\citep{khalil2002nonlinear}.
-The regularity assumption on $f$ ensures that the system in
-\eqref{ch02:eq:dynamic} is deterministic in the standard sense. For every
-admissible initial condition and every admissible control signal, there exists a
-unique state trajectory. The subsequent construction is stated for a general
-nonlinear model. The examples in this chapter, however, primarily involve
-single-integrator and unicycle dynamics.
-Given the partition introduced in
-Section~\ref{ch02:subsec:workspacemodel}, the next question is whether the robot
-can be steered from one region to another under the dynamics
-\eqref{ch02:eq:dynamic}. This notion is stronger than geometric adjacency. Two
-regions may share a boundary and yet fail to admit a feasible transition under
-the available control law. For that reason, the transition relation is defined
-in a control-driven manner.
+The Lipschitz condition ensures deterministic trajectories for admissible
+initial states and controls. The construction is stated for a general nonlinear
+model, although the examples mainly use single-integrator and unicycle
+dynamics. Given the partition in Section~\ref{ch02:subsec:workspacemodel}, the
+relevant question is not mere geometric adjacency, but whether the robot can be
+steered between regions under \eqref{ch02:eq:dynamic}. The transition relation
+is therefore defined in a control-driven manner.
 
 \begin{definition}
 \label{ch02:def:transition}
@@ -148,49 +121,31 @@ $x(t) \in \pi_i \cup \pi_j$
 for all $t \in [t_s,t_f]$.
 \end{definition}
 
-Definition~\ref{ch02:def:transition} imposes two requirements. First, the
-transition must be realizable under an admissible controller. Second, the
-motion should remain within the union of the source and target regions during
-its execution. The second requirement prevents the symbolic transition from
-implicitly relying on intermediate regions that do not appear in the discrete
-plan.
-The above definition is closely connected to the hybrid execution mechanism that
-will be introduced later in the chapter. A symbolic transition is included in
-the abstraction only if a concrete controller exists that can implement it in
-the continuous domain. In this sense, the abstraction is not merely geometric.
-It is explicitly shaped by the dynamical capabilities of the robot and by the
-available control architecture.
-
+Definition~\ref{ch02:def:transition} requires both controller realizability and
+confinement to the source--target region pair. The latter prevents a symbolic
+transition from implicitly using intermediate regions absent from the discrete
+plan. Thus the abstraction is not purely geometric: a symbolic transition is
+included only when a concrete controller can implement it in the continuous
+domain.
 The existence of a suitable navigation law depends on both the robot model and
-the geometry of the workspace decomposition. One representative approach is the
-potential-field construction in~\citep{lindemann2006real}, where a
-differential-drive robot is guided from any point in a region to an adjacent
-region through a prescribed facet. This construction is naturally associated
-with triangular decompositions derived from generalized Voronoi structures.
-Another representative approach is the navigation-function framework
-in~\citep{koditschek1990robot}, which provides provably correct point-to-point
-navigation in sphere worlds with obstacles. Variants of this idea have been
-used in both single-robot and multi-robot settings
+the workspace decomposition. Representative constructions include
+potential-field navigation for differential-drive robots through prescribed
+facets~\citep{lindemann2006real} and navigation functions for provably correct
+point-to-point motion in sphere worlds~\citep{koditschek1990robot}, with
+extensions to single- and multi-robot settings
 \citep{loizou2008density,loizou2002closed,dimarogonas2007decentralized,
-dimarogonas2005decentralized}.
-A navigation method is rarely compatible with an arbitrary geometric partition.
-Consequently, the preliminary partition may need to be refined or reshaped after
-the dynamics and controller structure have been taken into account. Such a
-refinement may produce either an over-approximation or an
-under-approximation~\citep{saidi1999abstract} of the original workspace model.
-If no available navigation strategy is compatible with the geometry, an
-additional controller design step becomes necessary before the abstraction can
-be completed.
+dimarogonas2005decentralized}. Since a controller is rarely compatible with an
+arbitrary partition, the geometry may require refinement or reshaping, yielding
+an over- or under-approximation~\citep{saidi1999abstract} before the
+abstraction is complete.
 
 
 \subsection{Control-driven weighted transition system}
 \label{ch02:subsec:FTS}
 
-The above ingredients now yield a symbolic model of robot motion. Each region
-$\pi_i \in \Pi$ is interpreted as a discrete state representing the event that
-the robot is located in that region. The admissible state changes are exactly
-those induced by Definition~\ref{ch02:def:transition}. This leads to the
-following control-driven transition system.
+The preceding ingredients define the symbolic motion model. Each region
+$\pi_i \in \Pi$ becomes a discrete state, and admissible state changes are
+exactly those induced by Definition~\ref{ch02:def:transition}.
 
 \begin{definition}
 \label{ch02:def:FTS}
@@ -212,14 +167,11 @@ each enabled transition.
 \end{definition}
 
 The weighted transition system in \eqref{ch02:eq:fts} is the discrete model on
-which the robot task will be interpreted. The function $w_c$ quantifies the
-cost of executing a feasible symbolic transition. Depending on the application,
-this quantity may represent travel time, path length, control effort, energy
-consumption, or another performance metric. For later synthesis, the inclusion
-of transition weights makes it possible to reason not only about task
-satisfaction but also about cost-optimal execution.
-The model is assumed to have no terminal states. This assumption is natural for
-the infinite-horizon temporal specifications considered later. For each state
+which tasks are interpreted. The weight $w_c$ may represent travel time, path
+length, control effort, energy, or another metric, enabling synthesis to account
+for both satisfaction and cost. The model is assumed to have no terminal states,
+as is natural for the infinite-horizon specifications considered later. For each
+state
 $\pi_i \in \Pi$, define the successor set
 $\texttt{Post}(\pi_i) \triangleq
 \{\pi_j \in \Pi \mid \pi_i \longrightarrow_c \pi_j\}$.
@@ -230,31 +182,21 @@ $\pi_0 \in \Pi_0$
 and
 $\pi_{k+1} \in \texttt{Post}(\pi_k)$
 for all $k \geq 0$.
-
-Every path induces a corresponding sequence of labels. More precisely, the trace
-generated by a path $\tau$ is the infinite word
+Every path induces a label sequence. The trace generated by
+$\tau$ is
 $\texttt{trace}(\tau) \triangleq
-L_c(\pi_0)L_c(\pi_1)L_c(\pi_2)\cdots$.
-Accordingly, the trace language of the transition system is
+L_c(\pi_0)L_c(\pi_1)L_c(\pi_2)\cdots$, and the trace language is
 $\texttt{Trace}(\mathcal{T}_c) \triangleq
 \{\texttt{trace}(\tau) \mid
 \tau \text{ is an infinite path of } \mathcal{T}_c\}$.
-This notion will be central later, since temporal logic formulas are evaluated
-over such infinite words rather than directly over the continuous state
-trajectories.
-Ultimately periodic paths may be represented compactly by the
-$\omega$-operator~\citep{baier2008principles}. Finally, the transition system
-$\mathcal{T}_c$ is said to be fully known if it faithfully captures the
-workspace model and the robot motion capabilities. It is said to be static if
-it does not vary with time.
-
-
-The constructions above fix the nominal symbolic model used throughout
-this chapter. Workspace partitioning, control-driven reachability, and
-weighted transitions together yield a finite abstraction that remains
-grounded in the robot dynamics rather than in geometry alone. This
-abstraction is the object on which temporal specifications will next be
-imposed.
+Temporal logic formulas are evaluated over these infinite words rather than
+directly over continuous trajectories. Ultimately periodic paths may be written
+compactly using the $\omega$-operator~\citep{baier2008principles}. The
+transition system $\mathcal{T}_c$ is fully known if it faithfully captures the
+workspace and motion capabilities, and static if it does not vary with time.
+These constructions fix the nominal symbolic model for the chapter. Workspace
+partitioning, control-driven reachability, and weighted transitions yield a
+finite abstraction grounded in dynamics rather than geometry alone.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -262,15 +204,11 @@ imposed.
 \section{Task Specification as LTL Formulas}
 \label{ch02:sec:LTL}
 
-A formal language is required to describe robotic tasks without ambiguity.
-Such a language should express logical conditions, temporal ordering, and
-recurrent mission requirements in a mathematically precise manner. In this
-chapter, the specification language is chosen as linear-time temporal logic,
-abbreviated as LTL. The reason is twofold. First, LTL is expressive enough to
-capture a broad range of motion and surveillance tasks. Second, its semantics
-is defined over infinite words, which matches the infinite executions generated
-by the weighted transition system $\mathcal{T}_c$ introduced in
-Section~\ref{ch02:subsec:FTS}.
+A formal task language must express logical conditions, temporal ordering, and
+recurrent requirements without ambiguity. This chapter uses linear-time
+temporal logic, or LTL, because it captures common motion and surveillance
+tasks and its infinite-word semantics matches the executions of
+$\mathcal{T}_c$ introduced in Section~\ref{ch02:subsec:FTS}.
 
 \subsection{Syntax and semantics}
 \label{ch02:subsec:syntax}
@@ -291,14 +229,11 @@ $\vee$ for disjunction, $\bigcirc$ for the next operator, and
 $\mathsf{U}$ for the until operator.
 \end{definition}
 
-Other operators used frequently in task
-specification are derived from these primitives in the standard way. In
-particular, conjunction, implication, always, and eventually may be introduced
-as abbreviations. Standard derivations are given in Chapter~5 of
-\citep{baier2008principles}.
-The semantics of LTL is defined over infinite words on the alphabet $2^{AP}$.
-Each symbol in such a word records the set of atomic propositions that are true
-at a given discrete instant.
+Other task operators, including conjunction, implication, always, and
+eventually, are derived from these primitives in the standard way; see
+Chapter~5 of \citep{baier2008principles}. LTL semantics is defined over
+infinite words on $2^{AP}$, whose symbols record the propositions true at each
+discrete instant.
 
 \begin{definition}
 \label{ch02:def:word_semantics}
@@ -330,19 +265,13 @@ where $a \in AP$, $k \in \mathbb{N}$, and $S_k$ is the set of propositions
 satisfied at position $k$ of the word.
 \end{definition}
 
-According to \eqref{ch02:eq:ltl_semantics}, a formula $\varphi$ is satisfied by
-a word $\sigma$ if $(\sigma,0)\models \varphi$. For brevity, this is written as
-$\sigma \models \varphi$. The language generated by $\varphi$ is then defined as
+A word $\sigma$ satisfies $\varphi$ if $(\sigma,0)\models \varphi$, written
+$\sigma \models \varphi$. The language generated by $\varphi$ is
 $\texttt{Words}(\varphi) \triangleq
 \{\sigma \in (2^{AP})^{\omega} \mid \sigma \models \varphi\}$.
-This viewpoint is fundamental because temporal formulas are evaluated over
-symbolic behaviors rather than directly over continuous state trajectories.
-The connection with the transition system follows directly from the definitions
-in Section~\ref{ch02:subsec:FTS}. Every infinite path $\tau$ of
-$\mathcal{T}_c$ generates an infinite word
-$\texttt{trace}(\tau)$ over the alphabet $2^{AP}$. Therefore, the
-semantics in \eqref{ch02:eq:ltl_semantics} can be applied directly to traces of
-the control-driven weighted transition system.
+Since every infinite path $\tau$ of $\mathcal{T}_c$ generates the word
+$\texttt{trace}(\tau)$, the semantics in \eqref{ch02:eq:ltl_semantics} applies
+directly to traces of the control-driven weighted transition system.
 
 \begin{definition}
 \label{ch02:def:path-satisfy}
@@ -353,42 +282,25 @@ $\tau \models \varphi$. A satisfying path is also called a plan for
 $\varphi$.
 \end{definition}
 
-LTL can express many classes of robotic tasks in a unified manner. Safety
-requirements may be written as $\square \neg \psi$, which enforces permanent
-avoidance of an undesired condition $\psi$. Ordered visiting requirements may
-be expressed by formulas such as
-$\Diamond(\psi_1 \wedge \Diamond(\psi_2 \wedge \Diamond \psi_3))$, which
-require the propositions $\psi_1$, $\psi_2$, and $\psi_3$ to become true in
-that order. Response requirements can be expressed by
-$\square(\psi_1 \Rightarrow \Diamond \psi_2)$, meaning that whenever
-$\psi_1$ holds, $\psi_2$ must hold at some future step. Persistent
-surveillance tasks are captured by $\square \Diamond \psi$, which requires
-$\psi$ to occur infinitely often.
-A particularly important subclass in robotic planning is syntactically co-safe
-LTL, abbreviated as sc-LTL~\citep{kupferman2001model}. Informally, an sc-LTL
-formula has the property that satisfaction can be certified after observing a
-finite prefix of an infinite word. Once such a satisfying prefix has been
-generated, the remaining suffix no longer affects satisfaction. This feature is
-especially useful for goal-reaching and sequencing tasks, where successful task
-completion can be recognized in finite time. The syntactic characterization
-used in this chapter follows the standard presentation in
+LTL expresses common robotic tasks in a unified form: safety as
+$\square \neg \psi$, ordered visitation as
+$\Diamond(\psi_1 \wedge \Diamond(\psi_2 \wedge \Diamond \psi_3))$, response as
+$\square(\psi_1 \Rightarrow \Diamond \psi_2)$, and persistent surveillance as
+$\square \Diamond \psi$. A useful subclass is syntactically co-safe LTL, or
+sc-LTL~\citep{kupferman2001model}, whose satisfaction can be certified from a
+finite prefix. This property is useful for goal-reaching and sequencing tasks;
+the standard syntactic characterization follows
 \citep{kupferman2001model,fainekos2009robustness}.
 
 \subsection{Problem formulation}
 \label{ch02:sec:single-problem}
 
-The semantic definitions above determine whether a given infinite path satisfies
-a given task formula. For verification, it is often sufficient to identify one
-counterexample in order to show that a specification is not universally
-satisfied. The synthesis problem is different. In that case, a concrete path
-must be computed and later executed through a continuous control law of the form
-given in \eqref{ch02:eq:control}. For this reason, the desired path should
-admit a finite and manipulable representation.
-A standard representation is the prefix-suffix form, also known as the lasso
-form~\citep{schuppan2005shortest}. In this representation, an infinite plan is
-decomposed into a transient part and a recurrent part. The transient part is
-executed once, while the recurrent part is repeated indefinitely. Formally, the
-plan is written as:
+The preceding semantics determines whether an infinite path satisfies a task
+formula. Synthesis additionally requires computing a concrete path that can be
+executed through a continuous control law of the form \eqref{ch02:eq:control}.
+The path is therefore represented in prefix-suffix, or lasso,
+form~\citep{schuppan2005shortest}, with a transient part executed once and a
+recurrent part repeated indefinitely:
 \begin{equation}
 \tau \triangleq \tau_{\textup{pre}}
 [\tau_{\textup{suf}}]^{\omega},
@@ -396,13 +308,10 @@ plan is written as:
 \end{equation}
 where $\tau_{\textup{pre}}$ is a finite prefix executed once, and
 $\tau_{\textup{suf}}$ is a finite suffix repeated infinitely.
-The representation in \eqref{ch02:eq:prefix-suffix} is important for several
-reasons. It provides a finite description of an infinite execution, which is
-essential for computation. It also anticipates the accepting structure of the
-product automaton introduced later in the chapter, where accepting runs admit
-precisely this form. In addition, the decomposition separates transient
-behavior from recurrent behavior, which is useful when analyzing feasibility,
-execution cost, and control implementation.
+The representation in \eqref{ch02:eq:prefix-suffix} gives a finite description
+of an infinite execution, matches the accepting structure of the product
+automaton introduced below, and separates transient behavior from recurrent
+behavior for cost and execution analysis.
 
 \begin{definition}
 \label{ch02:def:feasible}
@@ -411,15 +320,14 @@ exists an infinite path $\tau$ of $\mathcal{T}_c$ such that
 $\tau \models \varphi$.
 \end{definition}
 
-Definition~\ref{ch02:def:feasible} characterizes the existence of a symbolic
-solution at the level of the transition system. If $\varphi$ is infeasible,
-then no trace generated by $\mathcal{T}_c$ belongs to
-$\texttt{Words}(\varphi)$. If $\varphi$ is feasible, the remaining
-questions are computational: a satisfying path must be synthesized, and that
-path must then be implemented in the continuous workspace through hybrid
+Definition~\ref{ch02:def:feasible} characterizes symbolic solvability on the
+transition system. If $\varphi$ is feasible, a satisfying path must be
+synthesized and then implemented in the continuous workspace through hybrid
 control.
-The nominal planning problem addressed in this chapter can now be stated as
-follows.
+The task language, trace semantics, and nominal planning problem induced by
+$(\mathcal{T}_c,\varphi)$ are now fixed. The remaining question is constructive:
+how to synthesize a satisfying, cost-aware plan and realize it by hybrid
+execution.
 
 \begin{problem}
 \label{ch02:prob:nominal}
@@ -431,37 +339,23 @@ resulting symbolic plan in the continuous workspace.
 \end{problem}
 
 
-
-The preceding material specifies the task language, its semantics over
-traces, and the nominal planning problem induced by the pair
-$(\mathcal{T}_c,\varphi)$. At this stage, the modeling ingredients are
-complete, and the remaining question is constructive: how to synthesize
-a satisfying, cost-aware plan and realize it through a hybrid execution
-mechanism. That problem is addressed next.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Hybrid Controller Synthesis}
 \label{ch02:sec:solution}
 
-This section develops the nominal solution to
-Problem~\ref{ch02:prob:nominal}. The construction follows the standard
-automata-theoretic synthesis pipeline, specialized to the control-driven
-weighted transition system $\mathcal{T}_c$ introduced in
-Section~\ref{ch02:subsec:FTS}. The development proceeds in four steps. First,
-the task formula is translated into a Nondeterministic B\"uchi automaton.
-Second, this automaton is composed with $\mathcal{T}_c$ to obtain a weighted
-product automaton. Third, an accepting run with prefix-suffix structure is
-computed by graph search. Finally, the resulting symbolic plan is executed by a
-hybrid controller in the continuous workspace.
+This section solves Problem~\ref{ch02:prob:nominal} through the standard
+automata-theoretic synthesis pipeline specialized to $\mathcal{T}_c$. The task
+formula is translated into a Nondeterministic B\"uchi automaton, composed with
+$\mathcal{T}_c$ as a weighted product automaton, searched for an accepting
+prefix-suffix run, and finally executed by a hybrid controller.
 
 \subsection{B\"uchi automaton associated with the task formula}
 \label{ch02:subsec:NBA}
 
-Given an LTL formula $\varphi$ over the proposition set $AP$, there exists a
-Nondeterministic B\"uchi automaton that accepts exactly the infinite words that
-satisfy $\varphi$. This automaton provides the link between temporal logic and
-algorithmic synthesis.
+Given an LTL formula $\varphi$ over $AP$, a Nondeterministic B\"uchi automaton
+accepts exactly the infinite words satisfying $\varphi$, thereby linking
+temporal logic to graph-based synthesis.
 
 \begin{definition}
 \label{ch02:def:NBA}
@@ -478,11 +372,11 @@ $Q_0 \subseteq Q$ is the set of initial states, and
 $\mathcal{F} \subseteq Q$ is the set of accepting states.
 \end{definition}
 
-The automaton in \eqref{ch02:eq:NBA} evolves over infinite words on the
-alphabet $2^{AP}$. Each symbol of such a word records the set of atomic
-propositions satisfied at one discrete step. Acceptance is defined by infinite
-repetition of designated states, which is the standard acceptance mechanism for
-B\"uchi automata.
+The automaton in \eqref{ch02:eq:NBA} evolves over infinite words on
+$2^{AP}$. Acceptance is defined by infinite repetition of designated states,
+the standard B\"uchi condition.
+Since $\mathcal{A}_{\varphi}$ is nondeterministic, a word may induce several
+runs; acceptance requires at least one accepting run.
 
 \begin{definition}
 \label{ch02:def:buchi_run}
@@ -498,10 +392,6 @@ $\texttt{Inf}(r_{\sigma}) \cap \mathcal{F} \neq \emptyset$,
 where $\texttt{Inf}(r_{\sigma})$ denotes the set of states that appear
 infinitely often in $r_{\sigma}$.
 \end{definition}
-
-Because $\mathcal{A}_{\varphi}$ is nondeterministic, a single word may induce
-several resulting runs. The accepted language is therefore defined by the
-existence of at least one accepting run.
 
 \begin{definition}
 \label{ch02:def:buchi_language}
@@ -521,7 +411,7 @@ $\text{ of $\sigma$ in $\mathcal{A}_{\varphi}$ is accepting}\}$.
 The accepted language of $\mathcal{A}_{\varphi}$ coincides with the language of
 $\varphi$, namely
 $\mathcal{L}_{\omega}(\mathcal{A}_{\varphi})
-= \texttt{Words}(\varphi)$.
+= \textup{\texttt{Words}}(\varphi)$.
 \end{lemma}
 
 \begin{proof}
@@ -530,15 +420,12 @@ B\"uchi automata. A proof is given in Theorem~5.37 of
 \citep{baier2008principles}.
 \end{proof}
 
-The translation from LTL to B\"uchi automata has worst-case exponential
-complexity in the size of the formula~\citep{baier2008principles}. In practice,
-optimized translation procedures often generate substantially smaller automata.
-A widely used construction is given in~\citep{gastin2001fast}. In such
-implementations, transitions are typically labeled by Boolean formulas over
-$AP$, rather than by explicitly listing all symbols in $2^{AP}$. This symbolic
-encoding is important when the proposition set is nontrivial. Binary decision
-diagrams provide an efficient representation for such Boolean
-labels~\citep{akers1978binary}.
+LTL-to-B\"uchi translation is worst-case exponential in formula size
+\citep{baier2008principles}, although optimized procedures often yield much
+smaller automata. A common construction is given in~\citep{gastin2001fast}.
+Implementations usually label transitions by Boolean formulas over $AP$ rather
+than explicit symbols in $2^{AP}$, with binary decision diagrams providing an
+efficient representation~\citep{akers1978binary}.
 
 
 \begin{example}
@@ -546,20 +433,19 @@ labels~\citep{akers1978binary}.
 Consider the specification
 $\varphi = (\square\Diamond a_1) \wedge (\square\Diamond a_2)
 \wedge (\square\Diamond a_3) \wedge (\square \neg a_4)$.
-A corresponding automaton contains states that encode repeated satisfaction of the required surveillance propositions together with permanent exclusion of $a_4$. If an edge
-from $q_1$ to $q_3$ is labeled by the Boolean expression
-$a_2 \wedge \neg a_4$, then every symbol in $2^{AP}$ satisfying that
-expression enables the same transition. Hence a single symbolic label may
-represent several concrete alphabet symbols.
+A corresponding automaton encodes repeated satisfaction of the surveillance
+propositions together with permanent exclusion of $a_4$. If an edge from
+$q_1$ to $q_3$ is labeled by $a_2 \wedge \neg a_4$, then every symbol in
+$2^{AP}$ satisfying that expression enables the transition; one symbolic label
+therefore represents several concrete alphabet symbols.
 \end{example}
 
 \subsection{Weighted product automaton}
 \label{ch02:subsec:product}
 
-The transition system $\mathcal{T}_c$ captures feasible robot motion in the
-workspace, while the automaton $\mathcal{A}_{\varphi}$ captures the symbolic
-task language. Their product yields a single model whose accepting runs encode
-robot behaviors that satisfy the specification.
+The transition system $\mathcal{T}_c$ captures feasible motion, while
+$\mathcal{A}_{\varphi}$ captures the task language. Their product yields a
+single model whose accepting runs encode satisfying robot behaviors.
 
 \begin{definition}
 \label{ch02:def:product}
@@ -586,7 +472,7 @@ $\delta' : Q' \to 2^{Q'}$ satisfies
 q_n \in \delta\!\left(q_m,L_c(\pi_i)\right),
 \label{ch02:eq:product_transition}
 \end{equation}
-where the transition weight is defined by
+where the transition weight is defined by:
 \begin{equation}
 w_p\bigl(\langle \pi_i,q_m \rangle,\langle \pi_j,q_n \rangle\bigr)
 \triangleq
@@ -596,13 +482,11 @@ w_c(\pi_i,\pi_j),
 for every enabled transition in \eqref{ch02:eq:product_transition}.
 \end{definition}
 
-Equation~\eqref{ch02:eq:product_transition} shows that a product transition is
-enabled only if two conditions hold simultaneously. The first condition is that
-the robot can move from $\pi_i$ to $\pi_j$ in the transition system. The
-second condition is that the task automaton can evolve from $q_m$ to $q_n$
-under the label produced at $\pi_i$. The weight assignment in
-\eqref{ch02:eq:product_weight} preserves the motion cost from $\mathcal{T}_c$,
-which allows optimality to be analyzed directly at the product level.
+Equation~\eqref{ch02:eq:product_transition} enables a product transition only
+when the robot can move from $\pi_i$ to $\pi_j$ and the task automaton can move
+from $q_m$ to $q_n$ under the label at $\pi_i$. The weight assignment in
+\eqref{ch02:eq:product_weight} preserves the motion cost from $\mathcal{T}_c$.
+Thus satisfaction and optimality can be analyzed directly on the product.
 
 \begin{definition}
 \label{ch02:def:projection}
@@ -619,10 +503,12 @@ and
 $R|_{Q} \triangleq q_0'|_{Q}q_1'|_{Q}q_2'|_{Q}\cdots$.
 \end{definition}
 
-The product construction is the key step in synthesis. It converts the original
-problem into a graph-search problem over $\mathcal{A}_p$. An accepting run in
-the product automaton projects to a plan of $\mathcal{T}_c$ that satisfies the
-task formula.
+The product construction converts synthesis into graph search over
+$\mathcal{A}_p$: an accepting product run projects to a plan of
+$\mathcal{T}_c$ satisfying the task formula.
+Conversely, any path of $\mathcal{T}_c$ whose trace satisfies $\varphi$ induces
+accepting nonemptiness of the product. Synthesis therefore reduces to computing
+an accepting run with the required structure.
 
 \begin{lemma}
 \label{ch02:lem:satisfy}
@@ -645,19 +531,13 @@ $R|_{\Pi} \models \varphi$ by
 Definition~\ref{ch02:def:path-satisfy}.
 \end{proof}
 
-Conversely, if there exists a path of $\mathcal{T}_c$ whose trace satisfies
-$\varphi$, then the product automaton is nonempty in the accepting sense. This
-fact underlies automata-based synthesis, but nonemptiness alone is not
-sufficient here. An accepting run with suitable structure must also be
-computed.
 
 \subsection{Optimal accepting run search}
 \label{ch02:subsec:optimality}
 
-The plan in Problem~\ref{ch02:prob:nominal} is required to have prefix-suffix
-structure. Since the product automaton is finite, every accepting behavior can
-be represented by an ultimately periodic accepting run. Hence the search may be
-restricted to lasso-shaped runs.
+Problem~\ref{ch02:prob:nominal} requires prefix-suffix structure. Since the
+product automaton is finite, accepting behaviors admit ultimately periodic
+representations, so the search may be restricted to lasso-shaped runs.
 
 \begin{lemma}
 \label{ch02:lem:prefix-suffix}
@@ -688,11 +568,9 @@ q_0' q_1' \cdots q_{f-1}'
 \end{equation}
 where $q_0' \in Q_0'$,
 $q_f' \in \mathcal{F}'$, and the transition from $q_n'$ to $q_f'$ is enabled.
-The representation in \eqref{ch02:eq:prod-Apath} provides a finite description
-of an infinite accepting run. The prefix from $q_0'$ to $q_f'$ is executed
-once. The suffix beginning at $q_f'$ is then repeated indefinitely. This is
-precisely the form needed for finite optimization and subsequent hybrid
-execution.
+The representation in \eqref{ch02:eq:prod-Apath} gives a finite description of
+an infinite accepting run: the prefix reaches $q_f'$ once, and the suffix rooted
+at $q_f'$ repeats indefinitely.
 
 \begin{definition}
 \label{ch02:def:run_cost}
@@ -715,10 +593,9 @@ where $\gamma \geq 0$ is a design parameter that specifies the relative weight
 of the suffix cost with respect to the prefix cost.
 \end{definition}
 
-The first term in \eqref{ch02:eq:prod-cost} measures the transient cost of
-reaching an accepting state. The second term measures the cost of one full
-traversal of the recurrent suffix cycle. Consequently, larger values of
-$\gamma$ place greater emphasis on long-term recurring performance.
+The first term in \eqref{ch02:eq:prod-cost} is the transient cost of reaching
+an accepting state, while the second is the cost of one recurrent suffix cycle.
+Larger $\gamma$ therefore emphasizes long-term performance.
 
 \begin{problem}
 \label{ch02:pro:opt-search}
@@ -727,17 +604,13 @@ form \eqref{ch02:eq:prod-Apath} that minimizes the cost in
 \eqref{ch02:eq:prod-cost}.
 \end{problem}
 
-The search problem above can be decomposed into two finite graph problems. The
-prefix corresponds to a shortest path from an initial product state to an
-accepting product state. The suffix corresponds to a shortest cycle rooted at
-that accepting state. Since all transition weights are nonnegative,
-Dijkstra-type search can be used. Two construction strategies are relevant for
-the product automaton. Under full construction, all states and transitions of
-$\mathcal{A}_p$ are generated in advance by
-Definition~\ref{ch02:def:product}. Under on-the-fly construction, the adjacency
-relation of a product state is generated only when that state is visited during
-search. The latter strategy is particularly useful when large parts of the
-product graph are irrelevant to the optimal accepting run.
+The search decomposes into two finite graph problems: a shortest prefix path
+from an initial product state to an accepting state, and a shortest suffix cycle
+rooted at that accepting state. Since the weights are nonnegative,
+Dijkstra-type search applies. The product may be constructed fully, by
+generating all states and transitions in advance, or on the fly, by generating
+adjacency only when a state is visited. The latter is useful when much of the
+product graph is irrelevant to the optimal accepting run.
 Let $S' \subseteq Q_0'$ denote the set of initial product states considered
 by the search. For each starting state $q_s' \in S'$ and each accepting state
 $q_f' \in \mathcal{F}'$, let
@@ -813,13 +686,12 @@ $R_{\textup{opt}} \leftarrow \emptyset$\;
 %==============================
 %==============================
 
-Algorithm~\ref{ch02:alg:optimal} proceeds as follows. The algorithm first computes the shortest suffix
-cycle for each accepting state in $\mathcal{F}'$. It then computes, for each
-$q_s' \in S'$, the shortest prefix paths from $q_s'$ to all reachable
-accepting states. Each feasible pair $(q_s',q_f')$ defines a candidate lasso
-run with cost given by \eqref{ch02:eq:run_pair_cost}. The optimal accepting run
-$R_{\textup{opt}}$ is obtained by selecting the minimizing pair. The
-corresponding symbolic plan is
+Algorithm~\ref{ch02:alg:optimal} first computes the shortest suffix cycle for
+each accepting state, then the shortest prefix paths from each
+$q_s' \in S'$ to reachable accepting states. Each feasible pair
+$(q_s',q_f')$ defines a candidate lasso with cost
+\eqref{ch02:eq:run_pair_cost}; the minimizing pair gives
+$R_{\textup{opt}}$, whose symbolic plan is
 $\tau_{\textup{opt}} \triangleq R_{\textup{opt}}|_{\Pi}$.
 
 
@@ -838,13 +710,11 @@ typically produce larger automata and hence higher computational cost.
 \subsection{Hybrid execution of the optimal run}
 \label{ch02:sec:hybrid}
 
-The output of Algorithm~\ref{ch02:alg:optimal} is a symbolic accepting run in
-the product automaton. This run must then be realized in the continuous
-workspace by the navigation controller introduced in
-Definition~\ref{ch02:def:transition}. The role of the hybrid controller is to
-activate the appropriate local controller for each consecutive pair of regions
-in the projected plan.
-Let the optimal accepting run be written as below:
+The output of Algorithm~\ref{ch02:alg:optimal} is a symbolic accepting run that
+must be realized in the continuous workspace by the controller in
+Definition~\ref{ch02:def:transition}. The hybrid controller activates the
+appropriate local controller for each consecutive region pair in the projected
+plan. Let the optimal accepting run be written as
 \begin{equation}
 R_{\textup{opt}}
 \triangleq
@@ -855,24 +725,17 @@ R_{\textup{pre}}
 where $R_{\textup{pre}}$ is the finite prefix and $R_{\textup{suf}}$ is the
 finite suffix cycle.
 The projected motion plan is
-$\tau_{\textup{opt}} \triangleq R_{\textup{opt}}|_{\Pi}$. Execution begins with
-the prefix segment. After the prefix is completed, the execution switches to
-the suffix segment and then repeats the suffix indefinitely. Thus the hybrid
-controller realizes exactly the prefix-suffix structure required in
-\eqref{ch02:eq:prefix-suffix}.
+$\tau_{\textup{opt}} \triangleq R_{\textup{opt}}|_{\Pi}$. Execution follows the
+prefix once, then switches to the suffix and repeats it indefinitely, realizing
+the structure required in \eqref{ch02:eq:prefix-suffix}.
 
-For implementation, the current position within $R_{\textup{opt}}$ is indexed
-by a segment variable and an integer index. A helper function
-$\texttt{NextGoal}(\cdot)$ returns the next product state in the
-accepting run according to this indexing rule. The next target region is then
-obtained by projection onto $\Pi$, and the active continuous controller is
-generated by \eqref{ch02:eq:control}.
-Algorithm~\ref{ch02:alg:hybrid} runs indefinitely because the suffix of
-$R_{\textup{opt}}$ is repeated infinitely often. The condition
-$x(t) \in \pi_{\textup{next}}$ is evaluated by the same localization mechanism
-used in the labeling function. Once the next region is reached, the controller
-advances to the subsequent symbolic goal and activates the corresponding local
-navigation controller.
+For implementation, a segment variable and an index locate the current position
+within $R_{\textup{opt}}$. The helper function $\texttt{NextGoal}(\cdot)$
+returns the next product state; projection onto $\Pi$ gives the next region;
+and \eqref{ch02:eq:control} generates the active controller.
+Algorithm~\ref{ch02:alg:hybrid} runs indefinitely because the suffix repeats
+infinitely often. Once $x(t) \in \pi_{\textup{next}}$ is confirmed by the
+localization mechanism, the controller advances to the next symbolic goal.
 
 %==============================
 %==============================
@@ -909,10 +772,9 @@ $\tau_{\textup{past}} = [\;]$\;
 \subsection{Complexity discussion}
 \label{ch02:sssec:complexity_on_the_fly}
 
-The computational burden of the synthesis procedure is determined mainly by the
-size of the task automaton and the size of the product automaton. Let
-$n_{\varphi} \triangleq |\varphi|$
-denote the size of the LTL formula. Standard translation bounds imply:
+The computational burden is determined mainly by the task automaton and product
+automaton sizes. Let $n_{\varphi} \triangleq |\varphi|$ denote the size of the
+LTL formula. Standard translation bounds imply:
 $|Q| = 2^{\mathcal{O}(n_{\varphi})}$ and $|\delta| = 2^{\mathcal{O}(n_{\varphi})}$,
 where $Q$ is the automaton state set and $|\delta|$ denotes the number of
 enabled automaton transitions in $\mathcal{A}_{\varphi}$ from
@@ -942,38 +804,28 @@ T_{\textup{otf}}
 where
 $\mathcal{F}'_{\textup{vis}} \triangleq \mathcal{F}' \cap Q'_{\textup{vis}}$
 is the set of accepting product states that are actually generated.
-The corresponding memory requirement is given by:
+The corresponding memory requirement is
 $
 M_{\textup{otf}}
 =\mathcal{O}\bigl(|Q'_{\textup{vis}}| + |\delta'_{\textup{vis}}|\bigr)$,
-where the two terms account for the explicitly stored product states and
-product transitions.
-The worst-case asymptotic complexity of the on-the-fly method coincides with
-that of full construction, because the search may in principle visit the entire
-product graph. In practice, however, on-the-fly construction is often much more
-efficient, since large portions of the product automaton may be unreachable or
-irrelevant to the optimal accepting run. This distinction becomes especially
-important in adaptive settings where the transition system must be updated
-repeatedly.
+for the explicitly stored product states and transitions. In the worst case,
+on-the-fly construction has the same asymptotic complexity as full
+construction, since the search may visit the entire product graph. In practice,
+it is often more efficient because many product states are unreachable or
+irrelevant, especially in adaptive settings where the transition system is
+updated repeatedly.
 
 \begin{example}
 \label{ch02:exam:complexity}
-Consider a family of grid-based transition systems with $n^2$ states. The
-transition cost between adjacent regions is chosen uniformly from the interval
-$[0,1]$. The task is to transport two objects to two designated destinations
-and then return to a base region. The corresponding specification has the same
-general form as the case-study formula introduced later in the chapter.
-For each instance, three CPU times are recorded. The quantity
-$t_{\textup{full}}$ denotes the time required to construct $\mathcal{A}_p$
-fully. The quantity $t_{\textup{syn}}$ denotes the time required to search for
-the optimal accepting run on the fully constructed product automaton. The
-quantity $t_{\textup{fly}}$ denotes the time required when the product automaton
-is generated on the fly during search.
-The associated B\"uchi automaton has $75$ states and
-$877$ transitions. Figure~\ref{fig:ch02:single_robot_complexity} indicates that, for this
-task class, product construction dominates the total computation time, whereas
-the graph search itself is relatively inexpensive. This observation explains
-why symbolic and on-the-fly constructions are important in practice.
+Consider grid-based transition systems with $n^2$ states and adjacent-region
+costs drawn uniformly from $[0,1]$. The task transports two objects to two
+destinations and then returns to a base region, following the same general form
+as the later case study. For each instance, $t_{\textup{full}}$ records full
+product construction time, $t_{\textup{syn}}$ the optimal-run search time on
+the full product, and $t_{\textup{fly}}$ the on-the-fly search time. The
+associated B\"uchi automaton has $75$ states and $877$ transitions.
+Figure~\ref{fig:ch02:single_robot_complexity} shows that product construction
+dominates the computation, motivating symbolic and on-the-fly constructions.
 \end{example}
 
 
@@ -985,14 +837,10 @@ why symbolic and on-the-fly constructions are important in practice.
 \includegraphics[width=0.92\linewidth]{figures/ch02/single_robot_complexity_bar_chart.pdf}
 \caption{
 Computation times $t_{\textup{full}}$, $t_{\textup{syn}}$, and
-$t_{\textup{fly}}$ in Example~\ref{ch02:exam:complexity}, plotted
-against the problem size $n^2$. The quantity $t_{\textup{full}}$
-denotes the time required to construct the product automaton fully,
-$t_{\textup{syn}}$ denotes the time required to synthesize the optimal
-accepting run on the fully constructed product automaton, and
-$t_{\textup{fly}}$ denotes the time required when the product automaton
-is generated on the fly during search. A logarithmic $y$-axis is used so
-that all three quantities remain visible on the same scale.
+$t_{\textup{fly}}$ in Example~\ref{ch02:exam:complexity}, plotted against
+problem size $n^2$. A logarithmic $y$-axis keeps the full-construction,
+full-product synthesis, and on-the-fly synthesis times visible on the same
+scale.
 }
 \label{fig:ch02:single_robot_complexity}
 \end{figure}
@@ -1004,10 +852,9 @@ that all three quantities remain visible on the same scale.
 \subsection{Scalability in the multi-robot setting}
 \label{ch02:sssec:multi_robot_scalability}
 
-For a single robot, the above synthesis procedure remains tractable when the
-workspace abstraction and the task automaton are moderate in size. The
-situation changes significantly in the multi-robot setting if the same method
-is applied in a centralized way.
+For a single robot, the synthesis procedure is tractable when the workspace
+abstraction and task automaton are moderate in size. A centralized multi-robot
+extension is substantially less scalable.
 Consider $N$ robots with local transition systems
 $\mathcal{T}_i \triangleq
 \left(\Pi_i,\longrightarrow_i,\Pi_{i,0},AP_i,L_i,w_i\right)$,
@@ -1030,54 +877,38 @@ centralized product space has cardinality below:
 where the multiplicative growth arises from both the joint motion state and the
 task automaton;
 and $M$ is the size of homogeneous $\mathcal{T}_i$.
-Equation~\eqref{ch02:eq:team-product-cardinality} explains why a direct
-centralized extension of the single-robot method quickly becomes
-computationally prohibitive. Even when each local model is small, the combined
-team model can be too large for explicit product construction and exhaustive
-graph search. This observation motivates the decentralized and compositional
-developments presented in the later chapters. Similar scalability issues have
-been reported in the multi-robot temporal-logic literature
+Equation~\eqref{ch02:eq:team-product-cardinality} shows why direct centralized
+synthesis quickly becomes prohibitive: even small local models can yield a team
+product too large for explicit construction and exhaustive search. This
+motivates the decentralized and compositional developments in later chapters,
+and is consistent with scalability limits reported in multi-robot
+temporal-logic planning
 \citep{kloetzer2010automatic,chen2012formal,kloetzer2011multi,guo2015multi}.
-A numeric example is shown in Example~\ref{ch02:exam:multi_robot_complexity}.
+Example~\ref{ch02:exam:multi_robot_complexity} gives a numerical illustration.
 
 \begin{example}
 \label{ch02:exam:multi_robot_complexity}
-To illustrate the centralized growth in the multi-robot setting, consider
-$N$ identical robots, each modeled by the same $5 \times 5$ grid-based
-transition system, so that $|\Pi_i| = 25$ for every
-$i \in \{1,\cdots,N\}$. Let the team task be specified by the same
-B\"uchi automaton as in Example~\ref{ch02:exam:complexity}, which has
-$75$ states and $877$ transitions.
-The centralized team transition system then has
-$|\Pi_{\textup{team}}| = 25^N$ states, and the corresponding product
-automaton has
-$|Q'_{\textup{team}}| = 75 \cdot 25^N$ states. Hence the state space
-grows exponentially with the number of robots even though the local
-model and the task automaton remain unchanged.
-To obtain indicative CPU times, the single-robot benchmark data from
-Example~\ref{ch02:exam:complexity} are extrapolated by linear fits in the
-team-transition-system size. The resulting estimates show that both
-product construction and plan synthesis become rapidly impractical under
-centralized scaling. In particular, with only six robots, the estimated
-product-construction time already reaches about $58$ days, while the
-estimated synthesis time exceeds $2.7$ days. This example makes explicit
-why direct centralized synthesis is not a viable approach for
-multi-robot systems beyond very small team sizes.
+Consider $N$ identical robots, each modeled by a $5 \times 5$ grid transition
+system with $|\Pi_i| = 25$, and let the team task use the $75$-state,
+$877$-transition B\"uchi automaton from Example~\ref{ch02:exam:complexity}.
+Then $|\Pi_{\textup{team}}| = 25^N$ and
+$|Q'_{\textup{team}}| = 75 \cdot 25^N$, so the state space grows exponentially
+even though the local model and task automaton remain fixed. Linear
+extrapolation from the single-robot benchmark shows rapid impracticality: with
+six robots, the estimated product-construction time is about $58$ days and the
+estimated synthesis time exceeds $2.7$ days. Direct centralized synthesis is
+therefore unsuitable beyond small teams.
 \end{example}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.92\linewidth]{figures/ch02/multi_robot_complexity_plot.pdf}
 \caption{
-Centralized growth in the multi-robot setting for identical robots with
-local state size $|\Pi_i|=25$ and a fixed B\"uchi automaton of size
-$75$. Top: exact growth of the team transition system
-$|\Pi_{\textup{team}}|$ and the product automaton
-$|Q'_{\textup{team}}|$. Bottom: extrapolated CPU times for full product
-construction and optimal-run synthesis, based on the single-robot
-benchmark in Example~\ref{ch02:exam:complexity}. The ordinary linear
-$y$-axes make the explosive growth with respect to the number of robots
-visually explicit.
+Centralized growth for identical robots with $|\Pi_i|=25$ and a fixed
+$75$-state B\"uchi automaton. Top: exact growth of
+$|\Pi_{\textup{team}}|$ and $|Q'_{\textup{team}}|$. Bottom: extrapolated full
+product-construction and optimal-run synthesis times based on
+Example~\ref{ch02:exam:complexity}.
 }
 \label{fig:ch02:multi_robot_complexity}
 \end{figure}
@@ -1092,27 +923,21 @@ visually explicit.
 \label{ch02:sec:case_study}
 
 This case study instantiates the nominal synthesis pipeline on a concrete
-single-robot planning problem. The objective is not to introduce new modeling
-ingredients, but to show how workspace abstraction, temporal-task
+single-robot problem, showing how workspace abstraction, temporal-task
 specification, product construction, and hybrid execution combine in one
-complete synthesis instance. The example also serves as a baseline for the
-multi-robot developments presented later.
+baseline instance for the later multi-robot developments.
 
 %==============================
 \subsection{Workspace and platform}
 \label{ch02:subsec:case_workspace}
 
 The workspace is a structured indoor environment of size
-$2.4\,\mathrm{m} \times 2.1\,\mathrm{m}$, consisting of two rows of rooms
-separated by a corridor. Each row contains three rooms, and the corridor is
-partitioned into three smaller segments. The resulting region set is defined by
-$\Pi \triangleq \{r_1,\cdots,r_6,c_1,c_2,c_3\}$. More specifically, the rooms
-$r_1,r_2,r_3$ are located on one side of the corridor, the rooms
-$r_4,r_5,r_6$ are located on the other side, and the corridor itself is
-represented by the three intermediate regions $c_1,c_2,c_3$. This partition
-provides a compact workspace abstraction while preserving the adjacency
-relations needed for motion planning.
-The atomic propositions associated with the regions are
+$2.4\,\mathrm{m} \times 2.1\,\mathrm{m}$ with two rows of three rooms separated
+by a corridor partitioned into three segments. The region set is
+$\Pi \triangleq \{r_1,\cdots,r_6,c_1,c_2,c_3\}$, where
+$r_1,r_2,r_3$ lie on one side, $r_4,r_5,r_6$ on the other, and
+$c_1,c_2,c_3$ represent the corridor. This partition preserves the adjacency
+relations needed for motion planning. The associated atomic propositions are
 $\textsf{r1},\cdots,\textsf{r6},\textsf{c1},\textsf{c2},\textsf{c3}$, together
 with the object propositions $\textsf{rball}$, $\textsf{gball}$, and
 $\textsf{basket}$. The labeling map is specified by
@@ -1128,42 +953,58 @@ $L_c(r_6)=\{\textsf{r6}\}$.
 The cost of a transition between adjacent regions is taken as the Euclidean
 distance between their centers.
 
-The platform considered in this chapter is TIAGo. At the abstraction level of
-the present case study, the execution model is represented by the weighted
-transition system $\mathcal{T}_c$, while the low-level realization is handled
-through the platform-specific motion and action interface discussed in
-Section~\ref{ch02:subsec:tiago_execution}. In particular, the generic
-controller $\mathcal{U}(x(t),\pi_i,\pi_j)$ in \eqref{ch02:eq:control} is
-instantiated on TIAGo so that each discrete transition between adjacent regions
-can be executed by the underlying navigation and action stack. This
-construction yields a weighted transition system $\mathcal{T}_c$ with $9$
-states and $16$ transitions. In simulation, Gaussian perturbations are added
-to the actuation signal in order to represent execution noise.
+The platform is TIAGo. At the abstraction level, execution is represented by
+$\mathcal{T}_c$; low-level realization is handled by the platform-specific
+motion and action interface in Section~\ref{ch02:subsec:tiago_execution}. The
+generic controller $\mathcal{U}(x(t),\pi_i,\pi_j)$ in \eqref{ch02:eq:control}
+is instantiated so adjacent-region transitions are executable by the navigation
+and action stack. The resulting $\mathcal{T}_c$ has $9$ states and
+$16$ transitions; simulation adds Gaussian actuation perturbations to model
+execution noise.
 
 %==============================
 \subsection{Representative task instances}
 \label{ch02:subsec:case_tasks}
 
-The synthesized plans are illustrated on four representative temporal tasks.
-Together, these cases cover one-time delivery, constrained delivery,
-location-dependent delivery, and persistent surveillance.
+The synthesized plans are illustrated on four tasks: one-time delivery,
+constrained delivery, location-dependent delivery, and persistent surveillance.
+These cases confirm that, once the workspace abstraction and task automaton are
+constructed, Algorithms~\ref{ch02:alg:optimal} and \ref{ch02:alg:hybrid}
+produce and execute plans for both finite-time delivery and recurrent
+surveillance tasks.
+
+\begin{figure}[t!]
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{figures/ch02/task1.pdf}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{figures/ch02/task3.pdf}
+\end{minipage}
+\caption{
+Hybrid-controller trajectories for Case I, associated with $\varphi_1$, and
+Case II, associated with $\varphi_2$.
+}
+\label{ch02:fig:case_tasks12}
+\end{figure}
 
 \emph{Case I.}
-The robot is required to pick up the red ball, carry it to one of the baskets,
-and then stay in room $r_1$. The specification is
+The robot must pick up the red ball, deliver it to a basket, and then remain in
+$r_1$:
 $\varphi_1 \triangleq
 \Diamond(\textsf{rball} \wedge \Diamond\,\textsf{basket})
 \wedge \Diamond \square\,\textsf{r1}$.
 Algorithm~\ref{ch02:alg:optimal} computes the optimal accepting run in
-$0.03\,\mathrm{s}$ and returns the plan
+$0.03\,\mathrm{s}$:
 $r_1\,c_1\,c_2\,r_5\,c_2\,r_2\,c_2\,c_1\,r_1\,(r_1)^\omega$.
 The prefix cost is $581$, and the suffix cost is $1$.
-Algorithm~\ref{ch02:alg:hybrid} then executes the plan by hybrid control.
+Algorithm~\ref{ch02:alg:hybrid} then executes this plan by hybrid control.
 
 \emph{Case II.}
-The delivery task is extended to two objects, with the additional requirement
-that the robot is not allowed to carry both objects simultaneously. The task is
-specified by
+The delivery task is extended to two objects, with the constraint that the
+robot may not carry both simultaneously:
 \begin{equation}
 \label{ch02:eq:case_two_delivery}
 \begin{aligned}
@@ -1195,34 +1036,32 @@ The optimal plan is obtained in $0.86\,\mathrm{s}$:
 $r_1\,c_1\,c_2\,c_3\,r_3\,c_3\,c_2\,r_2\,c_2\,r_5\,c_2\,r_2\,c_2\,c_1$
 $(r_1)^\omega$.
 The prefix cost is $1021$, and the suffix cost is $1$.
-The corresponding execution first transports the green ball to the basket in
-$r_2$, then returns for the red ball and completes the second delivery. The
-trajectories for Cases I and II are shown in
+The execution first transports the green ball to the basket in $r_2$, then
+returns for the red ball. Cases I and II are shown in
 Fig.~\ref{ch02:fig:case_tasks12}.
+
+
 
 \begin{figure}[t!]
 \begin{minipage}[t]{0.49\linewidth}
 \centering
-\includegraphics[width=\linewidth]{figures/ch02/task1.pdf}
+\includegraphics[width=\linewidth]{figures/ch02/task4.pdf}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.49\linewidth}
 \centering
-\includegraphics[width=\linewidth]{figures/ch02/task3.pdf}
+\includegraphics[width=\linewidth]{figures/ch02/task5.pdf}
 \end{minipage}
 \caption{
-Trajectories generated by the synthesized hybrid controller. Left: execution
-for Case I, associated with $\varphi_1$. Right: execution for Case II,
-associated with $\varphi_2$.
+Hybrid-controller trajectories for Case III, associated with $\varphi_3$, and
+Case IV, associated with $\varphi_4$.
 }
-\label{ch02:fig:case_tasks12}
+\label{ch02:fig:case_tasks34}
 \end{figure}
 
 \emph{Case III.}
-The previous task is refined further by assigning a different basket to each
-object. In particular, the red ball must be delivered to the basket in $r_2$,
-while the green ball must be delivered to the basket in $r_4$. The
-corresponding specification is
+The previous task is refined by assigning each object to a different basket:
+the red ball to $r_2$ and the green ball to $r_4$:
 \begin{equation}
 \label{ch02:eq:case_separate_delivery}
 \begin{aligned}
@@ -1260,12 +1099,10 @@ The optimal plan is found in $1.39\,\mathrm{s}$:
 $r_1\,c_1\,c_2\,r_5\,c_2\,r_2\,c_2\,c_3\,r_3\,c_3\,c_2\,c_1\,r_4\,c_1$
 $(r_1)^\omega$.
 The prefix cost is again $1021$, and the suffix cost is $1$.
-The resulting execution first delivers the red ball to $r_2$ and then
-delivers the green ball to $r_4$.
+The execution delivers the red ball to $r_2$ and then the green ball to $r_4$.
 
 \emph{Case IV.}
-A persistent surveillance task is considered next. The robot must visit rooms
-$r_3$, $r_4$, and $r_6$ infinitely often. The specification is
+The final task requires persistent visits to $r_3$, $r_4$, and $r_6$:
 $\varphi_4 \triangleq
 (\square \Diamond\,\textsf{r3})
 \wedge
@@ -1277,84 +1114,8 @@ $0.01\,\mathrm{s}$:
 $r_1\,c_1\,r_4\,c_1\,c_2\,c_3\,r_3\,c_3$
 $(r_6\,c_3\,c_2\,c_1\,r_4\,c_1\,c_2\,c_3\,r_3\,c_3)^\omega$.
 The prefix cost is $1021$, and the suffix cost is $1$.
-The suffix cycle realizes the required recurrent patrol over the three
-designated rooms. The trajectories for Cases III and IV are shown in
+The suffix cycle realizes the recurrent patrol. Cases III and IV are shown in
 Fig.~\ref{ch02:fig:case_tasks34}.
-
-\begin{figure}[t!]
-\begin{minipage}[t]{0.49\linewidth}
-\centering
-\includegraphics[width=\linewidth]{figures/ch02/task4.pdf}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.49\linewidth}
-\centering
-\includegraphics[width=\linewidth]{figures/ch02/task5.pdf}
-\end{minipage}
-\caption{
-Trajectories generated by the synthesized hybrid controller. Left: execution
-for Case III, associated with $\varphi_3$. Right: execution for Case IV,
-associated with $\varphi_4$.
-}
-\label{ch02:fig:case_tasks34}
-\end{figure}
-
-These four cases confirm the qualitative behavior predicted by the preceding
-sections. Once the workspace abstraction and task automaton have been
-constructed, Algorithms~\ref{ch02:alg:optimal} and \ref{ch02:alg:hybrid}
-produce and execute correct plans for finite-time delivery objectives as well
-as recurrent surveillance tasks.
-
-
-%==============================
-\subsection{Platform-level execution on TIAGo}
-\label{ch02:subsec:tiago_execution}
-
-The repository \texttt{tiago\_ltl\_flexbe}~\citep{guo_tiago_ltl_flexbe}
-provides a deployment-oriented illustration of the nominal framework on the
-TIAGo platform. Its role in the present monograph is to show that the symbolic
-plans synthesized from temporal logic need not remain at the level of abstract
-region transitions. Instead, they can be grounded in a platform-specific
-execution stack that combines navigation, supervisory behavior coordination,
-and pre-defined robot actions. In this sense, the repository serves as an
-application-facing bridge between the formal synthesis procedure of this
-chapter and platform-level autonomy.
-A central feature of this implementation is that temporal tasks can involve
-both motion objectives and robot actions. Thus the synthesized plan is no
-longer restricted to visiting regions of interest, but can also require the
-execution of actions such as grasping, gesturing, or inspection behaviors at
-designated locations. This example therefore illustrates the practical purpose
-of the framework in a hardware-oriented setting: high-level temporal
-specifications can be translated into executable plans that coordinate motion
-and actions within a unified task logic.
-A representative execution scene is shown in
-Fig.~\ref{ch02:fig:tiago_execution}, where the Gazebo and RViz views are
-presented in a top-bottom layout.
-An illustrative task example from the TIAGo implementation is
-\begin{equation}
-\phi_{\textup{ex}}
-\triangleq
-\Diamond\Bigl(
-(\textsf{r2} \wedge \textsf{pick\_from\_floor})
-\wedge
-\Diamond(\textsf{r3} \wedge \textsf{reach\_max})
-\Bigr),
-\label{ch02:eq:tiago_example}
-\end{equation}
-where the robot is required first to reach region $r_2$ and execute the
-action \textsf{pick\_from\_floor}, and then to reach region $r_3$ and
-execute the action \textsf{reach\_max}. At the symbolic level, a
-corresponding plan therefore has the form
-$\pi_{\textup{init}}
-\rightarrow
-(r_2,\textsf{pick\_from\_floor})
-\rightarrow
-(r_3,\textsf{reach\_max})$,
-which shows explicitly how temporal goals over regions and actions are
-combined in the platform-level execution stack; see
-\citep{guo_tiago_ltl_flexbe} for the associated implementation details and
-demonstration environment.
-
 
 \begin{figure}[t!]
 \centering
@@ -1372,15 +1133,47 @@ demonstration environment.
 {figures/ch02/tiago_ltl_flexbe_rviz.png}
 \end{minipage}
 \caption{
-Execution views associated with the repository
-\texttt{tiago\_ltl\_flexbe}~\citep{guo_tiago_ltl_flexbe}. Top: Gazebo view of
-the TIAGo platform in the simulated environment. Bottom: corresponding RViz
-view used for workspace, mapping, and navigation monitoring. Together, these
-views illustrate how temporally specified tasks can be executed through a
-platform-level stack that combines motion and action primitives.
+Execution snapshots from \texttt{tiago\_ltl\_flexbe}~\citep{guo_tiago_ltl_flexbe}.
+Top: Gazebo simulation of the TIAGo platform. Bottom: RViz view for workspace,
+mapping, and navigation monitoring.
 }
 \label{ch02:fig:tiago_execution}
 \end{figure}
+
+%==============================
+\subsection{Platform-level execution on TIAGo}
+\label{ch02:subsec:tiago_execution}
+
+The repository \texttt{tiago\_ltl\_flexbe}~\citep{guo_tiago_ltl_flexbe}
+illustrates the nominal framework on the TIAGo platform. It shows that temporal
+logic plans need not remain abstract region sequences: they can be grounded in
+a platform-specific stack that combines navigation, supervisory behavior
+coordination, and predefined actions. Temporal tasks may therefore include both
+motion objectives and actions such as grasping, gesturing, or inspection at
+designated locations. Figure~\ref{ch02:fig:tiago_execution} shows a
+representative execution scene in Gazebo and RViz.
+An illustrative task example from the TIAGo implementation is
+\begin{equation}
+\phi_{\textup{ex}}
+\triangleq
+\Diamond\Bigl(
+(\textsf{r2} \wedge \textsf{pick\_from\_floor})
+\wedge
+\Diamond(\textsf{r3} \wedge \textsf{reach\_max})
+\Bigr),
+\label{ch02:eq:tiago_example}
+\end{equation}
+where the robot first reaches $r_2$ and executes
+\textsf{pick\_from\_floor}, then reaches $r_3$ and executes
+\textsf{reach\_max}. At the symbolic level, a corresponding plan has the form
+$\pi_{\textup{init}}
+\rightarrow
+(r_2,\textsf{pick\_from\_floor})
+\rightarrow
+(r_3,\textsf{reach\_max})$,
+which shows how region goals and actions are combined in the platform-level
+execution stack; see \citep{guo_tiago_ltl_flexbe} for implementation details.
+
 
 
  %==============================

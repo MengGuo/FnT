@@ -1,273 +1,171 @@
 \section{Related Work}
 \label{ch01:sec:related_work}
 
-This section maps the literature around the problems that organize the
-monograph. It starts with multi-robot task planning and allocation, where the
-mission is usually expressed in terms of jobs, assignments, and schedules rather
-than in formal behavioral semantics. It then turns to formal methods for task
-and motion synthesis, which supply the semantic machinery needed to specify and
-verify richer robotic behavior. From there, the review follows the pressures
-that complicate the classical synthesis picture: incomplete models, infeasible
-specifications, and coordination across multiple robots under coupled temporal
-constraints. The section then moves to online coordination under intermittent
-communication and selective human supervision. It closes with a set of
-cross-cutting developments---uncertainty, abstraction, and dynamic task
-models---that cut across several of the earlier strands rather than forming a
-separate lineage of their own.
+This section reviews the literature needed to position the problems studied in this
+monograph. The emphasis is selective rather than encyclopedic. The review starts from
+multi-robot task allocation, where missions are usually represented as jobs, visits,
+coalitions, and schedules. It then turns to formal methods for task and motion synthesis,
+where the mission itself is given a precise temporal semantics. The remaining subsections
+follow the assumptions that are gradually relaxed in the later chapters: complete prior
+models, exact realizability, centralized coordination, persistent communication, and
+static task structure.
 
 %==================================================
 %==================================================
 \subsection{Task planning and allocation in multi-robot systems}
 \label{sec:ch01:rw:allocation}
 
-Task planning and allocation in multi-robot systems concerns how a mission is
-decomposed into executable subtasks, how these subtasks are assigned to
-individual robots or subteams, and how the resulting activities are coordinated
-over time and space. In this literature, the dominant abstractions are jobs,
-visits, service requests, coalitions, and resource claims, rather than formal
-behavioral specifications. Classical reviews have established the main taxonomies
-of multi-robot task-allocation problems and cooperative planning architectures,
-with particular emphasis on the distinction between centralized and distributed
-coordination \cite{khamis2015multi}. More recent review articles now provide a
-broader and more up-to-date synthesis of the field, covering market-based,
-optimization-based, learning-based, and heterogeneous-team formulations
-\cite{athira2025systematic,quinton2023market,almahmud2026review}. A related
-survey literature in cooperative multi-agent planning has further clarified how
-decomposition, coupling, and information sharing shape the complexity of team
-planning \cite{torreno2017cooperative}. Together, these works provide the
-algorithmic foundation for fleet-level coordination, but they typically treat
-task structure at a more abstract level than the temporally rich mission models
-considered later in this monograph.
+Task planning and allocation in multi-robot systems concerns how a mission is decomposed
+into executable subtasks, how these subtasks are assigned to individual robots or
+subteams, and how the resulting activities are coordinated over time. Classical reviews
+have established the main taxonomies of multi-robot task allocation and cooperative
+planning, with particular emphasis on the distinction between centralized and distributed
+coordination \cite{khamis2015multi, torreno2017cooperative}. Recent surveys broaden this
+view to market-based, optimization-based, learning-based, and heterogeneous-team settings
+\cite{quinton2023market, athira2025systematic, almahmud2026review}. The common abstraction
+in this literature is nevertheless still a task, job, or resource claim rather than a
+temporal specification with explicit behavioral semantics.
 
-\subsubsection{Task decomposition and centralized fleet planning}
-\label{sec:ch01:rw:allocation:centralized}
+ (I) \emph{Task decomposition and centralized fleet planning}. Centralized
+formulations are natural when the planner has access to the full task set, the
+capabilities of the fleet, and a common model of cost, precedence, and resource
+constraints. They can encode global coupling precisely through mixed-integer, routing,
+scheduling, or related combinatorial models, and they are therefore attractive when
+heterogeneous capabilities, ordered subtasks, shared resources, or temporal dependencies
+must be represented in one decision problem \cite{gini2017multi, ji2021multi,
+li2025taskallocation}. Their strength is also their limitation. As the number of robots,
+subtasks, and inter-task constraints grows, the resulting search problem becomes difficult
+to solve and even harder to re-solve after mission updates. Branch-and-bound and hybrid
+exact--heuristic methods alleviate this burden in some regimes, but the scaling issue
+remains central \cite{martin2021mrta, athira2025systematic}. Centralized fleet planning is
+therefore most effective when the task set is moderately sized, the coupling is
+structured, and replanning is relatively infrequent.
 
-A large portion of the literature adopts a centralized viewpoint, in which a
-global planner reasons over the full task set and computes assignments for the
-team as a whole. This formulation is natural when the planner has access to task
-descriptions, robot capabilities, and resource constraints in a common model.
-It is also consistent with classical formulations from routing and scheduling,
-where a mission is encoded through precedence relations, timing windows, service
-costs, and assignment variables. In multi-robot settings, such centralized
-formulations are attractive precisely because they can model global coupling
-explicitly, including heterogeneous robot capabilities, ordered tasks, shared
-resources, and even temporal-logic-level inter-task dependencies
-\cite{gini2017multi,ji2021multi,li2025taskallocation}.
-This advantage is particularly clear in mixed-integer and related combinatorial
-formulations. Such methods can represent rich coupling patterns with high
-precision, and they often yield assignments that are globally consistent and
-near-optimal with respect to well-defined cost criteria. Their strength,
-however, is inseparable from their computational burden. As the number of
-robots, subtasks, and inter-task constraints increases, the search or
-optimization problem quickly becomes difficult to solve and even harder to
-re-solve after mission updates. Branch-and-bound and hybrid exact--heuristic
-approaches alleviate this burden in some regimes, but the underlying scaling
-problem remains substantial \cite{martin2021mrta,athira2025systematic}.
-Centralized fleet planning is therefore most effective when the task set is
-moderately sized, the coupling is structured, and replanning is relatively
-infrequent.
+ (II) \emph{Distributed allocation and market-based coordination}. Distributed
+and market-based methods address the same difficulty by moving part of the decision
+process to the robots themselves. In auction-based schemes, robots estimate the utility or
+cost of candidate tasks and then negotiate or compete for assignments. This reduces the
+need to solve a monolithic team-level optimization problem after every task update and
+fits heterogeneous fleets well, because each robot can evaluate its own motion cost,
+capability, or uncertainty estimate \cite{zhao2021market, quinton2023market}. A broader
+distributed view appears in negotiation-based and constraint-based coordination.
+Distributed constraint optimization provides a general language for utility, coupling, and
+decentralized decision making \cite{fioretto2018distributed}, while approximate,
+metaheuristic, and communication-aware variants enlarge the range of tractable problem
+sizes \cite{liu2019multi, ansari2024colossi}. The price is a weaker global view:
+optimality guarantees are harder to retain, and feasibility becomes harder to analyze when
+the task depends on tight timing, ordering, or collaborative-action constraints.
 
-\subsubsection{Distributed allocation and market-based coordination}
-\label{sec:ch01:rw:allocation:distributed}
+ (III) \emph{Hierarchical and continual fleet coordination}. Hierarchical
+coordination attempts to bridge the gap between globally informed planning and scalable
+execution. In this family of approaches, the mission is decomposed across strategic,
+allocation, and execution layers. The resulting architecture reduces the dimensionality of
+each decision problem while retaining enough global structure to maintain coherent team
+behavior \cite{leahy2021scalable, leahy2022fast, luo2024decomposition}. A closely related
+trend concerns continual or reactive fleet coordination, where new jobs, requests, or
+priorities may arise during execution and assignments must be revised online. Recent work
+on dynamic coalition formation, proactive allocation under spatiotemporal uncertainty, and
+reactive allocation under temporal constraints represents this shift \cite{dai2024dynamic,
+street2024rightplace, chen2025realtime}. These developments are important for robotic
+deployment, but they usually treat each task as an abstract job to be assigned. In the
+problems studied later in this monograph, feasibility may depend instead on temporal
+ordering, action preconditions, motion constraints, and execution-time interaction among
+robots. This difference motivates the move from task allocation to formal task and motion
+synthesis.
+The modeling gap is also visible in how task changes are handled. In many allocation
+systems, a new task can be inserted by updating a cost matrix, opening an auction, or
+modifying a schedule. In temporally specified missions, the same update may change the
+language accepted by the task automaton, the set of feasible suffixes of an existing plan,
+or the compatibility between a local action and a future collaboration. Thus, an
+apparently small update at the fleet-management level may have a nonlocal effect on task
+satisfaction. This is one reason that the later chapters avoid treating allocation and
+temporal feasibility as completely separate stages.
 
-To improve scalability and robustness, many works distribute the allocation
-process across the team. Market-based coordination is one of the most influential
-examples. In auction-based schemes, robots evaluate candidate tasks using local
-cost or utility estimates and then compete or negotiate for assignment. This
-reduces the need for solving a monolithic team-level optimization problem after
-every task update. It also fits heterogeneous fleets well, because each robot can
-incorporate its own capabilities, motion costs, or uncertainty estimates into
-its bid \cite{zhao2021market,quinton2023market}. As a result, market-based
-methods often provide a practical compromise between allocation quality and
-computational tractability, and recent survey work has clarified both their
-practical strengths and their recurring failure modes under richer coupling and
-limited communication \cite{quinton2023market}.
-A broader distributed perspective appears in negotiation-based and
-constraint-based coordination. In these formulations, the allocation is shaped by
-local message exchange rather than by a single global optimizer, and consistency
-is achieved through iterative agreement among agents. Distributed constraint
-optimization has become a particularly important abstraction in this context,
-because it offers a general language for utility, coupling, and decentralized
-decision making \cite{fioretto2018distributed}. Approximate, metaheuristic,
-and communication-aware variants further enlarge the range of tractable problem
-sizes \cite{liu2019multi,almahmud2026review,ansari2024colossi}. The
-corresponding trade-off is clear. These approaches scale better and are often
-more robust to local disturbances, but their guarantees of global optimality are
-weaker, and their behavior becomes harder to analyze when feasibility depends on
-tightly coupled timing, ordering, or collaborative-action constraints. They are
-therefore most effective when task interactions remain relatively local or can
-be evaluated through local performance surrogates.
+The distinction between allocation and temporally structured planning is useful for the
+rest of the monograph. Allocation methods are often evaluated by assignment cost, service
+time, travel distance, load balance, or throughput. These criteria are essential, but they
+do not by themselves specify what it means for a robot trajectory to satisfy a
+long-horizon mission. In particular, requirements such as recurrence, avoidance until
+service completion, conditional response, and temporally ordered collaboration cannot
+always be reduced to independent jobs without losing semantic content. The allocation
+literature therefore provides the fleet-level coordination background, while the formal
+methods literature supplies the language in which task correctness is made explicit.
 
-\subsubsection{Hierarchical and continual fleet coordination}
-\label{sec:ch01:rw:allocation:hierarchical}
-
-More recent work has attempted to bridge the gap between globally informed
-planning and scalable execution through hierarchical coordination. In this family
-of approaches, the mission is decomposed across multiple abstraction levels,
-such as strategic mission partitioning, fleet-level allocation, and local
-execution planning. This architecture reduces the dimensionality of each planning
-layer while preserving enough global structure to maintain coherent team
-behavior. It is therefore especially attractive for large fleets, where a fully
-flat optimization becomes difficult to maintain. Hierarchical planning has also
-been combined with richer symbolic or temporal mission models, which allows task
-assignment and high-level task structure to be addressed within a common
-pipeline \cite{leahy2021scalable,luo2024decomposition,leahy2022fast}.
-A closely related trend concerns continual or reactive fleet coordination, in
-which new tasks may arise during execution and assignments must be revised
-online. This shift reflects the practical observation that real robotic fleets
-rarely operate over a fixed set of tasks known completely in advance. Recent
-methods on dynamic coalition formation, proactive allocation under
-spatiotemporal uncertainty, and reactive task allocation under temporal
-constraints represent important progress in this direction
-\cite{dai2024dynamic,street2024rightplace,chen2025realtime}. Even so, many such
-approaches still assume relatively structured task models, moderate update
-rates, or simplified interactions between allocation and low-level execution. In
-particular, the task is often treated as an abstract job to be assigned,
-whereas in more demanding settings the feasibility of a task may depend on
-motion constraints, action preconditions, temporal ordering, and execution-time
-interaction among robots.
-Overall, the task-allocation literature offers a mature set of tools for
-decomposition, assignment, and scheduling at the fleet level. What it usually
-does \emph{not} carry is a detailed semantic account of temporal ordering,
-recurrence, safety, or contingent collaboration. Those requirements are treated
-either implicitly or at a level too coarse for the problems studied later in
-this monograph. For that reason, the review now turns to formal task and motion
-synthesis, where the structure of the mission itself becomes the object of
-representation and reasoning.
 
 %==================================================
 %==================================================
 \subsection{Formal methods for task and motion synthesis}
 \label{sec:ch01:rw:formal}
 
-Formal methods provide a principled framework for specifying, verifying, and
-synthesizing system behavior from high-level requirements. Their importance in
-robotics increased once missions could no longer be described adequately as
-simple goal-reaching or waypoint-following problems. Temporal logic made it
-possible to express ordering, recurrence, safety, and response within a single
-semantic language, while automata-based reasoning connected these requirements
-to algorithmic synthesis procedures. As a result, this literature is relevant
-not only because it offers expressive task descriptions, but also because it
-seeks correctness guarantees that are difficult to obtain from purely heuristic
-planning pipelines.
+Formal methods provide a principled framework for specifying, verifying, and synthesizing
+system behavior from high-level requirements. Their importance in robotics increased once
+missions could no longer be reduced to goal reaching or waypoint following. Temporal logic
+makes it possible to express ordering, recurrence, safety, and response requirements in a
+single semantic language, while automata-based reasoning connects these requirements to
+constructive synthesis procedures.
 
-\subsubsection{Symbolic abstraction and automata-based synthesis}
-\label{sec:ch01:rw:formal:abstraction}
+ (I) \emph{Symbolic abstraction and automata-based synthesis}. A foundational
+idea is to replace a continuous or hybrid system by a finite symbolic model that preserves
+the properties relevant to the specification. Once such a model is available, model
+checking and automata-theoretic synthesis can be used to construct behaviors whose traces
+satisfy temporal formulas \cite{baier2008principles}. Early abstraction results for
+continuous and hybrid systems \cite{alur2000discrete}, approximate bisimulation
+\cite{girard2007approximately}, and finite abstractions for linear or piecewise affine
+systems \cite{tabuada2006linear, kloetzer2008fully, yordanov2010formal} showed how
+continuous dynamics could be connected to finite-state synthesis. Stochastic variants
+extended the same logic to controlled Markov decision processes \cite{ding2011mdp}. Across
+these settings, the key conceptual shift is the same: task satisfaction is not an external
+check on a candidate plan, but the object of synthesis itself.
 
-A foundational idea in this area is to replace a continuous or hybrid dynamical
-system by a finite symbolic model that preserves the properties relevant to a
-given specification. Once such a model is available, model checking and
-automata-theoretic synthesis can be applied to construct system behaviors whose
-traces satisfy temporal formulas. The algorithmic basis for this viewpoint is
-developed systematically in \cite{baier2008principles}. In the context of hybrid and continuous systems,
-early formal abstraction results such as \cite{alur2000discrete} showed how
-continuous dynamics can be related to finite-state models, while approximate
-bisimulation and related abstractions, as in
-\cite{girard2007approximately}, clarified how finite symbolic models can
-preserve behavioral properties with controlled approximation error.
-Building on this formal backbone, temporal-logic control synthesis has been
-developed for several important model classes. For discrete-time linear
-systems, it was shown in \cite{tabuada2006linear,kloetzer2008fully} that LTL
-specifications can be enforced through finite abstractions and automata-based
-constructions. For piecewise affine systems, this approach was extended to
-richer hybrid dynamics in \cite{yordanov2010formal,yordanov2012temporal}. For
-stochastic models, it was illustrated in \cite{ding2011mdp} how temporal-logic
-constraints can be incorporated into controlled Markov decision processes. Across these settings, the key conceptual shift is
-the same: task satisfaction is no longer treated as an external check on a
-candidate plan, but as the object of synthesis itself.
+ (II) \emph{Temporal-logic planning for robotic motion}. In robotics, these ideas
+led to the standard abstraction--synthesis--refinement pipeline. A workspace is
+partitioned into symbolic regions, feasible transitions are encoded in a finite transition
+system, a temporal formula is translated into an automaton, and a plan is synthesized over
+the product of the robot model and the task automaton. This architecture was established
+in early symbolic robotic planning work \cite{belta2007symbolic, fainekos2009temporal,
+bhatia2010sampling} and has since become one of the main formal-methods interfaces to task
+and motion planning \cite{zhao2024tampsurvey}. Its main achievement is that surveillance,
+sequencing, persistent visitation, and conditional response can be handled within one
+logical framework rather than through separate planning heuristics. At the same time, the
+pipeline depends strongly on the quality and size of the finite abstraction, which becomes
+a recurring issue once the workspace, task labels, or execution assumptions are not fully
+known in advance.
 
-\subsubsection{Temporal-logic planning for robotic motion}
-\label{sec:ch01:rw:formal:motion}
+ (III) \emph{Integrated task and motion synthesis with actions}. Pure
+region-visitation models become restrictive when a mission also contains actions whose
+feasibility depends on local conditions, internal robot state, or discrete choices among
+alternatives. Planning theory provides action languages and precondition--effect models
+for such structure \cite{pednault1989adl, gelfond1998action}, but integrating this
+semantics with motion planning under temporal logic is substantially more difficult.
+Robotics work on manipulation-oriented temporal planning and motion--action coupling
+\cite{he2015towards, guo2013motion} illustrates the need to represent more than region
+transitions alone. Some formulations attach actions permanently to locations, while others
+treat action propositions as freely switchable labels; both choices can obscure the actual
+feasibility of execution when local resources, service behaviors, or collaborative
+operations become part of the mission.
 
-Within robotics, these developments led to a now standard architecture for
-planning under temporal tasks. A continuous robot model is first abstracted into
-a finite transition system, typically by partitioning the workspace into regions
-and encoding the feasible motion among them. A temporal formula is then
-translated into an automaton, a discrete plan is synthesized over the product
-between the robot abstraction and the task automaton, and the resulting plan is
-finally refined into executable motion by a lower-level controller. The survey
-in \cite{belta2007symbolic} helped establish this architecture
-as a common bridge between formal verification and robotic planning, and more
-recent reviews place this pipeline within the broader evolution of task and
-motion planning from classical symbolic synthesis to optimization- and
-learning-based variants \cite{zhao2024tampsurvey}.
-This abstraction-to-synthesis pipeline substantially broadened the class of
-robotic missions that could be handled in a systematic way. Rather than
-reasoning only about destination points, the literature could now address
-surveillance, sequencing, persistent visitation, and conditional response
-within a unified framework. Early robotic formulations of temporal-logic motion
-planning include dynamic-robot synthesis in \cite{fainekos2009temporal} and
-sampling-based planning under temporal goals in \cite{bhatia2010sampling}.
-Related work also explored interfaces and software layers that make temporal
-specifications more accessible in robotic practice. For example,
-\cite{srinivas2013graphical} proposed a graphical language for motion and
-mission planning, while \cite{he2015towards} connected temporal specifications
-to manipulation-oriented planning. The central achievement of this literature is
-that it transformed high-level mission requirements into motion-planning
-problems with explicit logical semantics.
+ (IV) \emph{Expressiveness, robustness, and scalability limits}. The expressive
+power of formal synthesis comes with computational limits. Robustness semantics and
+quantitative satisfaction measures make temporal specifications more useful under
+uncertainty and model mismatch \cite{fainekos2009robustness, abbas2013probabilistic}, and
+recent STL and dynamic-temporal methods address robustness and scalability together
+\cite{yang2024stlmpc, buyukkocak2024sequential}. Nevertheless, product-based search and
+automaton construction can grow rapidly with specification length, workspace size, and the
+number of relevant labels. Many classical methods therefore work best when the environment
+is fixed, labels are known in advance, and synthesis can be done largely offline. Those
+are precisely the assumptions that begin to fail once the model is incomplete, the nominal
+task cannot be realized, or the team must coordinate under limited communication.
 
-\subsubsection{Integrated task and motion synthesis with actions}
-\label{sec:ch01:rw:formal:action}
-
-The classical motion-planning pipeline becomes less adequate when the mission
-requires not only movement among regions, but also actions whose availability
-depends on local conditions, internal robot state, or discrete choices among
-alternatives. In planning theory, such action structure is naturally described
-through preconditions and effects, as in the action-language perspective of
-\cite{gelfond1998action} and the planning formalisms surveyed by
-\cite{pednault1989adl}. In robotics, however, integrating this type of action
-semantics with motion planning under temporal logic is substantially more
-difficult. The feasibility of an action may depend on where the robot is, what
-has already occurred, and which local resources are currently available.
-Several works moved formal robotic synthesis in this direction by enriching the
-symbolic state or label structure used for planning. The manipulation-oriented
-framework in \cite{he2015towards} already reflects the need to reason about
-actions more explicitly than in pure region-visitation tasks, and recent survey
-work now treats this integration of symbolic action structure, motion
-feasibility, and optimization as a central theme of task-and-motion planning
-rather than as a special case \cite{zhao2024tampsurvey}. Yet many
-classical formulations remain restrictive in one of two ways. Some attach
-actions permanently to locations, which simplifies planning but cannot represent
-changing local conditions or alternative action choices. Others treat action
-propositions as freely switchable symbolic labels, which weakens the connection
-between the task specification and the actual feasibility of execution. This
-limitation becomes visible when comparing surveillance-style formulations such
-as \cite{smith2011optimal} and reactive mission planning such as
-\cite{kress2009temporal} with motion--action coupling approaches such as
-\cite{guo2013motion}, where navigation and action-description models are
-combined more directly. Once local actions, service behaviors, or collaborative
-operations become part of the mission, the planning model must represent more
-than region transitions alone.
-
-\subsubsection{Expressiveness, robustness, and scalability limits}
-\label{sec:ch01:rw:formal:limits}
-
-As the expressiveness of the task language increases, the synthesis problem
-also becomes more demanding. One line of work introduced quantitative or
-robustness-based extensions in order to move beyond purely Boolean task
-satisfaction. For example, the robustness semantics developed in
-\cite{fainekos2009robustness} quantify how strongly a trajectory
-satisfies or violates a temporal requirement, while probabilistic and
-falsification-oriented analyses such as \cite{abbas2013probabilistic} connect
-formal semantics to testing and optimization. These developments are important
-because they make formal specifications more useful under uncertainty, model
-mismatch, and optimization-driven planning. Recent low-complexity synthesis
-approaches for signal temporal logic and dynamic temporal constraints also show
-that robustness and scalability are now being addressed together rather than in
-isolation \cite{yang2024stlmpc,buyukkocak2024sequential}. At the same time,
-these extensions enlarge the computational burden and complicate the relation
-between symbolic synthesis and executable control.
-Scalability, however, remains the recurring fault line. The practical success
-of formal task and motion synthesis depends heavily on how the system is
-abstracted and on how large the resulting automata and product structures become.
-Even with a good approximation of the underlying dynamics, automaton
-construction and product-based search can grow rapidly with both specification
-length and workspace size, as emphasized in \cite{baier2008principles}. In
-practice, many classical methods therefore work best when the environment is
-fixed, the relevant labels are known in advance, and most synthesis can be done
-offline. Those are precisely the assumptions that begin to fail once the model
-is incomplete or the nominal task cannot be realized, which is where the review
-turns next.
+This limitation should not be read as a weakness of formal synthesis alone. It is a
+consequence of insisting that the task language have a precise semantics and that
+synthesized behavior be linked to this semantics by a correctness argument. The central
+design question is therefore not whether to use symbolic, optimization-based, or
+sampling-based machinery in isolation, but how to choose representations that keep the
+semantic structure of the task while avoiding unnecessary growth in the planning object.
+This question reappears throughout the monograph in different forms: plan repair in
+Chapter~\ref{chap:bottom-up}, partial-order decomposition in Chapter~\ref{chap:top-down},
+communication-aware coordination in Chapter~\ref{chap:communication}, and dynamic task
+adaptation in Chapter~\ref{chap:uncertainty}.
 
 
 %==================================================
@@ -275,134 +173,72 @@ turns next.
 \subsection{Planning under incomplete models and infeasible specifications}
 \label{sec:ch01:rw:incomplete}
 
-The synthesis frameworks reviewed above are most effective when the workspace,
-its semantic labels, and the task model are all available in a reliable form
-before planning begins. In that setting, a symbolic abstraction can be built
-once, a temporal objective can be compiled into an automaton, and execution can
-proceed against a fixed model. Robotic deployment is often less orderly. The
-planner may rely on only partial knowledge of traversability, obstacles, or
-task-relevant properties, and this knowledge may continue to evolve after
-execution has started. A second difficulty appears when the nominal
-specification itself cannot be realized over the available model. The relevant
-literature therefore departs from the classical setting in two connected ways:
-it either weakens the assumption of complete prior knowledge, or it weakens the
-expectation that the original task can be satisfied exactly.
+Classical temporal synthesis is most effective when the workspace, semantic labels, and
+task model are all available before planning begins. Robotic deployment is often less
+orderly. The planner may have only partial knowledge of obstacles, traversability, or
+task-relevant propositions, and this knowledge may continue to evolve during execution. A
+second difficulty appears when the nominal specification cannot be realized over the
+available model. The relevant literature therefore relaxes either the assumption of
+complete prior knowledge or the expectation of exact task satisfaction.
 
-\subsubsection{Uncertain and partially known workspace models}
-\label{sec:ch01:rw:incomplete:workspace}
+ (I) \emph{Uncertain and partially known workspace models}. One response to
+incomplete knowledge is to encode uncertainty directly in the planning model.
+Temporal-logic synthesis over stochastic systems and robust MDP formulations represent
+uncertain transitions or observations probabilistically, so that the planner can reason
+about satisfaction probability or robust performance rather than exact correctness over a
+deterministic abstraction \cite{ding2011mdp, wolff2012robust}. Another response is to
+update the synthesis problem online as new information appears. Receding-horizon temporal
+synthesis \cite{wongpiromsarn2010receding}, perception-aware temporal planning
+\cite{kantaros2022perception}, and no-regret planning in partially known environments
+\cite{zhao2025noregret} all weaken the assumption of complete prior knowledge while
+preserving formal task semantics. Their common limitation is that uncertainty is usually
+built into the model class from the outset. Many robotic deployments also require
+correction of a symbolic model that was incomplete or partially inaccurate at the time of
+planning.
 
-One response to incomplete knowledge is to encode uncertainty directly in the
-planning model. In stochastic formulations, temporal-task synthesis is combined
-with Markov decision processes so that uncertain transitions or observations are
-treated probabilistically rather than ignored. For example, \cite{ding2011mdp}
-shows how temporal-logic specifications can be synthesized over controlled
-stochastic models, while \cite{wolff2012robust} studies robust satisfaction of
-temporal objectives under uncertainty in transition probabilities.
-Their significance lies in preserving the formal link between high-level task
-semantics and quantitative uncertainty, so that planning objectives can be
-stated in terms of satisfaction probability or robust performance rather than
-only exact correctness over a deterministic abstraction.
-A different route treats the environment as reactive or only partially observed
-during planning. Receding-horizon synthesis in \cite{wongpiromsarn2010receding}
-illustrates how temporal-logic tasks can be enforced through repeated online
-optimization, so that new environmental information can influence the evolving
-control policy. More recently, perception-aware planning has incorporated
-uncertain semantic information into the formal synthesis loop, as in
-\cite{kantaros2022perception}, while no-regret temporal-task planning has begun
-to address partially known environments whose structure is revealed
-progressively during execution \cite{zhao2025noregret}. What these methods share
-is an attempt to weaken the assumption of complete prior knowledge without
-discarding formal task semantics. Their common limitation is that uncertainty is
-usually represented as part of the model class from the outset. In many robotic
-settings, however, the difficulty is not only stochasticity or partial
-observation in a static sense, but the progressive correction of a symbolic
-model that was incomplete or partially inaccurate at the moment of planning.
+ (II) \emph{Execution-time plan repair and revision}. This execution-centered
+viewpoint leads to plan repair and revision. Instead of resynthesizing from scratch after
+every inconsistency, revision methods attempt to preserve as much of the nominal plan as
+possible while restoring feasibility or task correctness. Backtracking and iterative
+planning methods \cite{livingston2012backtracking, maly2013iterative} capture the
+computational value of reusing existing plan structure. Logic-sensitive revision for LTL
+motion planning in partially known workspaces \cite{guo2013revising} makes the semantic
+issue explicit: if a transition is blocked or a proposition label is updated, the question
+is not merely whether another route exists, but whether the remaining behavior still
+satisfies the temporal task. These methods remain most developed for single-robot or
+weakly coupled settings, where model updates can be localized more easily than in
+multi-robot missions with shared resources and collaboration dependencies.
 
-\subsubsection{Execution-time plan repair and revision}
-\label{sec:ch01:rw:incomplete:repair}
-
-Once execution begins, the practical question often changes from how to plan
-under uncertainty to how to respond when the current symbolic plan is no longer
-consistent with newly acquired information. This leads to a complementary body
-of work on plan repair and revision. Rather than resynthesizing from scratch
-after every inconsistency, these methods attempt to preserve as much of the
-existing plan structure as possible while restoring feasibility or task
-correctness. An early example is the backtracking framework of
-\cite{livingston2012backtracking}, where execution retreats to a previously
-consistent point and replanning proceeds from there. The appeal of this
-perspective is computational as well as semantic: it tries to exploit the
-structure already present in the nominal plan instead of discarding it
-completely.
-This idea becomes especially meaningful in temporally constrained motion
-planning, where the effect of a model update is not limited to local geometry.
-If a transition becomes blocked or a proposition label changes, the question is
-not merely whether another route exists, but whether the remaining behavior
-still satisfies the intended temporal formula. Iterative planning for partially
-unknown environments in \cite{maly2013iterative} already reflects this
-execution-centered viewpoint, while the revision framework in
-\cite{guo2013revising} addresses the semantic consequences of model updates more
-directly by revising LTL motion plans in partially known workspaces. The
-importance of this literature lies precisely in that shift: plan adaptation is
-treated as a logic-sensitive operation, not simply as local geometric
-replanning.
-Even so, many plan-revision methods remain limited in scope. They are often
-developed for single-robot settings, or for environments in which the main
-uncertainty concerns blocked transitions and updated labels rather than tightly
-coupled interaction with other agents. More recent resilient planning for
-multi-robot teams under permanent failures begins to address that gap
-\cite{cui2025robust}, but local repair still does not always make clear how far
-the revised behavior may drift from the original specification when multiple
-updates accumulate over time. These questions become more pronounced once task
-dependencies, collaboration, and shared resources enter the planning loop.
-
-\subsubsection{Task relaxation and least-violating synthesis}
-\label{sec:ch01:rw:incomplete:relaxation}
-
-Model incompleteness is not the only reason that a nominal synthesis problem can
-fail. In some instances, the symbolic model is sufficiently accurate, but the
-specification itself is unrealizable or infeasible. Under such conditions, a
-binary report of failure is rarely satisfactory. One natural response is to ask
-how the specification should be changed so that the revised task becomes
-realizable with minimal deviation from the original intent. This question is
-studied explicitly in \cite{fainekos2011revising}, where temporal-logic
-specifications are revised in response to synthesis failure, and in
-\cite{kim2012approximate}, where minimal revision of specification automata is
-treated as an optimization problem. Such works are valuable because they place
-the burden of repair on the specification itself, rather than only on the model
-or the plan.
-A related stream of research focuses first on diagnosis. Instead of immediately
-modifying the task, unrealizability analysis seeks to identify which assumptions
-or constraints are responsible for failure. The analysis in
-\cite{raman2011analyzing} is representative of this perspective. By isolating
-incompatible requirements, the method provides useful information to a designer
-or supervisory layer and clarifies whether failure is caused by the environment
-assumptions, the system model, or the task structure. Diagnosis, however, does
-not yet determine what behavior should be generated once exact realization is
-known to be impossible. That question leads to least-violating and partially
-satisfying synthesis.
-
-In least-violating planning, the objective is no longer exact task satisfaction
-but the best admissible compromise relative to the original specification. The
-minimum-violation formulations in \cite{tumova2013least} and
-\cite{tumova2013minimum} treat selected rules as violable and quantify the cost
-of doing so. Time-sensitive partial satisfaction is considered in
-\cite{lahijanian2015time}, where degradation is measured more explicitly against
-the structure of the task. Closely related ideas appear in maximally satisfying
-planning, such as \cite{tumova2014maximally}, where the goal is to preserve as
-much of the original mission as possible under feasibility limitations. This
-body of work is especially relevant when specifications contain requirements of
-unequal importance. In that case, synthesis becomes a problem of prioritization
-as much as one of feasibility, and the distinction between hard and soft
-constraints becomes conceptually unavoidable.
-Collectively, these studies show how formal planning can be pushed beyond the
-idealized setting of complete knowledge and exactly realizable tasks.
-Uncertainty can be embedded into the model, nominal plans can be repaired as the
-workspace abstraction changes, and infeasible specifications can be revised or
-relaxed in a principled manner. Much of this literature, however, still sits in
-single-robot or only weakly coupled settings. Once several robots interact
-under shared temporal requirements, model updates and specification compromises
-stop being local matters. The next step in the review is therefore multi-robot
+ (III) \emph{Task relaxation and least-violating synthesis}. When the nominal
+specification itself is infeasible, the problem changes from repairing a plan to
+interpreting failure. Specification revision and unrealizability analysis identify which
+assumptions or temporal clauses are responsible for failure \cite{fainekos2011revising,
+kim2012approximate, raman2011analyzing}. Least-violating, minimum-violation, and maximally
+satisfying planning then ask for the best admissible compromise relative to the original
+specification \cite{tumova2013least, tumova2013minimum, lahijanian2015time,
+tumova2014maximally}. This literature is especially relevant when requirements have
+unequal criticality, because synthesis becomes a problem of prioritizing hard and soft
+constraints rather than only reporting satisfiable or unsatisfiable. Much of the work,
+however, still treats adaptation and relaxation in settings with limited inter-robot
+coupling. Once multiple robots interact under shared temporal requirements, model updates
+and specification compromises stop being local matters. The next step is therefore
 coordination under temporal constraints.
+There is an analogous distinction between robustness and revision. Robustness semantics
+quantify the margin by which a behavior satisfies or violates a task, which is useful for
+optimization and feedback design. Revision, by contrast, concerns the structural question
+of what should be changed when the original behavior or specification can no longer be
+executed. Both ideas are needed in open robotic environments. A robust plan may still
+require revision after a symbolic label changes, and a revised plan may still be evaluated
+according to how strongly it satisfies the remaining temporal requirements.
+
+For multi-robot systems, the distinction between model repair and specification relaxation
+becomes especially important. A blocked transition, an unavailable proposition, or a
+failed service action may invalidate not only one robot's route but also another robot's
+temporal dependency on that route. Similarly, a relaxed formula may redistribute the
+burden of satisfaction across the team or change which collaborations are worth
+maintaining. This is why the later chapters treat local updates, task dependencies, and
+coordination decisions as coupled objects rather than as independent corrections to
+precomputed plans.
 
 
 %==================================================
@@ -410,174 +246,88 @@ coordination under temporal constraints.
 \subsection{Temporal-logic coordination under coupled constraints}
 \label{sec:ch01:rw:coordination}
 
-Extending temporal-logic synthesis from a single robot to a multi-robot team
-changes the nature of the planning problem. The central issue is no longer only
-how to construct one behavior that satisfies a temporal specification, but how
-to coordinate several behaviors whose feasibility and correctness are coupled
-through shared motion space, timing requirements, and interaction constraints.
-This shift has produced two main strands in the literature. One strand adopts a
-team-level viewpoint and synthesizes joint behavior from a global temporal
-mission. The other starts from locally assigned specifications and treats
-coordination as an emergent consequence of task dependencies, resource
-contention, and intermittent collaboration. Both inherit the automata-based
-machinery reviewed in Section~\ref{sec:ch01:rw:formal}, but they differ
-substantially in how coordination is modeled and where the computational burden
-is placed.
+Extending temporal-logic synthesis from one robot to a team changes the nature of the
+planning problem. The issue is no longer only how to construct one trace that satisfies a
+specification, but how to coordinate several traces whose feasibility and correctness are
+coupled through space, time, resources, and interaction constraints. The literature has
+developed two complementary viewpoints. Top-down methods synthesize team behavior from a
+global temporal mission, while bottom-up methods start from locally assigned
+specifications and manage the dependencies that arise during execution.
 
-\subsubsection{Global temporal-task coordination}
-\label{sec:ch01:rw:coordination:global}
+ (I) \emph{Global temporal-task coordination}. In the top-down paradigm, the team
+is treated as a composite system and the task is specified over collective behavior. Early
+work synthesized deployments and team plans directly from temporal-logic specifications
+\cite{kloetzer2010automatic, ding2011automatic}. This viewpoint gives a strong notion of
+correctness because logical dependencies and synchronization requirements are represented
+at the team level. Subsequent work extended the same paradigm to uncertain travel times,
+robustness, task allocation, sampling, capability-aware specifications, and
+abstraction-free or decomposition-based planning \cite{ulusoy2012robust,
+ulusoy2013optimality, schillinger2018simultaneous, kantaros2020stylus, luo2021abstraction,
+luo2022temporal, sahin2019multirobot, cardona2024planning}. The structural limitation is
+the size of the joint planning object. The global view captures coupling directly, but it
+can grow rapidly with the number of robots, synchronization points, and temporal
+dependencies. Hierarchical remedies can delay this growth, but the paradigm remains most
+effective when the coordination pattern can be encoded within a centralized or
+hierarchically centralized synthesis pipeline.
 
-The earliest and most direct extensions of temporal-logic planning to
-multi-robot systems followed a top-down paradigm. In these formulations, the
-team is viewed as a single composite system, and a global temporal task is
-specified over the collective behavior of all robots. Synthesis then proceeds by
-constructing coordinated joint executions whose projection onto the individual
-robots satisfies the team-level mission. Representative examples include
-\cite{kloetzer2010automatic}, where distributed robotic teams are deployed from
-temporal-logic specifications, and \cite{ding2011automatic}, where global task
-requirements are translated into coordinated team behaviors through formal
-synthesis. In this class of methods, inter-robot dependence is handled directly
-within the symbolic planning object rather than deferred to execution time.
-Such formulations are appealing because they provide a strong notion of
-correctness. Since the mission is specified globally, logical dependencies among
-robots are represented explicitly, and synchronization requirements can be
-verified at the team level. This makes the framework well suited to tasks that
-involve shared temporal objectives, coordinated visitation patterns, or
-mission-level ordering constraints. It also explains why early work in this area
-was able to provide strong guarantees about joint task satisfaction despite the
-complexity of the underlying system.
+ (II) \emph{Locally assigned tasks and loosely coupled collaboration}. The
+bottom-up viewpoint begins instead with local temporal tasks. Each robot may have its own
+role, sensing profile, or action capability, and collaboration appears only where local
+activities intersect through shared resources, temporal dependencies, or service requests.
+Decentralized and receding-horizon coordination from local temporal specifications
+\cite{filippidis2012decentralized, tumova2014receding} showed that formal coordination
+need not start from a single team-wide formula. Later work on knowledge transfer,
+dependent local tasks, and heterogeneous task-and-motion coordination
+\cite{guo2014distributed, guo2015multi, guo2016task} made this shift more explicit:
+collaboration is triggered by dependency, not imposed as a permanent team-level
+synchronization. Hierarchical decomposition methods can partially recover global structure
+without returning to a flat centralized product \cite{leahy2021scalable, leahy2022fast,
+luo2024decomposition, luo2025hulk}. The resulting technical burden is different from the
+top-down case. Correctness must be preserved across distributed decisions, evolving
+dependencies, and execution-time modifications of local plans.
+The difference between global and local specifications should also be understood as a
+difference in where uncertainty enters the problem. In a global task, the planner must
+reason about all relevant dependencies before execution or encode how those dependencies
+may change. In a local-task formulation, by contrast, some dependencies may be discovered
+only when one robot's plan reaches a state that requires another robot's assistance or
+information. This makes the local view more flexible, but it also means that coordination
+cannot be reduced to a single initial synthesis call. The plan must retain enough semantic
+structure to support later negotiation, repair, and verification.
 
-As the literature evolved, the team-level paradigm was extended in order to
-address robustness and richer coordination structure. The effect of uncertain
-travel times on temporal satisfaction was studied in \cite{ulusoy2012robust} and
-\cite{ulusoy2013optimality}, where the emphasis lies on preserving correctness
-despite bounded execution mismatch. Related optimization-based formulations made
-synchronization and routing constraints more explicit, which improved the
-representation of heterogeneous capabilities and coupled motion schedules.
-Recent developments have pushed this direction further by integrating allocation,
-sampling, multi-agent signal-temporal specifications, and scalable decomposition
-into the synthesis loop. Simultaneous task allocation and planning under
-temporal goals were considered in \cite{schillinger2018simultaneous}.
-Sampling-based optimal synthesis was developed in \cite{kantaros2020stylus}.
-Abstraction-free formulations such as \cite{luo2021abstraction}, temporal-
-task allocation methods such as \cite{luo2022temporal}, and recent multi-agent
-STL planning methods such as \cite{sun2022multiagent,sewlia2025maps2} expanded
-the size and variety of missions that can be handled. Capability-aware and
-counting-style extensions, represented by \cite{sahin2019multirobot} and
-\cite{cardona2024planning}, broadened the expressive scope of global team
-specifications.
-Even with these advances, the main limitation of the top-down literature remains
-structural rather than conceptual. The team-level viewpoint is powerful because
-it captures coupling directly, but the same feature causes the planning object
-to grow rapidly with the number of robots, synchronization points, and temporal
-dependencies. Hierarchical remedies alleviate this burden in some cases, yet the
-global paradigm is still most effective when the coordination pattern can be
-encoded within a centralized or hierarchically centralized synthesis pipeline.
 
-\subsubsection{Locally assigned tasks and loosely coupled collaboration}
-\label{sec:ch01:rw:coordination:local}
+ (III) \emph{Interaction constraints and relative-motion safety}. A further layer
+of coupling comes from interaction constraints. Temporal-task satisfaction alone does not
+ensure that robots avoid collisions, maintain communication structure, or preserve
+relative-motion relations required by the task. Classical multi-robot stabilization,
+collision avoidance, and connectivity maintenance \cite{dimarogonas2006feedback,
+zavlanos2011graph, ji2007distributed} therefore remain relevant even when the high-level
+task is formal. Work that combines temporal objectives with relative-motion, connectivity,
+or communication-free coordination \cite{guo2014controlling, guo2014cooperative,
+guo2015hybrid, guo2015communicationfree} shows that task satisfaction and team integrity
+cannot be separated cleanly. Graph-based local interaction models and embedded graph
+grammars \cite{mcnew2006locally, smith2009multi, pickem2013complete, guo2016graphgrammar}
+provide another compact way to encode neighbor-dependent behaviors and structural
+reconfiguration. The persistent tension is clear: global synthesis captures coupling
+explicitly but scales poorly, while local synthesis scales better but must maintain
+distributed consistency during execution.
+Interaction constraints also reveal why purely symbolic and purely geometric views are
+both incomplete. A symbolic plan may correctly visit the required regions and perform the
+required actions, yet fail because two robots cannot maintain safe separation or
+communication while executing the corresponding motions. Conversely, a geometrically safe
+motion may not preserve the temporal ordering or collaboration semantics required by the
+task. The coordination problem therefore lies in the interface between symbolic progress
+and continuous team integrity. This interface is one of the recurring themes of the case
+studies in Chapters~\ref{chap:bottom-up}--\ref{chap:communication}.
 
-Another branch of the literature begins from a different modeling choice. Rather
-than specifying one temporal task for the entire team, it assigns local
-specifications to individual robots and studies how these locally meaningful
-behaviors can coexist or cooperate. This viewpoint is particularly natural in
-heterogeneous fleets, where each robot may have a distinct role, sensing
-profile, or action capability, and where the full coordination pattern need not
-be fixed in advance. Decentralized multi-agent control from local temporal
-specifications was studied in \cite{filippidis2012decentralized}, and receding-
-horizon coordination from local LTL tasks was developed in \cite{tumova2014receding}.
-These works showed that formal coordination need not start from a single
-team-wide formula in order to retain a meaningful logical structure.
-Its appeal is also conceptual. In warehouse systems, inspection scenarios, and
-service settings, robots often begin with tasks that are already local in
-content, while collaboration appears only where those local activities intersect
-through shared resources, timing dependencies, or temporary service
-requirements. Under such conditions, a permanently synchronized team model can
-be more rigid than the mission itself. Local specifications fit heterogeneity
-and asynchronous execution more naturally, and they reduce the need to maintain
-a fully coupled global planning object throughout the mission.
 
-This line of work becomes especially relevant when inter-robot dependence is
-intermittent rather than persistent. Distributed plan reconfiguration through
-knowledge transfer in \cite{guo2014distributed}, bottom-up coordination for
-dependent local tasks in \cite{guo2015multi}, and task-and-motion coordination
-for heterogeneous teams with loosely coupled local specifications in
-\cite{guo2016task} all reflect this logic. In such formulations, collaboration
-is not imposed by a permanent team-level objective. Instead, it arises when one
-robot's local task becomes feasible only through assistance, information
-exchange, or conflict resolution with others. This shift greatly improves
-scalability and modeling realism, but it also changes the main technical burden.
-Correctness is no longer guaranteed by one global synthesis step. It must be
-maintained across distributed decisions, evolving dependencies, and execution-
-time modifications of local plans.
-Large systems have motivated further refinement of this perspective. Work such
-as \cite{leahy2021scalable}, \cite{leahy2022fast}, \cite{luo2024decomposition},
-\cite{luo2025hulk}, and recent temporal-logic-aware heterogeneous allocation
-methods such as \cite{li2025taskallocation} shows that hierarchical
-decomposition can partially recover global structure without returning fully to
-flat centralized synthesis. Even so, the conceptual
-shift remains: once temporal coordination is organized around local
-specifications, attention moves from global satisfiability alone to consistency
-among partial plans, dependency management, and the timing of collaboration.
-That shift is closely aligned with the perspective developed later in this
-monograph.
-
-\subsubsection{Interaction constraints and relative-motion safety}
-\label{sec:ch01:rw:coordination:interaction}
-
-Temporal-task satisfaction does not by itself guarantee that a multi-robot team
-can operate safely and coherently in shared space. Even if each robot follows a
-correct symbolic plan, the team must still avoid collisions, preserve necessary
-communication structure, and respect relative-motion constraints induced by the
-physical environment or the task itself. These requirements are often treated as
-background assumptions in high-level planning, but in practice they are central
-components of coordination. Classical stabilization and collision-avoidance
-schemes for multiple robots were developed in \cite{dimarogonas2006feedback},
-while connectivity-preserving motion control was studied in \cite{zavlanos2011graph}.
-The common lesson is that safe team behavior depends on interaction constraints
-that remain active throughout execution, not only at isolated synchronization
-points.
-This observation led to more explicit efforts to combine formal task planning
-with relative-motion and communication constraints. Distributed connectedness
-maintenance in \cite{ji2007distributed} and the control of relative motion in
-\cite{guo2014controlling} illustrate how local interaction requirements can be
-embedded into continuous coordination laws. Temporal-task variants appear in
-\cite{guo2014cooperative}, \cite{guo2015hybrid}, and
-\cite{guo2015communicationfree}, where local temporal objectives are coupled to
-distance maintenance, connectivity, or communication-free coordination rules.
-Related deployment problems with reduced communication were also considered in
-\cite{kloetzer2011multi}. More recent multi-agent STL formulations, including
-\cite{sun2022multiagent,sewlia2025maps2}, push this integration further by
-encoding relative-state and interaction constraints directly in the task-level
-planning problem. What makes this literature especially relevant is that it
-refuses to separate task satisfaction from team integrity. The planning problem
-is no longer only to achieve a sequence of symbolic objectives, but to do so
-while continuously preserving the geometric and communication relations that
-keep the team operational.
-
-Another useful perspective comes from graph-based local interaction models.
-Embedded graph grammars, introduced in \cite{mcnew2006locally} and developed
-further in \cite{smith2009multi}, \cite{mcnew2007solving}, and
-\cite{pickem2013complete}, provide a compact way to describe local mode
-transitions, neighbor-dependent behaviors, and structural reconfiguration in
-large robotic teams. Their appeal lies in locality. Coordination rules are
-expressed through neighboring relations and graph rewrites, which makes them
-well suited to settings in which only local interaction is available. At the
-same time, this literature often leaves the connection to rich temporal-task
-semantics only partially developed. The hybrid graph-grammar viewpoint in
-\cite{guo2016graphgrammar} is representative of attempts to close that gap by
-linking local interaction rules to more expressive task-level coordination
-objectives.
-The overall picture is therefore less a neat progression than a persistent
-tension. Team-level temporal synthesis captures coordination explicitly, but
-faces a steep growth in complexity. Locally specified planning improves
-flexibility and tractability, but shifts the burden toward distributed
-consistency and execution-time coordination. Interaction constraints make the
-problem sharper still, because high-level correctness must coexist with
-collision avoidance, connectivity preservation, and relative-motion safety. The
-next subsection examines what happens once these already difficult coordination
-problems are further complicated by online task arrivals, contingent requests,
-limited communication, and human involvement.
+The distinction between these paradigms also clarifies the organization of the technical
+chapters. Chapter~\ref{chap:bottom-up} follows the bottom-up view: the robots begin with
+local temporal tasks, and coordination is introduced when local plans require repair,
+assistance, or consistency with other agents. Chapter~\ref{chap:top-down} follows the
+complementary top-down view: a global mission is decomposed into partially ordered
+subtasks and assigned to suitable subteams. Both perspectives are needed. The former
+captures asynchronous local operation and execution-time dependence, while the latter
+captures global mission structure and team-level temporal requirements.
 
 
 %==================================================
@@ -585,345 +335,171 @@ limited communication, and human involvement.
 \subsection{Online coordination under communication constraints and human supervision}
 \label{sec:ch01:rw:online}
 
-The coordination models reviewed so far still rely, to different degrees, on the
-assumption that the relevant task structure can be determined before execution
-and that enough information is available to preserve consistency among the
-robots. Practical deployment is often more fluid. New service demands may arise
-after the mission has already begun, temporary collaborations may be requested
-by robots that were previously independent, information may propagate only
-intermittently, and human operators may need to redirect or validate decisions
-without taking over low-level control. Under these conditions, coordination is
-not only a matter of satisfying temporal requirements over a fixed team model.
-It also becomes a matter of managing evolving commitments, delayed information,
-and selective intervention while the mission is still unfolding.
+The coordination models reviewed above still assume, to different degrees, that the
+relevant task structure can be determined before execution and that enough information is
+available to keep the team consistent. Practical deployment is more fluid. New requests
+may arise after the mission begins, temporary collaborations may be required only at
+specific states, communication may be intermittent, and human operators may need to
+validate or redirect decisions without controlling every motion. Coordination then becomes
+a problem of managing evolving commitments and delayed information while execution
+continues.
+The literature on online coordination therefore exposes a central asymmetry. A robot can
+often detect a local need for help, repair, or communication before the rest of the team
+has enough information to reason about it globally. The coordination architecture must
+then mediate between local urgency and global consistency. This is the setting in which
+temporary collaboration, bounded-delay information fusion, and topology-aware request
+handling become more than implementation details; they determine whether the temporal
+mission can still be interpreted coherently during execution.
 
-\subsubsection{Online and contingent collaboration}
-\label{sec:ch01:rw:online:contingent}
+ (I) \emph{Online and contingent collaboration}. Online and contingent
+collaboration addresses the first part of this shift. In reactive task allocation,
+proactive allocation, and hierarchical coordination under continual task streams, the task
+set changes during execution and the team must update decisions without losing mission
+coherence \cite{chen2025realtime, street2024rightplace, luo2025hulk}. Contingent
+collaboration is more specific: a robot may need assistance only after reaching a
+particular local state, after a resource becomes unavailable, or after a formation or
+service condition is triggered. Classical reactive synthesis against a predefined
+environment model \cite{kress2009temporal} does not fully capture this case, because
+important coordination events are generated by the evolving internal state of the team
+itself. Event-based collaborative mechanisms with service and formation requests
+\cite{guo2016graphgrammar} therefore treat requests as coordination objects rather than
+external disturbances. The team must decide not only how to respond to change, but also
+when a request should be generated, how it should propagate, and how the surrounding local
+plans should absorb it.
 
-A substantial recent literature addresses the shift from static mission
-synthesis to continual and reactive coordination. In these formulations, the
-task set is no longer assumed to be fixed at the outset. New jobs, requests, or
-priorities may appear during execution, and the team must update its decisions
-while preserving enough structure to maintain progress toward the original
-mission. Reactive task allocation under temporal constraints, studied in
-\cite{chen2025realtime}, illustrates this shift clearly. Proactive allocation
-under spatiotemporal uncertainty \cite{street2024rightplace} and hierarchical
-coordination under continually arriving task streams, as in \cite{luo2025hulk},
-make the same point at a larger scale: the problem is not merely how to solve a
-larger planning instance, but how to preserve mission coherence while the
-planning instance itself continues to change.
-This online viewpoint becomes more demanding when collaboration is contingent
-rather than persistent. A robot may require assistance only after reaching a
-particular local state, may issue a request only when a resource becomes
-available or unavailable, or may need another robot to satisfy a transient
-formation or service condition. Such events are not well captured by the
-classical notion of reactive synthesis against a predefined class of
-environmental behaviors. In reactive temporal-logic formulations such as
-\cite{kress2009temporal}, the environment is modeled in advance and the
-controller is synthesized against that known interaction structure. In
-contingent collaboration, by contrast, important coordination events are often
-generated by the evolving internal state of the robotic team itself, and they
-need not belong to a finite class that can be exhaustively encoded before
-deployment.
-That distinction has led some work to treat online requests as first-class
-coordination objects rather than as incidental disturbances. Event-based
-collaborative mechanisms involving service and formation requests were studied
-in \cite{guo2016graphgrammar}, where coordination is triggered by the evolving status
-of local tasks. The important step here is that execution-time negotiation is
-brought inside the planning problem instead of being handled as an external
-patch. The team must decide not only how to respond to change, but also when a
-request should be generated, how it should propagate, and how the surrounding
-local plans should absorb it. Existing methods have improved responsiveness
-substantially, but many still rely on repeated replanning of expensive global
-coordination objects or on update structures simpler than those encountered in
-long-horizon, heterogeneous missions. The perspective adopted later in this
-monograph is closest to this contingent case, where collaboration is triggered
-locally and coordinated without assuming that all interaction patterns are known
-in advance.
+ (II) \emph{Coordination under intermittent or limited communication}.
+Communication constraints make online coordination harder. In subterranean exploration,
+disaster response, large indoor facilities, and infrastructure inspection, communication
+may be limited by range, occlusion, or network instability. Intermittent communication
+protocols allow robots to operate independently and then re-establish contact through
+planned meetings or rendezvous \cite{stump2011connectivity, hollinger2013sampling,
+nikou2016cooperative}. This restores autonomy between communication events, but it also
+means that plans, maps, and dependency information may be stale. Collaborative exploration
+makes the same point. Frontier-based and information-gain methods benefit from shared maps
+and timely mutual awareness \cite{yamauchi1997frontier, burgard2000collaborative,
+sheng2006distributed}; once that assumption is weakened, the team must also decide when to
+reconnect, whether to deploy relays, and how to balance map growth against information
+latency \cite{mosteo2013framework, dehoog2010role}. Recent studies connect these
+communication constraints to richer temporal mission models \cite{guo2024teamwise,
+guo2025moroco, ansari2024colossi, silva2026probabilistic}. The later chapters adopt the
+stronger view that communication maintenance is part of the planning problem, not a
+passive execution condition.
+These communication-aware problems differ from ordinary online replanning in an important
+respect. If every robot has immediate access to the same information, then replanning can
+be viewed mainly as a computational problem. Under intermittent communication, however,
+the location and timing of information exchange become part of the feasible behavior. A
+plan may be locally executable but globally unsafe if delayed information prevents another
+robot or the operator from updating a dependent commitment in time. This observation is
+the main reason that Chapter~\ref{chap:communication} treats communication topology,
+exploration progress, and temporal request handling as a single coordination problem.
 
-\subsubsection{Coordination under intermittent or limited communication}
-\label{sec:ch01:rw:online:communication}
 
-The difficulty of online coordination increases sharply once communication can no
-longer be treated as effectively unlimited. A large part of the multi-robot
-planning literature assumes communication rich enough to support timely sharing
-of plans, state estimates, and coordination decisions. That assumption is often
-reasonable in structured indoor domains or simulations, but it is difficult to
-maintain in subterranean exploration, disaster response, large indoor
-facilities, or infrastructure inspection, where range limits, occlusion, and
-network instability severely restrict information flow. In such settings,
-communication becomes a resource that must itself be planned, preserved, or
-recovered.
-One response has been to schedule communication explicitly rather than requiring
-it continuously. Intermittent communication protocols, developed in works such
-as \cite{stump2011connectivity}, \cite{hollinger2013sampling}, and
-\cite{nikou2016cooperative}, allow robots to operate independently for periods
-of time and then re-establish contact through planned rendezvous. Different
-variants make different assumptions about whether communication times are fixed
-or optimized, whether meetings are pairwise or team-wide, and whether the
-rendezvous structure is imposed centrally or emerges through distributed
-coordination. The appeal of these methods lies in the freedom they return to the
-robots between communication events. Their cost is that information no longer
-propagates immediately, which complicates temporal consistency, dependency
-management, and the validity of local decisions made on stale data.
+ (III) \emph{Human-fleet interaction and mixed-initiative supervision}.
+Human-fleet interaction introduces another form of partial information and selective
+authority. Human operators are often better suited to specify goals, resolve ambiguity,
+approve risky behavior, or intervene when mission priorities change, while the robot team
+should still handle local planning and execution autonomously. Direct teleoperation scales
+poorly with the number of robots and becomes even less practical when communication is
+delayed or intermittent. This tension has motivated work on human--swarm and
+human--multi-robot interaction, where scalable supervision depends on abstraction,
+situational awareness, and control modes that allow operators to influence the mission
+without micromanaging individual robots \cite{crandall2017human, nam2018survey,
+dahiya2023survey, lyons2025examining}. Mixed-initiative and scaled-autonomy approaches
+provide one answer: decision authority shifts according to uncertainty, task difficulty,
+and operator intent \cite{jiang2019mixed, kortenkamp2016integrating}. In temporal robotic
+planning, human intervention cannot be treated as an isolated override. It must be
+incorporated into a coordination architecture that still preserves task progress,
+inter-robot consistency, and mission-level safety, especially when the operator receives
+delayed or incomplete information about the fleet state \cite{jhunjhunwala2021ihero,
+orton2020madcat, walker2023ar}.
 
-These issues are especially visible in collaborative exploration. Frontier-based
-and information-gain approaches, including \cite{yamauchi1997frontier},
-\cite{burgard2000collaborative}, and \cite{sheng2006distributed}, benefit
-strongly from shared maps and timely mutual awareness. Once that assumption is
-weakened, the team must decide not only where to explore, but also when to
-reconnect, whether to deploy relays, and how to balance map growth against
-information latency. Relay-based and rendezvous-oriented exploration strategies,
-as in \cite{mosteo2013framework}, \cite{dehoog2010role}, and related work,
-demonstrate that exploration and communication are tightly coupled decision
-problems rather than separable modules.
-Recent studies have begun to connect communication constraints to richer
-high-level mission models. Team-wise intermittent communication in unknown
-environments was investigated in \cite{guo2024teamwise}, communication-aware
-fleet coordination with online requests appears in \cite{guo2025moroco}, and
-communication-restricted or explicitly communication-constrained temporal-task
-planning is now studied more directly in \cite{ansari2024colossi,silva2026probabilistic}.
-These efforts are important because they treat communication limits not merely
-as performance degradation, but as structural constraints that reshape the
-planning problem. Task assignment, temporal consistency, and situational
-awareness all become functions of when information can be exchanged and how much
-of it can be moved through the network. Once communication is treated in this
-way, the distinction between planning and networking becomes much less rigid.
+The same point applies to human supervision. In a communication-rich setting, human input
+can often be modeled as an occasional update to a centralized mission planner. Under
+limited communication, the operator may see an incomplete or delayed view of the team,
+while individual robots may have to continue executing with only local knowledge. The
+useful abstraction is therefore not a binary choice between autonomy and teleoperation,
+but a coordination layer in which human input, robot-to-robot information flow, and
+temporal task semantics remain mutually consistent.
 
-\subsubsection{Human-fleet interaction and mixed-initiative supervision}
-\label{sec:ch01:rw:online:human}
 
-Limited communication also changes the role of the human operator. In many field
-deployments, the human is not simply an external observer but an active
-participant who monitors the fleet, approves risky actions, inserts new goals,
-or resolves ambiguities that are difficult to settle autonomously. At the same
-time, direct teleoperation scales poorly with the number of robots and becomes
-even less practical when communication is delayed or intermittent. This tension
-has motivated a substantial literature on human--swarm and human--multi-robot
-interaction. Foundational surveys such as \cite{crandall2017human} and
-\cite{nam2018survey} established the main design principles, while more recent
-reviews now synthesize the multi-agent human--robot interaction literature and
-the human-centred challenges of supervising large robotic collectives
-\cite{dahiya2023survey,lyons2025examining}. Across these studies, the recurring
-lesson is that scalable supervision depends on abstraction, situational
-awareness, and control modes that allow operators to influence the mission
-without micromanaging individual robots.
-Mixed-initiative coordination provides one influential answer to this problem.
-Instead of assigning all authority to either the autonomy stack or the operator,
-mixed-initiative systems allow decision authority to shift according to
-uncertainty, task difficulty, and operator intent. This perspective is evident
-in \cite{jiang2019mixed}, where human input and robotic planning are integrated
-more directly, and it is closely related to scaled-autonomy ideas such as
-\cite{kortenkamp2016integrating}, where the level of human involvement depends
-on the state of the mission. Such approaches are especially relevant for
-temporally structured tasks, because intervention cannot be treated as an
-isolated override. It must be incorporated into a coordination architecture that
-still preserves task progress, inter-robot consistency, and mission-level
-safety.
-
-The challenge becomes richer when the operator is embedded in a
-communication-constrained fleet. Then the design problem is not only how to
-present the state of the team, but how to preserve timely and selective human
-intervention when the robots themselves may not remain continuously connected.
-Interactive exploration frameworks such as \cite{jhunjhunwala2021ihero} already
-illustrate the value of online operator input in dynamic missions. Work on
-multimodal and immersive interfaces, including \cite{orton2020madcat} and
-\cite{walker2023ar}, shows how richer communication channels can improve
-situational awareness and command efficiency. Yet much of this literature still
-assumes communication support more reliable than what is available in many
-real-world deployments. The unresolved issue is therefore deeper than adding a
-human to the loop. The real question is how to preserve scalable autonomy,
-temporal consistency, and meaningful oversight at the same time.
-The literature here does more than append a human to an existing planning loop.
-It recasts coordination as something that must absorb evolving commitments,
-delayed information, and selective intervention within the mission logic itself.
-Seen from that angle, the turn toward abstraction, uncertainty, and dynamic task
-models is not a side development; it is a direct response to the operational
-conditions under which modern robotic teams actually work.
-
-%========================================
-%========================================
+%==================================================
+%==================================================
 \subsection{Uncertainty, abstraction and dynamic tasks}
 \label{sec:ch01:rw:extensions}
 
-This final subsection gathers developments that cut across several of the
-preceding literatures rather than continuing a single chronological thread. As
-temporal-task planning moved beyond static deterministic workspaces, adjacent
-lines of work became increasingly hard to treat as peripheral. One replaces
-deterministic transition models by stochastic decision processes in order to
-represent uncertain outcomes more faithfully. Another revisits the meaning of
-safety once long-horizon execution, recovery, or partial task violation must be
-taken into account. A third addresses the computational burden of formal
-synthesis through symbolic and temporal abstraction. More recent work has also
-expanded the task language itself, moving from propositional formulas over fixed
-labels toward signal-based specifications and dynamically changing task models.
-These developments do not form a single unified school, but together they mark a
-clear change in emphasis: uncertainty, abstraction, and evolving task semantics
-are now part of the core planning problem.
+Several cross-cutting developments connect the preceding lines of work. They do not form a
+single unified school, but together they mark a clear change in emphasis: uncertainty,
+abstraction, safety, and evolving task semantics are now part of the core planning problem
+rather than secondary complications.
 
-\subsubsection{Probabilistic temporal-task planning}
-\label{sec:ch01:rw:extensions:mdp}
+ (I) \emph{Probabilistic temporal-task planning}. Markov decision processes,
+probabilistic model checking, and multi-objective verification make it possible to
+optimize satisfaction probability, cost, or risk under stochastic dynamics
+\cite{ding2011mdp, wolff2012robust, forejt2011quantitative, forejt2012pareto,
+kwiatkowska2011prism}. Learning-based variants combine temporal specifications with
+reinforcement learning when the transition model is not fully known
+\cite{hasanbeig2019reinforcement, bozkurt2020control, wang2015temporal}. These approaches
+broaden the reach of formal planning, but they do not remove the need for temporal
+reasoning; they relocate it into rewards, policies, or probabilistic verification
+objectives. Recent work also extends this direction to communication-constrained and
+partially known multi-robot settings \cite{silva2026probabilistic, zhao2025noregret},
+where the uncertainty is not only stochastic but also shaped by information flow.
 
-Markov decision processes provide one of the main formal models for robotic
-planning under uncertainty. In this setting, stochasticity may arise from
-actuation noise, imperfect sensing, or uncertain environmental response, and the
-planner seeks a policy rather than a single deterministic path. Classical MDP
-planning typically focuses on reachability or on the optimization of expected
-cumulative reward. Temporal-task formulations alter that objective by requiring
-the policy-induced behavior to satisfy a high-level logical specification.
-Representative work in this direction includes \cite{ding2011mdp}, where LTL
-constraints are incorporated into MDP control, and \cite{wolff2012robust}, where
-task satisfaction is studied under uncertainty in transition probabilities.
-These formulations are important because they preserve formal task semantics
-while moving from deterministic execution traces to probabilistic policies.
-Recent work extends this idea to multi-robot planning with temporal tasks under
-explicit communication constraints \cite{silva2026probabilistic} and to
-partially known environments where uncertainty is reduced online rather than
-assumed fully parameterized in advance \cite{zhao2025noregret}.
-Once the planning object becomes a policy, several new questions emerge. The
-objective may be to maximize the probability of satisfying a temporal formula,
-to optimize cost subject to a minimum satisfaction threshold, or to compare
-different operating points across multiple verification criteria. Quantitative
-multi-objective verification in \cite{forejt2011quantitative} and Pareto-style
-analysis in \cite{forejt2012pareto} make these trade-offs explicit, while tool
-support such as \cite{kwiatkowska2011prism} has helped establish a practical
-computational workflow for probabilistic verification and synthesis. The
-conceptual gain is substantial. Temporal planning is no longer limited to the
-question of whether a task can be satisfied, but can instead reason about how
-well, how reliably, and at what cost a task can be achieved under uncertainty.
-This same line of thought has also influenced learning-based control. Rather
-than assuming a fully known stochastic model, recent work has combined temporal
-logic with reinforcement learning, as in \cite{hasanbeig2019reinforcement},
-\cite{bozkurt2020control}, and \cite{wang2015temporal}. These approaches are
-appealing because they broaden the reach of formal planning to settings where
-transition structure must be estimated from experience. Their limitations are
-equally instructive. Temporal reasoning does not disappear when learning is
-introduced. It is relocated into reward shaping, policy optimization, or
-probabilistic verification of the learned behavior. In that sense, learning and
-formal methods are not substitutes here, but overlapping responses to the same
-difficulty of planning under uncertainty.
+ (II) \emph{Safety requirements and constrained satisfaction}. A second
+development is a more structured treatment of safety. Safety can be encoded as a temporal
+invariant, but long-horizon operation under uncertainty also requires notions of
+recoverability, resilience, and constrained satisfaction. Minimum-violation planning
+treats some rules as costly but violable \cite{tumova2013least, tumova2013minimum,
+vasile2017minimum}, while safe exploration and stochastic-hybrid synthesis emphasize the
+ability to avoid or recover from unsafe behavior under uncertain dynamics
+\cite{moldovan2012safe, turchetta2016safe, laurenti2020formal}. From this perspective,
+safety is not merely a propositional side condition. It affects how plans are compared,
+revised, relaxed, and executed when exact task satisfaction is no longer guaranteed. This
+view is particularly important in multi-robot settings, where safety and feasibility may
+also depend on team composition, communication structure, and local collaboration
+constraints.
 
-\subsubsection{Safety requirements and constrained satisfaction}
-\label{sec:ch01:rw:extensions:safety}
+ (III) \emph{Hierarchical and symbolic abstraction}. A third development is
+abstraction. The cost of formal synthesis depends heavily on the finite model presented to
+the planner. Symbolic abstraction, approximate refinement, and hierarchical synthesis seek
+finite representations that preserve the distinctions relevant to the task while
+suppressing irrelevant state detail \cite{tabuada2009verification,
+haesaert2018verification, meyer2019hierarchical, nilsson2014incremental}. Temporal
+abstraction, including options and other temporally extended behaviors
+\cite{sutton1999between}, reduces the effective planning horizon and lets the planner
+reason over structured behaviors rather than primitive transitions. This monograph follows
+the same principle: abstraction is not a preprocessing step alone, but a modeling decision
+shaped by task structure, scalability, and online adaptation.
 
-Safety is often introduced into temporal planning as one requirement among many,
-for example by encoding obstacle avoidance, separation, or return conditions
-directly in the task formula. Under this interpretation, safety is part of the
-same logical object that also captures reachability, surveillance, or service
-requirements. This view remains natural and powerful, especially when safety can
-be expressed as an invariant or as a temporal exclusion rule. It also underlies
-much of the literature on minimum-violation planning, where some requirements
-are treated as violable but costly rules rather than as absolutely rigid
-constraints. Representative examples include
-\cite{tumova2013least,tumova2013minimum,vasile2017minimum}. These methods are
-especially useful when the system must continue to operate despite conflicting,
-partially infeasible, or degraded mission requirements.
-A more structured notion of safety appears when execution unfolds over long
-horizons or under substantial uncertainty. In such settings, safety may depend
-not only on avoiding a bad state at the present instant, but on maintaining the
-ability to recover, return, or hand control to a safe policy later on. This
-shift from state avoidance to recoverability is evident in safe exploration for
-MDPs, studied in \cite{moldovan2012safe} and \cite{turchetta2016safe}. Formal
-synthesis for stochastic hybrid processes, as in \cite{laurenti2020formal},
-makes the same point in a different model class: the interpretation of safety
-depends on the probabilistic and dynamical structure of the system, not merely
-on a static forbidden set. Once safety is viewed in this way, it becomes tightly
-connected to model uncertainty, task persistence, and the availability of
-future corrective action.
-This distinction matters for the broader literature reviewed in this monograph.
-If safety is treated only as a propositional side condition, then its relation
-to adaptation, partial knowledge, or online coordination may remain unclear. If
-it is treated as a constrained-satisfaction problem with its own semantic
-structure, then safety becomes a central component of how plans are compared,
-revised, or relaxed. That perspective is particularly important in settings
-where exact task realization may fail and where different parts of the mission
-carry different levels of criticality. Recent resilient multirobot synthesis
-under permanent failures \cite{cui2025robust} reinforces the same point from a
-team-level perspective: safety and feasibility cannot be separated cleanly once
-the composition of the team itself may change during execution.
+ (IV) \emph{Signal temporal logic and dynamic task models}. The fourth
+development is the move from propositional temporal logic over static labels to richer and
+more dynamic task models. Signal Temporal Logic is particularly important because its
+semantics are defined over real-valued trajectories rather than only over abstract labels.
+It can therefore express formation errors, relative distances, time-varying predicates,
+and continuous safety margins. Multi-robot and optimization-based STL planning methods
+\cite{lindemann2019coupled, liu2022stlq, kurtz2022mixed, sun2022multiagent,
+sewlia2025maps2, yang2024stlmpc, buyukkocak2024sequential} bring temporal reasoning closer
+to continuous control, although often at the cost of more difficult optimization. Dynamic
+task models go further by allowing targets, propositions, semantic features, or
+neighboring agents to change during execution \cite{zhang2024reactive,
+kalluraya2023multirobot, aksaray2022online}. Taken together, these developments explain
+why the later chapters combine formal task semantics with abstraction, adaptation,
+communication-aware coordination, and richer models of uncertainty instead of treating
+these ingredients separately.
+Finally, dynamic task models sharpen the distinction between task updates and ordinary
+disturbances. A disturbance changes the state of the system or the quality of a candidate
+trajectory; a task update changes the condition under which the trajectory is judged. In
+robot teams, such updates may be caused by moving targets, changing semantic labels, new
+requests from the operator, or the appearance of uncontrollable neighboring agents. A
+coordination method must therefore maintain both executable behavior and an up-to-date
+interpretation of what the behavior is supposed to satisfy.
 
-\subsubsection{Hierarchical and symbolic abstraction}
-\label{sec:ch01:rw:extensions:abstraction}
 
-The computational cost of formal synthesis depends heavily on how the system is
-abstracted. A naive discretization of the full continuous state space quickly
-becomes intractable as dimension grows, and this remains one of the main
-practical bottlenecks in automata-based planning. Symbolic abstraction is a
-response to this difficulty. Rather than enumerating all possible states at a
-uniform resolution, it seeks finite representations that preserve exactly those
-behavioral distinctions relevant to the task. The general symbolic viewpoint is
-developed in \cite{tabuada2009verification}, where verification and control are
-organized around finite abstractions of hybrid systems. Related work on
-approximate similarity and refinement, such as \cite{haesaert2018verification},
-clarifies how abstract policies can be related back to the original stochastic
-or continuous model with controlled loss of fidelity.
-A complementary response is temporal abstraction. The options framework in
-\cite{sutton1999between} introduced the idea that temporally extended behaviors
-can be treated as higher-level decision units. This insight has had lasting
-influence because it reduces the effective planning horizon and allows the
-planner to reason over behaviors rather than only over primitive transitions.
-The same impulse appears in formal planning through hierarchical decomposition
-and abstraction refinement. The hierarchical LTL synthesis framework in
-\cite{meyer2019hierarchical} and incremental synthesis by abstraction
-refinement in \cite{nilsson2014incremental} both reflect the view that the
-structure of the task should shape the structure of the abstraction. This is not
-merely a computational convenience. It changes the modeling philosophy. The
-planner is no longer asked to solve a monolithic problem over the finest
-available state space, but to exploit the layered structure of the mission and
-the dynamics.
-Feature-based abstraction becomes especially attractive when only part of the
-system state is relevant to the temporal objective. In such cases, the most
-useful representation is often not the most detailed one, but the one that
-retains the distinctions that matter for satisfaction, refinement, and
-execution. This observation connects directly to later parts of this monograph,
-where abstraction is not treated as a preprocessing step alone, but as an
-integral design choice shaped by task structure, scalability demands, and the
-need for online adaptation.
-
-\subsubsection{Signal temporal logic and dynamic task models}
-\label{sec:ch01:rw:extensions:stl}
-
-Much of the classical temporal-planning literature is built on propositional
-labels attached to regions or abstract states. This representation is natural
-for many motion-planning problems, but it becomes restrictive when the mission
-depends directly on continuous quantities such as relative distance, velocity,
-formation error, or time-varying state predicates. Signal Temporal Logic offers
-a richer language for such settings because its semantics are defined directly
-over real-valued trajectories. This makes it especially attractive for tasks
-that involve transient formation constraints, continuous safety margins, or
-specifications that depend on evolving physical signals rather than on static
-state labels alone.
-That expressive gain has encouraged optimization-based formulations for
-continuous multi-robot planning. Coupled multi-robot motion under temporal goals
-was studied in \cite{lindemann2019coupled}, while more recent work such as
-\cite{liu2022stlq,kurtz2022mixed,sun2022multiagent,sewlia2025maps2,yang2024stlmpc,buyukkocak2024sequential},
-illustrates how STL constraints can be
-integrated into trajectory optimization, low-complexity MPC, mixed-integer
-planning, and dynamic-safety control pipelines. These methods narrow the gap
-between high-level task specification and continuous team behavior, but the
-usual trade-off does not go away. As the task language moves closer to the
-signal level, the synthesis problem often moves further away from the discrete
-combinatorial structure that made classical automata-based methods attractive.
-
-Dynamic task models push this evolution one step further. In these settings, the
-relevant propositions, semantic features, or spatial targets may change during
-execution, so that the task is not evaluated over a fixed symbolic environment.
-Reactive planning for heterogeneous teams under dynamic collaborative temporal
-missions was studied in \cite{zhang2024reactive}, while dynamic semantic
-environments were considered in \cite{kalluraya2023multirobot}. Online learning
-and control for STL tasks, as in \cite{aksaray2022online}, and conformal-
-prediction-based STL synthesis among dynamic uncontrollable agents
-\cite{luo2024decomposition}, point in a similar direction by coupling adaptation to
-richer continuous-time specifications. Taken as a whole, these works point to a
-broader transition in the field. Temporal planning is no longer confined to
-static propositions over a fixed abstraction. The task itself may depend on
-evolving signals, moving semantic features, uncertain neighboring agents, and
-interaction constraints whose meaning changes as execution proceeds.
-Overall, the lines of work reviewed in this subsection extend formal
-planning along several fronts at once. They incorporate uncertainty through
-probabilistic decision models, reinterpret safety as a structured planning
-constraint, use abstraction to control computational growth, and broaden the
-task language beyond propositional formulas over static labels. These
-developments help explain why the remaining chapters of this monograph combine
-formal task semantics with abstraction, adaptation, and richer coordination
-models instead of treating those ingredients separately.
+These four developments also mark a change in how formal task planning should be
+interpreted. The classical abstraction-to-automaton pipeline remains a useful foundation,
+but it is no longer sufficient as a complete deployment model. The planner must decide
+what information to retain, which constraints are hard or soft, how to compare partial
+satisfaction with strict satisfaction, and how to update the task representation when the
+environment or mission changes. The methodological position of this monograph is that
+these questions should be addressed inside the coordination architecture rather than
+postponed to an implementation layer after synthesis has already been completed.
