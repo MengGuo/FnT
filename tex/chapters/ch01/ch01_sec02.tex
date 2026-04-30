@@ -57,39 +57,32 @@ optimality guarantees are harder to retain, and feasibility becomes harder to an
 the task depends on tight timing, ordering, or collaborative-action constraints.
 
  (III) \emph{Hierarchical and continual fleet coordination}. Hierarchical
-coordination attempts to bridge the gap between globally informed planning and scalable
-execution. In this family of approaches, the mission is decomposed across strategic,
-allocation, and execution layers. The resulting architecture reduces the dimensionality of
-each decision problem while retaining enough global structure to maintain coherent team
-behavior \cite{leahy2021scalable, leahy2022fast, luo2024decomposition}. A closely related
-trend concerns continual or reactive fleet coordination, where new jobs, requests, or
-priorities may arise during execution and assignments must be revised online. Recent work
-on dynamic coalition formation, proactive allocation under spatiotemporal uncertainty, and
-reactive allocation under temporal constraints represents this shift \cite{dai2024dynamic,
-street2024rightplace, chen2025realtime}. These developments are important for robotic
-deployment, but they usually treat each task as an abstract job to be assigned. In the
-problems studied later in this monograph, feasibility may depend instead on temporal
-ordering, action preconditions, motion constraints, and execution-time interaction among
-robots. This difference motivates the move from task allocation to formal task and motion
-synthesis.
-The modeling gap is also visible in how task changes are handled. In many allocation
-systems, a new task can be inserted by updating a cost matrix, opening an auction, or
-modifying a schedule. In temporally specified missions, the same update may change the
-language accepted by the task automaton, the set of feasible suffixes of an existing plan,
-or the compatibility between a local action and a future collaboration. Thus, an
-apparently small update at the fleet-management level may have a nonlocal effect on task
-satisfaction. This is one reason that the later chapters avoid treating allocation and
-temporal feasibility as completely separate stages.
-
-The distinction between allocation and temporally structured planning is useful for the
-rest of the monograph. Allocation methods are often evaluated by assignment cost, service
-time, travel distance, load balance, or throughput. These criteria are essential, but they
-do not by themselves specify what it means for a robot trajectory to satisfy a
-long-horizon mission. In particular, requirements such as recurrence, avoidance until
-service completion, conditional response, and temporally ordered collaboration cannot
-always be reduced to independent jobs without losing semantic content. The allocation
-literature therefore provides the fleet-level coordination background, while the formal
-methods literature supplies the language in which task correctness is made explicit.
+coordination bridges globally informed planning and scalable execution by
+decomposing missions across strategic, allocation, and execution layers. This
+reduces the dimensionality of each decision problem while retaining enough
+global structure for coherent team behavior
+\cite{leahy2021scalable, leahy2022fast, luo2024decomposition}. A related line
+addresses continual or reactive fleet coordination, where new jobs, requests,
+or priorities arise during execution and assignments must be revised online
+\cite{dai2024dynamic, street2024rightplace, chen2025realtime}. These methods
+are important for deployment, but they often treat tasks as abstract jobs to be
+assigned. In the problems studied later in this monograph, feasibility also
+depends on temporal ordering, action preconditions, motion constraints, and
+execution-time interaction among robots. This difference motivates the shift
+from task allocation to formal task and motion synthesis. It also becomes
+critical when tasks change online: while many allocation systems insert a new
+task by updating a cost matrix, opening an auction, or modifying a schedule, a
+temporally specified update may change the language accepted by the task
+automaton, the feasible suffixes of an existing plan, or the compatibility
+between a local action and a future collaboration. Thus, a small
+fleet-management update can have a nonlocal effect on task satisfaction, so the
+later chapters do not treat allocation and temporal feasibility as fully
+separate stages. Allocation methods provide the fleet-level coordination
+background through metrics such as assignment cost, service time, travel
+distance, load balance, and throughput, whereas formal methods provide the
+language needed to define long-horizon task correctness, including recurrence,
+avoidance until service completion, conditional response, and temporally ordered
+collaboration.
 
 
 %==================================================
@@ -155,7 +148,6 @@ number of relevant labels. Many classical methods therefore work best when the e
 is fixed, labels are known in advance, and synthesis can be done largely offline. Those
 are precisely the assumptions that begin to fail once the model is incomplete, the nominal
 task cannot be realized, or the team must coordinate under limited communication.
-
 This limitation should not be read as a weakness of formal synthesis alone. It is a
 consequence of insisting that the task language have a precise semantics and that
 synthesized behavior be linked to this semantics by a correctness argument. The central
@@ -210,34 +202,27 @@ weakly coupled settings, where model updates can be localized more easily than i
 multi-robot missions with shared resources and collaboration dependencies.
 
  (III) \emph{Task relaxation and least-violating synthesis}. When the nominal
-specification itself is infeasible, the problem changes from repairing a plan to
-interpreting failure. Specification revision and unrealizability analysis identify which
-assumptions or temporal clauses are responsible for failure \cite{fainekos2011revising,
-kim2012approximate, raman2011analyzing}. Least-violating, minimum-violation, and maximally
-satisfying planning then ask for the best admissible compromise relative to the original
-specification \cite{tumova2013least, tumova2013minimum, lahijanian2015time,
-tumova2014maximally}. This literature is especially relevant when requirements have
-unequal criticality, because synthesis becomes a problem of prioritizing hard and soft
-constraints rather than only reporting satisfiable or unsatisfiable. Much of the work,
-however, still treats adaptation and relaxation in settings with limited inter-robot
-coupling. Once multiple robots interact under shared temporal requirements, model updates
-and specification compromises stop being local matters. The next step is therefore
-coordination under temporal constraints.
-There is an analogous distinction between robustness and revision. Robustness semantics
-quantify the margin by which a behavior satisfies or violates a task, which is useful for
-optimization and feedback design. Revision, by contrast, concerns the structural question
-of what should be changed when the original behavior or specification can no longer be
-executed. Both ideas are needed in open robotic environments. A robust plan may still
-require revision after a symbolic label changes, and a revised plan may still be evaluated
-according to how strongly it satisfies the remaining temporal requirements.
-
-For multi-robot systems, the distinction between model repair and specification relaxation
-becomes especially important. A blocked transition, an unavailable proposition, or a
-failed service action may invalidate not only one robot's route but also another robot's
-temporal dependency on that route. Similarly, a relaxed formula may redistribute the
-burden of satisfaction across the team or change which collaborations are worth
-maintaining. This is why the later chapters treat local updates, task dependencies, and
-coordination decisions as coupled objects rather than as independent corrections to
+specification is infeasible, the problem changes from repairing a plan to
+interpreting failure. Specification revision and unrealizability analysis
+identify which assumptions or temporal clauses cause the failure
+\cite{fainekos2011revising, kim2012approximate, raman2011analyzing}, while
+least-violating, minimum-violation, and maximally satisfying planning seek the
+best admissible compromise relative to the original specification
+\cite{tumova2013least, tumova2013minimum, lahijanian2015time,
+tumova2014maximally}. This line is especially relevant when requirements have
+unequal criticality, because synthesis must prioritize hard and soft
+constraints rather than only return satisfiable or unsatisfiable outcomes.
+However, much of the work treats adaptation and relaxation with limited
+inter-robot coupling. In multi-robot systems, a blocked transition, unavailable
+proposition, or failed service action may invalidate not only one robot's route
+but also another robot's temporal dependency on that route; similarly, a relaxed
+formula may redistribute satisfaction burden across the team or change which
+collaborations are worth maintaining. This creates a distinction between
+robustness and revision: robustness semantics quantify the margin by which a
+behavior satisfies or violates a task, whereas revision asks what should change
+when the original behavior or specification can no longer be executed. Both are
+needed in open robotic environments, where local updates, task dependencies,
+and coordination decisions are coupled rather than independent corrections to
 precomputed plans.
 
 
@@ -296,38 +281,38 @@ structure to support later negotiation, repair, and verification.
 
 
  (III) \emph{Interaction constraints and relative-motion safety}. A further layer
-of coupling comes from interaction constraints. Temporal-task satisfaction alone does not
-ensure that robots avoid collisions, maintain communication structure, or preserve
-relative-motion relations required by the task. Classical multi-robot stabilization,
-collision avoidance, and connectivity maintenance \cite{dimarogonas2006feedback,
-zavlanos2011graph, ji2007distributed} therefore remain relevant even when the high-level
-task is formal. Work that combines temporal objectives with relative-motion, connectivity,
-or communication-free coordination \cite{guo2014controlling, guo2014cooperative,
-guo2015hybrid, guo2015communicationfree} shows that task satisfaction and team integrity
-cannot be separated cleanly. Graph-based local interaction models and embedded graph
-grammars \cite{mcnew2006locally, smith2009multi, pickem2013complete, guo2016graphgrammar}
-provide another compact way to encode neighbor-dependent behaviors and structural
-reconfiguration. The persistent tension is clear: global synthesis captures coupling
-explicitly but scales poorly, while local synthesis scales better but must maintain
-distributed consistency during execution.
-Interaction constraints also reveal why purely symbolic and purely geometric views are
-both incomplete. A symbolic plan may correctly visit the required regions and perform the
-required actions, yet fail because two robots cannot maintain safe separation or
-communication while executing the corresponding motions. Conversely, a geometrically safe
-motion may not preserve the temporal ordering or collaboration semantics required by the
-task. The coordination problem therefore lies in the interface between symbolic progress
-and continuous team integrity. This interface is one of the recurring themes of the case
-studies in Chapters~\ref{chap:bottom-up}--\ref{chap:communication}.
-
-
-The distinction between these paradigms also clarifies the organization of the technical
-chapters. Chapter~\ref{chap:bottom-up} follows the bottom-up view: the robots begin with
-local temporal tasks, and coordination is introduced when local plans require repair,
-assistance, or consistency with other agents. Chapter~\ref{chap:top-down} follows the
-complementary top-down view: a global mission is decomposed into partially ordered
-subtasks and assigned to suitable subteams. Both perspectives are needed. The former
-captures asynchronous local operation and execution-time dependence, while the latter
-captures global mission structure and team-level temporal requirements.
+of coupling comes from interaction constraints: temporal-task satisfaction alone
+does not ensure collision avoidance, communication maintenance, or
+task-required relative-motion relations. Classical multi-robot stabilization,
+collision avoidance, and connectivity maintenance therefore remain relevant even
+when the high-level task is formal
+\cite{dimarogonas2006feedback, zavlanos2011graph, ji2007distributed}. Work
+combining temporal objectives with relative-motion, connectivity, or
+communication-free coordination
+\cite{guo2014controlling, guo2014cooperative, guo2015hybrid,
+guo2015communicationfree} shows that task satisfaction and team integrity
+cannot be separated cleanly, while graph-based local interaction models and
+embedded graph grammars
+\cite{mcnew2006locally, smith2009multi, pickem2013complete, guo2016graphgrammar}
+offer compact ways to encode neighbor-dependent behaviors and structural
+reconfiguration. The persistent tension is that global synthesis captures
+coupling explicitly but scales poorly, whereas local synthesis scales better but
+must maintain distributed consistency during execution. This also explains why
+purely symbolic and purely geometric views are both incomplete: a symbolic plan
+may visit the required regions and perform the required actions but fail to
+maintain safe separation or communication, while a geometrically safe motion may
+not preserve the required temporal ordering or collaboration semantics. The
+coordination problem therefore lies at the interface between symbolic progress
+and continuous team integrity, a theme developed in the case studies of
+Chapters~\ref{chap:bottom-up}--\ref{chap:communication}. It also clarifies the
+organization of the technical chapters: Chapter~\ref{chap:bottom-up} follows a
+bottom-up view, where robots begin with local temporal tasks and coordinate when
+plans require repair, assistance, or consistency with other agents, whereas
+Chapter~\ref{chap:top-down} follows a top-down view, where a global mission is
+decomposed into partially ordered subtasks and assigned to suitable subteams.
+The former captures asynchronous local operation and execution-time dependence,
+while the latter captures global mission structure and team-level temporal
+requirements.
 
 
 %==================================================
@@ -395,31 +380,28 @@ exploration progress, and temporal request handling as a single coordination pro
 
 
  (III) \emph{Human-fleet interaction and mixed-initiative supervision}.
-Human-fleet interaction introduces another form of partial information and selective
-authority. Human operators are often better suited to specify goals, resolve ambiguity,
-approve risky behavior, or intervene when mission priorities change, while the robot team
-should still handle local planning and execution autonomously. Direct teleoperation scales
-poorly with the number of robots and becomes even less practical when communication is
-delayed or intermittent. This tension has motivated work on human--swarm and
-human--multi-robot interaction, where scalable supervision depends on abstraction,
-situational awareness, and control modes that allow operators to influence the mission
-without micromanaging individual robots \cite{crandall2017human, nam2018survey,
-dahiya2023survey, lyons2025examining}. Mixed-initiative and scaled-autonomy approaches
-provide one answer: decision authority shifts according to uncertainty, task difficulty,
-and operator intent \cite{jiang2019mixed, kortenkamp2016integrating}. In temporal robotic
-planning, human intervention cannot be treated as an isolated override. It must be
-incorporated into a coordination architecture that still preserves task progress,
-inter-robot consistency, and mission-level safety, especially when the operator receives
-delayed or incomplete information about the fleet state \cite{jhunjhunwala2021ihero,
-orton2020madcat, walker2023ar}.
-
-The same point applies to human supervision. In a communication-rich setting, human input
-can often be modeled as an occasional update to a centralized mission planner. Under
-limited communication, the operator may see an incomplete or delayed view of the team,
-while individual robots may have to continue executing with only local knowledge. The
-useful abstraction is therefore not a binary choice between autonomy and teleoperation,
-but a coordination layer in which human input, robot-to-robot information flow, and
-temporal task semantics remain mutually consistent.
+Human-fleet interaction introduces partial information and selective authority:
+operators are often better suited to specify goals, resolve ambiguity, approve
+risky behavior, or intervene when priorities change, while the fleet should
+still handle local planning and execution autonomously. Direct teleoperation
+scales poorly with fleet size and becomes less practical under delayed or
+intermittent communication. This has motivated work on human--swarm and
+human--multi-robot interaction, where scalable supervision depends on
+abstraction, situational awareness, and control modes that let operators
+influence the mission without micromanaging individual robots
+\cite{crandall2017human, nam2018survey, dahiya2023survey,
+lyons2025examining}. Mixed-initiative and scaled-autonomy approaches address
+this issue by shifting decision authority according to uncertainty, task
+difficulty, and operator intent
+\cite{jiang2019mixed, kortenkamp2016integrating}. In temporal robotic planning,
+however, human intervention cannot be treated as an isolated override: it must
+be incorporated into a coordination architecture that preserves task progress,
+inter-robot consistency, and mission-level safety, especially when the operator
+receives delayed or incomplete information about the fleet state
+\cite{jhunjhunwala2021ihero, orton2020madcat, walker2023ar}. The useful
+abstraction is therefore not a binary choice between autonomy and teleoperation,
+but a coordination layer in which human input, robot-to-robot information flow,
+and temporal task semantics remain mutually consistent.
 
 
 %==================================================
