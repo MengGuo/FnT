@@ -43,9 +43,9 @@ to describe robot behavior in symbolic terms while preserving the connection to
 continuous dynamics through a lower-level control layer. Linear temporal logic
 is then introduced as the task language used to express sequencing, safety,
 recurrence, and related behavioral constraints. This abstraction--execution
-view follows the single-robot motion-and-action planning framework in
-\cite{guo2013motion} and the later human-in-the-loop ROS implementation in
-\cite{baran2021ros}.
+view follows the single-robot motion-and-action planning framework of
+\citet{guo2013motion} and the later human-in-the-loop ROS implementation of
+\citet{baran2021ros}.
 From there, the chapter develops the standard synthesis pipeline. A temporal
 formula is translated into a B\"uchi automaton, combined with the motion
 abstraction through a product construction, and searched for an accepting run
@@ -71,15 +71,15 @@ partially known workspaces. The problem there is no longer only how to compute
 a satisfying plan, but how to preserve meaningful task progress when the
 workspace model changes during execution. This development follows the line of
 work on plan revision, infeasible local specifications, multi-agent plan
-reconfiguration, and knowledge transfer in
-\cite{guo2013revising,guo2012infeasible,guo2015multi,guo2014distributed}.
+reconfiguration, and knowledge transfer developed by
+\citet{guo2013revising,guo2012infeasible,guo2015multi,guo2014distributed}.
 The chapter then moves to dependent local tasks with collaborative actions,
 where one robot can complete part of its task only if another robot provides
 the required support. It closes with contingent collaboration, in which
 requests are triggered during execution rather than specified exhaustively in
 advance. These mechanisms are based on the bottom-up coordination,
 heterogeneous task-and-motion coordination, and contingent formation-control
-frameworks in~\cite{guo2015bottom,guo2016task,guo2017hybrid}. What
+frameworks of~\citet{guo2015bottom,guo2016task,guo2017hybrid}. What
 distinguishes the chapter as a whole is that coordination is not imposed by a
 single team-level mission. It arises from local plans whose interactions become
 visible only as execution unfolds.
@@ -99,13 +99,13 @@ derived systematically from global mission structure.
 The chapter begins with partial-order-based task decomposition and assignment,
 where the logical structure of the mission is separated from the choice of
 which robot or subteam should implement each part. This part is tied to the
-poset-product and online synchronization methods in
-\cite{liu2022arxiv,liu2024time}. It then considers hierarchical coordination
+poset-product and online synchronization methods of
+\citet{liu2022arxiv,liu2024time}. It then considers hierarchical coordination
 for large-scale fleets, where abstraction across multiple planning layers is
 used to contain computational growth without discarding mission-level
 consistency. The final part addresses continual tasks, for which new demands
 may appear while the team is already executing a plan; this development follows
-the hierarchical continual-task framework in~\cite{luo2025hulk,wang2026hector}.
+the hierarchical continual-task framework of~\citet{luo2025hulk,wang2026hector}.
 That setting brings the top-down perspective closer to online coordination, but the
 organizing idea remains global from the outset. The mission is given at the
 team level, and the synthesis problem is to allocate and refine it without
@@ -122,18 +122,18 @@ information flow as part of the planning problem rather than as a background
 assumption.
 The chapter first examines settings in which communication and collaboration
 must be planned jointly, following the adaptive communication and coordination
-framework in~\cite{zhang2026cocoplan}. It then considers exploration and
+framework of~\citet{zhang2026cocoplan}. It then considers exploration and
 coordination under intermittent communication, where the robots cannot rely on
 continuous connectivity and must instead operate with delayed or sparse
 information exchange. This part is connected to the earlier data-gathering,
 temporal-task, team-wise intermittent-communication, and simultaneous
-exploration and inspection developments in
-\cite{guo2018multirobot,kantaros2019temporal,wang2026decentralized,chen2026slei3d}.
+exploration and inspection developments of
+\citet{guo2018multirobot,kantaros2019temporal,wang2026decentralized,chen2026slei3d}.
 The last part studies online human interaction and request fulfillment, where
 an operator may insert requests, guide decisions, or supply missing intent
 without replacing the underlying autonomous planning framework, following the
-human-oriented exploration and assistance frameworks in
-\cite{jhunjhunwala2021ihero,zhang2025flykites,tian2026bodyguards}.
+human-oriented exploration and assistance frameworks of
+\citet{jhunjhunwala2021ihero,zhang2025flykites,tian2026bodyguards}.
 The common thread across these sections
 is that temporal-task coordination must now coexist with incomplete awareness
 of the environment, of peer plans, and of the future availability of
@@ -152,16 +152,16 @@ uncertain environments.
 The chapter opens with probabilistic temporal tasks and safe-return
 constraints, where correctness must be interpreted alongside risk and
 recoverability. This part follows the probabilistic temporal-task planning and
-hierarchical safe-return formulations in
-\cite{guo2018probabilistic,guo2023hierarchical}. It then studies reactive
+hierarchical safe-return formulations of
+\citet{guo2018probabilistic,guo2023hierarchical}. It then studies reactive
 coordination under dynamic temporal logic tasks, where the environment
 is dynamic and can invalidate purely offline decisions
 even when the original specification is sound, partially
-based on results from~\cite{zhao2026umbrella}.
+based on results from~\citet{zhao2026umbrella}.
 The final section considers collaborative optimal transport under signal
 temporal logic tasks, thereby moving beyond the propositional setting that
 dominates the nominal synthesis pipeline and connecting the chapter to the
-coupled LTL/STL multi-robot framework in~\cite{lindemann2019coupled,zhang2026clot}.
+coupled LTL/STL multi-robot framework of~\citet{lindemann2019coupled,zhang2026clot}.
 By this stage, the monograph has moved well beyond the question of whether a
 symbolic task can be satisfied on a fixed abstraction. The problem is now how
 formal task semantics can still guide planning when the system model, the
@@ -178,7 +178,7 @@ include the scaling behavior of compositional and reactive synthesis,
 coordination for continual tasks in nonstationary or adversarial environments,
 and the integration of learning-based methods with formal guarantees that
 remain meaningful at the system level. The discussion is framed by the recent
-survey perspective in~\cite{li2025survey}, while remaining focused on the
+survey perspective of~\citet{li2025survey}, while remaining focused on the
 specific methodological trajectory developed in this monograph.
 For that reason, the final chapter should be read as a continuation of the
 earlier material rather than as a separate epilogue. The challenges discussed

@@ -231,7 +231,7 @@ $\mathsf{U}$ for the until operator.
 
 Other task operators, including conjunction, implication, always, and
 eventually, are derived from these primitives in the standard way; see
-Chapter~5 of \citep{baier2008principles}. LTL semantics is defined over
+Chapter~5 of \citet{baier2008principles}. LTL semantics is defined over
 infinite words on $2^{AP}$, whose symbols record the propositions true at each
 discrete instant.
 
@@ -417,12 +417,12 @@ $\mathcal{L}_{\omega}(\mathcal{A}_{\varphi})
 \begin{proof}
 The statement follows from the standard translation theorem from LTL to
 B\"uchi automata. A proof is given in Theorem~5.37 of
-\citep{baier2008principles}.
+\citet{baier2008principles}.
 \end{proof}
 
-LTL-to-B\"uchi translation is worst-case exponential in formula size
+The LTL-to-B\"uchi translation is worst-case exponential in formula size
 \citep{baier2008principles}, although optimized procedures often yield much
-smaller automata. A common construction is given in~\citep{gastin2001fast}.
+smaller automata. A common construction is given by~\citet{gastin2001fast}.
 Implementations usually label transitions by Boolean formulas over $AP$ rather
 than explicit symbols in $2^{AP}$, with binary decision diagrams providing an
 efficient representation~\citep{akers1978binary}.
@@ -635,6 +635,13 @@ d_{\textup{pre}}(q_s',q_f')
 where $\gamma \geq 0$ is the weighting parameter introduced in
 \eqref{ch02:eq:prod-cost}. The search problem is therefore reduced to finding a
 pair $(q_s',q_f')$ that minimizes \eqref{ch02:eq:run_pair_cost}.
+Algorithm~\ref{ch02:alg:optimal} first computes the shortest suffix cycle for
+each accepting state, then the shortest prefix paths from each
+$q_s' \in S'$ to reachable accepting states. Each feasible pair
+$(q_s',q_f')$ defines a candidate lasso with cost
+\eqref{ch02:eq:run_pair_cost}; the minimizing pair gives
+$R_{\textup{opt}}$, whose symbolic plan is
+$\tau_{\textup{opt}} \triangleq R_{\textup{opt}}|_{\Pi}$.
 
 %==============================
 %==============================
@@ -686,13 +693,6 @@ $R_{\textup{opt}} \leftarrow \emptyset$\;
 %==============================
 %==============================
 
-Algorithm~\ref{ch02:alg:optimal} first computes the shortest suffix cycle for
-each accepting state, then the shortest prefix paths from each
-$q_s' \in S'$ to reachable accepting states. Each feasible pair
-$(q_s',q_f')$ defines a candidate lasso with cost
-\eqref{ch02:eq:run_pair_cost}; the minimizing pair gives
-$R_{\textup{opt}}$, whose symbolic plan is
-$\tau_{\textup{opt}} \triangleq R_{\textup{opt}}|_{\Pi}$.
 
 
 \begin{remark}
@@ -701,7 +701,7 @@ The projected plan $\tau_{\textup{opt}}$ is optimal with respect to the search
 performed on $\mathcal{A}_p$, but it need not coincide with the globally
 optimal satisfying plan in $\mathcal{T}_c$. This possible loss of optimality is
 caused by the translation from LTL to a nondeterministic B\"uchi automaton.
-This phenomenon is discussed in~\citep{schuppan2005shortest}. Tighter automaton
+This phenomenon is discussed by~\citet{schuppan2005shortest}. Tighter automaton
 constructions may preserve optimality more faithfully, but such constructions
 typically produce larger automata and hence higher computational cost.
 \end{remark}
@@ -728,7 +728,6 @@ The projected motion plan is
 $\tau_{\textup{opt}} \triangleq R_{\textup{opt}}|_{\Pi}$. Execution follows the
 prefix once, then switches to the suffix and repeats it indefinitely, realizing
 the structure required in \eqref{ch02:eq:prefix-suffix}.
-
 For implementation, a segment variable and an index locate the current position
 within $R_{\textup{opt}}$. The helper function $\texttt{NextGoal}(\cdot)$
 returns the next product state; projection onto $\Pi$ gives the next region;
@@ -1153,7 +1152,7 @@ coordination, and predefined actions. Temporal tasks may therefore include both
 motion objectives and actions such as grasping, gesturing, or inspection at
 designated locations. Figure~\ref{ch02:fig:tiago_execution} shows a
 representative execution scene in Gazebo and RViz.
-An illustrative task example from the TIAGo implementation is
+An illustrative task example from the TIAGo implementation is given by:
 \begin{equation}
 \phi_{\textup{ex}}
 \triangleq

@@ -208,9 +208,9 @@ unbalanced linear bottleneck assignment problem:
 \mathcal{N}^{\xi},\mathbf{p}_0^{\xi},\widehat{\pi}^{\xi}
 \right),
 \end{equation}
-where the LBAP formulation follows~\cite{burkard2012assignment}. A
+where the LBAP formulation follows~\citet{burkard2012assignment}. A
 practical implementation can be obtained from standard optimization
-packages such as OR-Tools~\cite{gor}.
+packages such as OR-Tools~\citep{gor}.
 To reduce the search cost over
 \(\widehat{\mathcal{G}}^{\xi}\), the candidates are ordered by a
 best-first surrogate. After evaluating the current candidate
@@ -397,7 +397,7 @@ the wheel backbone is restored for continued exploration.
 (IV) \emph{Consistent link through a communication-ensured chain.}
 Requests \(\xi_4\) and \(\xi_6^i\) require a reliable and
 consistent chain between the operator \(\texttt{h}\) and a
-designated robot at \(p_i^{\star}\), as required by~\ref{ch05:eq:chain}.
+designated robot at \(p_i^{\star}\), as required by~\eqref{ch05:eq:chain}.
 These requests are therefore realized
 through a communication-ensured chain by selecting anchor points
 along the shortest path from \(p_{\texttt{h}}\) to \(p_i^{\star}\)

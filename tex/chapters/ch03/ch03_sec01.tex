@@ -24,7 +24,7 @@ infeasible or because the model is incomplete. When the nominal synthesis
 procedure of Section~\ref{ch02:sec:solution} fails, the objective becomes to
 relax the specification and synthesize a plan that violates the original task as
 little as possible.
-A related approach in~\cite{kim2012approximate} constructs a relaxed
+A related approach by~\citet{kim2012approximate} constructs a relaxed
 automaton~$\mathcal{A}_{\varphi}'$ that is close to
 $\mathcal{A}_{\varphi}$ and feasible over~$\mathcal{T}_c$. The present
 treatment uses a more discriminating objective: among accepting runs in the
@@ -147,14 +147,14 @@ The total cost of~$R$ in the relaxed product automaton is defined as:
 \label{ch03:eq:prod-cost2}
 \end{equation}
 where $\tau \triangleq R|_{\Pi}$ is the induced motion plan. The implementation
-cost in \eqref{ch03:eq:prod-cost2} is
+cost in \eqref{ch03:eq:prod-cost2} is given by:
 \begin{equation}
 \texttt{cost}_{\tau} \triangleq
 \Big( \sum_{i=0}^{f-1} + \gamma \sum_{i=f}^{n-1} \Big)
 w_c(\pi_i,\, \pi_{i+1}),
 \label{ch03:eq:cost}
 \end{equation}
-and the accumulated specification distance is
+and the accumulated specification distance is defined as:
 \begin{equation}
 \texttt{dist}_{\varphi} \triangleq
 \Big( \sum_{i=0}^{f-1} + \gamma \sum_{i=f}^{n-1} \Big)
@@ -193,7 +193,7 @@ $\texttt{dist}_{\varphi}$ follow from \eqref{ch03:eq:cost} and
 \eqref{ch03:eq:dist}. A relaxed automaton~$\mathcal{A}_{\varphi}'$ can also be
 obtained by adding, along $R_{\textup{bal}}$, the automaton edges needed to
 support the observed labels, yielding a relaxation in the sense of
-\cite{kim2012approximate}.
+\citet{kim2012approximate}.
 The parameter~$\alpha$ controls the trade-off between implementation cost and
 specification violation. In practice, Algorithm~\ref{ch02:alg:optimal} can be
 run for several values of $\alpha$, after which distinct balanced runs are
@@ -355,7 +355,7 @@ component is relaxed in the following intersection automaton.
 
 \begin{definition}\label{ch03:def:conj}
 The relaxed intersection of $\mathcal{A}^{\textup{hard}}$ and
-$\mathcal{A}^{\textup{soft}}$ is
+$\mathcal{A}^{\textup{soft}}$ is given by:
 \begin{equation}
 \tilde{\mathcal{A}}_{\varphi}
 \triangleq
@@ -380,7 +380,7 @@ Definition~\ref{ch03:def:conj} relaxes only the soft component: the actual
 alphabet must satisfy the hard transition, whereas the soft transition must
 only be enabled by some alphabet. The auxiliary variable $t \in \{1,\, 2\}$
 alternates the acceptance obligation as in the standard NBA intersection
-\cite{baier2008principles}. Denote by $r|_{Q_1}$ and $r|_{Q_2}$ the projections
+\citep{baier2008principles}. Denote by $r|_{Q_1}$ and $r|_{Q_2}$ the projections
 of a run~$r$ onto the hard and soft automata.
 
 \begin{algorithm}[t]
@@ -466,13 +466,10 @@ only if $(\pi_i,\, \pi_j) \in \longrightarrow_c$ and
 $q_n \in \delta(q_m,\, L_c(\pi_i))$. The weight function
 $W_r : Q' \times Q' \rightarrow \mathbb{R}^{+}$ is given by:
 \begin{equation}
-\begin{aligned}
 W_r(\langle \pi_i,\, q_m \rangle,\,
 \langle \pi_j,\, q_n \rangle)
-\triangleq {} & w_c(\pi_i,\, \pi_j) \\
-& {} + \alpha \cdot
+\triangleq  w_c(\pi_i,\, \pi_j) + \alpha \cdot
 \textup{\texttt{Dist}}(L_c(\pi_i),\, \chi_2(q_2,\, \check{q}_2)),
-\end{aligned}
 \label{ch03:eq:weight-soft}
 \end{equation}
 where $q_m = \langle q_1,\, q_2,\, t \rangle$,
@@ -507,7 +504,7 @@ equivalent to $\tau \models \varphi^{\textup{hard}}$. Hence, the resulting plan 
 
 As in Section~\ref{ch03:sec:infeasible}, accepting runs are evaluated in the
 prefix-suffix form of \eqref{ch02:eq:prefix-suffix}. Their total cost is
-defined by
+defined by:
 \begin{equation}
 \begin{aligned}
 \texttt{Cost}(R,\, \tilde{\mathcal{A}}_{r})
@@ -677,7 +674,7 @@ can be retained, locally repaired, or replaced.
 Let $\tilde{\mathcal{A}}_r^{t^-}$ and $\tilde{\mathcal{A}}_r^{t^+}$ denote the
 product automata before and after the update. Reconstructing
 $\tilde{\mathcal{A}}_r^{t^+}$ globally, or re-evaluating every affected
-transition as in~\cite{guo2013revising}, is often unnecessary. Instead, update
+transition as in~\citep{guo2013revising}, is often unnecessary. Instead, update
 information is incorporated lazily into the adjacency routine: product states
 whose workspace component lies in $\widehat{\Pi}$ have their outgoing
 transitions rebuilt only when revisited. The remaining questions are whether
@@ -772,7 +769,7 @@ construction, $R_{\textup{past}} \in R_{\tau_{\textup{past}}}$ and the recorded
 current product state belongs to $Q'_{\tau_{\textup{past}}}$. The revision
 algorithm first attempts to repair the current run by inserting a bridging
 segment around each invalid or unsafe transition, following the spirit of
-\cite{guo2013revising}. If no bridge exists, it calls
+\citet{guo2013revising}. If no bridge exists, it calls
 \texttt{OptRun}$(\cdot)$ with initial-state set
 $Q'_{\tau_{\textup{past}}}$ rather than $Q_0'$, ensuring compatibility with the
 executed past.
@@ -843,7 +840,7 @@ that the complete trajectory $\tau_{\textup{comp}}$ is valid and safe.
 Algorithm~\ref{ch03:alg:scheme} later combines the revision procedure of
 Algorithm~\ref{ch03:alg:revise} with the optimal search routine of
 Algorithm~\ref{ch02:alg:optimal}; additional implementation details appear
-in~\cite{guo2014cooperative}. The hybrid controller then receives the updated
+in~\citep{guo2014cooperative}. The hybrid controller then receives the updated
 next target region.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -983,7 +980,7 @@ $\Xi_i^t$ or $\aleph_i^t$ is nonempty, Algorithm~\ref{ch03:alg:revise} repairs
 the run. Since local repair need not restore a cost-minimizing safe run, exact
 synthesis is triggered periodically or after sufficient model change, in the
 spirit of dynamic shortest-path updates
-\cite{chan2009shortest,misra2005dynamic}. Let $\Upsilon_i^t$ count accumulated
+\citep{chan2009shortest,misra2005dynamic}. Let $\Upsilon_i^t$ count accumulated
 model changes and $T_i$ record the last call to Algorithm~\ref{ch02:alg:optimal}.
 When $\Upsilon_i^t \geq N_i^{\textup{call}}$ or
 $t - T_i \geq T_i^{\textup{call}}$, the optimal search is called on

@@ -9,7 +9,7 @@
 Advances in sensing, embedded computation, communication, and control have
 accelerated the deployment of smart robotic systems in both everyday and
 mission-critical environments. In many modern applications, robots no longer
-operate as isolated machines that execute fixed routines in closed settings~\cite{atzori2010internet}.
+operate as isolated machines that execute fixed routines in closed settings~\citep{atzori2010internet}.
 Instead, they function as mobile components of larger networked systems, where
 information is exchanged among robots, sensing devices, and supervisory
 infrastructure. This broader trend has been reinforced by the development of
@@ -19,20 +19,20 @@ streams.
 Within this broader landscape, multi-robot systems have become an important
 class of autonomous systems. A team of robots can distribute mobility, sensing,
 and manipulation capabilities over a large workspace, while preserving the
-ability to act locally when conditions change~\cite{arai2002advances,parker2008multiple}.
+ability to act locally when conditions change~\citep{arai2002advances,parker2008multiple}.
 Such systems are not merely
 scaled versions of single-robot platforms. Their collective behavior depends on
 how local decisions interact through shared space, shared resources,
 communication constraints, and task dependencies. Consequently, the system-level
 question is not only how an individual robot moves or acts, but how multiple
 robots coordinate their decisions in a coherent and reliable
-way~\cite{arai2002advances,parker2008multiple,torreno2017cooperative}.
+way~\citep{arai2002advances,parker2008multiple,torreno2017cooperative}.
 
 
 The need for coordinated autonomy is evident in several representative
 application domains. In service settings, mobile robots are increasingly used
 for delivery, inspection, cleaning, assistance, and other user-facing functions
-in dynamic environments shared with humans and infrastructure~\cite{lee2021service}.
+in dynamic environments shared with humans and infrastructure~\citep{lee2021service}.
 These systems
 must operate persistently, respond to changing requests, and maintain safe and
 predictable behavior despite environmental variation and incomplete
@@ -40,17 +40,17 @@ information.
 A similarly strong motivation arises in search-and-rescue and disaster-response
 operations. In hazardous environments, robot teams can extend sensing reach,
 reduce human exposure to danger, and maintain activity in areas that are
-difficult or unsafe for direct human access~\cite{murphy2014disaster}. Such scenarios often involve
+difficult or unsafe for direct human access~\citep{murphy2014disaster}. Such scenarios often involve
 uncertain terrain, incomplete maps, intermittent communication, and rapidly
 changing operational priorities. They therefore provide a natural setting for
 coordination methods that must combine autonomy, robustness, and online
-adaptation~\cite{macaluso2020multi}.
+adaptation~\citep{macaluso2020multi}.
 Related coordination demands also appear in logistics, field robotics,
 infrastructure inspection, and environmental monitoring. Although these domains
-differ in their physical details, they share a common systems feature~\cite{parker2008multiple}.
+differ in their physical details, they share a common systems feature~\citep{parker2008multiple}.
 Multiple robots must carry out spatially distributed activities under coupled
 constraints, while preserving mission-level correctness and operational
-efficiency~\cite{torreno2017cooperative}.
+efficiency~\citep{torreno2017cooperative}.
 
 \subsection{Coordination requirements in multi-robot systems}
 \label{sec:ch01:background:requirements}
@@ -59,12 +59,12 @@ efficiency~\cite{torreno2017cooperative}.
 Multi-robot systems are attractive because many large-scale tasks are naturally
 parallel, geographically distributed, and heterogeneous. A team can provide
 wider coverage than a single robot, reduce completion time through concurrent
-execution, and improve resilience through redundancy~\cite{arai2002advances,
+execution, and improve resilience through redundancy~\citep{arai2002advances,
 parker2008multiple}. Heterogeneous teams offer
 an additional advantage, since sensing, mobility, communication, and
 manipulation capabilities need not be concentrated on one platform. Different
 robots can specialize and cooperate so that the team accomplishes tasks beyond
-the capability of any individual member~\cite{fioretto2018distributed}.
+the capability of any individual member~\citep{fioretto2018distributed}.
 These advantages, however, materialize only when coordination is handled
 carefully. If robots compete for the same workspace region, obstruct one
 another, or request assistance without a consistent protocol, the benefits of
@@ -73,15 +73,15 @@ team that improves performance under proper coordination may behave
 inefficiently or unsafely when decisions are generated independently without
 accounting for inter-robot coupling. Coordination is therefore not a secondary
 layer added after planning. It is a central part of the planning problem
-itself~\cite{parker2008multiple,torreno2017cooperative}.
+itself~\citep{parker2008multiple,torreno2017cooperative}.
 
 
 The coordination problem becomes especially demanding when missions are
 specified at a high level. At the continuous level, each robot must move under
 geometric, kinematic, and dynamic constraints while avoiding unsafe regions and
-other moving agents~\cite{lavalle2006planning}. At the discrete level, robots
+other moving agents~\citep{lavalle2006planning}. At the discrete level, robots
 must choose actions, respect preconditions, and reason about how local choices
-affect future task feasibility~\cite{ghallab2004automated}. In realistic
+affect future task feasibility~\citep{ghallab2004automated}. In realistic
 missions, these two layers are tightly coupled. A robot may need to reach a
 region before activating a service behavior, delay an action until another
 robot has completed a prerequisite step, or revisit locations repeatedly while
@@ -91,7 +91,7 @@ Many tasks require ordering, persistence, surveillance, response, and exclusion
 properties that extend over long horizons. Temporal logics and automata-based
 methods provide a principled language for such requirements, because they can
 encode safety, reachability, recurrence, and precedence within a single formal
-framework~\cite{baier2008principles,belta2007symbolic,tabuada2006linear}. Once
+framework~\citep{baier2008principles,belta2007symbolic,tabuada2006linear}. Once
 multiple robots are involved, these requirements often become relational. One
 robot may depend on another for synchronized assistance, resource handoff,
 temporary formation, or conflict-free access to a shared workspace. Even when

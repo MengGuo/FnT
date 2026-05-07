@@ -1,44 +1,42 @@
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-Multi-robot systems are increasingly deployed in applications that require
-persistent operation, distributed decision making, and correctness under
-coupled motion, action, and information constraints. In such settings,
-coordination cannot be reduced to collision avoidance, static task allocation,
-or isolated path planning. The central challenge is to connect high-level task
-specifications with low-level robot behavior in a manner that remains
-computationally manageable and operationally meaningful when multiple robots
-interact through shared resources, temporal dependence, incomplete knowledge,
-limited communication, and changing mission conditions. This monograph studies
-that challenge from a formal and algorithmic perspective, with emphasis on
-hybrid coordination for multi-robot systems under complex temporal tasks.
+This monograph studies hybrid coordination for multi-robot systems that must
+satisfy complex temporal tasks under coupled motion, action, communication, and
+information constraints. Its purpose is to connect high-level formal
+specifications with low-level robot execution in a way that remains
+computationally tractable, operationally interpretable, and robust to the
+structural difficulties that arise in persistent missions, including shared
+resources, temporal dependence, heterogeneous capabilities, partial knowledge,
+limited communication, uncertainty, and changing mission conditions.
 
-The technical development begins with the nominal single-robot setting, where
-robot motion is abstracted by a weighted transition system and tasks are
-specified in linear temporal logic, leading to an automata-based synthesis and
-hybrid execution framework. On this basis, the monograph develops two
-complementary views of multi-robot coordination. The first is a bottom-up
-perspective, in which robots are assigned local temporal tasks and coordination
-emerges through execution-time dependence, collaborative actions, online
-requests, and partial knowledge of the workspace. The second is a top-down
-perspective, in which a global team task is decomposed, assigned, and refined
-so that its temporal structure is preserved across heterogeneous robots and
-hierarchical team organizations. The monograph then extends these foundations
-to settings in which communication must be planned jointly with task
-execution, and further to environments involving probabilistic task evolution,
-safe-return requirements, dynamic targets, and signal-based temporal
-specifications, using reactive planning, hierarchical abstraction, and
+The monograph develops a formal and algorithmic framework beginning with the
+nominal single-robot setting, where weighted transition systems, temporal logic,
+and automata-based synthesis are combined with hybrid execution. It then extends
+this foundation through two complementary coordination views: bottom-up
+coordination from local temporal tasks and top-down synthesis from global team
+specifications. The framework is further generalized to communication-aware
+planning, intermittent information exchange, human and online requests,
+probabilistic task evolution, safe-return constraints, dynamic targets,
+signal-based specifications, hierarchical abstraction, reactive replanning, and
 continuous trajectory optimization.
 
-Taken together, these developments provide a unified perspective on how formal
-temporal-task semantics, hybrid execution models, and scalable coordination
-mechanisms can be integrated for multi-robot systems operating in complex and
-evolving environments. The contribution of the monograph lies not only in the
-systematic treatment of nominal, communication-constrained, and uncertain
-settings within a common formal framework, but also in clarifying the
-methodological links among symbolic abstraction, task decomposition, reactive
-replanning, and continuous motion synthesis. At the same time, the monograph
-highlights several open directions that remain central to the field, including
-scalability beyond monolithic synthesis, continual coordination in
-nonstationary environments, open-world reasoning under partial knowledge, and
-the integration of learning-based components with meaningful formal guarantees.
+The monograph shows that temporal-task semantics, symbolic abstraction, hybrid
+execution, and scalable coordination mechanisms can be integrated within a
+common framework for multi-robot systems in complex and evolving environments.
+It clarifies how task decomposition, allocation, dependency management,
+communication planning, topology adaptation, and reactive replanning interact
+across nominal, communication-constrained, and uncertain settings. It also
+identifies remaining limitations in scalability, nonstationary operation,
+open-world reasoning, learning-augmented planning, runtime assurance, and
+deployment evaluation.
+
+The originality of the monograph lies in its unified treatment of hybrid
+multi-robot coordination under temporal specifications across nominal,
+distributed, communication-limited, and uncertain mission settings. Rather than
+addressing task allocation, path planning, communication maintenance, human
+interaction, and reactive adaptation as isolated problems, it presents their
+methodological links through a common formal structure. This perspective shows
+how symbolic planning, temporal decomposition, execution-time coordination, and
+continuous motion synthesis can jointly support persistent multi-robot missions
+with explicit correctness and operational constraints.

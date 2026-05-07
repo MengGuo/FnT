@@ -10,7 +10,7 @@ and permanent residence in a safe set are generally incompatible on the same
 infinite execution. The temporal-logic background follows
 Chapter~\ref{chap:preliminaries}, and remains
 consistent with probabilistic temporal-planning models
-\cite{guo2018probabilistic,belta2017formal,ding2014ltl}.
+\citep{guo2018probabilistic,belta2017formal,ding2014ltl}.
 
 %==============================================================
 \subsection{Uncertain system and probabilistic temporal task}
@@ -41,12 +41,12 @@ Moreover, $AP$ is the set of atomic propositions, the labeling map
 $L \colon X \rightarrow 2^{AP}$ assigns the propositions satisfied at each
 state, $c_D \colon D \rightarrow \mathbb{R}_{>0}$ is the stage-cost function,
 and $x_0 \in X$ is the initial state. Equation~\eqref{ch06:eq:mdp} follows the
-standard MDP model in \cite{puterman2014markov}, augmented with a deterministic
+standard MDP model of \citet{puterman2014markov}, augmented with a deterministic
 labeling map.
 The deterministic labeling in \eqref{ch06:eq:mdp} is sufficient below. If
 workspace features are uncertain, the construction can be extended by state
 augmentation or by probabilistic labeling
-\cite{guo2018probabilistic}. For instance, in search and rescue, states may
+\citep{guo2018probabilistic}. For instance, in search and rescue, states may
 encode regions and local conditions, actions may encode motion primitives, and
 labels may mark exits, victims, charging stations, or hazards.
 
@@ -60,7 +60,7 @@ $AP$ from \eqref{ch06:eq:mdp}. The syntax and semantics follow
 Section~\ref{ch02:sec:LTL}; the automata-based construction follows
 Sections~\ref{ch02:subsec:NBA}--\ref{ch02:subsec:product}, using
 deterministic automata for probabilistic planning
-\cite{baier2008principles,belta2017formal}.
+\citep{baier2008principles,belta2017formal}.
 Typical tasks include persistent surveillance,
 $\varphi = (\Box \Diamond r_1) \wedge (\Box \Diamond r_2)
 \wedge (\Box \Diamond r_3)$, ordered service,
@@ -81,8 +81,8 @@ over admissible actions based on the observed history. The set of such policies
 is denoted by $\overline{\boldsymbol{\mu}}$.
 Given $\boldsymbol{\mu} \in \overline{\boldsymbol{\mu}}$, the MDP in
 \eqref{ch06:eq:mdp} induces a probability measure over
-$\mathbf{R}_{\infty}$ \cite{baier2008principles}. The corresponding task
-satisfaction probability is
+$\mathbf{R}_{\infty}$ \citep{baier2008principles}. The corresponding task
+satisfaction probability is given by:
 \begin{equation}
 \label{ch06:eq:satisfy}
 \textbf{Sat}_{\mathcal{M}}^{\boldsymbol{\mu}} \triangleq
@@ -97,7 +97,7 @@ where $\mathbf{R}_{\mathcal{M}}^{\boldsymbol{\mu}} \subseteq
 $\mathcal{M}$ under $\boldsymbol{\mu}$. Equation~\eqref{ch06:eq:satisfy} is
 therefore the probability that the induced label sequence satisfies the task
 formula.
-The outbound performance criterion is the expected mean cost
+The outbound performance criterion is the expected mean cost:
 \begin{equation}
 \label{ch06:eq:total-cost}
 \textbf{Cost}_{\mathcal{M}}^{\boldsymbol{\mu}} \triangleq
@@ -110,7 +110,7 @@ The outbound performance criterion is the expected mean cost
 which is suited to persistent tasks over infinite executions. An average-cost
 criterion is used instead of a stochastic-shortest-path cost, since the latter
 is tailored to terminating tasks
-\cite{puterman2014markov,bertsekas1995neuro,polychronopoulos1996stochastic}.
+\citep{puterman2014markov,bertsekas1995neuro,polychronopoulos1996stochastic}.
 
 \subsubsection{Safe-return constraints}
 \label{ch06:subsec:safety}
@@ -129,7 +129,7 @@ $\varphi_{\texttt{r}}^{2} \triangleq \bigvee_{l \in L_s} l$, where
 $L_s \subseteq AP$ is the set of labels associated with the safe states.
 Equation~\eqref{ch06:eq:safe-task} requires eventual completion of the transient
 phase and, afterwards, permanent residence in the safe set
-\cite{baier2008principles,pnueli1981temporal}.
+\citep{baier2008principles,pnueli1981temporal}.
 
 Under a return policy
 $\boldsymbol{\mu}_{\texttt{r}} \in \overline{\boldsymbol{\mu}}$, the
@@ -156,7 +156,7 @@ $\varphi$, whereas $\varphi_{\texttt{r}}$ expresses recoverability: at any
 externally chosen switching time, execution should admit a return policy with
 sufficient success probability. This interpretation is related to safe
 exploration and recoverability constraints
-\cite{moldovan2012safe,turchetta2016safe}, but is coupled here with a general
+\citep{moldovan2012safe,turchetta2016safe}, but is coupled here with a general
 temporal mission.
 Let $\boldsymbol{\mu}_{\texttt{o}}$ denote the outbound policy for the nominal
 task, and let $\boldsymbol{\mu}_{\texttt{r}}$ denote the return policy
@@ -225,9 +225,9 @@ where $\chi_{\texttt{o}}, \chi_{\texttt{r}} \in [0,1]$ are prescribed lower
 bounds on task satisfaction and safe return.
 \end{problem}
 
-Problem~\ref{ch06:prob:main} is a two-policy synthesis problem rather than a
+Problem~\ref{ch06:prob:main} above is a two-policy synthesis problem rather than a
 single-policy multi-objective problem. The outbound policy is admissible only
-if it preserves a return policy satisfying \eqref{ch06:eq:safe}.
+if it preserves a return policy satisfying the safety constraint in~\eqref{ch06:eq:safe}.
 
 
 %=========================================================
@@ -241,7 +241,7 @@ Problem~\ref{ch06:prob:main} on product automata. The return policy is computed
 first, and the outbound policy is then synthesized under the induced
 safe-return values. The construction follows the standard automata-based
 treatment of MDPs under temporal logic specifications
-\cite{klein2007ltl2dstar,baier2008principles,belta2017formal,
+\citep{klein2007ltl2dstar,baier2008principles,belta2017formal,
 guo2018probabilistic}.
 
 \subsubsection{Product automata and accepting components}
@@ -284,9 +284,9 @@ accepting if there exists at least one pair
 \(\bigl(H_{\mathcal{A}_{\psi}}^{i}, I_{\mathcal{A}_{\psi}}^{i}\bigr)\) such
 that \(H_{\mathcal{A}_{\psi}}^{i}\) is visited only finitely many times and
 \(I_{\mathcal{A}_{\psi}}^{i}\) is visited infinitely many times
-\cite{baier2008principles}. Translation tools such as \texttt{ltl2dstar} can
+\citep{baier2008principles}. Translation tools such as \texttt{ltl2dstar} can
 be used to construct \(\mathcal{A}_{\psi}\) from \(\psi\)
-\cite{klein2007ltl2dstar}.
+\citep{klein2007ltl2dstar}.
 For the task formula \(\varphi\), let
 \begin{equation}
 \label{ch06:eq:dra-task}
@@ -345,7 +345,7 @@ The stage cost is
 \langle x_0, q^{0}_{\textup{\texttt{o}}}\rangle\), and the accepting pairs
 induced from
 \(\mathrm{Acc}_{\mathcal{A}_{\textup{\texttt{o}}}}\) in the standard
-manner \cite{baier2008principles}.
+manner \citep{baier2008principles}.
 \end{definition}
 
 The product automaton \(\mathcal{P}_{\textup{\texttt{o}}}\) combines traces
@@ -371,7 +371,7 @@ S^{\textup{\texttt{o}}}_{c},
 \end{equation}
 which is the set of product states from which the accepting condition can be
 sustained indefinitely,
-see Definitions~10.116, 10.117, 10.124 of~\cite{baier2008principles}.
+see Definitions~10.116, 10.117, 10.124 of~\citet{baier2008principles}.
 Let \(\mathcal{A}_{\textup{\texttt{r}}}\) be the deterministic Rabin
 automaton associated with the safe-return formula
 \(\varphi_{\texttt{r}}\). The corresponding product automaton is defined in
@@ -434,7 +434,7 @@ where \(b_{s,S} \triangleq \mathds{1}_{\{s \in S\}}\), and
 For deterministic Rabin acceptance, a run satisfies \(\varphi\) if and only
 if the corresponding run on \(\mathcal{P}_{\textup{\texttt{o}}}\) reaches an
 AMEC and then remains inside an accepting component under an admissible
-policy \cite{baier2008principles,forejt2011quantitative,
+policy \citep{baier2008principles,forejt2011quantitative,
 guo2018probabilistic}. Hence, the probability of satisfying \(\varphi\)
 equals the probability of reaching
 \(S^{\textup{\texttt{o}}}_{\Xi}\) at least once. In the modified product
@@ -561,10 +561,10 @@ v^{\star}_{\textup{\texttt{r}}}
 where the constraints follow from \eqref{ch06:eq:theo-sat-bound} and
 \eqref{ch06:eq:theo-safe-bound}. Equation~\eqref{ch06:eq:new-problem} is a
 constrained MDP problem
-\cite{altman1999constrained,bertsekas1991analysis}; its prefix and suffix
+\citep{altman1999constrained,bertsekas1991analysis}; its prefix and suffix
 policies can be synthesized by an occupancy-measure linear program, as in
 probabilistic temporal-logic planning
-\cite{guo2018probabilistic,ding2014optimal}. The procedure is summarized in
+\citep{guo2018probabilistic,ding2014optimal}. The procedure is summarized in
 Algorithm~\ref{ch06:alg:direct}. Although the linear programs are polynomial
 in the product sizes, the products grow rapidly with the MDP and automata
 sizes. Thus, the direct method is used as a baseline for the structured
@@ -604,8 +604,8 @@ abstractions are introduced as semi-MDPs. One abstraction is constructed for
 the safe-return specification, and the other is constructed for the nominal
 task. Planning is then carried out on these abstractions rather than on the
 full model.
-The construction follows the semi-MDP and option framework in
-\cite{sutton1999between}. Each abstract transition represents a motion policy
+The construction follows the semi-MDP and option framework of
+\citet{sutton1999between}. Each abstract transition represents a motion policy
 between two feature states. As in the baseline method, the return policy is
 synthesized first, because its value function is required when building the
 task-level abstraction. The structure is hierarchical: the return policy is
@@ -687,7 +687,7 @@ state \(x_f\), while every state in
 \(X'_{\textup{\texttt{r}}} \setminus \{x_f\}\) is treated as a sink state.
 The option
 \(\boldsymbol{\mu}'_{\textup{\texttt{r}}}(x_f,x_t)\) maximizes the probability
-of reaching the target sink \(x_t\) \cite{sutton1999between}. Once this
+of reaching the target sink \(x_t\) \citep{sutton1999between}. Once this
 option is fixed, the induced Markov chain defines the abstract transition
 probability
 \(p'_{\textup{\texttt{r}},D}
@@ -839,7 +839,7 @@ formula, the policy consists of a prefix part
 \(\boldsymbol{\pi}'_{\textup{\texttt{o}},\texttt{pre}}\), executed until an
 accepting component is reached, and a suffix part
 \(\boldsymbol{\pi}'_{\textup{\texttt{o}},\texttt{suf}}\), executed
-thereafter. Following the framework in \cite{guo2018probabilistic}, the two
+thereafter. Following the framework of \citet{guo2018probabilistic}, the two
 parts are obtained from the constrained optimization below:
 \begin{subequations}
 \label{ch06:eq:abstract-prod-task-lp}
@@ -961,7 +961,7 @@ the outbound policy on \(\mathcal{P}'_{\textup{\texttt{o}}}\) preserves the
 safe-return constraint in \eqref{ch06:eq:objective}.
 For the task requirement, the prefix-suffix synthesis on
 \(\mathcal{P}'_{\textup{\texttt{o}}}\) follows the same automata-based
-construction used in \cite{guo2018probabilistic}. In particular, the prefix
+construction used by \citet{guo2018probabilistic}. In particular, the prefix
 policy ensures that the union of AMECs \(S'_{\textup{\texttt{o}},\Xi}\) is
 reached with probability at least \(\chi_{\texttt{o}}\), and the suffix policy
 maintains the execution within the accepting component. Therefore, the

@@ -28,7 +28,7 @@ on regional properties, while executed actions modify internal robot states.
 Motion and action therefore have to be modeled jointly. The construction below
 separates workspace-dependent mobility information from workspace-independent
 action knowledge, which improves modularity and reuse when the workspace or
-specification changes \cite{van2008handbook}.
+specification changes \citep{van2008handbook}.
 
 (I) \emph{Mobility abstraction}.
 The robot mobility is modeled by the weighted finite transition system below:
@@ -50,8 +50,8 @@ the symbolic counterpart of the continuous navigation controller in
 
 (II) \emph{Action model}.
 Action description languages encode preconditions and effects of task-level
-actions \cite{gelfond1998action}, including STRIPS and ADL models
-\cite{fikes1972strips,pednault1989adl}. Suppose the robot can perform
+actions \citep{gelfond1998action}, including STRIPS and ADL models
+\citep{fikes1972strips,pednault1989adl}. Suppose the robot can perform
 $K$ actions
 $\{\sigma_{\mathcal{B},1}, \cdots, \sigma_{\mathcal{B},K}\}$ through
 controllers $\{\mathcal{K}_1, \cdots, \mathcal{K}_K\}$, and define
@@ -122,7 +122,7 @@ $2^{\Psi_s} \times 2^{\Psi_b}$, because only one action proposition can be true.
 The map is nondeterministic before workspace properties are fixed: any enabled
 action may be selected. Once the external valuation is fixed, the conditional
 transitions define a standard weighted finite transition system
-\cite{baier2008principles}. Since $\mathcal{B}$ is independent of workspace
+\citep{baier2008principles}. Since $\mathcal{B}$ is independent of workspace
 geometry, it can be reused across environments.
 
 (III) \emph{Complete functionality model}.
@@ -132,7 +132,7 @@ specifications involving both navigation and action execution require a unified
 model.
 
 \begin{definition}
-The complete robot functionality is defined by the composition:
+The complete robot functionality is defined by the composition below:
 \begin{equation}
 \label{ch03:eq:R}
 \mathcal{R} \triangleq
@@ -194,7 +194,7 @@ The composed model $\mathcal{R}$ above is a weighted finite transition system ov
 $\Psi_{\mathcal{R}} = \Psi_r \cup \Psi_p \cup \Psi_s \cup \Psi_b$. Thus task
 formulas can refer to locations, workspace properties, internal states, and
 executed actions, enabling specifications over both action ordering and action
-locations \cite{bhatia2010sampling,kloetzer2010automatic,smith2011optimal}. For
+locations \citep{bhatia2010sampling,kloetzer2010automatic,smith2011optimal}. For
 example, executing ``drop \textsf{A}'' at region \textsf{1} infinitely often is
 expressed as $\varphi = \square \Diamond (\Psi_{r,1} \wedge \Psi_{b,2})$, while
 preconditions enforce where \textsf{A} may be picked up.
@@ -289,7 +289,7 @@ are $\Sigma_a^i \triangleq \Sigma_l^i \cup \Sigma_c^i$, with
 $\sigma_0 \triangleq \texttt{None}$. Let $\Sigma_h^{\sim i}$ denote the
 external assisting actions on which robot $i$ may depend, where
 $\Sigma_h^{\sim i} \subseteq \bigcup_{j \in \mathcal{N}_i}\Sigma_h^j$. The
-action model is
+action model is given by:
 \begin{equation}
 \label{ch03:A}
 \mathcal{B}_i \triangleq
@@ -378,7 +378,7 @@ duration $T_0$.
 \end{definition}
 
 The model $\mathcal{R}_i$ is a standard finite transition system
-\cite{baier2008principles}. A finite path is written
+\citep{baier2008principles}. A finite path is written
 $\tau_i=\pi_{\mathcal{R},0}\pi_{\mathcal{R},1}\cdots\pi_{\mathcal{R},P}$,
 with trace
 $\texttt{trace}(\tau_i)\triangleq
@@ -469,14 +469,14 @@ state, ends at an accepting state, and minimizes the cost in
 
 Let $R_{p,\textup{init}}^i$ solve Problem~\ref{ch03:prob-accept}.
 Algorithm~\ref{ch02:alg:optimal} computes it by shortest-path search on the
-product automaton \cite{guo2013motion,lavalle2006planning,korf1987planning},
+product automaton \citep{guo2013motion,lavalle2006planning,korf1987planning},
 with worst-case complexity
 $\mathcal{O}(|\delta_{p,i}| \cdot \log |Q_{p,i}| \cdot |Q_{p,i,0}|)$.
 Projection gives
 $\tau_{\mathcal{R},\textup{init}}^i \triangleq
 R_{p,\textup{init}}^i|_{\Pi_{\mathcal{R}}^i}$, which fulfills $\varphi_i$.
 These plans are synthesized locally rather than by a central coordinator
-\cite{chen2012formal,guo2012infeasible}. If
+\citep{chen2012formal,guo2012infeasible}. If
 $\tau_{\mathcal{R},\textup{init}}^i$ contains collaborative actions, execution
 requires online assistance from other robots.
 
@@ -681,7 +681,7 @@ $\widehat{R}_{p,+}^j$. If no such state exists, robot $j$ cannot assist. The
 complexity of \texttt{DijksTA} is
 $\mathcal{O}(|\delta_{p,j}| \cdot \log |Q_{p,j}|)$, and reversing the automaton
 is linear in $|\delta_{p,j}|$
-\cite{baier2008principles,lavalle2006planning,korf1987planning}. The candidate
+\citep{baier2008principles,lavalle2006planning,korf1987planning}. The candidate
 run is stored in $\widehat{P}$ until robot $i$ sends confirmation; simultaneous
 requests are processed sequentially.
 
@@ -822,7 +822,7 @@ For collaborative tasks, robot $i$ monitors confirmed helpers until
 $\sigma_m$ is completed. If a helper $h \in \mathcal{N}_i$ fails to acknowledge
 within a bounded time, it is treated as failed and the affected assisting action
 $\sigma_d$ is reassigned. Robot $i$ sends a new request and selects the
-replacement by
+replacement by:
 \begin{equation}
 \label{ch03:eq:reassign}
 \hat{h} \triangleq

@@ -8,7 +8,7 @@ the current plan has already been executed, while preserving that valid prefix.
 Rebuilding the conjunction of all active formulas is generally expensive because
 automaton construction, partial-order extraction, and team assignment grow with
 the active mission set
-\cite{schillinger2018simultaneous,kantaros2020stylus,luo2022temporal,
+\citep{schillinger2018simultaneous,kantaros2020stylus,luo2022temporal,
 liu2024time,luo2025hulk}. This section therefore maintains the high-level task
 structure online and updates only the portion affected by new missions, using
 R-poset products, receding-horizon replanning, and request-driven updates.
@@ -71,7 +71,7 @@ range are denoted by $\operatorname{dom}(M_{\Omega})$ and
 $\operatorname{ran}(M_{\Omega})$, respectively. Initially, $M_{\Omega}$ is
 empty. Whenever $\omega'_j \models \omega_i^2$, the relation
 $M_{\Omega}(\omega_i^2)=\omega'_j$ is recorded.
-A depth-first search~\cite{kozen1992depth} is then used to process the subtasks
+A depth-first search~\citep{kozen1992depth} is then used to process the subtasks
 of $\Omega_2$ in order. The search state is a pair $(\Omega',M_{\Omega})$, and
 the initial queue is
 $que=[(\Omega'=\Omega_1,\,M_{\Omega}=\emptyset)]$. Suppose the current search
@@ -188,9 +188,9 @@ relation is obtained by mapping the opposition sets of $P_2$ into $\Omega'$:
 \{M_{\Omega}(\omega)\mid \omega\in\widehat{\Omega}^2\}
 \ \Big|\
 \widehat{\Omega}^2\in\neq_2
-\Bigr\}.
+\Bigr\},
 \end{equation}
-The resulting product R-poset
+where the resulting product R-poset
 $P' \triangleq (\Omega',\preceq,\neq)$ is then added to the product set
 $\mathcal{P}^{r}$.
 
@@ -253,7 +253,7 @@ uses the current system state. The candidate pool contains assigned-but-not-
 started tasks, unassigned tasks, and newly introduced tasks; tasks already under
 execution are excluded by non-preemption. Let $\Omega^{\mathrm{ns}}$,
 $\Omega^{\mathrm{ua}}$, and $\Omega^{\mathrm{new}}$ denote these three sets. The
-replanning pool is then:
+replanning pool is then given by:
 \begin{equation}
 \label{ch04:eq:replanning_pool}
 \Omega^{\mathrm{rh}} \triangleq
@@ -314,7 +314,7 @@ During continual operation, a human operator may insert, remove, or modify
 missions. These interventions are modeled as online task updates that change the
 active mission set or admissible fleet allocation, allowing the same R-poset
 product and receding-horizon mechanisms to be reused
-\cite{ferreira2021survey,swamy2020scaledautonomy}. Let $\Phi_t$ denote the
+\citep{ferreira2021survey,swamy2020scaledautonomy}. Let $\Phi_t$ denote the
 active missions at time $t\geq0$; an operator request changes either $\Phi_t$ or
 the constraints under which it is executed.
 
@@ -382,7 +382,6 @@ certain robots to a designated mission or exclude them from other teams. The
 subsequent team-formation step is then recomputed from the rolling robot state
 in \eqref{ch04:eq:rolling_state}, so that the revised assignment remains
 consistent with the current execution status.
-
 Conflicting requests may make the online problem infeasible, for example when a
 high-priority mission is combined with a reassignment that removes the required
 capabilities. Such infeasibility is detected at the online-product, abstract-

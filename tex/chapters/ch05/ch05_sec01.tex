@@ -372,18 +372,15 @@ collective plan $J^\star$ found.
 Lines~1--8 create the root node, compute its lower and upper bounds, initialize
 the max-heap and incumbent pair, and record the timer for the computation
 budget $T'$.
-
 (II) \emph{Selection}.
 At each iteration, the node with the largest upper bound is extracted from
 $\mathcal{Q}$. Nodes with $UB_\nu \leq LB^\star$ are discarded because neither
 they nor their descendants can improve the incumbent plan.
-
 (III) \emph{Expansion}.
 For each surviving node, $\texttt{GetTasks}$ identifies feasible tasks under
 $\mathcal{C}_t$, and $\texttt{ExpNode}$ inserts each such task into eligible
 local plans before the next communication event. Thus allocation and
 communication scheduling remain coupled within one search tree.
-
 (IV) \emph{Bounding}.
 Each child node undergoes iterative bound refinement. At iteration $k$, a task
 $\omega^{(k)} \in \Omega_t \setminus \Omega_{\nu^{(k)}}$ is selected and
@@ -403,7 +400,7 @@ This step yields an updated plan $J^{(k)}$ for node $\nu^{(k)}$. Its
 completion time is then evaluated in two phases. First, the non-communication
 tasks are scheduled by minimizing the makespan
 $\max_{\omega_m \in \Omega_{\nu^{(k)}}} t_m^{\texttt{f}}$ with a standard
-linear-programming solver such as OR-Tools~\cite{glop}, while temporarily
+linear-programming solver such as OR-Tools~\citep{glop}, while temporarily
 ignoring communication decisions. Second, the routine $\texttt{ComOpt}$
 optimizes the communication events and returns the corresponding communication
 time $t_{(k)}^{\texttt{c}}$. The resulting candidate rate is
@@ -411,8 +408,7 @@ $b^{(k)} \triangleq |\Omega_{\nu^{(k)}}| / t_{(k)}^{\texttt{c}}$. Tasks are
 added as long as $b^{(k)}$ improves, and the lower bound is then set to
 $LB_{\nu_+} = \max_j b^{(j)}$. The upper bound $UB_{\nu_+}$ is computed by the
 same procedure under the optimistic assumption of instantaneous robot motion.
-
- (V) \emph{Termination}.
+(V) \emph{Termination}.
 The algorithm stops when $\mathcal{Q}$ is empty or the time budget is exhausted,
 and returns the incumbent plan $J^\star$. Because bounds and the incumbent are
 updated throughout the search, the method is anytime.
@@ -524,7 +520,7 @@ task-completion rate of the collective plan.
 \label{ch05:subsubsec:comm-event-algorithm}
 
 \begin{algorithm}[!t]
-    \caption{$\texttt{ComOpt}(\cdot)$}
+    \caption{Collaborative optimization of communication events $\texttt{ComOpt}(\cdot)$}
     \label{ch05:alg:comopt}
     \SetAlgoLined
     \DontPrintSemicolon
@@ -770,10 +766,3 @@ infinite-horizon average objective, and the local optimum induced by
 \eqref{ch05:eq:adaptive_objective} coincides with the global optimum in
 \eqref{ch05:eq:objective}.
 \end{proof}
-
-
-This section treated communication as a design variable of the coordination
-process. Collaborative-task assignment, fleet-wise communication events, and
-online replanning were integrated into one optimization loop, yielding cyclewise
-feasibility and a local approximation of the long-run objective. The next
-section embeds intermittent connectivity directly into exploration.

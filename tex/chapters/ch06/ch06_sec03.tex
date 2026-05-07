@@ -34,7 +34,7 @@ over planning orders.
 Consider a system of $N$ robots indexed by
 $\mathcal{N} \triangleq \{1,\cdots,N\}$ and evolving in a workspace
 $\mathcal{W}\subset\mathbb{R}^D$, where $D\geq 2$.
-Each robot $i\in\mathcal{N}$ follows the discrete-time first-order dynamics
+Each robot $i\in\mathcal{N}$ follows the discrete-time first-order dynamics below:
 \begin{equation}
 \label{ch06:eq:robot-model}
 \mathbf{p}_i(t+1)=\mathbf{p}_i(t)+\mathbf{v}_i(t)\Delta t,
@@ -44,7 +44,7 @@ respectively, the position and velocity of robot $i$ at time
 $t\in\{0,\cdots,T\}$, and $\Delta t>0$ is the sampling period.
 Each robot occupies a physical region $\mathcal{A}_i(t)$ at time $t$,
 for instance a disk centered at $\mathbf{p}_i(t)$.
-The full state of robot $i$ is defined by
+The full state of robot $i$ is defined by:
 $\mathbf{q}_i(t)\triangleq (\mathbf{p}_i(t),\mathbf{v}_i(t))$.
 For the team-level description, let
 $\mathbf{x}(t)\triangleq [\mathbf{p}_1(t),\cdots,\mathbf{p}_N(t)]$ and
@@ -78,7 +78,7 @@ $g_{\texttt{obs}}\big(\mathbf{p}_i(t)\big)\triangleq
 \max\{0,r_{\texttt{o}}-\texttt{MSD}(\mathcal{A}_i(t),\mathcal{O})\}$,
 where $r_{\texttt{o}}>0$ is a safety margin and
 $\texttt{MSD}(\cdot,\cdot)$ is the minimum signed distance between two
-manifolds~\cite{schulman2014motion}.
+manifolds~\citep{schulman2014motion}.
 For inter-robot collision avoidance, define
 $g_{\texttt{int}}\big(\mathbf{p}_i(t),\mathbf{p}_j(t)\big)\triangleq
 \max\{0,r_{\texttt{s}}-
@@ -138,7 +138,7 @@ where $t\oplus I$ denotes the translation of the interval $I$ by $t$.
 A positive value of $\rho^\phi(\mathbf{s},t)$ implies that
 $(\mathbf{s},t)\models \phi$ holds
 under the standard quantitative semantics of STL
-\cite{fainekos2009robustness,deshmukh2017robust,lindemann2025formal}.
+\citep{fainekos2009robustness,deshmukh2017robust,lindemann2025formal}.
 
 
 The task-related term is defined through STL robustness.
@@ -164,17 +164,17 @@ The term $f_{ij}$ quantifies the formation mismatch between neighboring
 robots $(i,j)\in\mathcal{E}$.
 Typical choices include
 $f_{ij}\triangleq \big|\|\mathbf{p}_i-\mathbf{p}_j\|-d_{ij}\big|$
-for distance-based formations~\cite{antonelli2014decentralized} and
+for distance-based formations~\citep{antonelli2014decentralized} and
 $f_{ij}\triangleq
 \|(\mathbf{p}_i-\mathbf{p}_j)-\overline{\mathbf{p}}_{ij}\|$
-for relative-pose formations~\cite{alonso2017multi}.
+for relative-pose formations~\citep{alonso2017multi}.
 (II) The second is \emph{connectivity maintenance}, described by
 $\mathcal{F}_{\texttt{con}}\big(\mathbf{z}(t)\big)\triangleq
 \lambda_2\big(L(t)\big)$,
 where $L(t)\in\mathbb{R}^{N\times N}$ is the Laplacian matrix of the
 communication graph $\mathcal{G}_{\texttt{c}}(t)$.
 The graph $\mathcal{G}_{\texttt{c}}(t)$ is connected if and only if
-$\lambda_2\big(L(t)\big)>0$~\cite{sabattini2013distributed}.
+$\lambda_2\big(L(t)\big)>0$~\citep{sabattini2013distributed}.
 Unlike pairwise spacing constraints, this condition is a system-level
 property.
 
@@ -239,7 +239,7 @@ disjunctions, often handled through mixed-integer encodings. Thus, direct
 gradient-based nonlinear programming is not straightforward, while MILP and
 MICP formulations typically grow exponentially or combinatorially with formula
 size, horizon length, and team size
-\cite{fainekos2009robustness,lindemann2025formal,liu2022stlq,kurtz2022mixed}.
+\citep{fainekos2009robustness,lindemann2025formal,liu2022stlq,kurtz2022mixed}.
 
 
 %==============================
@@ -258,7 +258,7 @@ caused by perturbing one waypoint along multiple probing directions.
 
 An STL formula $\phi$ can be decomposed recursively into subformulas and
 Boolean operators
-\cite{fainekos2009robustness,kurtz2022mixed,leung2023backpropagation}.
+\citep{fainekos2009robustness,kurtz2022mixed,leung2023backpropagation}.
 This recursive structure is represented by the STL tree
 \begin{equation}
 \label{ch06:eq:stl-tree}
@@ -513,7 +513,7 @@ used in the optimization of the subsequent robots.
 The local problem in \eqref{ch06:eq:local-problem} remains nonlinear and
 non-convex. Each single-robot update is therefore recast as an
 entropy-regularized optimal transport problem and solved by a Sinkhorn-type
-iteration \cite{cuturi2013sinkhorn,peyre2019computational,le2023accelerating}.
+iteration \citep{cuturi2013sinkhorn,peyre2019computational,le2023accelerating}.
 The update probes local directions at each waypoint, evaluates their costs in
 parallel, and moves the trajectory toward lower-cost regions. The procedure in
 Algorithm~\ref{ch06:alg:sinkhorn} has four stages.
@@ -592,7 +592,7 @@ $\widetilde{\boldsymbol{D}}_{\mathcal{P}}
 \in \mathbb{R}^{T\times M\times N_{\texttt{s}}\times 2D}$ and reducing
 cost-evaluation variance. Third, annealing $\alpha_k$ and the exploration
 radius $\beta_k$ shifts the iteration from exploration to local refinement
-\cite{altschuler2017near,le2023accelerating}.
+\citep{altschuler2017near,le2023accelerating}.
 
 
 %==============================
@@ -864,7 +864,7 @@ precision of the local transport update, $H$ is the number of parallel
 expansions, $N_p$ is the number of trajectory samples, $T$ is the
 trajectory length, and $\varepsilon>0$ is the tolerance used in the
 Sinkhorn--Knopp scaling
-\cite{cuturi2013sinkhorn,peyre2019computational,le2023accelerating}.
+\citep{cuturi2013sinkhorn,peyre2019computational,le2023accelerating}.
 In addition, evaluating the task-related constraints through the STL
 tree contributes a cost of
 $O\big(M|\mathcal{T}^\phi|\big)$ per robot, where $M$ is the number of

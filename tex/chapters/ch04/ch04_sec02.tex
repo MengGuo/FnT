@@ -7,9 +7,9 @@ combinatorics, because heterogeneous robots must be grouped and deployed under
 capability and availability constraints. Monolithic products between temporal
 automata and all robot models preserve correctness but scale poorly with robot
 and task counts
-\cite{kantaros2020stylus,schillinger2018simultaneous,luo2022temporal,
+\citep{kantaros2020stylus,schillinger2018simultaneous,luo2022temporal,
 leahy2021scalable}, motivating hierarchical decompositions for large fleets
-\cite{chen2025realtime,liu2024time,luo2025simultaneous,gosrich2025online,
+\citep{chen2025realtime,liu2024time,luo2025simultaneous,gosrich2025online,
 luo2025hulk}. This section develops a three-layer architecture: temporal
 decomposition with abstract team assignment, concrete team formation, and local
 coordination with motion generation.
@@ -67,10 +67,10 @@ $\omega_{m,k}\triangleq(S_{m,k},\eta_{m,k},\Xi_{m,k})$.
 The uncertainty lies in the internal subtask structure: the number of subtasks,
 their precise locations, or their effective durations may be unspecified when
 the mission formula is issued, unlike models with fixed deterministic task
-alphabets~\cite{sahin2019multirobot}. The estimator
+alphabets~\citep{sahin2019multirobot}. The estimator
 $\eta_{m,k}(n,a,\mathcal{N}')$ depends on the assigned subset and captures
 composition-dependent duration and saturation effects
-\cite{ferreira2021survey,krizmancic2022cooperative_ag,apt2009generic,liu2024time}.
+\citep{ferreira2021survey,krizmancic2022cooperative_ag,apt2009generic,liu2024time}.
 
 Let $t_0$ denote the initial planning time, and let $t_m^{\mathrm{f}}$ denote
 the first time at which mission $\varphi_m$ is satisfied. The completion time
@@ -125,11 +125,11 @@ $\Phi \triangleq \{\varphi_1,\cdots,\varphi_M\}$, the next step is to decompose
 missions into executable symbols while assigning them to abstract teams.
 Synchronized products between mission automata and full fleet models preserve
 correctness but scale poorly
-\cite{schillinger2018simultaneous,luo2022temporal}. Existing scalability
-mechanisms include local coordination~\cite{lindemann2019coupled}, decision
-trees~\cite{chen2025realtime}, distributed sampling~\cite{kantaros2020stylus},
-hierarchical decoupling~\cite{luo2025simultaneous}, and partial-order reasoning
-\cite{liu2024time}. Here, decomposition and team assignment are performed
+\citep{schillinger2018simultaneous,luo2022temporal}. Existing scalability
+mechanisms include local coordination~\citep{lindemann2019coupled}, decision
+trees~\citep{chen2025realtime}, distributed sampling~\citep{kantaros2020stylus},
+hierarchical decoupling~\citep{luo2025simultaneous}, and partial-order reasoning
+\citep{liu2024time}. Here, decomposition and team assignment are performed
 simultaneously within one automaton-guided search.
 For each mission $\varphi_m \in \Phi$, let
 \[
@@ -413,7 +413,7 @@ $\omega_4$, and the third executes $\omega_5$.
 
 The construction avoids a monolithic product over all mission automata and robot
 models, and lets the number of teams emerge from the search. Unlike the
-poset-based methods in~\cite{liu2024time,luo2025hulk}, each node directly tracks
+poset-based methods of~\citet{liu2024time,luo2025hulk}, each node directly tracks
 reachable-state sets $\widehat{Q}_m$ for all missions, so decomposition and
 abstract assignment are handled in one search process. Correctness and
 completeness for the fixed mission set are stated next.
@@ -558,7 +558,7 @@ integer linear program with $\mathcal{O}(|\mathcal{N}|K^\star)$ binary variables
 and $\mathcal{O}(|\mathcal{A}|K^\star)$ capacity constraints. Although NP-hard,
 it remains smaller than direct robot-to-subtask assignment because the number of
 abstract teams is limited by the hierarchy
-\cite{sahin2019multirobot,kurtz2021more}. Once $\{b_{ik}\}$ is obtained, the
+\citep{sahin2019multirobot,kurtz2021more}. Once $\{b_{ik}\}$ is obtained, the
 concrete team formation is recovered by
 $\mathcal{N}_k \triangleq
 \{i\in\mathcal{N}\mid b_{ik}=1\},
@@ -677,8 +677,8 @@ where $\mathbb{K}(x_u,x_v)$ is the set of feasible motion primitives
 connecting the states $x_u$ and $x_v$. The cost in
 \eqref{ch04:eq:augmented-cost} therefore combines subtask sequencing and
 dynamically feasible motion. Practical implementations can employ motion
-primitives such as Dubins curves~\cite{ny2011dubins,vavna2015dubins}, together
-with hybrid-A$^\star$ type search~\cite{erke2020improved}, to obtain the plans
+primitives such as Dubins curves~\citep{ny2011dubins,vavna2015dubins}, together
+with hybrid-A$^\star$ type search~\citep{erke2020improved}, to obtain the plans
 $\widetilde{\tau}_k^\ell$ and trajectories
 $\{x_i^\ell\}_{i\in\mathcal{N}_k}$.
 
@@ -698,7 +698,7 @@ unknown but fixed after discovery, as in search-and-rescue. The approach combine
 collaborative exploration of $S_k^\ell$ with online insertion of newly revealed
 subtasks. Exploration accounts for heterogeneous velocities, initial positions,
 sensing footprints, and, in structured environments, obstacle avoidance through
-frontier-based mechanisms~\cite{holz2010evaluating}. When a feasible new
+frontier-based mechanisms~\citep{holz2010evaluating}. When a feasible new
 subtask is discovered, the local plans are updated by solving:
 \begin{equation}
 \label{ch04:eq:min-disruption}

@@ -58,7 +58,7 @@ $D_{\texttt{cal}} \triangleq \{Y^{(1)},\cdots,Y^{(K)}\}$ and the
 training set
 $D_{\texttt{tra}} \triangleq \{Y^{(K+1)},\cdots,Y^{(\bar{K})}\}$. The
 datasets are independently drawn from $\mathcal{D}$
-\cite{Lars2023CP,Matthew2024CP}. Perfect observations of target
+\citep{Lars2023CP,Matthew2024CP}. Perfect observations of target
 positions and velocities are assumed to be available throughout
 execution. They are denoted by
 $Y_{0:t} \triangleq (Y_0,\cdots,Y_t)$ and
@@ -109,9 +109,9 @@ $\varphi_{\texttt{obs}}^{\bar{e}}$ holds, the response task
 $\varphi_{\texttt{rep}}^{\bar{e}}$ must eventually be satisfied.
 The standard LTL syntax and semantics from
 Chapter~\ref{chap:preliminaries} are adopted here
-\cite{baier2008principles}. The fragment is sc-LTL, which admits finite-trace
+\citep{baier2008principles}. The fragment is sc-LTL, which admits finite-trace
 satisfaction and is written in positive normal form using $\bigcirc$,
-$\textsf{U}$, and $\Diamond$ \cite{belta2017formal}.
+$\textsf{U}$, and $\Diamond$ \citep{belta2017formal}.
 
 Thus, given the robot model and the task specification,
 the task plan for the robot team is defined by:
@@ -134,7 +134,7 @@ language of $\varphi$ is
 $\mathcal{L}_{\varphi} \triangleq \{w \mid w \models \varphi\}$, where
 $\models$ is the satisfaction relation. Since sc-LTL formulas admit
 satisfaction by finite traces
-\cite{belta2017formal,baier2008principles}, the plan satisfies
+\citep{belta2017formal,baier2008principles}, the plan satisfies
 $\varphi$ if $w_{\tau} \in \mathcal{L}_{\varphi}$, which is denoted by
 $\boldsymbol{\tau}_{\mathcal{N}} \models \varphi$.
 The makespan $T_{\varphi}$ is the minimum time required to generate a
@@ -236,8 +236,8 @@ Let
 $\mathbf{\Upsilon} \triangleq (\Upsilon_1,\cdots,\Upsilon_M)$ denote the
 collection of all target-wise predictors.
 Any suitable trajectory predictor may be used, including LSTMs
-\cite{Hochreiter1997LSTM}, recurrent neural networks~\cite{rnn}, and gated
-recurrent units~\cite{gru}. Here, one LSTM is adopted per target, with the
+\citep{Hochreiter1997LSTM}, recurrent neural networks~\citep{rnn}, and gated
+recurrent units~\citep{gru}. Here, one LSTM is adopted per target, with the
 training objective:
 \begin{equation}
 \label{ch06:eq:traj-loss}
@@ -264,7 +264,7 @@ quantity is used later as a velocity bound in the planning stage.
 
 Conformal prediction constructs uncertainty regions around the nominal
 forecasts and provides finite-sample coverage guarantees
-\cite{Angelopoulos2021CP}. Following \cite{Lars2023CP}, the regions are built
+\citep{Angelopoulos2021CP}. Following \citet{Lars2023CP}, the regions are built
 independently for each target.
 Given observations $Y_{0:t}$ at time $t$, the predictors
 $\mathbf{\Upsilon}$ generate the nominal forecasts
@@ -436,7 +436,7 @@ subtasks, written as
 $\nu \triangleq (\tau_1,\cdots,\tau_N)$, where $\tau_n$ is the ordered
 sequence of subtasks currently assigned to robot $n \in \mathcal{N}$.
 During selection, the Upper Confidence Bound applied to Trees
-criterion~\cite{2006Bandit} is used. The UCT score of the $i$-th child
+criterion~\citep{2006Bandit} is used. The UCT score of the $i$-th child
 is
 $\overline{\xi}_i + Q\sqrt{\ln B/b_i}$, where $\overline{\xi}_i$ is the
 estimated value of that child, $b_i$ is its visit count, $B$ is the
@@ -452,7 +452,7 @@ $\Omega_{\nu} \triangleq
 denote the set of subtasks already assigned at node $\nu$, and let
 $\Omega_{\nu}^{-} \triangleq \Omega_{\varphi}\setminus\Omega_{\nu}$
 denote the set of unassigned subtasks. The admissible next-subtask set
-is defined by
+is defined by:
 \begin{equation}
 \label{ch06:eq:admissible}
 \Omega_{\nu}^{\texttt{a}} \triangleq
@@ -466,7 +466,7 @@ Once a subtask $\omega \in \Omega_{\nu}^{\texttt{a}}$ is selected, a
 child node $\nu^{+}$ is created by assigning $\omega$ to a feasible
 robot group $\mathcal{I}_{\omega}$ and appending it to the local plan
 of each robot in that group. For the resulting child node, define the
-set of key subtasks by
+set of key subtasks by:
 \begin{equation}
 \label{ch06:eq:key-subtasks}
 \Omega_{\nu^{+}}^{\texttt{s}} \triangleq
@@ -725,9 +725,6 @@ $G_{\widehat{T}_{\omega},m}/
 \subsection{Overall analyses}
 \label{ch06:subsec:execution}
 
-The assignment method is used inside a receding-horizon loop. The following
-parts summarize online execution, complexity, and generalization.
-
 \subsubsection{Online execution and adaptation}
 
 The assignment method is embedded in receding-horizon execution. As in
@@ -761,7 +758,7 @@ $\eta_t^{\star} > (1+\gamma)\eta^{\star}$, where
 $\gamma \in (0,1)$ is the replanning threshold. The quantity
 $\eta_t^{\star}$ is obtained from $\texttt{Eval}(\cdot)$ using the
 latest state and target information. For completed tasks, the expected
-performance value is updated by
+performance value is updated by:
 \begin{equation}
 \label{ch06:eq:update_eta}
 \eta_{+}^{\star} \triangleq
