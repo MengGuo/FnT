@@ -207,7 +207,17 @@ Write $\widehat{\Gamma} \models \Xi(\overline{T})$ if the behaviors of the
 robots and the operator collectively fulfill all requests received up to the
 terminal time $\overline{T}$.
 
-The overall mission-level objective is then formulated as:
+
+\begin{problem}
+\label{ch05:prob:intermittent-exploration}
+Given the initially unknown workspace $\mathcal{A}$, the operator-fleet system
+$\mathcal{T}$, the SLAM and communication models in
+\eqref{ch05:eq:slam}--\eqref{ch05:eq:com}, and the online request set
+$\Xi(t)$ in \eqref{ch05:eq:requests}, synthesize a joint
+communication-aware plan
+$\widehat{\Gamma} \triangleq
+\{\Gamma_i\}_{i \in \mathcal{N}} \cup \{\Gamma_{\texttt{h}}\}$
+and a terminal time $\overline{T} > 0$ such that:
 \begin{subequations}
 \begin{align}
 & \min_{\widehat{\Gamma},\, \overline{T}} \; \overline{T},
@@ -218,24 +228,30 @@ The overall mission-level objective is then formulated as:
 \label{ch05:subeq:terminal}
 \\
 & \eqref{ch05:eq:slam}\text{--}\eqref{ch05:eq:plan},
-\quad \widehat{\Gamma} \models \Xi(\overline{T}),
-\label{ch05:subeq:system_requests}
+\label{ch05:subeq:system}
+\\
+& \widehat{\Gamma} \models \Xi(\overline{T}),
+\label{ch05:subeq:requests}
 \end{align}
 \label{ch05:eq:problem}
 \end{subequations}
-where $\widehat{\Gamma}$ is the joint plan of the operator and all robots, and
-$\overline{T} > 0$ is the time at which the environment has been completely
-mapped and the resulting map is available to the operator, as required by
-\eqref{ch05:subeq:terminal}. Constraint
-\eqref{ch05:subeq:system_requests} enforces the operational constraints
-together with the fulfillment of all requests received up to time
-$\overline{T}$.
+where constraint \eqref{ch05:subeq:terminal} requires that the workspace has been
+completely mapped and that the resulting map is available to the operator by
+time $\overline{T}$; constraint \eqref{ch05:subeq:system} enforces the robot
+motion, mapping, communication, and plan-structure requirements defined above;
+and constraint \eqref{ch05:subeq:requests} requires the joint behavior of the
+robots and the operator to fulfill all requests received up to the terminal
+time.
+\end{problem}
 
-Problem~\eqref{ch05:eq:problem} states the mission objective, but the online
-setting reveals requests, operator motions, robot encounters, and communication
-opportunities only incrementally. The framework therefore realizes the objective
-through feasible online decisions over the current communication backbone rather
-than solving \eqref{ch05:eq:problem} as an offline global optimization problem.
+
+Problem~\ref{ch05:prob:intermittent-exploration} gives the mission-level
+specification. Since the map, communication opportunities, robot observations,
+operator motion, and request set are revealed only incrementally, the problem is
+not solved as an offline global optimization. Instead, the objective is realized
+through online feasible decisions that maintain exploration progress, propagate
+information to the operator, and satisfy active requests over the current
+communication structure.
 
 
 
@@ -430,7 +446,7 @@ $\widehat{\Gamma}_j = \Gamma_j^{-}\Gamma_j^{+}$. The latency vectors are
 updated by information exchange as
 $\widehat{\chi}_i \triangleq \widehat{\chi}_j \triangleq \chi_{ij}$, where
 $\chi_{ij}$ is defined in \eqref{ch05:eq:chi-merge}. The local embedding update
-is then:
+is then given by:
 \begin{equation}
 \begin{aligned}
 \sigma_{\mathcal{V}}(i) &\leftarrow
@@ -513,7 +529,6 @@ maximum in \eqref{ch05:eq:chi-merge} is taken component-wise, no confirmed
 time stamp is lost in this fusion step: every piece of information that
 was guaranteed to reach the operator through either robot remains
 guaranteed after the meeting.
-
 Stage-I then checks whether a direct operator return is needed. If
 \eqref{ch05:eq:return_cond} holds, one of the current tails
 already implies operator delivery within the admissible horizon. If

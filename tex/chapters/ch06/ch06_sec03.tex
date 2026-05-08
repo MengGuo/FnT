@@ -28,7 +28,7 @@ over planning orders.
 \label{ch06:subsec:problem_formulation}
 
 %==============================
-\subsubsection{Multi-robot system}
+\subsubsection{Multi-robot system under dynamic constraints}
 \label{ch06:sec:multi-robot-system}
 
 Consider a system of $N$ robots indexed by
@@ -110,7 +110,7 @@ The satisfaction of $\phi$ by $\mathbf{s}$ at time $t$ is denoted by
 $(\mathbf{s},t)\models \phi$.
 To quantify the degree of satisfaction, the space robustness
 $\rho^\phi(\mathbf{s},t)\in\mathbb{R}$ is adopted.
-Its recursive definition is given in \eqref{ch06:eq:stl-robustness}:
+Its recursive definition is given in \eqref{ch06:eq:stl-robustness} below:
 \begin{equation}
 \label{ch06:eq:stl-robustness}
 \begin{aligned}
@@ -259,7 +259,7 @@ caused by perturbing one waypoint along multiple probing directions.
 An STL formula $\phi$ can be decomposed recursively into subformulas and
 Boolean operators
 \citep{fainekos2009robustness,kurtz2022mixed,leung2023backpropagation}.
-This recursive structure is represented by the STL tree
+This recursive structure is represented by the STL tree below:
 \begin{equation}
 \label{ch06:eq:stl-tree}
 \mathcal{T}^{\phi}\triangleq
@@ -318,7 +318,7 @@ At higher conjunction levels, the child values are aggregated by their
 mean.
 Disjunction nodes continue to use the standard maximum operator.
 Accordingly, the perturbed robustness of a single perturbed trajectory is
-defined in \eqref{ch06:eq:perturbed-robustness}:
+defined as:
 \begin{equation}
 \label{ch06:eq:perturbed-robustness}
 \widehat{\rho}^{\phi}\big(\widehat{\mathbf{Z}}_{t^\star}(T)\big)
@@ -396,7 +396,7 @@ $\overline{\mathcal{G}}_s\triangleq
 (\mathcal{N},\overline{\mathcal{E}}_s)$,
 $s\in\{1,\cdots,S\}$, denote the dependency graphs associated with the
 different time indices or operating modes.
-The validity condition is then strengthened to
+The validity condition is then strengthened as follows:
 \[
 i_\ell\in
 \bigcap_{s=1}^S
@@ -459,7 +459,7 @@ collisions with the preceding robots and with obstacles, while the last
 term promotes collective task satisfaction.
 Combining \eqref{ch06:eq:state-cost-sequential} with the control cost in
 \eqref{ch06:eq:control-cost}, the local optimization problem for robot
-$i_\ell$ is written as
+$i_\ell$ is written as:
 \begin{equation}
 \label{ch06:eq:local-problem}
 \mathbf{Z}_{i_\ell}^\star(T)\triangleq
@@ -572,7 +572,7 @@ After the Sinkhorn update has converged, the optimized trajectory
 $\mathbf{Z}_{i_\ell}^\star(T)$ is added to the current collective set,
 and the next robot in the sequence is planned using the updated
 preceding set.
-In this way, the sequential procedure yields the collective trajectory
+In this way, the sequential procedure yields the collective trajectory below:
 \[
 \Gamma_\kappa\triangleq
 \{\mathbf{Z}_{i_1}^\star(T),\cdots,\mathbf{Z}_{i_N}^\star(T)\},
@@ -634,7 +634,7 @@ through the following four stages.
 At each search round, a subset of $H$ nodes is selected for parallel
 expansion, denoted by
 $\mathcal{V}_H\triangleq \{\nu_1^\star,\cdots,\nu_H^\star\}$.
-These nodes are chosen according to the value function
+These nodes are chosen according to the value function below:
 \begin{equation}
 \label{ch06:eq:value}
 \chi(\nu)\triangleq
