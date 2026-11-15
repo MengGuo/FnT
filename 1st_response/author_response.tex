@@ -1,0 +1,1062 @@
+\documentclass[11pt]{article}
+\usepackage{siunitx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{subfigure}
+\usepackage{amsmath}
+\usepackage[x11names]{xcolor}
+\usepackage[left=3.5cm,right=3.5cm]{geometry}
+\usepackage{framed}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{amsthm}
+\usepackage{times}
+\usepackage{multicol}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage[para,online,flushleft]{threeparttable}
+
+\newtheorem{remark}{Remark}
+\colorlet{shadecolor}{Thistle3!50}
+
+\newcommand{\improve}[1]{\textcolor{blue}{#1}}
+\newcommand{\highlight}[1]{\textcolor{pink}{#1}}
+\newcommand{\todo}[1]{\textcolor{red}{Todo: #1}}
+\newcommand{\change}[1]{\textcolor{blue}{#1}}
+
+
+\def\sss{\scriptscriptstyle{}}
+\def\bsss{\sss{\mathrm{B}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage[T1]{fontenc}
+\setlength{\emergencystretch}{1.5em}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,
+ pdftitle={Working author response: Multi-robot Coordination under Complex Temporal Logic
+Tasks}}
+\begin{document}
+\title{Authors' Response for the Paper\\
+``Multi-robot Coordination under\\Complex Temporal Logic Tasks''}
+\author{Meng Guo and Zhongkui Li}
+\date{}
+\maketitle
+
+
+\section*{To Associate Editor}
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{The paper has been well received by the reviewers.
+We would kindly ask you to revise the paper according to the reviewers' suggestions
+and to resubmit it, \textbf{preferably within December.}
+It would be very useful for us if you could highlight in the paper with a different
+color the parts that you modified with respect to the current version, and if you
+could let us have a reasonably detailed author response.}
+\end{shaded*}
+
+\noindent\textbf{A:} We sincerely thank the Associate Editor for handling our
+submission and the reviewers for their constructive suggestions. Substantive changes are
+highlighted in \textcolor{blue}{blue} in the paper.
+The point-by-point replies give the locations and excerpts. The main revisions
+are summarized below.
+
+\begin{itemize}
+\setlength{\itemsep}{3pt}
+\setlength{\parsep}{0pt}
+\item \textbf{Motion abstractions and execution.} We unified the weighted transition
+system notation, explained how controllers implement symbolic plans, and clarified
+the scope of the complexity analysis.
+
+\item \textbf{Temporal logic and planning methods.} We introduced syntactically
+co-safe LTL, clarified the link between formulas and automata, and explained
+the use of trajectory optimization for signal temporal logic tasks.
+
+\item \textbf{Coordination algorithms and guarantees.} We added comments to the
+algorithms, formalized the knowledge-transfer problem, illustrated the assumptions
+on collaboration, and corrected the sufficient penalty bound for task relaxation.
+
+\item \textbf{Organization and examples.} Chapter titles now identify local and
+global task specifications, and a recurring service mission connects Chapters~2--6.
+
+\item \textbf{References.} We discussed alternative planning methods and corrected
+bibliographic records and citations.
+\end{itemize}
+
+\newpage
+\section*{To Reviewer 1}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{\textbf{Overall Assessment.} The monograph
+presents an overview of multi-robot coordination under complex temporal logic tasks. It
+comprises seven chapters, including the introduction and ``Outlook and Open Problems.''
+Beginning with the fundamentals of temporal logic-based planning for a single robot, it
+progressively covers task relaxation to accommodate incomplete or partial knowledge, task
+decomposition based on partial orders to enable a group of robots to accomplish a common
+mission, and planning under communication constraints. It then considers Markov decision
+process (MDP) models of robot motion to address probabilistic task satisfaction. Each
+chapter concludes with multiple case studies. Overall, the monograph provides a
+comprehensive overview of multi-robot planning and coordination under temporal logic
+tasks. The exposition is rigorous and, to the best of my understanding, technically
+correct. The following suggestions primarily concern readability, consistency, and the
+organization of the material.}
+\end{shaded*}
+\noindent\textbf{A:} We sincerely thank you for your careful review and constructive
+suggestions. We appreciate your assessment of the breadth and technical rigor of the
+paper. Your comments on readability, consistency, and organization helped us identify
+where clearer notation and stronger connections between chapters would benefit the
+reader. Below, we provide point-by-point responses to the comments and a summary of the
+changes made in the revision.
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{\textbf{Suggestions for Improvement.} 1. Reduce the notational
+burden and improve
+consistency. The presentation is mathematically rigorous, with precise and mostly
+unambiguous definitions. However, this rigor comes with a substantial notational burden
+that hinders readability, particularly in the later chapters. I found the exposition
+especially clear through most of Section 3.1, although Algorithm 3.4 in that section is
+already a bit difficult to parse. The notation becomes considerably denser from Section
+3.2 onward. Brief comments explaining the purpose of major algorithmic steps would help
+readers follow the algorithms (you may consider using the \texttt{\textbackslash comment}
+feature provided by many algorithm packages). Changes in notation further compound this
+difficulty. Weighted transition systems (WTSs), for example, appear in several chapters,
+but their definitions and notation vary. The text immediately following equation (3.20)
+states that the WTS structure follows Definition 2.3, yet the two structures are not
+identical. Even within the same chapter, the WTS in equation (3.20) is a seven-element
+tuple, whereas the one in equation (3.25) contains six elements. Both equations (3.20) and
+(3.25) describe mobility abstractions, albeit in slightly different contexts; these
+differences do not necessarily require changes to the underlying WTS structure. A unified
+structure and consistent notation, with any necessary deviations explicitly explained,
+would make it easier for readers, especially those new to the subject, to connect the
+concepts across chapters.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for pointing out the discrepancy and for suggesting
+comments within
+the algorithms. You are right that the two mobility abstractions need the same
+components. The navigation symbol in Eq.~(3.20) identifies the controller for
+a mobility edge. Since all such edges have the same navigation symbol, it can
+be kept separately from the six-component tuple. The symbols in Eq.~(3.25)
+are robot-specific, and the edge weight there is specifically a duration.
+The complete functionality model needs an action component to distinguish
+navigation from task actions, and the conditional action map needs the
+workspace valuations on which action transitions depend.
+
+In Algorithm~3.4, the robot first exchanges observations and checks the
+current run on the updated model. It then decides whether to retain the run,
+repair it locally, or compute a new one. Confirming arrival triggers the update
+to the executed history and the next goal. These are the steps the comments
+now identify.
+
+The convention after Definition~2.3 (p.~17) specifies the six components as
+\change{$(S,\longrightarrow,S_0,AP,L,w)$}.
+The accompanying text in Section~3.2.1, after Eq.~(3.20) (p.~41), states
+\change{For controller selection, the auxiliary navigation-action set is
+$\Sigma_{\mathcal{M}}\triangleq\{\sigma_{\mathcal{M}}\}$.
+The notation $\pi\xrightarrow{\sigma_{\mathcal{M}}}_{\mathcal{M}}\pi'$
+is shorthand for $\pi\longrightarrow_{\mathcal{M}}\pi'$; the singleton
+action annotation is not an additional component of the mobility WTS.}
+
+The table after Eq.~(3.25) in Section~3.2.2 (p.~43) maps the six components
+across the three models. Its discussion of weights states
+\change{The weight $T_{\mathcal{M}}^i$ is specifically a duration, whereas
+$w_c$ and $W_{\mathcal{M}}$ may represent other nonnegative costs.}
+
+The algorithm comments were added throughout Chapter~3 and in Algorithms~4.1 and~4.2
+(pp.~59 and~62). The three comments
+in Algorithm~3.4 (p.~40) are
+\change{Exchange information and verify the updated local model.}
+\change{Choose full resynthesis or local repair.}
+\change{Advance the goal after confirmed arrival.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{2. Clarify the relationship between continuous
+dynamics and discrete planning. The transition from the continuous dynamics in equation
+(2.2) to the discrete representation in equation (2.4) is too abrupt. To my recollection,
+the monograph does not subsequently return to the continuous dynamics or explain how to
+construct the controller in equation (2.3) to execute the discrete trajectories generated
+by the planning algorithms. The discussion following Definition 2.2 is largely cursory and
+remains at a high level. One option would be to begin with the discrete representation and
+discuss the realization of discrete plans through continuous controllers at the end of
+Chapter 2 or later in the monograph. Alternatively, the connection could be developed more
+fully when the discrete model is first introduced. As written, readers may wonder how the
+transitions $\longrightarrow_c$ in equation (2.4), and those in subsequent WTS motion
+models, are precomputed. The complexity analysis excludes the construction of these WTSs
+from the underlying dynamics. This is a reasonable choice of scope, but it should be made
+explicit. If continuous dynamics are not a focus of the monograph, presenting them later
+may improve the flow.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for asking how a symbolic edge is constructed and executed.
+For a
+candidate region pair, a controller must drive the robot to the target in
+finite time from every admissible state in the source, under the input bounds
+and with motion confined to the two regions. Controller design depends on the
+dynamics and partition. For example, for a single integrator and adjacent
+rectangular cells with convex union, $u=k(y-x)$ steers the state along the
+segment toward a point $y$ in the target interior. It enters the target in
+finite time, and $k$ can be chosen to satisfy the input bound on the bounded
+cell pair. Section~2.1.2 also discusses navigation functions by Koditschek
+and Rimon (1990) and feedback control for nonholonomic robots by Lindemann
+et al.\ (2006).
+
+The controller for each edge is invoked until arrival is confirmed, at which
+point the next edge can be executed. The planner interprets the LTL next
+operator at those symbolic events. The complexity of constructing and
+certifying the controllers depends on the continuous model and falls outside
+the symbolic search bounds.
+
+Section~2.1.2, after Definition~2.2 (p.~17), describes edge construction
+as follows.
+\change{The transition relation is constructed by testing candidate region pairs
+against a library of admissible local controllers. An edge is retained only
+when its controller reaches the target in finite time, respects the input
+limits, and remains inside the source--target pair from every admissible
+source state. This uniform requirement permits consecutive symbolic edges
+to be composed.}
+
+Section~2.3.4 (p.~22) explains the switching condition.
+\change{At the $k$th decision event, the supervisor activates the controller stored
+with the edge $(\pi_k,\pi_{k+1})$. The next event occurs when target-region
+membership is confirmed; the controller then switches to the next edge.}
+
+Section~2.3.5 (p.~24) states the scope of the complexity bounds.
+\change{The complexity bounds below assume that the finite motion abstraction and
+its edge controllers are already available. They include task-automaton
+construction and symbolic product search, but exclude workspace
+decomposition, continuous reachability analysis, controller synthesis,
+localization, and low-level tracking.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{3. Better integrate the discussion of signal
+temporal logic. The exposition primarily concerns linear temporal logic (LTL) tasks, but
+it introduces signal temporal logic (STL) late in the monograph and moves through the
+material quickly. The earlier solutions rely on automata-based approaches, whereas the STL
+discussion adopts a different methodology without clearly explaining the transition. A
+reader new to the subject may struggle to understand how this discussion relates to the
+preceding framework. The connection to the organization of Chapter 6 is also unclear. The
+chapter, titled ``Dynamic Uncertainty and Constraints,'' begins with an MDP representation
+of the robot and its environment. However, the STL discussion does not appear to involve
+the same type of uncertainty, and its connection to the ``constraints'' component of the
+title is not clearly articulated. Explaining the motivation for introducing STL, the
+reason for the change in methodology, and the relationship to the chapter's themes would
+make this material feel more coherent with the rest of the monograph.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for asking how the STL section fits into the paper.
+Sections~6.1
+and~6.2 address uncertainty in transition outcomes and in moving-target
+forecasts, respectively. Section~6.3 takes the task and sampled motion model
+as given and asks whether the trajectories meet deadlines and geometric
+constraints on formation, separation, and connectivity. The Gaussian-process
+prior guides the numerical search. The STL assessment concerns the nominal
+sampled trajectories over a finite horizon.
+
+An LTL requirement such as $\Diamond a$ calls for eventual visitation.
+An STL requirement such as $\mathsf{F}_{[0,h]}\mu$ places a deadline on a
+predicate evaluated on the sampled state. Its robustness also distinguishes
+trajectories by their margin from the predicate boundary. That margin is why
+the section optimizes trajectories directly. As Maity and Baras (2015) show,
+an augmented space-time model can also support automata-based planning for
+bounded-time tasks.
+
+The Chapter~6 introduction (p.~107) explains the relation between the
+three settings.
+\change{These are complementary problem classes rather than successive steps of
+one stochastic model. Section~6.1 uses MDP
+transition uncertainty; Section~6.2 uses uncertain
+target forecasts and new task releases. Section~6.3
+instead fixes the task and nominal motion model and treats timed spatial
+constraints directly. Its constraints concern deadlines, relative
+formation, separation, and connectivity, not the probabilistic transition
+model of Section~6.1. Gaussian-process
+trajectory priors in that optimization are numerical search models;
+they do not introduce an MDP task-satisfaction probability.}
+
+The opening of Section~6.3 (p.~122) explains the role of robustness, and
+the closing analysis in Section~6.3.5 (p.~130) states the verification scope.
+\change{Robustness further distinguishes trajectories
+with different margins from the predicate boundary, which Boolean
+acceptance alone does not rank.}
+
+\change{The nominal certification here concerns the sampled signal and the
+specified finite horizon. It is not a probabilistic guarantee inherited
+from the MDP model of Section~6.1.
+Continuous-time safety between samples and robustness to tracking error
+require additional interpolation and error bounds, or direct checks of
+the realized trajectory.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{4. Use recurring case studies to connect the
+chapters. The authors do a good job of presenting case studies at the end of each chapter.
+However, the examples change from chapter to chapter, giving the impression of a
+collection of simulation results from separate papers. It would be helpful to select one
+or two recurring examples and revisit them throughout the monograph. These examples could
+demonstrate the qualitative and quantitative differences among the solutions developed in
+successive chapters and show how additional modeling assumptions or capabilities affect
+the results.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for suggesting a recurring example. The same rooms,
+corridor, and
+service order now provide a common starting point. Chapter~2 asks how a
+single robot completes the visits. Chapter~3 adds local knowledge updates
+and requests for assistance. Chapter~4 starts with a team-level requirement
+and asks which robots should perform the services. Chapter~5 adds decisions
+about where and when information is exchanged. Chapter~6 illustrates three
+extensions through uncertain passage outcomes, moving targets, and timed
+formation requirements.
+
+This lets a reader compare what each method assumes and what it produces.
+A quantitative comparison would require a common instance, matched inputs,
+and data collected under the same evaluation conditions. The existing case
+studies use different task scales and assumptions, so their measurements
+cannot establish a cross-method ranking.
+
+Section~1.3.7 (pp.~13--14) introduces the example and its chapter-by-chapter
+comparison. The case-study openings in Sections~2.4, 3.3, 4.4, 5.4, and~6.4
+(pp.~25, 50, 74, 102, and~130) revisit it. The opening and the scope statement
+in Section~1.3.7 read as follows.
+\change{Consider the rooms and corridor of Section~2.4.1.
+Let $A=r_3$, $D=r_5$, and $E=r_6$ be service regions, with a base at $r_1$.
+The initial visitation task is
+$\psi\triangleq\Diamond(a\wedge\Diamond d)\wedge\Diamond e$,
+where $a$, $d$, and $e$ denote visits to $A$, $D$, and $E$.}
+
+\change{This is a recurring explanatory instance, not a new numerical benchmark.
+The later case studies retain their original data and task scales.
+Completion time, logical satisfaction, communication load, and robustness
+can be compared quantitatively only after fixing a common instance and
+the assumptions under which each method is applicable.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{5. Broaden the methodological context and
+explain the scope. The exposition could more fully acknowledge alternative approaches. For
+example, Eric M. Wolff's doctoral dissertation, Control of Dynamical Systems with Temporal
+Logic Specifications [R1], includes methods that use mixed-integer linear programming to
+address related problems. I understand that the monograph primarily focuses on
+automata-based approaches and therefore need not provide a detailed treatment of every
+alternative. However, this choice of scope is applied inconsistently. Throughout the
+earlier chapters, the authors focus on automata-based methods despite the availability of
+alternative approaches. Yet, in the STL discussion, they focus on a non-automata-based
+method even though an automatabased approach is available: Maity and Baras [R2] formulate
+bounded-time temporal logic specifications using LTL in a space-time representation,
+enabling the use of automata-based planning tools. It is therefore unclear why the authors
+depart from their chosen methodological focus in the final subsection when an approach
+exists that could preserve the coherence of the exposition.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for pointing us to Wolff (2014) and Maity and Baras (2015).
+Both
+references help explain why an automaton is useful in some parts of the paper
+and why the final section works directly with trajectories. Chapters~2--5
+use accepting runs and their temporal dependencies as shared objects for
+plan repair, task decomposition, and coordination. Wolff's mixed-integer
+encodings provide a different way to connect logical requirements and
+trajectory variables. The relative cost of the two formulations depends on
+the dynamics, horizon, and specification.
+
+You are also right that bounded time alone does not dictate the choice of
+method. In a space-time formulation, time is represented in the state and the
+planner can use LTL tools, as in Maity and Baras. Section~6.3 optimizes
+quantitative formation, separation, and connectivity margins on sampled
+trajectories. Those quantities motivate the trajectory representation.
+
+Section~1.2.2 (p.~4) discusses Wolff's two formulations. Section~6.3
+(p.~122) explains the space-time alternative and why the section uses
+trajectory optimization.
+\change{Wolff (2014) develops both automaton-guided constrained
+reachability and direct mixed-integer encodings for dynamical systems.
+The latter encode logical requirements together with trajectory variables
+instead of first constructing a full finite motion abstraction.}
+
+\change{Maity and Baras (2015) represent bounded-time requirements in an
+augmented space-time model and use LTL planning with continuous
+realization. The present section instead optimizes sampled trajectories
+directly to retain quantitative distance, formation, and connectivity
+margins in the objective.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{\textbf{Technical Comments.} Most of the
+analysis appears correct to me. The following questions identify points that would benefit
+from clarification.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for identifying the points in the analysis that need
+clarification.
+We appreciate the opportunity to explain the assumptions and the penalty
+choice more precisely.
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{1. In Definition 2.2, must the set $\pi_i$ be
+connected? More generally, what topological assumptions are required?}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for asking about the topology of $\pi_i$. Definition~2.2
+does
+not impose connectedness as a separate condition. It requires a controller
+that can reach the target region from every admissible source state while
+remaining in the source--target pair. A disconnected source can satisfy
+that requirement if every component admits the required confined motion
+under the controller. Conversely, even a connected region can fail the
+requirement because of the dynamics or input bounds. The abstraction also
+needs measurable regions with well-defined membership and uniform labels.
+When a component or an arrival orientation prevents a valid transition,
+the abstraction needs to retain that information.
+
+The discussion after Definition~2.2 (p.~17) specifies the region assumptions
+and explains what to do when the controller only works on part of a region.
+\change{The regions are taken to be measurable and to have well-defined membership
+tests and uniform labels. Connected, geometrically simple cells are useful
+for constructing navigation laws, but Definition~2.2
+requires the stronger control property stated there. If a disconnected
+region contains an unreachable component, an edge cannot be justified by a
+controller that works only from another component. The abstraction must
+then split the region or retain the relevant entry-state information.
+The same refinement is required when orientation, velocity, or other
+unmodeled state variables affect the available transitions.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{2. How is the Eval function defined in Section
+3.1.1, approximately three lines above equation (3.2)?}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for pointing out that the encoding was underspecified. The
+input
+$l$ is one label, a subset of $AP$. For a fixed ordering of the $K$ propositions
+in $AP$, $\texttt{Eval}(l)$ is the length-$K$ vector that records membership
+in $l$. The $\ell_1$ distance between two such vectors therefore equals the
+number of propositions on which the labels disagree.
+
+The definition before Eq.~(3.2), in Section~3.1.1 (p.~30), now reads
+\change{$\texttt{Eval}(l)_k\triangleq 1$ if $a_k\in l$ and $0$ otherwise, for
+$k\in\{1,\cdots,K\}$.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{3. What motivates the linear combination in
+equation (3.3)? Other ways of combining task feasibility and environment transitions seem
+possible. A brief explanation of this choice would be helpful.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for asking why the two quantities are combined linearly.
+The
+motion term prices an executable edge, and the specification term measures
+how far its observed label is from enabling the intended automaton
+transition. The coefficient $\alpha$ prices a unit of that mismatch in
+motion-cost units. With nonnegative additive edge weights, the relaxed
+product can use the same shortest-path routines as the nominal product.
+Other choices are possible. A lexicographic objective gives violation
+strict priority, and a proposition-weighted distance can give certain
+mismatches greater importance. In Section~3.1.2, hard requirements are
+enforced by the transition relation itself.
+
+The paragraph following Eq.~(3.3) in Section~3.1.1 (p.~30) explains the
+choice and two alternatives.
+\change{The additive form in (3.3) retains nonnegative edge weights,
+so the same shortest-path routines can compare relaxed accepting runs.
+The two terms have different roles: $w_c$ measures implementation cost,
+whereas $\texttt{Dist}$ counts proposition mismatches at an automaton
+transition. The coefficient $\alpha$ converts one unit of this distance
+into the units of the motion cost. This is a design choice, not a unique
+consequence of the task semantics. A lexicographic objective can instead
+prioritize violation before motion cost, and other violation measures can
+encode proposition priorities.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{4. In Theorem 3.1, the threshold
+$\underline{\alpha}$ is unknown. Is an estimate of this threshold needed to select
+$\alpha$? If so, how can such an estimate be obtained? Choosing $\alpha$ ``as large as
+possible'' may be a practical heuristic, but a more informative guideline would be
+valuable. In addition, quantities used in a theorem statement should preferably be defined
+before or within the statement, rather than introduced only in the proof, as is the case
+for $\underline{\alpha}$.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for asking how to select $\alpha$. Any feasible accepting
+prefix-suffix run of the standard product gives a sufficient bound. Its
+cost $C_{\textup{feas}}$ can be computed with the same suffix weight $\gamma$
+used in the relaxed objective. A violation contributes at least $1$ on the
+prefix or $\gamma$ on the suffix, so a violating run costs at least
+$\alpha\min\{1,\gamma\}$. Choosing $\alpha$ strictly above
+$C_{\textup{feas}}/\min\{1,\gamma\}$ makes such a run more expensive than the
+feasible witness. Accepting-cycle detection can produce a witness without
+requiring an optimal nominal run. If a time-limited search yields no witness,
+a parameter sweep can still describe the observed trade-off. This bound requires
+a feasible witness. Increasing
+$\alpha$ cannot restore satisfaction for an infeasible task.
+
+Theorem~3.1 and Eq.~(3.7) (p.~32) define the threshold in the theorem
+statement. The relevant passage reads
+\change{Suppose that $\gamma>0$ and that $\varphi$ is feasible over
+$\mathcal{T}_c$. Let $R_{\textup{feas}}$ be any accepting prefix-suffix
+run of the standard product $\mathcal{A}_p$, let
+$C_{\textup{feas}}\triangleq J(R_{\textup{feas}})$ with $J$ defined in
+(2.13), and define
+\begin{equation*}
+\underline{\alpha}\triangleq
+\frac{C_{\textup{feas}}}{\min\{1,\gamma\}},
+\tag{3.7}
+\end{equation*}
+where $C_{\textup{feas}}$ is finite and nonnegative.
+If $\alpha>\underline{\alpha}$, then the balanced plan
+$\tau_{\textup{bal}}$ satisfies $\varphi$.}
+
+Equations (3.5) and (3.6) (p.~31) and Eq.~(3.12) (p.~34) include the suffix closing edge
+in their respective sums. The closing-edge
+terms are \change{$w_c(\pi_n,\pi_f)$},
+\change{$\texttt{Dist}(L_c(\pi_n),\chi(q_n,q_f))$}, and
+\change{$\texttt{Dist}(L_c(\pi_n),\chi_2(q_n'|_{Q_2},q_f'|_{Q_2}))$}. The text after
+Eq.~(3.6) (p.~31) states
+\change{The closing edge of the suffix is included,
+as in (2.13). Positivity of $\gamma$ is required for
+zero accumulated distance to imply that every recurrent transition
+satisfies the original automaton constraint.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{5. Could the authors elaborate on Assumption
+3.1? Its role in the analysis is understandable, but it is less clear when the assumption
+is satisfied in practice and when it is likely to be violated. Examples of both situations
+would help readers assess its applicability.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for asking when this assumption is realistic.
+Assumption~3.1
+requires the assignment problem for a request made at time $t_m$ to become
+feasible by $t_m+T$, for a common finite $T$. A dedicated helper pool can
+meet that requirement when each role has a reachable helper, each existing
+commitment ends within a known bound, communication and travel delays are
+bounded, and requests are served fairly. The bound needs to include both
+helper release and receipt of feasible replies. Permanent loss of a
+required capability or link, circular waiting, and starvation can all
+invalidate the assumption. In those cases the completion guarantee in
+Theorem~3.8 does not apply.
+
+The discussion following Assumption~3.1 in Section~3.2.3 (p.~49) gives
+the concrete conditions and failure examples.
+\change{Assumption~3.1 is a bounded-availability condition,
+not a consequence of having few collaborations. It holds, for example,
+when every requested assisting role has a reachable helper, every helper's
+existing commitment has a uniform finite duration, request handling is
+fair, and travel and message delays are uniformly bounded. A dedicated
+helper pool serving finitely many requests under those conditions is a
+representative instance. The bound $T$ must cover both the release of
+busy helpers and the time needed to obtain feasible replies.
+The assumption fails if a required capability is absent, a blocked route
+permanently separates a helper, communication is lost indefinitely, or
+robots wait cyclically for one another while rejecting requests.
+It can also fail through starvation under an unfair request order.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \textbf{References.}
+
+\noindent [R1] Eric M. Wolff. \emph{Control of Dynamical Systems with Temporal
+Logic Specifications}. Ph.D. dissertation, California Institute of
+Technology, 2014. doi:10.7907/TGFR-SS39.
+
+\noindent [R2] Dipankar Maity and John S. Baras. ``Motion planning in dynamic
+environments with bounded time temporal logic specifications.'' In
+\emph{2015 23rd Mediterranean Conference on Control and Automation (MED)}.
+IEEE, 2015. Author-hosted paper.
+\end{shaded*}
+\noindent\textbf{A:} Thank you for these references.
+\href{https://thesis.caltech.edu/8078/}{Wolff (2014)} provides the
+mixed-integer example discussed in Section~1.2.2 (p.~4), and
+\href{https://johnbaras.com/wp-content/uploads/2020/10/15-08-MCC-2015-Final-Pub-Ver.pdf}%
+{Maity and Baras (2015)} provide the space-time approach in Section~6.3
+(p.~122). The corresponding bibliography records appear on pp.~154 and~150,
+respectively.
+
+We would like to thank you again for the time and care you devoted to
+reviewing our paper. Your questions and constructive feedback helped us explain
+the modeling assumptions, algorithmic choices, and scope of the results more
+clearly.
+
+\newpage
+\section*{To Reviewer 2}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{The article
+focuses on multi-robot coordination with temporal logic specification. It starts from a
+single robot case, then moves to coordination among robots and how to decompose the
+original global task to individual robots. After these fundamentals, it then considers
+imperfections such as limited knowledge and communication and uncertainties. Finally, it
+concludes with open problems. The structure of the article is suitable and builds things
+up very well. What I particularly like is that each section has a well-defined problem
+formulation. I have some minor comments below.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for the careful assessment and for noting the progression
+from
+single-robot foundations to coordination with uncertain information. Your
+specific comments helped us identify where the problem formulations and
+notation needed more context.
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{Section 2.1.1: I do not see the need to
+introduce $AP_r$ the way it is introduced, i.e., with each proposition indicating whether
+the robot is in the corresponding region. This unnecessarily leads to exponential
+explosion. With n regions, we need $2^n$ propositions to represent it. However, a robot
+can only be in 1 region at a time (as correctly noted).}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for raising the distinction between propositions and
+valuations.
+With $N$ regions, there are $N$ location propositions, one per region.
+Although the Boolean alphabet $2^{AP_r}$ contains $2^N$ subsets, a robot
+occupies exactly one region at a symbolic step. Only the $N$ singleton
+location valuations can arise. Workspace properties can coexist with that
+one location proposition. The region propositions let a formula name
+individual destinations directly, and the motion abstraction uses $N$
+location states.
+
+The paragraph following the definition of $AP$ in Section~2.1.1 (p.~15) makes this
+explicit.
+\change{The location encoding uses $N$ propositions, not $2^N$ propositions.
+Although the general alphabet $2^{AP_r}$ has $2^N$ subsets, only the
+$N$ singleton location valuations are admissible under the partition
+assumption. The motion abstraction therefore has $N$ location states;
+it need not enumerate the full Boolean alphabet. Workspace-property
+propositions may hold together with the unique location proposition.
+At a shared geometric boundary, a fixed ownership convention assigns the
+boundary point to one region, preserving a unique location valuation.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{Definition 2.2: Please specify whether $t_s$ and
+$t_f$ are given or we should interpret this as they exist.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for catching the missing quantifiers. The start time $t_s$
+is
+arbitrary. Given $t_s$ and an admissible initial state, the same edge
+controller must yield some finite arrival time $t_f>t_s$. The arrival
+time may depend on that execution. The condition applies from every
+admissible source state so that symbolic transitions can be composed.
+
+Definition~2.2 (p.~16) now specifies the quantifiers before Eq.~(2.3).
+\change{For every admissible initial state
+$x_s\in\pi_i$ and starting time $t_s\geq 0$, there exists a finite
+arrival time $t_f>t_s$ such that, with $x(t_s)=x_s$, the control input is
+given by:}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{The statement after Definition 2.2: "The latter
+prevents a symbolic transition...". It's unclear what "latter" means in this
+context.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for pointing out the ambiguous reference. It refers to
+confinement
+for the entire motion segment. Even with a valid controller and an endpoint
+in the target, a trajectory that crosses a third region would introduce
+an unmodeled visit.
+
+The paragraph immediately after Definition~2.2 (p.~16) names the condition.
+\change{The confinement condition
+$x(t)\in\pi_i\cup\pi_j$ prevents a symbolic transition from implicitly
+using intermediate regions absent from the discrete plan.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{The statement after Definition 2.3: "Temporal
+logic formulas are evaluated over these infinite words..." I believe the notion of "words"
+has not been introduced.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for flagging the missing introduction. A word in this
+setting is a
+sequence of region labels. Each symbol is the set of propositions true at a
+single symbolic step, and concatenating those symbols along an infinite path
+gives its trace. Definition~2.5 (p.~18) then uses that trace alphabet to state
+the LTL semantics.
+
+The paragraph after Definition~2.3 in Section~2.1.3 (p.~17) introduces the
+term before defining the trace.
+\change{An infinite word over an alphabet is an infinite sequence of symbols from
+that alphabet. Here the alphabet is $2^{AP}$, so each symbol is the set of
+propositions true at one symbolic step. Every path induces such a word.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{Definition 2.8: The way this definition is
+stated makes Lemma 2.1 incorrect. In particular, the way Definition 2.8 is current stated
+does not impose any condition that $\mathcal{A}_{\varphi}$ has to correspond to $\varphi$.
+If we simply follow the definition, we can define Q, $\delta$, $Q_0$ and $\mathcal{F}$
+arbitrarily since the definition does not relate these elements to $\varphi$. But then
+Lemma 2.1 states that this arbitrary construction ensures that the accepted language of
+$\mathcal{A}_{\varphi}$ is the language generated by $\varphi$.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for distinguishing the structural definition from the
+language
+equivalence claim. You are right that arbitrary choices of $Q$, $\delta$,
+$Q_0$, and $\mathcal{F}$ need not define an automaton for $\varphi$.
+The equivalence follows from an LTL-to-B\"uchi translation, as in
+Theorem~5.37 of Baier and Katoen (2008). Thus $\mathcal{A}_{\varphi}$
+in the synthesis arguments denotes a translation result. In the finite
+product, a reachable accepting cycle then supplies a prefix-suffix run.
+
+Definition~2.8 and Lemma~2.1 in Section~2.3 (p.~20) state the structural
+and language claims separately.
+\change{A Nondeterministic B\"uchi automaton over $2^{AP}$ has the tuple structure
+below. Its components specify an automaton, but do not by themselves
+associate it with any particular LTL formula:}
+
+\change{For every LTL formula $\varphi$ over $AP$, there exists a
+Nondeterministic B\"uchi automaton $\mathcal{A}_{\varphi}$ with the structure
+of Definition~2.8 such that
+$\mathcal{L}_{\omega}(\mathcal{A}_{\varphi})
+=\textup{\texttt{Words}}(\varphi)$.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{Sections 3.1.1 and 3.1.2: These sections are
+about what to do when the specification $\varphi$ is not satisfiable. It's unclear to me
+what this has to do with coordination. I feel like it fits Chapter 2 better.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for the suggestion. Sections~3.1.1 and~3.1.2 address
+infeasibility
+for a single robot. Their role in Chapter~3 is to supply the relaxed cost
+and hard-task transition constraints that each robot uses later when
+revising its plan after an information exchange. Placing these sections in
+Chapter~2 would put that material with the single-robot foundations. The
+current organization keeps it immediately before the multi-robot use,
+with a reading path for readers already familiar with relaxation.
+
+The opening of Section~3.1 (p.~29) explains the scope and gives that
+reading path.
+\change{Sections~3.1.1--3.1.3 are single-robot
+prerequisites, not coordination algorithms by themselves. They are retained
+here to introduce the local update mechanism immediately before its
+multi-robot use in Section~3.1.4. Readers familiar
+with task relaxation may proceed directly to that subsection.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{Section 3.1.3: Similar to 3.1.1 and 3.1.2, this
+section has nothing to do with robot coordination. Consider moving it to Chapter
+2.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for raising the same issue for online adaptation.
+Section~3.1.3
+describes how one robot incorporates its observations, updates the local
+model, and finds a safe continuation compatible with the executed history.
+Section~3.1.4 uses that same process after the robot receives task-relevant
+labels from neighbors. This dependency is the reason Section~3.1.3 sits
+directly before the collaborative extension in the current organization.
+
+The signpost at the start of Section~3.1 (p.~29) covers Section~3.1.3 as
+part of the single-robot material. The text following Problem~3.7 in
+Section~3.1.4 (p.~38) specifies what the extension transfers.
+\change{The shared information concerns region labels; the sender's
+motion feasibility is not transferred to a receiver with different
+capabilities.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{Section 3.1.4: Unlike earlier sections, this
+section does not have a precise problem formulation.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for asking for a precise formulation. Each robot starts
+with its
+own motion model and hard and soft tasks. Local observations and messages
+from current neighbors can change its labels. The coordination problem is
+to decide what information to exchange and how to update each robot's plan so
+it remains valid and satisfies the hard task relative to the current model.
+Exact resynthesis minimizes the local relaxed cost. The guarantee depends
+on there being a safe accepting continuation that agrees with what the
+robot has already executed. Theorem~3.6 (p.~39) additionally requires
+each necessary search or repair to succeed in time.
+
+Problem~3.7 in Section~3.1.4 (p.~38), before the initial synthesis,
+states the inputs, decision, objective, and feasibility premise.
+\change{Given the local models $\{\mathcal{T}_i^0\}$, local hard--soft tasks
+$\{\varphi_i\}$, time-varying neighbor sets $\{\mathcal{N}_i^t\}$,
+and local sensing records $\{\textbf{Sense}_i^t\}$ defined below, design
+a distributed information-exchange and plan-update scheme. Each robot
+must use its own observations and received task-relevant labels to
+maintain a valid plan satisfying its hard specification on its current
+model, while minimizing the local relaxed cost when exact resynthesis
+is invoked. The requirement is conditional on the existence of a safe
+accepting continuation compatible with the executed history after each
+model update.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{Section 3.3: This example uses sc-LTL while
+Chapter 2 only introduces LTL. Would it be possible to include in Chapter 2 the definition
+of these LTL fragments that are used later so readers understand their differences? In
+fact, the statement after Equation (4.1) says "where the syntax and semantics of sc-LTL
+follow Chapter 2" but Chapter 2 only gives LTL. I understand that the syntax of sc-LTL is
+exactly the same as LTL as an sc-LTL formula is also an LTL formula but the article does
+not make this obvious for those who don't know these logics.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for suggesting that the fragment be introduced before the
+examples
+and for pointing out the cross-reference after Eq.~(4.1). Every syntactically
+co-safe LTL formula is an LTL formula with the same infinite-word semantics.
+The syntax restricts negation to atoms in positive normal form and uses
+next and until, with eventually as shorthand. Its practical benefit is
+the finite good prefix: once the prefix is observed, every infinite
+continuation satisfies the formula. Ordered visitation can therefore be
+certified at a finite step, whereas persistent surveillance cannot. Synthesis
+can use a good-prefix automaton or an equivalent accepting-absorbing
+construction. An arbitrary B\"uchi accepting state alone is insufficient.
+
+Section~2.2.1 (p.~19) defines the grammar and explains the finite certificate.
+\change{The syntactically co-safe fragment, denoted by $\mathrm{sc\mbox{-}LTL}(AP)$,
+is generated in positive normal form by
+\[
+\psi ::= \top\mid\bot\mid a\mid\neg a
+\mid\psi_1\wedge\psi_2\mid\psi_1\vee\psi_2
+\mid\bigcirc\psi\mid\psi_1\mathsf{U}\psi_2,
+\]
+where $a\in AP$; $\Diamond\psi$ is shorthand for
+$\top\,\mathsf{U}\,\psi$. Negation is restricted to atomic propositions.
+Every sc-LTL formula is an LTL formula and retains the infinite-word
+semantics of Definition~2.5.
+Its distinguishing property is that every satisfying infinite word has a
+finite good prefix: a finite word $u$ such that $uv\models\psi$ for
+every infinite continuation $v$. The notation $u\models\psi$ for a finite
+execution in later chapters means that $u$ is such a good prefix; it does
+not introduce a separate finite-trace logic.}
+
+The text following Eq.~(4.1) (p.~55) points to that definition.
+
+\change{where $\mathrm{sc\mbox{-}LTL}(AP)$ is the syntactically co-safe fragment
+defined in Section~2.2.1, here with
+$AP=\mathbf{p}\cup\mathbf{a}\cup\mathbf{c}$.}
+
+Section~3.2.2 (p.~44) uses the term \change{sc-LTL formula} for the
+dependent local task.
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{Chapter 3 vs Chapter 4 naming: The titles of
+Chapter 3 and Chapter 4 seem to imply that they're solving a similar problem (one using
+bottom up approach and the other using a top-down approach). But they're solving very
+different problems. Chapter 3 does not care about global specifications at all. It's just
+about how the robots coordinate so that each of them accomplishes their individual task
+$\varphi_i$ or a relaxed version of it but this coordination and relaxation does not
+really take into account the global specification. I'd just avoid using "bottom-up" and
+"top-down" in the title.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for pointing out the distinction between the two input
+problems.
+Chapter~3 begins with prescribed local formulas $\varphi_i$. Coordination
+helps each robot fulfill its own requirements, for example by sharing
+observations or assigning a helper for a collaborative action. Chapter~4
+begins with one team-level formula. Task decomposition and assignment must
+then preserve the temporal dependencies in that formula. The direction
+of information flow is secondary to this difference in the specifications
+supplied to each method.
+
+The revised titles identify those inputs directly on pp.~29 and~54.
+Chapter~3. \change{Coordination under Local Temporal Logic Tasks}
+
+Chapter~4. \change{Synthesis and Coordination under Global Temporal Logic Tasks}
+
+The opening of Chapter~3 (p.~29) also states the scope of its guarantees.
+\change{No global formula is decomposed in this chapter. The terms local and global
+refer to where specifications are supplied, not to two interchangeable
+algorithms for the same input. The guarantees concern the supplied local
+tasks and their stated interaction assumptions; they do not certify an
+additional, unspecified team mission.}
+
+\begin{shaded*}
+\noindent\textbf{Q:} \emph{Section 4.1.1: The notation of Eq (4.1) has not
+been introduced. On the other hand, Definition 2.4 introduces an LTL formula over AP. You
+can introduce the notation of Eq (4.1) here, i.e., say that this is ltl(AP). Or you can
+just remove this notation and just say in Equation 4.1 that you consider sc-LTL formula
+over $\mathbf{p}\cup\mathbf{a}\cup\mathbf{c}$.}
+\end{shaded*}
+\noindent\textbf{A:} Thank you for pointing out that the formula-set notation was used
+before
+it was defined. $\mathrm{LTL}(AP)$ denotes the set of LTL formulas
+over $AP$, and $\mathrm{sc\mbox{-}LTL}(AP)$ denotes its syntactically co-safe
+fragment. In Eq.~(4.1), the alphabet comprises the location, local-action, and
+collaborative-behavior propositions defined for the global task. Writing the formula
+as an element of this set makes both the fragment and the alphabet explicit.
+
+Section~2.2.1 (p.~19) introduces the formula set, and the text immediately
+after Eq.~(4.1) in Section~4.1.1 (p.~55) specializes it to the mission
+alphabet.
+\change{The set of LTL formulas over $AP$ is denoted by $\mathrm{LTL}(AP)$.}
+
+\change{where $\mathrm{sc\mbox{-}LTL}(AP)$ is the syntactically co-safe fragment
+defined in Section~2.2.1, here with
+$AP=\mathbf{p}\cup\mathbf{a}\cup\mathbf{c}$.}
+
+We sincerely thank you again for your time, effort, and careful reading
+of our paper. Your comments helped us clarify how the definitions, problem
+formulations, and chapter organization fit together. We appreciate your
+constructive guidance throughout the review.
+
+\newpage\section*{Bibliographic verification --- supplemental author note}
+This additional verification follows the authors' request to audit the
+references. It is not an additional reviewer comment.
+
+All 528 original bibliography records were checked, including 233 originally
+cited records. The revised paper cites 230 verified records. Seven
+unverified cited records have been replaced with sources suited to the
+surrounding claims; four new journal papers are introduced and the other
+replacements reuse verified existing works. The new works appear in
+\emph{Science Robotics}, \emph{The International Journal of Robotics
+Research}, and \emph{Proceedings of the IEEE}. Authentic books, original
+conference papers, and software references remain where appropriate.
+
+The active database contains 450 verified records. A separate review
+bibliography preserves all 82 held original records unchanged: seven now
+replaced cited records, 74 unresolved unused records, and one confirmed
+retracted unused paper. The 74 unresolved records are not declared
+fabricated. Each has an explicit author question in
+\texttt{REFERENCE\_AUTHOR\_QUESTIONS.md}. The complete evidence and
+field-level corrections are supplied in \texttt{REFERENCE\_AUDIT.md} and
+\texttt{REFERENCE\_AUDIT.json}.
+
+Notable corrections include the STRIPS publication year, the journal
+locator for \emph{Action Languages}, the actual IEEE publication of the
+construction-robotics paper, Swamy et al.'s actual \emph{Scaled Autonomy}
+paper, publication types, missing authors, final pagination, and registered
+DOIs. The MoRoCo citation is pinned to arXiv version~1, matching the title
+and authors used in the supplied chapter. Changed bibliography entries,
+citations with changed author/year, replacement citations, and revised
+prose are blue.
+
+The Retraction Watch screening covered a dated dataset of 73,477 records.
+The unused whale-optimization paper is confirmed retracted and excluded
+from scientific support. A title-only hit for ``Dynamic Programming'' was
+an unrelated Alan Sultan chapter, not Bellman's Science paper. No revised
+cited work matched a confirmed retraction in this screening. This result
+does not certify unindexed or future notices.
+
+The source-package audit accounts for every original project file and
+bibliography record. All original figure assets and labels are retained.
+The final compilation and integrity results are in
+\texttt{VALIDATION.md} and \texttt{SOURCE\_INTEGRITY.md}.
+
+\newpage\section*{Author questions --- remove before submission}
+\noindent These notes are for the authors. They identify decisions and technical passages
+deliberately left unchanged. They are not claims that the corresponding issues have been
+resolved.
+\par\medskip
+\noindent\textbf{AQ1 --- Organization of single-robot extensions}\par
+\todo{Should Sections~3.1.1--3.1.3 move into Chapter~2? The present revision
+adds a prerequisite signpost but leaves their order unchanged. This decision
+affects Reviewer~2 comments~6 and~7.}
+\par\medskip
+\noindent\textbf{AQ2 --- Quantitative recurring benchmark}\par
+\todo{Should the recurring nine-region service example become an experimental
+benchmark across the applicable methods? Which code, common robot model,
+task instances, and logs should be used? The added example is explanatory;
+there are no fabricated measurements or cross-method rankings.}
+\par\medskip
+\noindent\textbf{AQ3 --- Controller contract and state representation}\par
+\todo{Do the navigation primitives in each implementation guarantee finite-time
+reachability and confinement from every admissible source state, or only
+from specified entry sets? If the latter, which entry sets, orientations, and velocity
+states should be retained in the abstraction? The revised
+definition states the contract needed for composability; it does not verify
+the platform implementations.}
+\par\medskip
+\noindent\textbf{AQ4 --- Relaxation example costs and source data}\par
+\todo{Do the original numerical relaxation examples include the suffix closing
+edge in both cost and violation? Confirm the underlying instances before
+changing their reported numbers. The formulas and sufficient penalty bound
+have been corrected in blue; the original example statistics are retained.}
+\par\medskip
+\noindent\textbf{AQ5 --- Assistance timing and optimality of detour evaluation}\par
+\todo{In Section~3.2, are request times arrival times, action-start times, or
+completion times, and does the confirmation time include all action
+durations? Also, a shortest route to an assisting state need not minimize
+the absolute timing-mismatch objective when arriving later reduces that
+mismatch. Is waiting modeled explicitly in \texttt{EvalReq} and
+\texttt{DelayCol}, or should their optimization claims be restricted to
+the candidate paths actually considered? The routines and timing formulas
+are left unchanged pending clarification.}
+\par\medskip
+\noindent\textbf{AQ6 --- R-poset pruning and fleet-search guarantees}\par
+\todo{What restrictions on formulas and automata justify sequentializing a
+simultaneous transition, guarantee termination of repeated decompositions,
+and ensure that the relaxed relations accept only valid words? Individual
+swap tests alone need not establish arbitrary combinations of relaxations.
+What state-equivalence condition permits dominance pruning by the scalar
+distance/capacity profile in Section~4.2, and what bounds search depth in
+automata containing cycles? The pruning, R-poset, and fleet-search
+theorems are left unchanged until their source assumptions are fixed.}
+\par\medskip
+\noindent\textbf{AQ7 --- Communication-event refinement pseudocode}\par
+\todo{In \texttt{ComOpt}, the two time variables are initialized equal, so the
+displayed while condition is false at entry. The initial common time also
+does not account for every robot's travel to the common location. What
+initial feasible schedule and convergence variable does the implementation
+use? Moving a graph articulation vertex while retaining one anchor link
+does not alone preserve connectivity: is a spanning-tree or full-connectivity
+test intended? The algorithm and connectivity lemma are left unchanged.}
+\par\medskip
+\noindent\textbf{AQ8 --- Latency invariant and infinite-horizon objective}\par
+\todo{In Section~5.2, when the earliest possible return already exceeds the
+latency deadline, how can appending that return restore the claimed bound?
+Specify the prior feasibility invariant, return-reservation rule, and the
+meaning of each time stamp. Separately, stationarity and ergodicity alone
+do not make independent per-cycle rate maximization globally optimal when
+the decisions change future states and cycle lengths. Which renewal or
+separability assumptions support the final claim in Section~5.1, or should
+it be weakened to a local approximation? These passages remain unchanged.}
+\par\medskip
+\noindent\textbf{AQ9 --- Probabilistic satisfaction and safe return}\par
+\todo{In Section~6.1, summing the indicator of an absorbing accepting set
+counts it infinitely often after entry; it does not count one hit. Is a
+first-hit reward or stopped process intended in the task and return
+equations? For a fixed arbitrary policy, merely reaching an AMEC does not
+ensure that the policy follows accepting actions thereafter. The safe-return
+expression also sums return values over all switching times rather than
+specifying a switching law or a pointwise lower bound. Which notion is
+intended? The return formula contains $\Diamond\Box$, so its later
+description as sc-LTL also needs correction together with that choice.
+These definitions, dependent optimizations, and guarantees are left
+unchanged to avoid selecting a different safety problem without the authors.}
+\par\medskip
+\noindent\textbf{AQ10 --- Reactive task semantics and risk conventions}\par
+\todo{Does Section~6.2 intend a general LTL recurring response rule with
+finite sc-LTL obligations released online, and what certifies termination?
+The current text calls the complete rule sc-LTL and uses $\varphi(t)$
+both for a set and for a conjunction. In addition, the displayed VaR
+definition uses an infimum of thresholds satisfying an upper-tail
+probability lower bound, which is unbounded below. Is $\alpha$ a tail
+probability or a confidence level, and should the standard quantile or
+optimization definition of CVaR be used? These passages remain unchanged.}
+\par\medskip
+\noindent\textbf{AQ11 --- Prediction coverage and target-speed assumptions}\par
+\todo{What independence or dependence assumptions justify multiplying the
+per-subtask coverage probabilities in Lemma~6.3? Without independence,
+a union-bound treatment is needed, with special care when several subtasks
+share a target or time. The largest observed target speed is not a bound
+on future speed without an additional model assumption. Finally, prediction
+regions alone do not specify a sampling distribution for CVaR evaluation.
+Which sampling law and speed bound are used? The coverage, delay, and
+risk claims remain unchanged pending these choices.}
+\par\medskip
+\noindent\textbf{AQ12 --- STL conventions and partial-team robustness}\par
+\todo{Confirm the until interval convention, including the value at the
+current time and the empty-prefix minimum. Confirm a strictly positive
+connectivity margin if non-strict predicates are used, since
+$\lambda_2(L)\geq0$ alone permits a disconnected graph. How are predicates
+defined while only a subset of robots has been planned, and how are
+unplanned trajectories supplied to the team-level robustness evaluation?
+The original equations are retained pending these modeling choices.}
+\par\medskip
+\noindent\textbf{AQ13 --- Experimental provenance and remaining proof assumptions}\par
+\todo{Can the authors supply the underlying logs or scripts for the reproduced
+and hardware statistics before claiming any new numerical verification?
+Also confirm the additional assumptions needed for monotone coalition-cost
+decrease in Section~4.2 when targets move, and the constraints used to
+certify all collision and signal requirements in Section~6.3. The supplied
+archive contains source, figures, and a compiled paper, but no experiment
+code or raw logs; the reported results have therefore been preserved.}
+
+\newpage\par\medskip
+\noindent\textbf{BIBQ1 --- Unresolved unused reference records}\par
+\todo{For each of the 74 records in
+\texttt{REFERENCE\_AUTHOR\_QUESTIONS.md}, provide the exact DOI,
+publisher or proceedings record, original document, or official repository.
+The original record text is preserved unchanged outside the active
+bibliography. Which work and version was intended?}
+
+\par\medskip
+\noindent\textbf{BIBQ2 --- Replaced citation records}\par
+\todo{Confirm the seven verified replacements in the reference audit table.
+If an original record was intended to identify another actual paper,
+provide its authoritative record before restoring that citation.}
+
+\par\medskip
+\noindent\textbf{BIBQ3 --- Retracted unused paper}\par
+\todo{The unused entry \texttt{abdel2018hybrid} is confirmed retracted.
+It is preserved for provenance and excluded from scientific support.
+Confirm that it should remain excluded from future versions.}
+
+\par\medskip
+\noindent\textbf{BIBQ4 --- Consulted editions and MoRoCo version}\par
+\todo{Confirm the consulted editions for Latombe, Godsil and Royle,
+and Sontag, whose original publication dates replace later distribution
+years. Confirm that Chapter~5 is intended to follow MoRoCo arXiv version~1,
+as its title and authors indicate, or specify the technical changes needed
+before switching to version~2. No chapter has been silently changed to
+follow a different version.}
+
+\end{document}
