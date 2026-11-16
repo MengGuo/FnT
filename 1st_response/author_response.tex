@@ -70,7 +70,7 @@ the scope of the complexity analysis.
 
 \item \textbf{Temporal logic and planning methods.} We introduced syntactically
 co-safe LTL, clarified the link between formulas and automata, and explained
-the use of trajectory optimization for signal temporal logic tasks.
+the use of trajectory optimization for bounded-time LTL tasks.
 
 \item \textbf{Coordination algorithms and guarantees.} We added comments to the
 algorithms, formalized the knowledge-transfer problem, illustrated the assumptions
@@ -130,43 +130,167 @@ structure and consistent notation, with any necessary deviations explicitly expl
 would make it easier for readers, especially those new to the subject, to connect the
 concepts across chapters.}
 \end{shaded*}
-\noindent\textbf{A:} Thank you for pointing out the discrepancy and for suggesting
-comments within
-the algorithms. You are right that the two mobility abstractions need the same
-components. The navigation symbol in Eq.~(3.20) identifies the controller for
-a mobility edge. Since all such edges have the same navigation symbol, it can
-be kept separately from the six-component tuple. The symbols in Eq.~(3.25)
-are robot-specific, and the edge weight there is specifically a duration.
-The complete functionality model needs an action component to distinguish
-navigation from task actions, and the conditional action map needs the
-workspace valuations on which action transitions depend.
+\noindent\textbf{A:} Thank you for pointing out where the notation becomes harder
+to follow and for suggesting comments within the algorithms.
 
-In Algorithm~3.4, the robot first exchanges observations and checks the
-current run on the updated model. It then decides whether to retain the run,
-repair it locally, or compute a new one. Confirming arrival triggers the update
-to the executed history and the next goal. These are the steps the comments
-now identify.
+\textbf{Notation and symbol meanings.} Your comment about the later chapters
+highlights the need to make related quantities easy to identify when notation
+becomes more specialized. In Section~5.3.1 (p.~97), for example,
+$\widehat{\pi}^{\xi}$ identifies the time and location of each robot's
+detachment for request $\xi$. The symbol $\Pi^{\xi}$ maps each detached
+robot to its role location. Algorithm~5.5 (p.~102) carries both outputs into
+execution. The List of Symbols (p.~143) gives both meanings using the same
+symbols as Section~5.3.1.
 
-The convention after Definition~2.3 (p.~17) specifies the six components as
-\change{$(S,\longrightarrow,S_0,AP,L,w)$}.
-The accompanying text in Section~3.2.1, after Eq.~(3.20) (p.~41), states
-\change{For controller selection, the auxiliary navigation-action set is
-$\Sigma_{\mathcal{M}}\triangleq\{\sigma_{\mathcal{M}}\}$.
-The notation $\pi\xrightarrow{\sigma_{\mathcal{M}}}_{\mathcal{M}}\pi'$
-is shorthand for $\pi\longrightarrow_{\mathcal{M}}\pi'$; the singleton
-action annotation is not an additional component of the mobility WTS.}
+\textbf{Algorithm readability.} We agree that readers should be able to see
+the purpose of each block. The \texttt{\textbackslash tcc} comments in
+Algorithm~3.4 (p.~40) mark information exchange and verification of the
+current run on the updated model, the choice to resynthesize, repair, or
+retain that run, and the update after confirmed arrival. The loop carries
+the updated model and product forward. In Section~3.2.3, Algorithm~3.5
+(p.~46) checks the horizon before issuing a request. Algorithms~3.7 and~3.8
+(pp.~48 and~49) treat the requested action states as terminal targets in the
+forward detour searches.
 
-The table after Eq.~(3.25) in Section~3.2.2 (p.~43) maps the six components
-across the three models. Its discussion of weights states
-\change{The weight $T_{\mathcal{M}}^i$ is specifically a duration, whereas
-$w_c$ and $W_{\mathcal{M}}$ may represent other nonnegative costs.}
+\textbf{Common structure for mobility models.} You are right that the two
+mobility abstractions can use the same structure. Definition~2.3 in
+Section~2.1.3 (p.~17) and Eqs.~(3.20) and~(3.25) (pp.~41 and~43) use the
+same six fields for states, transitions, initial states, propositions,
+labels, and weights. In Section~3.2.1 (pp.~41--42), the single navigation
+label $\sigma_{\mathcal{M}}$ now belongs to the action set of the composed
+model. The table in Section~3.2.2 (p.~43) relates each model's symbols to
+the six fields. The time-varying models in Sections~3.1.3 and~3.1.4
+(pp.~35 and~38) follow the same order.
 
-The algorithm comments were added throughout Chapter~3 and in Algorithms~4.1 and~4.2
-(pp.~59 and~62). The three comments
-in Algorithm~3.4 (p.~40) are
-\change{Exchange information and verify the updated local model.}
-\change{Choose full resynthesis or local repair.}
-\change{Advance the goal after confirmed arrival.}
+\textbf{Model-specific details.} In Section~3.2.2 (p.~43), the robot-specific
+weight $T_{\mathcal{M}}^i$ gives the travel duration used to schedule collaborations.
+The complete functionality model and conditional action map in Section~3.2.1
+(p.~42) include the additional information needed for controller selection
+and checking action preconditions, respectively. Section~3.2.1 (p.~43)
+keeps each selected action in the projected plan so execution can select
+its controller. Section~3.2.2 (p.~43) explains the model extensions and
+places the idle action in the local-action set.
+
+We have made the following changes in the revision:
+\begin{itemize}
+\item \textbf{Notation and symbol meanings.} The definitions in
+\change{Section~5.3.1 (p.~97)} read
+\change{``The detachment schedule is \(\widehat{\pi}^{\xi}\triangleq
+\{\pi_r^{\xi}\}_{r\in\mathcal{N}^{\xi}}\),
+where \(\mathcal{N}^{\xi}\) is the set of robots detached from
+\(\mathcal{G}^{\texttt{w}}\) to realize \(\mathcal{G}^{\xi}\).
+The event \(\pi_r^{\xi}\triangleq(r,t_r,p_r)\) gives the time \(t_r\) and
+location \(p_r\) at which robot \(r\) leaves the backbone.
+The assignment \(\Pi^{\xi}\) maps each detached robot to its role location
+in \(\mathcal{G}^{\xi}\).''}
+The corresponding entries in the \change{List of Symbols (p.~143)} describe
+$\widehat{\pi}^{\xi}$ as
+\change{``Detachment schedule giving the time and location at which each assigned robot
+leaves the backbone for request $\xi$.''}
+and $\Pi^{\xi}$ as
+\change{``Assignment mapping detached robots to role locations for request $\xi$.''}
+The text after \change{Eq.~(5.34) in Section~5.3.2 (p.~101)} states
+\change{``For an admitted request, each assigned robot uses its detachment event from
+\(\widehat{\pi}^{\ell}\) and then moves to its role location under
+\(\Pi^{\ell}\).''}
+The execution handoff in \change{Algorithm~5.5 (p.~102)} reads
+\change{``Store \((\widetilde{\pi}^{\ell},\widetilde{\Pi}^{\ell})\)
+            for request \(\xi^{\ell}\).''}
+\change{``Execute the stored detachment schedules, route each detached robot
+      to its stored role location, and update \(\mathcal{G}\).''}
+
+\item \textbf{Algorithm readability.} The overview in \change{Section~3.1.4
+(p.~39)} reads
+\change{``During execution, the robot exchanges task-relevant information and checks
+its run against the updated model. It then resynthesizes the run, repairs it
+locally, or retains it. On confirmed completion in the admissible target set,
+the robot records the executed step and selects the next goal.''}
+\change{``The updated transition system and product automaton are carried forward
+to the next iteration.''}
+The three comments in \change{Algorithm~3.4 (p.~40)} are
+\change{``Exchange information and check the current run on the updated model.''}
+\change{``Resynthesize, repair, or retain the current run.''}
+\change{``Record confirmed arrival and advance the goal.''}
+In \change{Section~3.2.3 (p.~45)}, the request time is summed over the
+original plan indices. \change{Algorithm~3.5 (p.~46)} tests $T_{\textup{next}}>H_i$
+before advancing and labels this block
+\change{``Request the first assistance needed within the lookahead horizon.''}
+The text following \change{Eq.~(3.35) on p.~47} specifies the target rule.
+\change{``In the forward search, states in $S_c\setminus S_d$ are forbidden, and states
+in $S_d$ are terminal targets. The same rule is used for the forward search
+in Algorithm~3.8 with the requester and its target action.''}
+The corresponding comments in \change{Algorithms~3.7 and~3.8
+(pp.~48 and~49)} read, respectively,
+\change{``End each forward detour at its first assisting target.''}
+\change{``End each forward path at its first collaboration target.''}
+
+\item \textbf{Common structure for mobility models.} The paragraph following
+\change{Definition~2.3 in Section~2.1.3 (p.~17)} states
+\change{``A weighted transition system for mobility uses the ordered tuple
+$(S,\longrightarrow,S_0,AP,L,w)$, where the entries give the states,
+transition relation, initial states, propositions, labeling map, and edge weights.
+Equation~(2.4) uses the workspace regions as states, so $S=\Pi$.
+The mobility models in Chapter~3 use this order for both
+fixed and time-varying abstractions. A time superscript on a component
+indicates that its value can change as the robot updates the model.''}
+The revised \change{Eq.~(3.20) in Section~3.2.1 (p.~41)} is
+{\color{blue}
+\begin{equation*}
+\mathcal{M} \triangleq
+(\Pi_{\mathcal{M}}, \longrightarrow_{\mathcal{M}},
+ \Pi_{\mathcal{M},0}, \Psi_{\mathcal{M}}, L_{\mathcal{M}}, W_{\mathcal{M}}),
+\tag{3.20}
+\end{equation*}}
+The accompanying text reads
+\change{``The label $\sigma_{\mathcal{M}}$ denotes navigation in the composed model.
+Within $\mathcal{M}$, a mobility edge is written as
+$\pi\longrightarrow_{\mathcal{M}}\pi'$.''}
+The text following \change{Eq.~(3.17) in Section~3.1.4 (p.~38)} explains the
+time index.
+\change{``The superscript $t$
+marks the transition relation, labeling map, and weights available at time
+$t \geq 0$.''}
+The table following \change{Eq.~(3.25) in Section~3.2.2 (p.~43)} is
+introduced as follows.
+\change{``The mobility abstractions in (3.20) and (3.25) follow the
+same component order as the WTS in Definition~2.3.
+Each table column gives the corresponding symbol for one component.''}
+
+\item \textbf{Model-specific details.} The definition following
+\change{Eq.~(3.24) in Section~3.2.1 (p.~42)} reads
+\change{``The state set is
+$\Pi_{\mathcal{R}} \triangleq \Pi_{\mathcal{M}} \times \Pi_{\mathcal{B}}$, and
+the action set is
+$\Sigma_{\mathcal{R}} \triangleq
+\{\sigma_{\mathcal{M}}\} \cup \Sigma_{\mathcal{B}}$.''}
+The same subsection explains the fixed-valuation case on \change{p.~42}
+and the graph used for synthesis on \change{p.~43}.
+\change{``Fixing the external valuation yields a weighted transition system with
+action labels on its edges (Baier and Katoen, 2008).''}
+\change{``The product search of Chapter~2 uses one
+minimum-weight edge for each ordered pair of adjacent states of $\mathcal{R}$
+and stores that edge's action label. Parallel edges have the same endpoints
+and thus induce the same sequence of state labels. Algorithm~2.1
+computes an optimal accepting run $R_{\text{opt}}$ for $\mathcal{A}_{\varphi}$
+on this product.
+Its projection $\tau_{\text{opt}}$ records the source state, selected action,
+and target state of each transition, including the edge that closes the suffix.
+For $\sigma_{\mathcal{M}}$, the robot applies the navigation controller in
+(2.3) and advances after confirming completion in the admissible target set. For an action
+in $\Sigma_{\mathcal{B}}$, it executes the corresponding action controller or
+the idle behavior for $\sigma_{\mathcal{B},0}$ and advances on completion.''}
+The discussion after the table in \change{Section~3.2.2 (p.~43)} states
+\change{``For each retained edge, $T_{\mathcal{M}}^i$ is the nominal travel duration
+used to schedule collaborations, obtained from the motion model or estimated from
+execution data. The weights $w_c$ and $W_{\mathcal{M}}$ can encode a general
+nonnegative motion cost. The complete functionality model in
+(3.24) records action labels to distinguish navigation and task
+controllers. The conditional action map in (3.23) uses external
+workspace valuations to determine which actions are enabled.''}
+\change{Section~3.2.2 (p.~43)} also specifies the idle action.
+\change{``The local-action set $\Sigma_l^i$ includes the idle action
+$\sigma_0 \triangleq \texttt{None}$.''}
+\end{itemize}
 
 \begin{shaded*}
 \noindent\textbf{Q:} \emph{2. Clarify the relationship between continuous
@@ -185,45 +309,69 @@ from the underlying dynamics. This is a reasonable choice of scope, but it shoul
 explicit. If continuous dynamics are not a focus of the monograph, presenting them later
 may improve the flow.}
 \end{shaded*}
-\noindent\textbf{A:} Thank you for asking how a symbolic edge is constructed and executed.
-For a
-candidate region pair, a controller must drive the robot to the target in
-finite time from every admissible state in the source, under the input bounds
-and with motion confined to the two regions. Controller design depends on the
-dynamics and partition. For example, for a single integrator and adjacent
-rectangular cells with convex union, $u=k(y-x)$ steers the state along the
-segment toward a point $y$ in the target interior. It enters the target in
-finite time, and $k$ can be chosen to satisfy the input bound on the bounded
-cell pair. Section~2.1.2 also discusses navigation functions by Koditschek
-and Rimon (1990) and feedback control for nonholonomic robots by Lindemann
-et al.\ (2006).
+\noindent\textbf{A:} Thank you for pointing out the abrupt transition between the
+robot dynamics and the planning model, and for asking how the resulting plans are
+executed.
 
-The controller for each edge is invoked until arrival is confirmed, at which
-point the next edge can be executed. The planner interprets the LTL next
-operator at those symbolic events. The complexity of constructing and
-certifying the controllers depends on the continuous model and falls outside
-the symbolic search bounds.
+\textbf{Motion model and transition construction.} We agree with your suggestion to
+start with the weighted transition system. The nonlinear dynamics enter when we specify
+how a local controller realizes an edge. For example, in Section~2.1.2 (p.~17), the
+feedback $u=k(y-x)$ steers a single integrator from a source cell toward an interior
+point $y$ in an adjacent target cell. The motion stays in the convex union of the cells
+and enters the target in finite time. That controller justifies an edge in the nominal
+graph before planning. A robot can add edges online by applying the same feasibility
+test to its updated workspace information. Travel durations for collaboration scheduling
+come from each robot's motion model or execution data.
 
-Section~2.1.2, after Definition~2.2 (p.~17), describes edge construction
-as follows.
-\change{The transition relation is constructed by testing candidate region pairs
-against a library of admissible local controllers. An edge is retained only
-when its controller reaches the target in finite time, respects the input
-limits, and remains inside the source--target pair from every admissible
-source state. This uniform requirement permits consecutive symbolic edges
-to be composed.}
+\textbf{Plan execution and complexity.} To answer your execution question, the
+supervisor advances on confirmed completion in the target region's admissible state
+set, which may also constrain heading or speed. If new sensing invalidates the active
+edge, the robot cancels the command and reports an interruption. The TIAGo example in
+Section~2.4.3 (p.~27) illustrates how navigation and supervisory behaviors carry out
+region goals and actions. Section~2.3.5 (p.~23) bounds the size of the translated task
+automaton. The search-time and memory bounds assume that automaton and the motion graph
+are already available.
 
-Section~2.3.4 (p.~22) explains the switching condition.
-\change{At the $k$th decision event, the supervisor activates the controller stored
-with the edge $(\pi_k,\pi_{k+1})$. The next event occurs when target-region
-membership is confirmed; the controller then switches to the next edge.}
+We have made the following changes in the revision:
+\begin{itemize}
+\item \textbf{Motion model and transition construction.}
+Section~2.1 (p.~15) opens with
+\change{``The planner represents robot motion by a weighted transition system whose
+states are workspace regions and whose edges are feasible motions between regions.
+Each edge is realized by a local navigation controller. The robot dynamics enter
+through the construction and execution of these controllers.''}
+Section~2.1.2 (pp.~16--17), titled \change{``Continuous realization of transitions,''}
+defines the admissible states and the conditions for retaining an edge.
+\change{``For each region $\pi$, let $X_\pi\subseteq\{x\mid p(x)\in\pi\}$ be the
+nonempty set of admissible states from which every outgoing controller can start.''}
+\change{``For the nominal model, candidate region pairs are tested against a library
+of admissible local controllers before task planning. An edge is retained only when
+its controller reaches the admissible target set in finite time, respects the input
+limits, and remains inside the source--target pair from every admissible source state.''}
+Section~3.1.3 (p.~36) applies this rule online.
+\change{``An online update adds an edge only after identifying a local controller
+that satisfies Definition~2.2 under the updated workspace information. The controller
+is stored with the edge.''}
+Section~3.2.2 (p.~43) explains the scheduling weights.
+\change{``For each retained edge, $T_{\mathcal{M}}^i$ is the nominal travel duration
+used to schedule collaborations, obtained from the motion model or estimated from
+execution data.''}
 
-Section~2.3.5 (p.~24) states the scope of the complexity bounds.
-\change{The complexity bounds below assume that the finite motion abstraction and
-its edge controllers are already available. They include task-automaton
-construction and symbolic product search, but exclude workspace
-decomposition, continuous reachability analysis, controller synthesis,
-localization, and low-level tracking.}
+\item \textbf{Plan execution and complexity.} Section~2.3.4 (p.~23) states,
+\change{``The supervisor advances when the active controller completes and the
+estimated state is confirmed in $X_{\pi_{k+1}}$. This target set is also the
+admissible start set for the next edge, which makes consecutive controllers
+composable.''}
+The interruption step in Algorithm~3.4 (p.~40) reads
+\change{``Cancel the active command and report an execution interruption.''}
+Section~2.3.5 (p.~23) states,
+\change{``The task-automaton size bounds quantify the effect of translating the
+LTL formula. The search-time and memory bounds below take the task automaton
+and finite motion abstraction as inputs. The reported product-construction
+times likewise concern the symbolic product. Workspace decomposition,
+continuous reachability analysis, controller synthesis, localization, and
+low-level tracking are outside these bounds.''}
+\end{itemize}
 
 \begin{shaded*}
 \noindent\textbf{Q:} \emph{3. Better integrate the discussion of signal
@@ -240,48 +388,74 @@ title is not clearly articulated. Explaining the motivation for introducing STL,
 reason for the change in methodology, and the relationship to the chapter's themes would
 make this material feel more coherent with the rest of the monograph.}
 \end{shaded*}
-\noindent\textbf{A:} Thank you for asking how the STL section fits into the paper.
-Sections~6.1
-and~6.2 address uncertainty in transition outcomes and in moving-target
-forecasts, respectively. Section~6.3 takes the task and sampled motion model
-as given and asks whether the trajectories meet deadlines and geometric
-constraints on formation, separation, and connectivity. The Gaussian-process
-prior guides the numerical search. The STL assessment concerns the nominal
-sampled trajectories over a finite horizon.
+\noindent\textbf{A:} Thank you for pointing out that the link to the earlier LTL
+chapters and the role of the final section in Chapter~6 needed clarification.
 
-An LTL requirement such as $\Diamond a$ calls for eventual visitation.
-An STL requirement such as $\mathsf{F}_{[0,h]}\mu$ places a deadline on a
-predicate evaluated on the sampled state. Its robustness also distinguishes
-trajectories by their margin from the predicate boundary. That margin is why
-the section optimizes trajectories directly. As Maity and Baras (2015) show,
-an augmented space-time model can also support automata-based planning for
-bounded-time tasks.
+\textbf{From LTL to bounded-time tasks.} We agree that the earlier LTL formulation
+provides a natural starting point. The propositions still record Boolean conditions, such
+as whether the team is inside a region. A bounded operator specifies when a condition
+must hold. For example, $\mathsf{F}_{[0,h]}a$ is true if $a$ holds at a sample within
+$h$ seconds. This is a bounded fragment of metric temporal logic on the sampling grid
+(Koymans, 1990). The interval can be expanded into ordinary LTL next steps on that grid
+(Alsmann and Lange, 2025). The optimizer uses the same sample indices when it scores
+waypoint perturbations, including those inside nested time windows.
 
-The Chapter~6 introduction (p.~107) explains the relation between the
-three settings.
-\change{These are complementary problem classes rather than successive steps of
-one stochastic model. Section~6.1 uses MDP
-transition uncertainty; Section~6.2 uses uncertain
-target forecasts and new task releases. Section~6.3
-instead fixes the task and nominal motion model and treats timed spatial
-constraints directly. Its constraints concern deadlines, relative
-formation, separation, and connectivity, not the probabilistic transition
-model of Section~6.1. Gaussian-process
-trajectory priors in that optimization are numerical search models;
-they do not introduce an MDP task-satisfaction probability.}
+\textbf{Trajectory optimization and the role of Section~6.3.} As you note, the
+uncertainty in Sections~6.1 and~6.2 concerns transition outcomes and target forecasts,
+respectively. Section~6.3 addresses deadlines, formations, and connectivity under a
+given task and sampled motion model. The space-time construction of Maity and Baras
+(2015) shows how to plan bounded-time tasks using LTL and automata. In our setting,
+two trajectories may both satisfy the same formula and offer different formation or
+connectivity margins. Direct trajectory optimization uses those margins to rank
+candidates, following the quantitative semantics of Fainekos and Pappas (2009) and
+Donz\'e and Maler (2010). During the search, the Gaussian-process prior supplies
+provisional trajectories for robots that have yet to be planned. Final verification
+uses the optimized trajectories of the complete team.
 
-The opening of Section~6.3 (p.~122) explains the role of robustness, and
-the closing analysis in Section~6.3.5 (p.~130) states the verification scope.
-\change{Robustness further distinguishes trajectories
-with different margins from the predicate boundary, which Boolean
-acceptance alone does not rank.}
+We have made the following changes in the revision:
+\begin{itemize}
+\item \textbf{Timed task language.} Section~6.3 (p.~124) states,
+\change{``Bounded-time LTL here denotes the fragment of metric temporal logic with
+bounded future operators evaluated on a uniform sampling grid (Koymans, 1990).''}
+Section~6.3.1 (p.~125) defines the bounded until operator as follows.
+\change{``The formula $\phi_1\mathsf{U}_I\phi_2$ holds at $t$ if $\phi_2$ holds
+at some $j\in t\oplus I$ and $\phi_1$ holds at every sample from $t$
+through $j-1$.''}
+Section~6.3.2 (p.~127) applies the same timing convention to the perturbation mask.
+\change{``The perturbation mask uses the same sample indices as the exact semantics.
+At a parent sample $t$, a window $I$ contributes the indices $t\oplus I$.
+Nested windows use the sample of their own enclosing operator.''}
+Section~6.4.2 (p.~135) gives the time grid for both case studies.
+\change{``The 48 samples are indexed from $0$ through $T=47$, so the final sample is
+at $4.7\,\mathrm{s}$.''}
 
-\change{The nominal certification here concerns the sampled signal and the
-specified finite horizon. It is not a probabilistic guarantee inherited
-from the MDP model of Section~6.1.
-Continuous-time safety between samples and robustness to tracking error
-require additional interpolation and error bounds, or direct checks of
-the realized trajectory.}
+\item \textbf{Method and scope.} The Chapter~6 introduction (p.~109) states,
+\change{``The first two sections address uncertainty in transition outcomes and
+target forecasts, respectively. The third section addresses the timing
+and geometry of collective motion under a given task and nominal model.''}
+Section~6.3 (p.~124) explains the use of quantitative margins.
+\change{``Here the optimizer evaluates the same kind of deadline directly on
+candidate trajectories and uses the real-valued predicate margins to rank them.''}
+Section~6.3.1 (p.~126) explains how the numerical objective handles constants.
+\change{``Before optimization, constants and empty reductions are folded into the
+expanded formula tree using the exact min and max rules. If the root reduces
+to true, the task robustness term contributes zero to every optimization cost.
+If it reduces to false, the sampled task is infeasible and the search returns
+failure.''}
+Section~6.3.3 (p.~128) defines the signal used for partial plans.
+\change{``During local optimization, each robot outside this partial plan is
+represented by the mean trajectory of its Gaussian-process prior
+conditioned on its endpoints. These means are fixed across the probes.''}
+Section~6.3.4 (p.~131) and Algorithm~6.7 (p.~132) place exact verification
+before the final ranking. The text states,
+\change{``The final ranking includes only nodes with a trajectory for every robot
+that pass the verification in Section~6.3.5.''}
+Section~6.3.5 (p.~131) states the scope of verification.
+\change{``The verification certifies Boolean satisfaction on the sampled trajectory
+over the specified finite horizon. Continuous-time safety between samples and
+robustness to tracking error require additional interpolation and error bounds, or
+direct checks of the realized trajectory.''}
+\end{itemize}
 
 \begin{shaded*}
 \noindent\textbf{Q:} \emph{4. Use recurring case studies to connect the
@@ -311,7 +485,7 @@ cannot establish a cross-method ranking.
 
 Section~1.3.7 (pp.~13--14) introduces the example and its chapter-by-chapter
 comparison. The case-study openings in Sections~2.4, 3.3, 4.4, 5.4, and~6.4
-(pp.~25, 50, 74, 102, and~130) revisit it. The opening and the scope statement
+(pp.~25, 50, 75, 103, and~133) revisit it. The opening and the scope statement
 in Section~1.3.7 read as follows.
 \change{Consider the rooms and corridor of Section~2.4.1.
 Let $A=r_3$, $D=r_5$, and $E=r_6$ be service regions, with a base at $r_1$.
@@ -358,18 +532,17 @@ quantitative formation, separation, and connectivity margins on sampled
 trajectories. Those quantities motivate the trajectory representation.
 
 Section~1.2.2 (p.~4) discusses Wolff's two formulations. Section~6.3
-(p.~122) explains the space-time alternative and why the section uses
+(p.~124) explains the space-time alternative and why the section uses
 trajectory optimization.
 \change{Wolff (2014) develops both automaton-guided constrained
 reachability and direct mixed-integer encodings for dynamical systems.
 The latter encode logical requirements together with trajectory variables
 instead of first constructing a full finite motion abstraction.}
 
-\change{Maity and Baras (2015) represent bounded-time requirements in an
-augmented space-time model and use LTL planning with continuous
-realization. The present section instead optimizes sampled trajectories
-directly to retain quantitative distance, formation, and connectivity
-margins in the objective.}
+\change{Maity and Baras (2015) use LTL and a space-time abstraction to plan
+with bounded-time requirements. Here the optimizer evaluates the same kind
+of deadline directly on candidate trajectories and uses the real-valued
+predicate margins to rank them.}
 
 \begin{shaded*}
 \noindent\textbf{Q:} \emph{\textbf{Technical Comments.} Most of the
@@ -388,7 +561,7 @@ connected? More generally, what topological assumptions are required?}
 \noindent\textbf{A:} Thank you for asking about the topology of $\pi_i$. Definition~2.2
 does
 not impose connectedness as a separate condition. It requires a controller
-that can reach the target region from every admissible source state while
+that can reach the admissible target set from every admissible source state while
 remaining in the source--target pair. A disconnected source can satisfy
 that requirement if every component admits the required confined motion
 under the controller. Conversely, even a connected region can fail the
@@ -406,8 +579,9 @@ requires the stronger control property stated there. If a disconnected
 region contains an unreachable component, an edge cannot be justified by a
 controller that works only from another component. The abstraction must
 then split the region or retain the relevant entry-state information.
-The same refinement is required when orientation, velocity, or other
-unmodeled state variables affect the available transitions.}
+The admissible state sets may restrict orientation or velocity. If a common
+set cannot support the intended outgoing edges, the abstraction must retain
+the relevant state information through a finer partition of the state space.}
 
 \begin{shaded*}
 \noindent\textbf{Q:} \emph{2. How is the Eval function defined in Section
@@ -552,7 +726,7 @@ IEEE, 2015. Author-hosted paper.
 mixed-integer example discussed in Section~1.2.2 (p.~4), and
 \href{https://johnbaras.com/wp-content/uploads/2020/10/15-08-MCC-2015-Final-Pub-Ver.pdf}%
 {Maity and Baras (2015)} provide the space-time approach in Section~6.3
-(p.~122). The corresponding bibliography records appear on pp.~154 and~150,
+(p.~124). The corresponding bibliography records appear on pp.~158 and~154,
 respectively.
 
 We would like to thank you again for the time and care you devoted to
@@ -618,11 +792,14 @@ controller must yield some finite arrival time $t_f>t_s$. The arrival
 time may depend on that execution. The condition applies from every
 admissible source state so that symbolic transitions can be composed.
 
-Definition~2.2 (p.~16) now specifies the quantifiers before Eq.~(2.3).
-\change{For every admissible initial state
-$x_s\in\pi_i$ and starting time $t_s\geq 0$, there exists a finite
-arrival time $t_f>t_s$ such that, with $x(t_s)=x_s$, the control input is
-given by:}
+Definition~2.2 (p.~16) specifies the quantifiers with Eq.~(2.3).
+\change{For every admissible initial state $x_s\in X_{\pi_i}$ and starting time
+$t_s\geq 0$, there exists a finite arrival time $t_f>t_s$ such that, with
+$x(t_s)=x_s$, the control input is given by
+$u(t)\triangleq\mathcal{U}\bigl(x(t),\pi_i,\pi_j\bigr)$, $t\in[t_s,t_f]$,
+where the input respects its limits and the closed-loop trajectory of
+(2.2) reaches $x(t_f)\in X_{\pi_j}$, with $p(x(t))\in\pi_i\cup\pi_j$ for all
+$t\in[t_s,t_f]$.}
 
 \begin{shaded*}
 \noindent\textbf{Q:} \emph{The statement after Definition 2.2: "The latter
@@ -637,7 +814,7 @@ an unmodeled visit.
 
 The paragraph immediately after Definition~2.2 (p.~16) names the condition.
 \change{The confinement condition
-$x(t)\in\pi_i\cup\pi_j$ prevents a symbolic transition from implicitly
+$p(x(t))\in\pi_i\cup\pi_j$ prevents a symbolic transition from implicitly
 using intermediate regions absent from the discrete plan.}
 
 \begin{shaded*}
@@ -676,7 +853,7 @@ Theorem~5.37 of Baier and Katoen (2008). Thus $\mathcal{A}_{\varphi}$
 in the synthesis arguments denotes a translation result. In the finite
 product, a reachable accepting cycle then supplies a prefix-suffix run.
 
-Definition~2.8 and Lemma~2.1 in Section~2.3 (p.~20) state the structural
+Definition~2.8 and Lemma~2.1 in Section~2.3 (pp.~19--20) state the structural
 and language claims separately.
 \change{A Nondeterministic B\"uchi automaton over $2^{AP}$ has the tuple structure
 below. Its components specify an automaton, but do not by themselves
@@ -742,8 +919,8 @@ to decide what information to exchange and how to update each robot's plan so
 it remains valid and satisfies the hard task relative to the current model.
 Exact resynthesis minimizes the local relaxed cost. The guarantee depends
 on there being a safe accepting continuation that agrees with what the
-robot has already executed. Theorem~3.6 (p.~39) additionally requires
-each necessary search or repair to succeed in time.
+robot has already executed. Theorem~3.6 (p.~41) applies during uninterrupted
+execution and requires each necessary search or repair to succeed in time.
 
 Problem~3.7 in Section~3.1.4 (p.~38), before the initial synthesis,
 states the inputs, decision, objective, and feasibility premise.
@@ -797,7 +974,7 @@ every infinite continuation $v$. The notation $u\models\psi$ for a finite
 execution in later chapters means that $u$ is such a good prefix; it does
 not introduce a separate finite-trace logic.}
 
-The text following Eq.~(4.1) (p.~55) points to that definition.
+The text following Eq.~(4.1) (p.~56) points to that definition.
 
 \change{where $\mathrm{sc\mbox{-}LTL}(AP)$ is the syntactically co-safe fragment
 defined in Section~2.2.1, here with
@@ -826,7 +1003,7 @@ then preserve the temporal dependencies in that formula. The direction
 of information flow is secondary to this difference in the specifications
 supplied to each method.
 
-The revised titles identify those inputs directly on pp.~29 and~54.
+The revised titles identify those inputs directly on pp.~29 and~55.
 Chapter~3. \change{Coordination under Local Temporal Logic Tasks}
 
 Chapter~4. \change{Synthesis and Coordination under Global Temporal Logic Tasks}
@@ -854,7 +1031,7 @@ collaborative-behavior propositions defined for the global task. Writing the for
 as an element of this set makes both the fragment and the alphabet explicit.
 
 Section~2.2.1 (p.~19) introduces the formula set, and the text immediately
-after Eq.~(4.1) in Section~4.1.1 (p.~55) specializes it to the mission
+after Eq.~(4.1) in Section~4.1.1 (p.~56) specializes it to the mission
 alphabet.
 \change{The set of LTL formulas over $AP$ is denoted by $\mathrm{LTL}(AP)$.}
 
@@ -927,12 +1104,10 @@ task instances, and logs should be used? The added example is explanatory;
 there are no fabricated measurements or cross-method rankings.}
 \par\medskip
 \noindent\textbf{AQ3 --- Controller contract and state representation}\par
-\todo{Do the navigation primitives in each implementation guarantee finite-time
-reachability and confinement from every admissible source state, or only
-from specified entry sets? If the latter, which entry sets, orientations, and velocity
-states should be retained in the abstraction? The revised
-definition states the contract needed for composability; it does not verify
-the platform implementations.}
+\todo{Which admissible state sets, including heading and velocity limits, are
+supported by the navigation primitives in each implementation? Confirm that each
+primitive reaches its target's admissible set in finite time and stays within the
+allowed regions. The formal contract is stated in Definition~2.2.}
 \par\medskip
 \noindent\textbf{AQ4 --- Relaxation example costs and source data}\par
 \todo{Do the original numerical relaxation examples include the suffix closing
@@ -946,9 +1121,8 @@ completion times, and does the confirmation time include all action
 durations? Also, a shortest route to an assisting state need not minimize
 the absolute timing-mismatch objective when arriving later reduces that
 mismatch. Is waiting modeled explicitly in \texttt{EvalReq} and
-\texttt{DelayCol}, or should their optimization claims be restricted to
-the candidate paths actually considered? The routines and timing formulas
-are left unchanged pending clarification.}
+\texttt{DelayCol}, and how should the timing and optimality assumptions be stated
+for the candidate paths actually considered?}
 \par\medskip
 \noindent\textbf{AQ6 --- R-poset pruning and fleet-search guarantees}\par
 \todo{What restrictions on formulas and automata justify sequentializing a
@@ -1012,14 +1186,10 @@ regions alone do not specify a sampling distribution for CVaR evaluation.
 Which sampling law and speed bound are used? The coverage, delay, and
 risk claims remain unchanged pending these choices.}
 \par\medskip
-\noindent\textbf{AQ12 --- STL conventions and partial-team robustness}\par
-\todo{Confirm the until interval convention, including the value at the
-current time and the empty-prefix minimum. Confirm a strictly positive
-connectivity margin if non-strict predicates are used, since
-$\lambda_2(L)\geq0$ alone permits a disconnected graph. How are predicates
-defined while only a subset of robots has been planned, and how are
-unplanned trajectories supplied to the team-level robustness evaluation?
-The original equations are retained pending these modeling choices.}
+\noindent\textbf{AQ12 --- Partial-team robustness in the simulations}\par
+\todo{Confirm whether the simulations used endpoint-conditioned prior means
+for unplanned robots when computing the local task cost. Confirm how any
+additional connectivity margin was set in the implementation.}
 \par\medskip
 \noindent\textbf{AQ13 --- Experimental provenance and remaining proof assumptions}\par
 \todo{Can the authors supply the underlying logs or scripts for the reproduced
