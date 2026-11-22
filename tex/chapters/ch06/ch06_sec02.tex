@@ -113,8 +113,9 @@ good prefix, even though each released obligation is sc-LTL
 Thus, given the robot model and the task specification,
 the task plan for the robot team is defined by:
 \begin{equation}
+\color{blue}
 \label{ch06:plan}
-\boldsymbol{\tau}_{\mathcal{N}} \triangleq (\pi_1,\pi_2,\cdots,\tau_n),
+\boldsymbol{\tau}_{\mathcal{N}} \triangleq (\tau_1,\tau_2,\cdots,\tau_N),
 \end{equation}
 where
 $\tau_n \triangleq
@@ -194,8 +195,8 @@ and \texttt{animal}. An offline collaborative task is specified by
 \bigr),
 \end{aligned}
 \end{equation}
-which requires patrol of region $\texttt{s}_1$ and sequential
-monitoring and filming of the antelope. Ground robots must also avoid
+\rev{where the formula combines patrol of region $\texttt{s}_1$ with
+sequential monitoring and filming of the antelope.} Ground robots must also avoid
 obstacles in the workspace. In addition, the reactive rule
 $\texttt{poacher} \rightarrow \Diamond \texttt{arrest}$ releases an
 arrest task when a poacher is detected, whereas the rule
@@ -260,18 +261,24 @@ trajectory sample $Y_{0:T_{\varphi},m}^{(i)}$. The resulting
 target-wise predictions are stacked as
 $\widehat{Y}_{\mathcal{H}_t} \triangleq
 (\widehat{Y}_{\mathcal{H}_t,1},\cdots,\widehat{Y}_{\mathcal{H}_t,M})$.
-Based on the measured target velocities $V_{0:t}$, define
-$v_m^{\ast}(t) \triangleq \max \{|V_{\varsigma,m}| : \varsigma \leq t\}$
-as the maximum recorded speed of target $m$ up to time $t$. This
-quantity is used later as a velocity bound in the planning stage.
+\begin{revision}
+The measured maximum speed
+$\widehat v_m(t)\triangleq\max_{\varsigma\le t}|V_{\varsigma,m}|$
+is a diagnostic, not a bound on future motion. The planning bound
+$v_m^\ast$ is a separately specified valid upper bound on target speed
+throughout the forecast and pursuit interval. If such a bound is unavailable,
+the delay expression below is only a heuristic estimate and its guarantee
+is not asserted.
+\end{revision}
 
 \subsubsection{Conformal prediction regions}
 \label{ch06:subsec:cpr}
 
-Conformal prediction constructs uncertainty regions around the nominal
+\rev{Conformal prediction constructs uncertainty regions around the nominal
 forecasts and provides finite-sample coverage guarantees
 \citep{Angelopoulos2021CP}. Following \citet{Lars2023CP}, the regions are built
-independently for each target.
+\rev{separately for each target; separate construction does not imply
+statistical independence of their coverage events.}}
 Given observations $Y_{0:t}$ at time $t$, the predictors
 $\mathbf{\Upsilon}$ generate the nominal forecasts
 $\widehat{Y}_{\mathcal{H}_t}$. For each target
@@ -288,8 +295,13 @@ coverage guarantee is given by \eqref{ch06:eq:cpg}:
 \ \forall h \in \mathcal{H}_t
 \Big) \geq 1 - \delta,
 \end{equation}
-where $G_{h \mid t,m}$ is the conformal prediction radius associated
-with target $m$ at step $h$.
+\rev{where $G_{h\mid t,m}$ is the radius for target $m$ at step $h$.
+The split-conformal guarantee assumes exchangeability of the calibration
+and test trajectories and a predictor fixed before calibration. It is
+marginal coverage at a fixed forecast origin, not conditional coverage for
+every observation history. The union bound over forecast steps gives
+\eqref{ch06:eq:cpg}; repeated online origins require their own failure-budget
+allocation for a mission-wide guarantee.}
 To compute these radii, define the nonconformity score by
 \eqref{ch06:eq:ncs}:
 \begin{equation}
@@ -313,7 +325,10 @@ $p \triangleq
 \left\lceil
 (|D_{\texttt{cal}}^m|+1)(1-\bar{\delta})
 \right\rceil$.
-The bound $G_{h \mid t,m}$ is then chosen as the $p$-th smallest score.
+\rev{The bound $G_{h\mid t,m}$ is the $p$-th smallest score.
+For the guarantee below, nominal event estimates are rounded up to this
+forecast grid. Events beyond the grid require a new forecast and are not
+covered by extrapolating the old radii.}
 Finally, the prediction regions for all targets are collected as
 $G_{\mathcal{H}_t} \triangleq
 (G_{\mathcal{H}_t,1},\cdots,G_{\mathcal{H}_t,M})$.
@@ -373,9 +388,9 @@ exactly the good prefixes of $\varphi$. From a finite prefix ending in $S_F$,
 the decomposition procedure in Definition~\ref{ch04:def:subtasks} extracts
 the indexed subtasks $\Omega_{\varphi}$ and their temporal relations.
 \end{revision}
-The subsequent relaxation step retains only
-those constraints that are essential for correctness, rather than the
-full sequential order of the automaton run.
+\rev{The subsequent relaxation proposes candidate partial constraints
+in place of the seed order. Complete schedules must still pass the original
+automaton check; the partial constraints alone do not certify correctness.}
 Recall that an R-poset associated with $\varphi$ is the triple:
 \begin{equation}
 \label{ch06:eq:r-poset}
@@ -495,18 +510,20 @@ subtask $\omega \in \Omega_{\nu^{+}}$.
 
 %=======================================
 \setlength{\textfloatsep}{5pt}
-\begin{algorithm}[!t]
+\begin{algorithm}
+\color{blue}[!t]
     \caption{CP-based MCTS for uncertainty-aware task assignment}
     \label{ch06:alg:cp-mcts}
     \SetKwInOut{Input}{Input}
     \SetKwInOut{Output}{Output}
     \Input{Robots $\mathcal{N}$, current team state $x_t$, R-poset
     $P_{\varphi}$, duration map $\rho$, time budget $t_b$, target
-    estimates $\widehat{Y}_{\mathcal{H}_t}, G_{\mathcal{H}_t}$.}
-    \Output{Plan $\Pi_{\texttt{c}}^\star$ and risk value
-    $\eta_{\texttt{c}}^\star$.}
-    Initialize the root node $\nu_0$ and set
-    $\eta_{\texttt{c}}^\star \leftarrow \infty$\;
+    estimates $\widehat{Y}_{\mathcal{H}_t}, G_{\mathcal{H}_t}$,
+    \rev{scenario law $\mathbb Q_t$, and confidence level $\alpha\in(0,1)$.}}
+    \Output{\rev{A verified plan $\Pi_{\texttt c}^\star$ and risk value
+    $\eta_{\texttt c}^\star$, or failure.}}
+    \rev{Initialize $\nu_0$, $\Pi_{\texttt c}^\star\leftarrow\varnothing$,
+    and $\eta_{\texttt c}^\star\leftarrow\infty$.}\;
     \While{$\mathrm{time} < t_b$}{
         $\nu \leftarrow \texttt{Selection}(\nu_0)$\;
         $\{\nu_{+}\} \leftarrow
@@ -521,7 +538,8 @@ subtask $\omega \in \Omega_{\nu^{+}}$.
             $\eta_{\texttt{c}} \leftarrow
             \texttt{Eval}(\Pi_{\texttt{c}},P_{\varphi},\rho,
             \widehat{Y}_{\mathcal{H}_t},G_{\mathcal{H}_t},x_t)$\;
-            \If{$\eta_{\texttt{c}} < \eta_{\texttt{c}}^\star$}{
+            \If{\rev{$\eta_{\texttt c}<\eta_{\texttt c}^\star$ and the complete
+            plan passes the original-automaton trace check}}{
                 $\eta_{\texttt{c}}^\star \leftarrow
                 \eta_{\texttt{c}}$\;
                 $\Pi_{\texttt{c}}^\star \leftarrow
@@ -532,6 +550,7 @@ subtask $\omega \in \Omega_{\nu^{+}}$.
             \texttt{Backpropagate}($\nu_{\texttt{s}},\xi_{\texttt{c}}$)\;
         }
     }
+    \rev{Return failure if no verified complete plan was retained.}\;
 \end{algorithm}
 %=======================================
 
@@ -542,40 +561,38 @@ resulting plan under samples from the prediction regions, and computes a risk
 metric from the induced average-makespan distribution. Rollout recursively
 chooses admissible subtasks from \eqref{ch06:eq:admissible} and assigns them to
 feasible robot groups. An $\epsilon$-randomized rule selects a random feasible
-group with probability $\epsilon$ and the earliest-start group otherwise. The
-complete plan $\Pi_{\texttt{c}}$ is then evaluated by stepwise simulation over
-$z$ samples from
-$(\widehat{Y}_{\mathcal{H}_t},G_{\mathcal{H}_t})$.
+group with probability $\epsilon$ and the earliest-start group otherwise. \begin{revision}
+The complete plan is evaluated using $z$ joint trajectory scenarios drawn
+from an explicitly supplied probability law $\mathbb Q_t$.
+The law describes temporal and inter-target dependence and is an input to
+$\texttt{Rollout}$ and $\texttt{Eval}$, with this argument suppressed below.
+Conformal regions alone do not define a distribution for these scenarios.
+The resulting CVaR is a risk measure under $\mathbb Q_t$; marginal coverage
+of the regions does not calibrate its tail probabilities.
 
-For a complete plan $\Pi_{\texttt{c}}$ and a risk level
-$\alpha \in (0,1]$, the value at risk is defined by
-% AUTHOR QUESTION AQ10: see response appendix and AUTHOR_QUESTIONS.md.
-$\mathrm{VaR}_{\alpha}(\Pi_{\texttt{c}}) \triangleq
-\inf\bigl\{
-\rho \in \mathbb{R}
-\bigm|
-\Pr(\mathbf{\overline{T}}_{\texttt{c}} \geq \rho) \geq \alpha
-\bigr\}$,
-and the associated conditional value at risk is defined by
-$\mathrm{CVaR}_{\alpha}(\Pi_{\texttt{c}}) \triangleq
-\mathbb{E}\bigl[
-\mathbf{\overline{T}}_{\texttt{c}}
-\bigm|
-\mathbf{\overline{T}}_{\texttt{c}} \geq
-\mathrm{VaR}_{\alpha}(\Pi_{\texttt{c}})
-\bigr]$.
-Here, $\mathrm{VaR}_{\alpha}$ identifies a tail threshold, whereas
-$\mathrm{CVaR}_{\alpha}$ measures the expected cost beyond that
-threshold and is therefore more informative for risk-sensitive
-assignment. Accordingly, the evaluation metric of a complete plan is
-defined by
-$\eta_{\texttt{c}} \triangleq
-\mathrm{CVaR}_{\alpha}(\Pi_{\texttt{c}})$.
-The procedure that generates the sample distribution and evaluates this
-criterion is denoted by $\texttt{Eval}(\cdot)$. During the search, the
-best plan $\Pi_{\texttt{c}}^\star$ and its minimal risk value
-$\eta_{\texttt{c}}^\star$ are maintained and updated whenever a
-candidate plan yields a smaller value of $\eta_{\texttt{c}}$.
+For an integrable completion-time cost $Z=\mathbf{\overline T}_{\texttt c}$
+and confidence level $\alpha\in(0,1)$, define
+$\mathrm{VaR}_\alpha\triangleq
+\inf\{r\in\mathbb R\mid\mathbb Q_t(Z\le r)\ge\alpha\}$.
+The upper-tail CVaR is
+\[
+\mathrm{CVaR}_\alpha\triangleq
+\min_{r\in\mathbb R}
+\left\{r+\frac{\mathbb E_{\mathbb Q_t}[(Z-r)_+]}{1-\alpha}\right\},
+\]
+where $(z)_+\triangleq\max\{z,0\}$ and $\alpha$ is a confidence level.
+This definition handles probability mass at the quantile; it is not in
+general the conditional mean given $Z\ge\mathrm{VaR}_\alpha$
+\citep{rockafellar2002cvar}.
+For scenarios $Z_1,\cdots,Z_z$, the expectation is replaced by their
+empirical mean in the same minimization. The endpoint $\alpha=1$ is not
+used in this finite-sample definition.
+The plan metric is $\eta_{\texttt c}\triangleq
+\mathrm{CVaR}_\alpha(\Pi_{\texttt c})$.
+The best verified complete plan and its metric are maintained during search.
+Verification includes its actual proposition trace, as required by
+Section~\ref{ch04:subsubsec:task-decompose}.
+\end{revision}
 
 (III) \emph{Backpropagation}.
 To support the tree search, define the normalized performance score
@@ -615,73 +632,48 @@ $\widehat{T}_{\omega} = \infty$, which yields
 $\zeta_{\nu^{+}} = \infty$. Such nodes are excluded before simulation.
 For comparison, the no-trajectory-prediction baseline NTP treats all targets
 as stationary, while the no-uncertainty baseline NU uses
-$\widehat{Y}_{\mathcal{H}_t}$ but ignores $G_{\mathcal{H}_t}$. The CVaR
-criterion captures both motion forecasts and uncertainty growth.
+$\widehat{Y}_{\mathcal{H}_t}$ but ignores $G_{\mathcal{H}_t}$. \rev{The CVaR criterion incorporates the chosen scenario law and
+forecasts; prediction radii enter the geometric screening separately.}
 
 
+\begin{revision}
 \begin{lemma}
-% AUTHOR QUESTION AQ11: Prediction coverage and target-speed assumptions
-% What independence or dependence assumptions justify multiplying the per-subtask coverage
-% probabilities in Lemma~6.3? Without independence, a union-bound treatment is needed, with special
-% care when several subtasks share a target or time. The largest observed target speed is not a bound
-% on future speed without an additional model assumption. Finally, prediction regions alone do not
-% specify a sampling distribution for CVaR evaluation. Which sampling law and speed bound are used?
-% The coverage, delay, and risk claims remain unchanged pending these choices.
 \label{ch06:lemma:key-bound}
-Given an expanded node $\nu^{+}$, the completion times of the key
-subtasks in $\Omega_{\nu^{+}}^{\texttt{s}}$ satisfy:
+Fix a forecast origin $t$ and suppose \eqref{ch06:eq:cpg} holds for each
+of the $M$ targets over the full forecast grid. Suppose the selected nominal
+times lie in that grid, target speeds are bounded by $v_m^\ast$, and the
+assigned robots can execute unobstructed feasible pursuit with closing speed
+at least $\min_{n\in\mathcal I_\omega}v_n-v_m^\ast>0$.
+If the task-duration model remains valid during pursuit, then
 \begin{equation}
 \label{ch06:eq:key-bound}
-\Pr\Bigl(
-T_{\omega} \leq \widehat{T}_{\omega} +
-\frac{G_{\widehat{T}_{\omega},m}}
-{\min_{n \in \mathcal{I}_{\omega}} v_n - v_m^{\ast}},
-\ \forall \omega \in \Omega_{\nu^{+}}^{\texttt{s}}
-\Bigr)
-\geq
-(1-\delta)^{|\Omega_{\nu^{+}}^{\texttt{s}}|},
+\Pr\left(
+T_\omega\le\widehat T_\omega+
+\frac{G_{\widehat T_\omega,m}}
+{\min_{n\in\mathcal I_\omega}v_n-v_m^\ast},\quad
+\forall\omega\in\Omega_{\nu^+}^{\texttt s}
+\right)\ge\max\{0,1-M\delta\},
 \end{equation}
-where $T_{\omega}$ is the actual completion time of subtask
-$\omega \in \Omega_{\nu^{+}}^{\texttt{s}}$, $m$ is the associated
-target, $\mathcal{I}_{\omega}$ is the robot group assigned to
-$\omega$, and $v_m^{\ast}$ is the target-speed bound defined in
-Section~\ref{ch06:subsec:trajectory}.
+where $m$ is the target of subtask $\omega$ and the radius is evaluated on
+the forecast grid. The guarantee is marginal at this forecast origin.
 \end{lemma}
-
 \begin{proof}
-Fix any $\omega \in \Omega_{\nu^{+}}^{\texttt{s}}$, and let $m$ be its
-associated target. By construction of the stepwise simulation, all
-robots in $\mathcal{I}_{\omega}$ are predicted to reach the nominal
-target position $\widehat{Y}_{\widehat{T}_{\omega},m}$ by time
-$\widehat{T}_{\omega}$. By \eqref{ch06:eq:cpg}, the actual target
-position at that time satisfies
-$
-\left\|
-Y_{\widehat{T}_{\omega},m}
--
-\widehat{Y}_{\widehat{T}_{\omega},m}
-\right\|
-\leq
-G_{\widehat{T}_{\omega},m}$,
-with probability at least $1-\delta$. Applying the same bound to all
-$\omega \in \Omega_{\nu^{+}}^{\texttt{s}}$ gives the probability factor
-$(1-\delta)^{|\Omega_{\nu^{+}}^{\texttt{s}}|}$.
-Hence, on that event, the remaining distance to the actual target
-position is at most $G_{\widehat{T}_{\omega},m}$. Since the target speed
-is bounded by $v_m^{\ast}$ and the slowest assigned robot has speed
-$\min_{n \in \mathcal{I}_{\omega}} v_n$, the residual distance is closed
-with relative speed at least
-$\min_{n \in \mathcal{I}_{\omega}} v_n - v_m^{\ast}$. Therefore, the
-additional delay is bounded above by
-$G_{\widehat{T}_{\omega},m}/
-(\min_{n \in \mathcal{I}_{\omega}} v_n - v_m^{\ast})$, which yields
-\eqref{ch06:eq:key-bound}.
+For each target let $E_m$ be its simultaneous forecast-coverage event in
+\eqref{ch06:eq:cpg}. The union bound gives
+$\Pr(\bigcap_{m=1}^M E_m)\ge\max\{0,1-M\delta\}$ without independence.
+On this event every selected target and grid time is covered, including
+choices made from the same forecasts. Repeated subtasks for one target use
+the same horizon event. At the nominal arrival time the remaining distance
+is at most the corresponding radius. The assumed positive closing speed
+bounds the additional pursuit time by the displayed ratio. The stated
+duration assumption then transfers this arrival bound to completion times.
 \end{proof}
-
+\end{revision}
 
 %=======================================
 \setlength{\textfloatsep}{5pt}
-\begin{algorithm}[!t]
+\begin{algorithm}
+\color{blue}[!t]
     \caption{Online reactive and dynamic task assignment}
     \label{ch06:alg:ta}
     \SetKwInOut{Input}{Input}
@@ -689,13 +681,13 @@ $G_{\widehat{T}_{\omega},m}/
     \Input{Robots $\mathcal{N}$, task formula $\varphi(t)$, duration
     map $\rho$, trajectory predictors $\mathbf{\Upsilon}$, prediction
     regions $G_{\mathcal{H}_t}$, initial team state $x_0$, and
-    observations $\{Y_{0:t},V_{0:t}\}$.}
+    observations $\{Y_{0:t},V_{0:t}\}$, \rev{scenario law $\mathbb Q_t$, and confidence level $\alpha$.}}
     \Output{Assignment $\Pi^{\star}$.}
     \rev{Initialize $t\leftarrow0$ and $\Omega_\iota\leftarrow\emptyset$.}\;
     \rev{Progress the static task and initial releases using the initial
     propositions to obtain $\varphi(0)$.}\;
     \If{\rev{no obligation is pending}}{
-        \rev{Set $\Pi^\star=\emptyset$ and $\eta^\star=0$.}\;
+        \rev{Set $\Pi^\star=\emptyset$ and $\eta^\star=\overline T_\varphi$.}\;
     }
     \Else{
         \rev{$P_\varphi\leftarrow\texttt{compute\_poset}(\varphi(0))$.}\;
@@ -713,8 +705,11 @@ $G_{\widehat{T}_{\omega},m}/
         $\widehat{Y}_{\mathcal{H}_t}$\;
         \rev{Progress earlier obligations and new releases using the observed propositions.}\;
         Update $\varphi(t)$ by \eqref{ch06:eq:task-update}\;
+        \rev{Record newly completed subtasks and formula-instance times,
+        and remove completed work from the residual assignment.}\;
+        \rev{$\Omega_\iota\leftarrow\Omega_\iota\cup\Omega_{\texttt c}(t)$.}\;
         \If{\rev{no obligation is pending}}{
-            \rev{Set $\Pi^\star=\emptyset$ and $\eta^\star=0$; continue monitoring.}\;
+            \rev{Set $\Pi^\star=\emptyset$ and $\eta^\star=\overline T_\varphi$; continue monitoring.}\;
             \rev{\textbf{continue}}\;
         }
         Update $P_{\varphi}$ by
@@ -725,12 +720,9 @@ $G_{\widehat{T}_{\omega},m}/
             \widehat{Y}_{\mathcal{H}_t},G_{\mathcal{H}_t},x_t)$\;
         }
         \Else{
-            $\eta^{\star} \leftarrow \eta^{\star} - 1$\;
+            \rev{Retain the baseline until an adoption or completion update.}\;
             \If{$\Omega_{\texttt{c}}(t) \neq \emptyset$}{
-                Update $\eta^{\star}$ by
-                \eqref{ch06:eq:update_eta}\;
-                $\Omega_{\iota} \leftarrow
-                \Omega_{\iota}\cup\Omega_{\texttt{c}}(t)$\;
+                \rev{Refresh $\eta^\star$ by \eqref{ch06:eq:update_eta}.}\;
             }
             $\eta_t^{\star} \leftarrow
             \texttt{Eval}(\Pi^{\star},P_{\varphi},\rho,
@@ -761,7 +753,9 @@ The assignment method is embedded in receding-horizon execution. As in
 Chapter~\ref{chap:top-down}, the current plan is executed non-preemptively,
 and replanning is triggered only by new task information or sufficient
 assignment-quality degradation. Algorithm~\ref{ch06:alg:ta} has two stages:
-initial planning and online adaptation. Robots execute local plans by moving to
+initial planning and online adaptation. \rev{A failed planning call retains a still-valid
+existing continuation or reports failure; it is not treated as a completed
+assignment.} Robots execute local plans by moving to
 assigned targets and performing the required actions. Multi-robot actions wait
 for all collaborators, while non-collaborative actions proceed independently.
 At each time step $t>0$, the team state $x_t$ and the target
@@ -789,47 +783,50 @@ degradation in the quality of the current plan, namely
 $\eta_t^{\star} > (1+\gamma)\eta^{\star}$, where
 $\gamma \in (0,1)$ is the replanning threshold. The quantity
 $\eta_t^{\star}$ is obtained from $\texttt{Eval}(\cdot)$ using the
-latest state and target information. For completed tasks, the expected
-performance value is updated by:
+latest state and target information. \begin{revision}
+A completion changes the residual plan rather than the number of released
+formula instances. The baseline metric is refreshed by the same evaluator:
 \begin{equation}
 \label{ch06:eq:update_eta}
-\eta_{+}^{\star} \triangleq
-\frac{
-|\varphi(t)|-|\Omega_{\iota}|+|\Omega_{\texttt{c}}(t)|
-}{
-|\varphi(t)|-|\Omega_{\iota}|
-}
-\eta_{-}^{\star},
+\eta_+^\star\triangleq
+\texttt{Eval}(\Pi_{\mathrm{rem}}^\star,P_{\varphi(t)},\rho,
+\widehat Y_{\mathcal H_t},G_{\mathcal H_t},x_t),
 \end{equation}
-where $\eta_{+}^{\star}$ and $\eta_{-}^{\star}$ are the updated and
-previous values, $|\varphi(t)|$ is the total number of tasks,
-$|\Omega_{\iota}|$ is the number of completed tasks, and
-$|\Omega_{\texttt{c}}(t)|$ is the number of tasks completed at time $t$.
+where $\Pi_{\mathrm{rem}}^\star$ is the residual assignment after confirmed
+completion and the evaluation uses $\mathbb Q_t$.
+Completed formula instances contribute their observed completion times;
+pending instances contribute their scenario completion times, with the same
+released-instance denominator $L$ as in \eqref{ch06:eq:avg-makespan}.
+The subtask record $\Omega_\iota$ is used only for execution bookkeeping.
+No formula count is divided by a subtask count, and the average absolute
+completion-time objective is not decremented once per clock tick.
+\end{revision}
 Whenever replanning is activated, CP-MCTS produces a candidate plan
 $\widehat{\Pi}_t$ with associated metric $\widehat{\eta}_t$. The new
 plan is adopted only if it improves upon the current one, that is, if
-$\widehat{\eta}_t < \eta_t^{\star}$. Otherwise, the current plan
-$\Pi^{\star}$ is retained, and the value $\eta^{\star}$ is decreased
-monotonically to reflect the progress already achieved. This procedure
+$\widehat{\eta}_t < \eta_t^{\star}$. \rev{Otherwise, the current residual plan is retained. Metric changes
+from completed instances or updated predictions need not be monotone;
+they are evaluated in the same objective units.} This procedure
 is repeated until the mission terminates.
 
 \subsubsection{Complexity and generalization}
 
-The complexity of Algorithm~\ref{ch06:alg:ta} follows from the
-individual components introduced in the preceding subsections. The
-construction of an R-poset has worst-case complexity
-$\mathcal{O}(J^{2})$, where $J$ is the number of subtasks and is
-bounded by the number of edges in the underlying automaton. For the
-assignment stage, the worst-case search space is
-$\mathcal{O}(J!\cdot N^{J})$, since the subtask orderings are
-combinatorial and the robot-group assignments grow exponentially with
-the number of robots $N$. By contrast, the rollout stage in CP-MCTS has
-complexity $\mathcal{O}(J\cdot N)$, since subtasks are assigned
-sequentially through a random or greedy rule. The complexity of the
-stepwise simulation is
-$\mathcal{O}\bigl(zT(J+N)/\Delta t\bigr)$, where $z$ is the number of
-samples, $T$ is the makespan, and $\Delta t$ is the simulation step
-size.
+\begin{revision}
+The $\mathcal O(J^2)$ relation bookkeeping for a seed with $J$ subtasks
+is not the complexity of constructing all R-posets. Simple-path enumeration,
+relaxation tests, and final automaton checks add their own, potentially
+exponential, costs. For a fixed subtask set and $C$ candidate robot groups,
+a crude bound on ordered group assignments is $J!C^J$; in general
+$C\le2^N-1$, rather than $C=N$ as in single-robot assignment.
+A greedy rollout tests up to $JC$ group choices, in addition to its
+navigation and duration evaluations. Simulating $z$ scenarios at time step
+$\Delta t$ has the stated model-evaluation cost
+$\mathcal O(zT(J+N)/\Delta t)$ when each step uses linear work in the
+represented robots and subtasks. Empirical CVaR evaluation adds
+$\mathcal O(z\log z)$ sorting work, and each retained complete schedule
+requires an automaton trace check. These are component costs; they do not
+imply a polynomial total search or general completeness.
+\end{revision}
 Two extensions are immediate. For robot failures, CP-MCTS can be restarted
 after removing failed robots, retaining completed subtasks, and returning
 interrupted subtasks to the pending set. For task priorities, weights

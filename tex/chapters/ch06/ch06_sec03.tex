@@ -215,7 +215,7 @@ g_{\texttt{int}}\big(\mathbf{p}_i(t),\mathbf{p}_j(t)\big)
 \Bigg),
 \end{aligned}
 \end{equation}
-\rev{The first term promotes timed task satisfaction, while the remaining
+\rev{where the first term promotes timed task satisfaction, while the remaining
 terms penalize obstacle proximity and inter-robot collisions.}
 \begin{revision}
 Before optimization, constants and empty reductions are folded into the
@@ -453,9 +453,8 @@ $\ell>1$ is constrained by at least one preceding robot, namely,
 i_\ell\in
 \bigcup_{j\in\mathcal{N}_\ell^-}\mathcal{N}_j^{\overline{\mathcal{E}}},
 \]
-which ensures that, when robot $i_\ell$ is optimized, the local
-problem already reflects the relevant interactions with the previously
-planned trajectories.
+\rev{where the membership condition requires a dependency on at least one
+previously planned robot.}
 Moreover, for time-varying pairwise constraints, let
 $\overline{\mathcal{G}}_s\triangleq
 (\mathcal{N},\overline{\mathcal{E}}_s)$,
@@ -470,8 +469,8 @@ i_\ell\in
 \mathcal{N}_j^{\overline{\mathcal{E}}_s}
 \Big),
 \]
-which guarantees that robot $i_\ell$ remains coupled to the preceding
-set across all graphs $\overline{\mathcal{G}}_s$.
+\rev{where the intersection requires such a dependency in every graph}
+$\overline{\mathcal G}_s$.
 Hence, valid sequences support feasible sequential decompositions,
 whereas arbitrary orderings can easily produce incompatible local
 subproblems.
@@ -574,9 +573,9 @@ used in the optimization of the subsequent robots.
 \label{ch06:subsec:sinkhorn}
 
 The local problem in \eqref{ch06:eq:local-problem} remains nonlinear and
-non-convex. Each single-robot update is therefore recast as an
+non-convex. \rev{Each single-robot update is therefore recast as an
 entropy-regularized optimal transport problem and solved by a Sinkhorn-type
-iteration \citep{cuturi2013sinkhorn,peyre2019computational,le2023accelerating}.
+iteration \citep{cuturi2013sinkhorn,peyre2019computational,le2023accelerating}.}
 The update probes local directions at each waypoint, evaluates their costs in
 parallel, and moves the trajectory toward lower-cost regions. The procedure in
 Algorithm~\ref{ch06:alg:sinkhorn} has four stages.
@@ -838,6 +837,7 @@ cascading failures, and accelerate convergence.
 
 %==========
 \begin{algorithm}[t!]
+\color{blue}
   \caption{\rev{Hybrid search with collaborative optimal transport under bounded-time LTL tasks}}
   \label{ch06:alg:ss-MPOT}
   \SetAlgoLined
@@ -960,7 +960,7 @@ The dominant computational cost of
 Algorithm~\ref{ch06:alg:ss-MPOT} arises from the repeated Sinkhorn updates
 performed during node expansion.
 \begin{revision}
-Using the complexity estimate for the entropy-regularized optimal
+\rev{Using the complexity estimate for the entropy-regularized optimal
 transport step, the cost of one such update is
 $\widetilde{O}\!\left(
 \tfrac{2D}{\epsilon^2}\cdot
@@ -971,7 +971,7 @@ precision of the local transport update, $H$ is the number of parallel
 expansions, $N_p$ is the number of sampled trajectories, $T+1$ is the
 number of samples per trajectory, and $\varepsilon>0$ is the tolerance used in the
 Sinkhorn--Knopp scaling
-\citep{cuturi2013sinkhorn,peyre2019computational,le2023accelerating}.
+\citep{cuturi2013sinkhorn,peyre2019computational,le2023accelerating}.}
 Evaluating the task-related constraints through the expanded formula
 tree contributes a cost of
 $O\big(M|\mathcal{T}^\phi|\big)$ per robot, where $M$ is the number of

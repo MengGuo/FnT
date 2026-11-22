@@ -83,6 +83,8 @@ Symbol & Meaning \\
 $x_t$ & Joint robot state at discrete time $t$ in Chapter~6. \\
 $Y_t$ & Joint target-state vector at time $t$. \\
 $V_t$ & Joint target-velocity vector at time $t$. \\
+\rev{$v_m^\ast$} & \rev{Specified future target-speed bound; distinct from the measured maximum $\widehat v_m(t)$.} \\
+\rev{$\mathbb Q_t$} & \rev{Joint scenario distribution used to evaluate completion-time risk.} \\
 $D_{\texttt{cal}},D_{\texttt{tra}}$ & Calibration and training trajectory datasets for target-motion prediction. \\
 $\boldsymbol{\tau}_{\mathcal{N}}$ & Team task plan in the uncertain open-world setting. \\
 $\tau_n$ & Timed action-target sequence of robot $n$ in the team task plan. \\
@@ -91,7 +93,7 @@ $P_{\varphi}=(\Omega_{\varphi},\preceq_{\varphi},\neq_{\varphi})$ & R-poset asso
 $\Omega_{\varphi}$ & Subtask set induced from the task formula. \\
 $\preceq_{\varphi}$ & Precedence relation in the R-poset. \\
 $\neq_{\varphi}$ & Incompatibility relation in the R-poset. \\
-$\overline{T}_{\varphi}$ & Average makespan metric for the released tasks. \\
+\rev{$\overline T_\varphi$} & \rev{Average absolute completion time over released formula instances.} \\
 $\mathbf{p}_i(t)$ & Position of robot $i$ at time $t$. \\
 $\mathbf{v}_i(t)$ & Velocity of robot $i$ at time $t$. \\
 $\mathbf{q}_i(t)$ & State of robot $i$, typically $(\mathbf{p}_i(t),\mathbf{v}_i(t))$. \\

@@ -95,8 +95,8 @@ task-relevant information held by robot~$i$ by sending the request:
 (j,\, \varphi_j|_{AP_j},\, i),
 \label{ch03:eq:robot-request}
 \end{equation}
-which records the subscriber, the relevant propositions, and the intended
-publisher. Each robot stores received subscriptions and sends each request at
+\rev{where the tuple records the subscriber, relevant propositions, and
+intended publisher.} Each robot stores received subscriptions and sends each request at
 most once. When robot~$i$ obtains
 $((\pi,\, S,\, S_{\neg}),\, E,\, E_{\neg}) \in \textbf{Sense}_i^t$, it checks
 whether $S \cup S_{\neg}$ contains propositions relevant to any reachable
@@ -188,6 +188,7 @@ automaton are carried forward to the next iteration.
 \end{revision}
 
 \begin{algorithm}[tp]
+\color{blue}
 \caption{Cooperative online planning for each robot $i \in \mathcal{N}$}
 \label{ch03:alg:scheme}
 \DontPrintSemicolon

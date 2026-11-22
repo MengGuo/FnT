@@ -107,7 +107,8 @@ The outbound performance criterion is the expected mean cost:
 \frac{1}{T} \sum_{t=0}^{T-1} c_D(x_t,u_t)
 \right],
 \end{equation}
-which is suited to persistent tasks over infinite executions. An average-cost
+\rev{where the time average measures persistent performance over an
+infinite execution.} An average-cost
 criterion is used instead of a stochastic-shortest-path cost, since the latter
 is tailored to terminating tasks
 \citep{puterman2014markov,bertsekas1995neuro,polychronopoulos1996stochastic}.
@@ -158,26 +159,27 @@ sufficient success probability. This interpretation is related to safe
 exploration and recoverability constraints
 \citep{moldovan2012safe,turchetta2016safe}, but is coupled here with a general
 temporal mission.
-Let $\boldsymbol{\mu}_{\texttt{o}}$ denote the outbound policy for the nominal
-task, and let $\boldsymbol{\mu}_{\texttt{r}}$ denote the return policy
-activated after a return request. Let $\mathcal{M}'_{\texttt{o}}$ denote the
-same MDP as in \eqref{ch06:eq:mdp}, but initialized with the state
-distribution induced at the switching instant under
-$\boldsymbol{\mu}_{\texttt{o}}$. The safety level of the pair
-$(\boldsymbol{\mu}_{\texttt{o}}, \boldsymbol{\mu}_{\texttt{r}})$ is then
-defined by:
+\begin{revision}
+Let $\boldsymbol\mu_{\texttt o}$ be the outbound policy and
+$\boldsymbol\mu_{\texttt r}$ the policy started on a return request.
+Write $V_{\texttt r}^{\boldsymbol\mu_{\texttt r}}(x)$ for the probability
+of satisfying $\varphi_{\texttt r}$ when return starts at $x$, with the
+return automaton and controller memory initialized there.
+Let $\operatorname{Reach}(\boldsymbol\mu_{\texttt o})$ contain every MDP
+state reachable with positive probability during outbound execution.
+Recoverability at any request history is measured by
 \begin{equation}
 \label{ch06:eq:sat-return-new}
-\textbf{Safe}_{\mathcal{M}}^{
-\boldsymbol{\mu}_{\texttt{o}},\boldsymbol{\mu}_{\texttt{r}}
-}
-\triangleq
-\textbf{Sat}_{\mathcal{M}'_{\texttt{o}}}^{
-\boldsymbol{\mu}_{\texttt{r}}
-},
+\textbf{Safe}_{\mathcal M}^{\boldsymbol\mu_{\texttt o},
+\boldsymbol\mu_{\texttt r}}
+\triangleq\inf_{x\in\operatorname{Reach}(\boldsymbol\mu_{\texttt o})}
+V_{\texttt r}^{\boldsymbol\mu_{\texttt r}}(x),
 \end{equation}
-so \eqref{ch06:eq:sat-return-new} measures the return success probability from
-the distribution induced by the outbound execution.
+where the infimum is over reachable states, not over a sum of possible
+switching times. A lower bound on this quantity applies to every switching
+history, and hence to any externally requested switching time. It is stronger
+than an average guarantee for one prescribed switching distribution.
+\end{revision}
 
 \begin{definition}
 \label{ch06:def:safety}
@@ -205,6 +207,7 @@ $\varphi$, and the safe-return formula $\varphi_{\texttt{r}}$, synthesize an
 outbound policy $\boldsymbol{\mu}_{\texttt{o}}$ and a return policy
 $\boldsymbol{\mu}_{\texttt{r}}$ such that
 \begin{equation}
+\color{blue}
 \label{ch06:eq:objective}
 \begin{aligned}
 \min_{
@@ -218,7 +221,7 @@ $\boldsymbol{\mu}_{\texttt{r}}$ such that
 \geq \chi_{\texttt{o}}, \; \textbf{Safe}_{\mathcal{M}}^{
 \boldsymbol{\mu}_{\texttt{o}},\boldsymbol{\mu}_{\texttt{r}}
 }
-\geq \chi_{\texttt{r}};
+\geq \chi_{\texttt{r}},
 \end{aligned}
 \end{equation}
 where $\chi_{\texttt{o}}, \chi_{\texttt{r}} \in [0,1]$ are prescribed lower
@@ -298,7 +301,8 @@ q_{\textup{\texttt{o}}}^{0},
 \mathrm{Acc}_{\mathcal{A}_{\textup{\texttt{o}}}}
 \bigr),
 \end{equation}
-be the associated deterministic Rabin automaton. The product automaton between
+\rev{where the tuple is the deterministic Rabin automaton for the
+outbound formula.} The product automaton between
 \(\mathcal{M}\) in \eqref{ch06:eq:mdp} and
 \(\mathcal{A}_{\textup{\texttt{o}}}\) is defined as follows.
 
@@ -368,8 +372,8 @@ S^{\textup{\texttt{o}}}_{\Xi} \triangleq
 }
 S^{\textup{\texttt{o}}}_{c},
 \end{equation}
-which is the set of product states from which the accepting condition can be
-sustained indefinitely,
+\rev{where the union contains product states belonging to accepting end
+components, in which an accepting controller can sustain the Rabin condition.}
 see Definitions~10.116, 10.117, 10.124 of~\citet{baier2008principles}.
 Let \(\mathcal{A}_{\textup{\texttt{r}}}\) be the deterministic Rabin
 automaton associated with the safe-return formula
@@ -405,177 +409,105 @@ state. Theorems~\ref{ch06:theorem:task-bound} and
 \ref{ch06:theorem:safe-bound} convert the two constraints in
 Problem~\ref{ch06:prob:main} into product-automaton quantities.
 
+\begin{revision}
+For an outbound or return product, let $\tau_{\texttt o}$ or
+$\tau_{\texttt r}$ be the first time its AMEC union is reached, with
+$\inf\varnothing=\infty$. On entry, the policy commits to an accepting
+controller within the reached component. The sets and policies below use
+this continuation condition; reaching an AMEC under an arbitrary policy is
+not sufficient for satisfaction.
+
 \begin{theorem}
-% AUTHOR QUESTION AQ9: Probabilistic satisfaction and safe return
-% In Section~6.1, summing the indicator of an absorbing accepting set counts it infinitely often after
-% entry; it does not count one hit. Is a first-hit reward or stopped process intended in the task and
-% return equations? For a fixed arbitrary policy, merely reaching an AMEC does not ensure that the
-% policy follows accepting actions thereafter. The safe-return expression also sums return values over
-% all switching times rather than specifying a switching law or a pointwise lower bound. Which notion
-% is intended? The probability definitions, dependent optimizations, and guarantees remain
-% unchanged; the return formula is classified separately as general LTL.
 \label{ch06:theorem:task-bound}
-For any outbound policy
-\(\boldsymbol{\mu}_{\textup{\texttt{o}}}\) and its corresponding product
-policy \(\boldsymbol{\pi}_{\textup{\texttt{o}}}\), the task-satisfaction
-probability in \eqref{ch06:eq:satisfy} satisfies:
+For an outbound policy with the accepting continuation just specified,
 \begin{equation}
 \label{ch06:eq:theo-sat-bound}
-\textbf{Sat}_{\mathcal{M}}^{
-\boldsymbol{\mu}_{\textup{\texttt{o}}}}
-=
-\mathbb{E}_{\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}}^{
-\boldsymbol{\pi}_{\textup{\texttt{o}}}}
-\left[
-\sum_{t=0}^{\infty}
-b_{s_t,S^{\textup{\texttt{o}}}_{\Xi}}
-\right],
+\textbf{Sat}_{\mathcal M}^{\boldsymbol\mu_{\texttt o}}
+=\Pr_{\mathcal P_{\texttt o}}^{\boldsymbol\pi_{\texttt o}}
+(\tau_{\texttt o}<\infty),
 \end{equation}
-where \(b_{s,S} \triangleq \mathds{1}_{\{s \in S\}}\), and
-\(\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}\) is obtained from
-\(\mathcal{P}_{\textup{\texttt{o}}}\) by making
-\(S^{\textup{\texttt{o}}}_{\Xi}\) absorbing.
+where $\tau_{\texttt o}$ is the first hit of the outbound AMEC union.
 \end{theorem}
-
 \begin{proof}
-For deterministic Rabin acceptance, a run satisfies \(\varphi\) if and only
-if the corresponding run on \(\mathcal{P}_{\textup{\texttt{o}}}\) reaches an
-AMEC and then remains inside an accepting component under an admissible
-policy \citep{baier2008principles,forejt2011quantitative,
-guo2018probabilistic}. Hence, the probability of satisfying \(\varphi\)
-equals the probability of reaching
-\(S^{\textup{\texttt{o}}}_{\Xi}\) at least once. In the modified product
-\(\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}\), the set
-\(S^{\textup{\texttt{o}}}_{\Xi}\) is absorbing, so the indicator
-\(b_{s_t,S^{\textup{\texttt{o}}}_{\Xi}}\) is counted exactly once along each
-accepting trajectory. This yields \eqref{ch06:eq:theo-sat-bound}.
+In a finite product MDP, satisfying trajectories eventually enter an
+accepting end component with probability one. Conversely, after an AMEC is
+reached, its accepting controller satisfies the Rabin condition almost
+surely~\citep{baier2008principles,guo2018probabilistic}.
+The first-hit event is counted once, including a hit at the initial state.
+Absorbing target states may be used for reachability computation, but their
+state indicators are not summed over the infinite continuation.
 \end{proof}
 
 \begin{theorem}
 \label{ch06:theorem:safe-bound}
-For any pair of policies
-\((\boldsymbol{\mu}_{\textup{\texttt{o}}},
-\boldsymbol{\mu}_{\textup{\texttt{r}}})\) and the corresponding product
-policies
-\((\boldsymbol{\pi}_{\textup{\texttt{o}}},
-\boldsymbol{\pi}_{\textup{\texttt{r}}})\), the safe-return quantity in
-\eqref{ch06:eq:safe} can be written as
+Let the return policy attain maximal reachability values from every return
+product state and use an accepting continuation after entry. Then
 \begin{equation}
 \label{ch06:eq:theo-safe-bound}
-\textbf{Safe}_{\mathcal{M}}^{
-\boldsymbol{\mu}_{\textup{\texttt{o}}},
-\boldsymbol{\mu}_{\textup{\texttt{r}}}}
-=
-\mathbb{E}_{\mathcal{P}_{\textup{\texttt{o}}}}^{
-\boldsymbol{\pi}_{\textup{\texttt{o}}}}
-\left[
-\sum_{t=0}^{\infty}
-v^{\star}_{\textup{\texttt{r}}}
-\bigl(s^{\textup{\texttt{r}}}_{t}\bigr)
-\right],
+\textbf{Safe}_{\mathcal M}^{\boldsymbol\mu_{\texttt o},
+\boldsymbol\mu_{\texttt r}^{\star}}
+=\inf_{x\in\operatorname{Reach}(\boldsymbol\mu_{\texttt o})}
+v_{\texttt r}^{\star}(\langle x,q_{\texttt r}^0\rangle),
 \end{equation}
-where
-\(s^{\textup{\texttt{r}}}_{t} \triangleq
-\langle x_t, q^{0}_{\textup{\texttt{r}}}\rangle\) is the product state in
-\(\mathcal{P}_{\textup{\texttt{r}}}\) associated with the MDP state \(x_t\),
-and
+where the return value is
 \begin{equation}
 \label{ch06:eq:vrstar}
-v^{\star}_{\textup{\texttt{r}}}(s) \triangleq
-\mathbb{E}_{\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}}^{
-s,\boldsymbol{\pi}_{\textup{\texttt{r}}}}
-\left[
-\sum_{\ell=0}^{\infty}
-b_{s_{\ell},S^{\textup{\texttt{r}}}_{\Xi}}
-\right],
+v_{\texttt r}^{\star}(s)\triangleq
+\max_{\boldsymbol\pi_{\texttt r}}
+\Pr_s^{\boldsymbol\pi_{\texttt r}}(\tau_{\texttt r}<\infty),
 \end{equation}
-where \(\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}\) is obtained from
-\(\mathcal{P}_{\textup{\texttt{r}}}\) by making
-\(S^{\textup{\texttt{r}}}_{\Xi}\) absorbing.
+where $s$ is the return-product initial state and the maximization is over
+return policies with accepting continuations.
 \end{theorem}
-
 \begin{proof}
-Consider an arbitrary switching stage \(t \geq 0\). Conditional on the
-state \(x_t\) reached under the outbound policy at stage \(t\), the
-subsequent evolution of the system is governed by the return policy.
-For the modified initial state \(x_t\), the probability of
-satisfying \(\varphi_{\texttt{r}}\) under
-\(\boldsymbol{\mu}_{\textup{\texttt{r}}}\) is equal to the probability of
-reaching \(S^{\textup{\texttt{r}}}_{\Xi}\) in the return product. By the
-same argument used in Theorem~\ref{ch06:theorem:task-bound}, this quantity is
-given by \(v^{\star}_{\textup{\texttt{r}}}
-(s^{\textup{\texttt{r}}}_{t})\) in \eqref{ch06:eq:vrstar}. Averaging these
-values over the outbound evolution yields
-\eqref{ch06:eq:theo-safe-bound}.
+Finite-MDP reachability admits a policy attaining these values from all
+states. Its value at $\langle x,q_{\texttt r}^0\rangle$ is the return
+success probability when a request occurs at $x$. Substitution in
+\eqref{ch06:eq:sat-return-new} gives the result. No averaging or summation
+over mutually exclusive request times is involved.
 \end{proof}
-
+\end{revision}
 
 \subsubsection{Sequential baseline method}
 \label{ch06:subsec:complexity}
 
-The reformulation above yields a sequential baseline method. The return
-policy is synthesized first, because its value function enters the outbound
-optimization through \eqref{ch06:eq:theo-safe-bound}. The return problem is
-formulated as:
+\begin{revision}
+The baseline first computes return reachability values and a common
+maximizing return policy:
 \begin{equation}
 \label{ch06:eq:new-problem-safe}
-\max_{
-\boldsymbol{\pi}_{\textup{\texttt{r}}}
-\in \overline{\boldsymbol{\pi}}
-}
-\mathbb{E}_{\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}}^{
-\boldsymbol{\pi}_{\textup{\texttt{r}}}}
-\left[
-\sum_{\ell=0}^{\infty}
-b_{s_{\ell},S^{\textup{\texttt{r}}}_{\Xi}}
-\right],
+\max_{\boldsymbol\pi_{\texttt r}}
+\Pr_s^{\boldsymbol\pi_{\texttt r}}(\tau_{\texttt r}<\infty),
+\qquad s\in S_{\texttt r},
 \end{equation}
-which maximizes the reachability of
-\(S^{\textup{\texttt{r}}}_{\Xi}\) in
-\(\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}\). Once
-\(\boldsymbol{\pi}_{\textup{\texttt{r}}}\) is fixed, the value function
-\(v^{\star}_{\textup{\texttt{r}}}\) in \eqref{ch06:eq:vrstar} is computed on
-\(\widetilde{\mathcal{P}}_{\textup{\texttt{r}}}\).
-The outbound policy is then obtained from the constrained problem below:
+where the values are computed for all return-product states and the policy
+uses an accepting controller after the first hit.
+The outbound policy is obtained from
 \begin{equation}
 \label{ch06:eq:new-problem}
 \begin{aligned}
-\min_{
-\boldsymbol{\pi}_{\textup{\texttt{o}}}
-\in \overline{\boldsymbol{\pi}}
-}
-\quad
-&\textbf{Cost}_{\mathcal{P}_{\textup{\texttt{o}}}}^{
-\boldsymbol{\pi}_{\textup{\texttt{o}}}}, \\
+\min_{\boldsymbol\pi_{\texttt o}}\quad
+&\textbf{Cost}_{\mathcal P_{\texttt o}}^{\boldsymbol\pi_{\texttt o}},\\
 \text{s.t.}\quad
-&\mathbb{E}_{\widetilde{\mathcal{P}}_{\textup{\texttt{o}}}}^{
-\boldsymbol{\pi}_{\textup{\texttt{o}}}}
-\left[
-\sum_{t=0}^{\infty}
-b_{s_t,S^{\textup{\texttt{o}}}_{\Xi}}
-\right]
-\geq \chi_{\texttt{o}}, \quad
-\mathbb{E}_{\mathcal{P}_{\textup{\texttt{o}}}}^{
-\boldsymbol{\pi}_{\textup{\texttt{o}}}}
-\left[
-\sum_{t=0}^{\infty}
-v^{\star}_{\textup{\texttt{r}}}
-\bigl(s^{\textup{\texttt{r}}}_{t}\bigr)
-\right]
-\geq \chi_{\texttt{r}};
+&\Pr^{\boldsymbol\pi_{\texttt o}}(\tau_{\texttt o}<\infty)
+\ge\chi_{\texttt o},\\
+&v_{\texttt r}^{\star}(\langle x,q_{\texttt r}^0\rangle)
+\ge\chi_{\texttt r},\quad
+\forall x\in\operatorname{Reach}(\boldsymbol\mu_{\texttt o}),
 \end{aligned}
 \end{equation}
-where the constraints follow from \eqref{ch06:eq:theo-sat-bound} and
-\eqref{ch06:eq:theo-safe-bound}. Equation~\eqref{ch06:eq:new-problem} is a
-constrained MDP problem
-\citep{altman1999constrained,bertsekas1991analysis}; its prefix and suffix
-policies can be synthesized by an occupancy-measure linear program, as in
-probabilistic temporal-logic planning
-\citep{guo2018probabilistic,ding2014optimal}. The procedure is summarized in
-Algorithm~\ref{ch06:alg:direct}. Although the linear programs are polynomial
-in the product sizes, the products grow rapidly with the MDP and automata
-sizes. Thus, the direct method is used as a baseline for the structured
-synthesis below.
+where the return inequality is a state-wise constraint.
+It can be enforced by retaining the greatest controlled-invariant subset of
+states satisfying that inequality and removing actions with positive
+probability of leaving the subset. If the initial state is excluded, the
+instance is infeasible under this recoverability requirement.
+The outbound product and its AMECs are constructed after this restriction.
+Reachability and mean-cost prefix/suffix synthesis can then use the standard
+finite-MDP linear programs~\citep{altman1999constrained,bertsekas1991analysis,
+guo2018probabilistic,ding2014optimal}. The mean-cost suffix must remain
+accepting; restricting control to an AMEC without its acceptance condition
+is insufficient. The products remain the main source of state-space growth.
+\end{revision}
 
 \begin{algorithm}[t]
 \caption{Sequential baseline method}
@@ -649,8 +581,7 @@ by
 \delta_{\textup{\texttt{r}}}(q,\theta) \neq q
 \right\},
 \end{equation}
-which collects the labels that induce non-self transitions in
-\(\mathcal{A}_{\textup{\texttt{r}}}\).
+\rev{where the effective labels can change a state of the return automaton.}
 Using \(\Theta_{\textup{\texttt{r}}}\), a feature-based abstraction is
 constructed as the labeled semi-MDP
 \begin{equation}
@@ -781,44 +712,44 @@ X'_{\textup{\texttt{o}}} \times X'_{\textup{\texttt{o}}}\), the associated
 macro action is written as
 \((x_f,x_t) \in U'_{\textup{\texttt{o}}}\). As before, a modified MDP
 \(\mathcal{M}_{\textup{\texttt{o}}}(x_f,x_t)\) is constructed from the
-original model. A motion policy
-\(\boldsymbol{\mu}'_{\textup{\texttt{o}}}(x_f,x_t)\) is then synthesized to
-maximize the probability of reaching \(x_t\), while also satisfying the
-safe-return bound. By Theorem~\ref{ch06:theorem:safe-bound}, the latter can be
-imposed through the constraint below:
+original model. \begin{revision}
+The outbound option is synthesized to maximize target-sink reachability
+while preserving return capability at every low-level state it may visit:
 \begin{equation}
 \label{ch06:eq:abstract-task-lp}
-\mathbb{E}_{\mathcal{M}_{\textup{\texttt{o}}}(x_f,x_t)}^{
-\boldsymbol{\mu}'_{\textup{\texttt{o}}}}
-\left[
-\sum_{t=0}^{\infty}
-v'^{\star}_{\textup{\texttt{r}}}(s^{\textup{\texttt{r}}}_t)
-\right]
-\geq
-\chi_{\texttt{r}},
+\inf_{x\in\operatorname{Reach}(
+\boldsymbol\mu'_{\texttt o}(x_f,x_t))}V'_{\texttt r}(x)
+\ge\chi_{\texttt r},
 \end{equation}
-where
-\(s^{\textup{\texttt{r}}}_t \triangleq
-\langle x_t,q^{0}_{\textup{\texttt{r}}}\rangle\)
-is the product state in
-\(\mathcal{P}'_{\textup{\texttt{r}}}\) associated with the MDP state
-encountered at stage \(t\).
+where $V'_{\texttt r}(x)$ is the actual success probability of the lifted
+return policy started at $x$, with an accepting return continuation.
+At an abstract boundary state it agrees with the corresponding product
+value. Intermediate-state values must be computed on the original MDP
+under the lifted return options; endpoint values are not interpolated.
+The return policy must be defined on every retained low-level state.
+As in the baseline, unsafe states and options that can leave the permitted
+controlled-invariant subset are excluded. If no such option exists, the
+macro transition is omitted.
+\end{revision}
 Once the option
 \(\boldsymbol{\mu}'_{\textup{\texttt{o}}}(x_f,x_t)\) is fixed, the induced
 Markov chain yields the abstract transition probabilities
 \(p'_{\textup{\texttt{o}},D}\). The corresponding abstract cost is defined by:
 \begin{equation}
+\color{blue}
 \label{ch06:eq:task-edge-cost}
 c'_{\textup{\texttt{o}},D}(x_f,x_t) \triangleq
 \mathbb{E}_{\mathcal{M}_{\textup{\texttt{o}}}(x_f,x_t)}^{
 \boldsymbol{\mu}'_{\textup{\texttt{o}}}}
 \left[
-\sum_{t=0}^{\infty}
+\sum_{t=0}^{\tau_{\mathrm{opt}}-1}
 c_D(x_t,u_t)
 \right],
 \end{equation}
-that is, the expected cumulative cost of executing the option from \(x_f\)
-until termination at one of the sink states. If the constrained linear program
+\rev{where $\tau_{\mathrm{opt}}$ is the first sink-hitting time.
+Only costs before option termination are counted. Retained options terminate
+almost surely and have finite expected duration; otherwise the macro model
+and its finite expected costs are not asserted.} If the constrained linear program
 is infeasible, then the transition \((x_f,x_t)\) is removed from
 \(U'_{\textup{\texttt{o}}}\).
 This local synthesis prioritizes reachability and safety over exact
@@ -932,7 +863,10 @@ Synthesize
 
 \begin{lemma}
 \label{ch06:lemma:safe}
-The semi-MDP \(\mathcal{M}'_{\textup{\texttt{o}}}\) is safety-ensured.
+\rev{Suppose every retained outbound option satisfies
+\eqref{ch06:eq:abstract-task-lp}, including its initial and terminal states.
+Then the lifted execution of the semi-MDP
+$\mathcal M'_{\texttt o}$ is safety-ensured.}
 More precisely, for every transition
 \((x_f,x_t) \in U'_{\textup{\texttt{o}}}\), the associated motion policy
 \(\boldsymbol{\mu}'_{\textup{\texttt{o}}}(x_f,x_t)\), together with the
@@ -941,20 +875,20 @@ safe-return constraint in \eqref{ch06:eq:safe}.
 \end{lemma}
 
 \begin{proof}
-For each macro transition \((x_f,x_t)\), the motion policy
-\(\boldsymbol{\mu}'_{\textup{\texttt{o}}}(x_f,x_t)\) is synthesized subject
-to \eqref{ch06:eq:abstract-task-lp}. By
-Theorem~\ref{ch06:theorem:safe-bound}, the left-hand side of
-\eqref{ch06:eq:abstract-task-lp} is exactly the safe-return probability
-associated with the option execution and the return policy. Hence, every
-admissible transition in \(\mathcal{M}'_{\textup{\texttt{o}}}\) preserves the
-probability bound \(\chi_{\texttt{r}}\). The entire abstraction is therefore
-safety-ensured.
+\rev{Every state visited during a retained option has return success
+probability at least $\chi_{\texttt r}$ by
+\eqref{ch06:eq:abstract-task-lp}. This includes option boundaries, where
+the next option is chosen. Concatenating retained options therefore preserves
+the pointwise return bound at every request history. Taking the infimum over
+all reachable states yields \eqref{ch06:eq:safe}.}
 \end{proof}
 
 
 \begin{theorem}
 \label{ch06:thm:safety-guarantee}
+\rev{Assume the retained options terminate with finite expected duration,
+the option abstraction preserves all automaton-relevant label changes,
+and the accepting prefix/suffix programs are feasible.}
 The hierarchical policies
 \(\boldsymbol{\pi}'_{\textup{\texttt{r}}}\) and
 \(\boldsymbol{\pi}'_{\textup{\texttt{o}}}\) satisfy the task and safe-return
@@ -974,8 +908,8 @@ For the task requirement, the prefix-suffix synthesis on
 \(\mathcal{P}'_{\textup{\texttt{o}}}\) follows the same automata-based
 construction used by \citet{guo2018probabilistic}. In particular, the prefix
 policy ensures that the union of AMECs \(S'_{\textup{\texttt{o}},\Xi}\) is
-reached with probability at least \(\chi_{\texttt{o}}\), and the suffix policy
-maintains the execution within the accepting component. Therefore, the
+reached with probability at least \(\chi_{\texttt{o}}\), \rev{and the suffix policy satisfies the Rabin acceptance condition within
+the reached component.} Therefore, the
 task-satisfaction bound in \eqref{ch06:eq:objective} is satisfied.
 Finally, \eqref{ch06:eq:abstract-prod-task-lp-objective} minimizes the cost
 defined on the abstract product \(\mathcal{P}'_{\textup{\texttt{o}}}\).

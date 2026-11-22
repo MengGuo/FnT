@@ -16,6 +16,16 @@ R-poset products, receding-horizon replanning, and request-driven updates.
 
 %==============================
 %==============================
+\begin{revision}
+The set-based R-poset operations below use the exclusion-guard fragment of
+Definition~\ref{ch04:def:subtasks}. They generate candidate residual schedules,
+not a certificate for arbitrary Boolean self-loop guards. Before adoption,
+the fixed executed prefix followed by the proposed timed continuation is
+checked on every applicable mission automaton. A failed check rejects the
+candidate; a guard outside the set representation remains in the full
+automaton and is not approximated by an exclusion set.
+\end{revision}
+
 \subsection{Online product of R-posets}
 \label{ch04:subsec:online_poset_product}
 
@@ -44,16 +54,17 @@ $P_1$ and $P_2$ is a set of R-posets defined as:
 \label{ch04:eq:product_of_r_posets}
 \mathcal{P}^{r} \triangleq P_1 \otimes_{w_0} P_2,
 \end{equation}
-such that the following two conditions hold:
+\rev{where the product is required to satisfy both preservation conditions:}
 (I) if $w_0w \in L(P_1)$ and $w \in L(P_2)$, then
 $w_0w \in \bigcup_{P' \in \mathcal{P}^{r}} L(P')$;
 (II) if $w_0w \in L(P')$ for some $P' \in \mathcal{P}^{r}$, then
 $w_0w \in L(P_1)$ and $w \in L(P_2)$.
 \end{definition}
 
-Definition~\ref{ch04:def:product_of_r_posets} preserves exactly the
-continuations compatible with both the current and newly introduced task
-structures. The construction has two stages: subtask composition and partial-
+\rev{Definition~\ref{ch04:def:product_of_r_posets} specifies the intended
+preservation property for candidate continuations. The constructive
+heuristic below is followed by the original-automaton trace check; the set
+operations alone do not certify equality of the accepted languages.} The construction has two stages: subtask composition and partial-
 relation calculation.
 
 (I) \emph{Composition of subtasks}.
@@ -129,6 +140,7 @@ and let $\omega_i^2 \triangleq M_{\Omega}^{-1}(\omega_i)$ whenever
 $\omega_i \in \texttt{ran}(M_{\Omega})$. The newly induced successors of
 $\omega_i$ relative to $P_1$ and $P_2$ are then collected by:
 \begin{equation}
+\color{blue}
 \label{ch04:eq:new_partial_order}
 \begin{aligned}
 S_i^1 &\triangleq
@@ -146,9 +158,11 @@ S_i^2 &\triangleq
 \omega_i^2 \text{ exists},\,
 (\omega_i,M_{\Omega}(\omega_\ell^2))\in\preceq,\,
 (\omega_i^2,\omega_\ell^2)\notin\preceq_2
-\bigr\}.
+\bigr\},
 \end{aligned}
 \end{equation}
+\rev{where $S_i^1$ and $S_i^2$ collect newly induced successors in the
+component R-posets.}
 To preserve the self-loop constraints of these newly induced successors, the
 labels of $\omega_i$ are updated by:
 \begin{equation}
@@ -160,8 +174,7 @@ labels of $\omega_i$ are updated by:
 \sigma_i \leftarrow \sigma_i \cup \hat{\sigma}_i,\
 \sigma_i^s \leftarrow \sigma_i^s \cup \hat{\sigma}_i,
 \end{equation}
-which guarantees that the additional self-loop requirements inherited from
-$P_1$ and $P_2$ are respected before executing $\omega_i$.
+\rev{where the set unions combine the component requirements before executing} $\omega_i$.
 After this update, further precedence constraints may still be necessary. If
 $\sigma_j$ conflicts with the self-loop requirement $\sigma_i^s$ of another
 subtask $\omega_i$, and $(\omega_i,\omega_j)\notin\preceq$, then $\omega_i$
@@ -176,8 +189,10 @@ must precede $\omega_j$. This yields the augmentation below:
 \sigma_j\cap\sigma_i^s\neq\emptyset
 \bigr\},
 \end{equation}
-after which \eqref{ch04:eq:new_partial_order} and
-\eqref{ch04:eq:omega_task_update} are applied again if necessary.
+\rev{where the added pairs record conflicts with self-loop requirements.
+Equations~\eqref{ch04:eq:new_partial_order} and
+\eqref{ch04:eq:omega_task_update} are reapplied if necessary; final acceptance
+still requires the original-automaton trace check.}
 For subtasks that remain unordered in $\preceq$, the opposition
 relation is obtained by mapping the opposition sets of $P_2$ into $\Omega'$:
 \begin{equation}

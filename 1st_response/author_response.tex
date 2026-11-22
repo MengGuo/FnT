@@ -6,7 +6,7 @@
 \usepackage{subfigure}
 \usepackage{amsmath}
 \usepackage[x11names]{xcolor}
-\usepackage[left=3.5cm,right=3.5cm]{geometry}
+\usepackage[left=3.5cm,right=3.5cm,top=2.5cm,bottom=2.5cm]{geometry}
 \usepackage{framed}
 \usepackage{graphicx}
 \usepackage{hyperref}
@@ -75,8 +75,9 @@ co-safe LTL, explains the link between formulas and automata, and describes
 the use of trajectory optimization for bounded-time LTL tasks.
 
 \item \textbf{Coordination algorithms and guarantees.} Algorithm comments explain the main
-steps, a formal problem statement specifies knowledge transfer, examples illustrate
-the collaboration assumptions, and the task-relaxation penalty bound is corrected.
+steps, and the knowledge-transfer problem
+and collaboration assumptions are explicit. First-hit probabilities, risk
+conventions, feasibility checks, and the scope of the guarantees are corrected.
 
 \item \textbf{Organization and examples.} Chapter titles now identify local and
 global task specifications, and a recurring service mission connects Chapters~2--6.
@@ -438,7 +439,7 @@ Section~6.4.2 (p.~137) gives the time grid for both case studies.
 \change{``The 48 samples are indexed from $0$ through $T=47$, so the final sample is
 at $4.7\,\mathrm{s}$.''}
 
-\item \textbf{Method and scope.} The Chapter~6 introduction (p.~110) states,
+\item \textbf{Method and scope.} The Chapter~6 introduction (p.~109) states,
 \change{``The first two sections address uncertainty in transition outcomes and
 target forecasts, respectively. The third section addresses the timing
 and geometry of collective motion under a given task and nominal model.''}
@@ -458,11 +459,11 @@ represented by the mean trajectory of its Gaussian-process prior
 conditioned on its endpoints. These means are fixed across the probes.
 The resulting full team signal, denoted by $\mathbf{Z}^{\mathrm{p}}_\ell(T)$,
 is used to evaluate surrogate task robustness during the search.''}
-Section~6.3.4 (p.~132) and Algorithm~6.7 (p.~133) place exact verification
-before the final ranking. The text states,
+Section~6.3.4 (pp.~132--133) and Algorithm~6.7 (p.~134) place exact verification
+before the final ranking. The text on p.~133 states,
 \change{``The final ranking includes only nodes with a trajectory for every robot
 that pass the verification in Section~6.3.5.''}
-Section~6.3.5 (p.~134) states the scope of verification.
+Section~6.3.5 (p.~133) states the scope of verification.
 \change{``The verification certifies Boolean satisfaction on the sampled trajectory
 over the specified finite horizon. Continuous-time safety between samples and
 robustness to tracking error require additional interpolation and error bounds, or
@@ -507,24 +508,25 @@ We have made the following changes in the revision:
 \begin{itemize}
 \item \textbf{Running example and task assignment.} Section~1.3.7 (pp.~13--14)
 introduces the shared setting, which the case-study openings in Sections~2.4, 3.3,
-4.4, 5.4, and~6.4 (pp.~25, 51, 76, 104, and~134) revisit. Section~3.3 (p.~51) states,
+4.4, 5.4, and~6.4 (pp.~25, 51, 77, 104, and~133) revisit. Section~3.3 (p.~51) states,
 \change{``In the local-task variant of Section~1.3.7, robot~1 is assigned inspection
 at $A$ followed by delivery at $D$, and robot~2 is assigned service at $E$.''}
 The example distinguishes a blockage on a future edge from one on the active edge.
 \change{``If a blockage invalidates the active edge, Algorithm~3.2 cancels the
 command and reports an execution interruption.''}
-Section~4.4 (p.~76) gives a team assignment example with the inspection required
+Section~4.4 (p.~77) gives a team assignment example with the inspection required
 to finish before delivery begins.
 \change{``If both robots can inspect, only robot~1 can deliver, and robot~2 can
 serve $E$, the planner may assign $A$ and $E$ to robot~2 and $D$ to
 robot~1 when the routes and service order permit.''}
 
-\item \textbf{Stochastic traversal and comparison scope.} Section~6.4 (p.~134) states,
+\item \textbf{Stochastic traversal and comparison scope.} Section~6.4 (pp.~134--135)
+states,
 \change{``In the uncertain-motion variant of Section~1.3.7, a traversal command can
 reach the next region or leave the robot at the corridor entrance. The MDP assigns
 probabilities to the two outcomes. The outbound policy uses the observed region and
 the task progress recorded by the automaton.''}
-The timed variant in Section~6.4 (p.~134) sets the deadline for reaching $D$.
+The timed variant in Section~6.4 (pp.~134--135) sets the deadline for reaching $D$.
 Section~1.3.7 (p.~14) states the comparison scope.
 \change{``These small variants illustrate how the inputs, planning decisions, and
 outputs change across chapters. A quantitative comparison requires matching
@@ -589,9 +591,10 @@ We have made the following changes in the revision:
 \item \textbf{Mixed-integer alternatives.} Section~1.2.2 (p.~4) states,
 \change{``Wolff (2014) develops both automaton-guided constrained reachability
 and mixed-integer linear encodings of LTL constraints on trajectories.''}
-Section~6.3.1 (pp.~127--128) cites Wolff again where it discusses mixed-integer
+Section~6.3.1 (pp.~128--128) cites Wolff again where it discusses mixed-integer
 constraints on trajectory variables and states how the two stages use robustness.
 The bibliography entry for [R1] appears on p.~159.
+The paragraph on p.~128 states:
 \change{``The transport updates use a robustness surrogate to generate candidate
 trajectories. In final verification, the finite automaton checks whether a complete
 candidate has strictly positive exact task robustness.''}
@@ -600,7 +603,7 @@ candidate has strictly positive exact task robustness.''}
 states,
 \change{``Maity and Baras (2015) augment the spatial abstraction with time so
 that standard LTL planning can express bounded-time requirements.''}
-Section~6.3.2 (p.~128) gives the robustness automaton and its acceptance rule.
+Section~6.3.2 (pp.~128--129) gives the robustness automaton and its acceptance rule.
 \change{``Thresholding a minimum gives a conjunction, and thresholding a maximum
 gives a disjunction. Applying these identities to the expanded tree shows
 that the automaton accepts exactly when $\rho^\phi(\mathbf{s},0)\geq\lambda$.''}
@@ -610,7 +613,7 @@ the optimization convention.
 one that reduces to false has robustness $-\infty$. In the optimization, the task
 robustness term is set to zero for a true root, and a false root causes the search to
 return failure, as specified after (6.45).''}
-Algorithm~6.7 (p.~133) and Section~6.3.5 (p.~134) use this automaton in final
+Algorithm~6.7 (p.~134) and Section~6.3.5 (p.~133) use this automaton in final
 verification.
 The bibliography entry for [R2] appears on p.~155.
 \end{itemize}
@@ -623,7 +626,8 @@ from clarification.}
 \noindent\emph{1. In Definition 2.2, must the set $\pi_i$ be
 connected? More generally, what topological assumptions are required?}
 \end{shaded*}
-\noindent\textbf{A:} Definition~2.2 allows $\pi_i$ to be disconnected. Each region
+\noindent\textbf{A:} Thank you for this question. Definition~2.2 allows $\pi_i$ to be
+disconnected. Each region
 must be measurable, have well-defined membership, and carry a uniform label.
 An edge from $\pi_i$ to $\pi_j$ requires a controller that respects its input limits
 and takes every admissible state in $X_{\pi_i}$ to $X_{\pi_j}$ in finite time while
@@ -663,7 +667,8 @@ after confirming completion in $X_{\pi_{\mathcal{M}}}$.}
 \noindent\textbf{Q:} \emph{2. How is the Eval function defined in Section
 3.1.1, approximately three lines above equation (3.2)?}
 \end{shaded*}
-\noindent\textbf{A:} For a label $l\subseteq AP$, $\texttt{Eval}(l)$ is its binary
+\noindent\textbf{A:} Thank you for requesting this clarification. For a label $l\subseteq
+AP$, $\texttt{Eval}(l)$ is its binary
 membership vector in the fixed order $(a_1,\cdots,a_K)$. Its $k$th entry equals $1$
 when $a_k\in l$ and equals $0$ otherwise. The $\ell_1$ distance between two such
 vectors counts the propositions on which their labels differ.
@@ -690,7 +695,8 @@ on the path can retain their bits in $\texttt{Eval}(l)$.}
 equation (3.3)? Other ways of combining task feasibility and environment transitions seem
 possible. A brief explanation of this choice would be helpful.}
 \end{shaded*}
-\noindent\textbf{A:} The linear combination prices specification mismatches
+\noindent\textbf{A:} Thank you for raising this point. The linear combination prices
+specification mismatches
 in the same units as motion cost. The environment transition relation
 determines which edges the robot can execute. Among runs made up of those edges,
 one unit less of accumulated mismatch justifies up to $\alpha$ units of extra
@@ -735,7 +741,8 @@ valuable. In addition, quantities used in a theorem statement should preferably 
 before or within the statement, rather than introduced only in the proof, as is the case
 for $\underline{\alpha}$.}
 \end{shaded*}
-\noindent\textbf{A:} You can compute a sufficient threshold from any satisfying
+\noindent\textbf{A:} Thank you for this question. You can compute a sufficient threshold
+from any satisfying
 run. In the standard product $\mathcal{A}_p$, find an accepting state reachable
 from an initial state and a nonempty cycle through it. Evaluate the cost
 $C_{\textup{feas}}$ of this prefix-suffix run with the same $\gamma$ used in the
@@ -822,7 +829,8 @@ and $(90,1)$, respectively.}
 is satisfied in practice and when it is likely to be violated. Examples of both situations
 would help readers assess its applicability.}
 \end{shaded*}
-\noindent\textbf{A:} A request meets Assumption~3.1 when feasible replies
+\noindent\textbf{A:} Thank you for asking about feasibility. A request meets
+Assumption~3.1 when feasible replies
 cover all required roles with distinct helpers by $t_m+T$, where $t_m$ is the
 request time and $T$ is a common bound. For example, a robot at a service station
 may need one helper to hold a fixture and another to inspect it. If the reserved
@@ -863,7 +871,8 @@ and the selected helpers must remain available through confirmation.}
 \change{Request, reply, and confirmation timestamps use the same planning clock.
 The incoming action edge includes its duration, as in (3.11).}
 Equation~(3.21) (p.~49) adds the constraint
-\change{$c_d^j\le b_d^j$, for every neighbor $j$ and requested role $d$.}
+\change{$c_d^j\le b_d^j,\quad\forall j\in\{1,\cdots,N_1\},\;\forall
+d\in\{1,\cdots,N_2\}$.}
 Algorithm~3.4 (p.~48) and the text on pp.~46--47 specify reservation and release.
 \change{A positive reply reserves it for that request until a stated finite
 confirmation deadline. Rejection or expiry clears an unconfirmed reservation.
@@ -1111,7 +1120,7 @@ The same paragraph states:
 \change{The finite mission search uses the
 good-prefix construction of Section~2.2.1, with absorbing
 accepting states $Q_F^m$.}
-Section~6.2.3 (p.~121) specifies the acceptance condition before extracting
+Section~6.2.3 (p.~120) specifies the acceptance condition before extracting
 subtasks from a finite prefix:
 \change{Accepting states are absorbing, and finite acceptance recognizes
 exactly the good prefixes of $\varphi$.}
@@ -1308,14 +1317,14 @@ The finite search on p.~46 states:
 the minimum-cost accepting prefix.}
 \change{An initially accepting product state yields a zero-transition plan of zero cost.}
 
-Section~6.1.3 (p.~116) clarifies the safe-return specification:
+Section~6.1.3 (p.~115) clarifies the safe-return specification:
 \change{The complete safe-return specification in (6.4) is
 general LTL: the eventual-permanence requirement is not, in general, certified
 by a finite good prefix. The transient requirement remains sc-LTL. The set
 \(S'_{\textup{\texttt{r}},\Xi}\) is the union of return-product AMECs;
 reaching it must be followed by an accepting policy within the reached
 component to satisfy the full return specification.}
-Section~6.2.1 (p.~119) identifies the persistent rule
+Section~6.2.1 (p.~118) identifies the persistent rule
 $\varphi_{\texttt{rule}}$ in Eq.~(6.28) as general LTL and states:
 \change{The static task and each response task are sc-LTL formulas over $AP$, as
 defined in Section~2.2.1.}
@@ -1330,15 +1339,16 @@ $\varphi$ denotes this current formula.}
 \change{An empty pending set yields an empty assignment while
 monitoring continues. Overall termination requires that task releases end
 and all pending instances are completed.}
-Section~6.2.3 (p.~121) specifies the input to the R-poset construction:
+Section~6.2.3 (p.~120) specifies the input to the R-poset construction:
 \change{Here $\varphi$ denotes the current finite obligation formula $\varphi(t)$.}
 
 Algorithm~6.5 (p.~124) progresses initial observations once, advances time
 before each subsequent observation, and bypasses assignment search when no
 obligation is pending. It includes:
 \change{Progress earlier obligations and new releases using the observed propositions.}
-\change{Set $\Pi^\star=\emptyset$ and $\eta^\star=0$; continue monitoring.}
-The explanation after Eq.~(6.40), Section~6.2.5 (p.~124), states:
+\change{Set $\Pi^\star=\emptyset$ and $\eta^\star=\overline T_\varphi$; continue
+monitoring.}
+The explanation after Eq.~(6.40), Section~6.2.5 (p.~123), states:
 \change{where $\varphi(t^-)$ is the progressed residual of earlier obligations.
 The formula $\varphi_{\texttt r}(t)$ is the residual of
 $\bigwedge_{\bar e\in\bar E_t}\Diamond\varphi_{\texttt{rep}}^{\bar e}$
@@ -1372,9 +1382,9 @@ We have made the following changes in the revision:
 \begin{itemize}
 \item The chapter titles on pp.~38 and~56 identify the task formulations:
 
-Chapter~3. \change{Coordination under Local Temporal Logic Tasks}
+Chapter~3 (p.~38). \change{Coordination under Local Temporal Logic Tasks}
 
-Chapter~4. \change{Synthesis and Coordination under Global Temporal Logic Tasks}
+Chapter~4 (p.~56). \change{Synthesis and Coordination under Global Temporal Logic Tasks}
 
 \item The opening of Chapter~3 (p.~38) states:
 \change{This chapter starts from temporal tasks supplied to individual robots.
@@ -1393,14 +1403,14 @@ the team-level specification.}
 
 The abstract (p.~i), literature summary in Section~1.2.4 (p.~8), method
 openings in Sections~3.2.3, 4.1, and~4.1.1 (pp.~45 and~56), case-study
-introduction in Section~4.4 (p.~76), chapter summaries in Sections~3.4 and~4.5
-(pp.~55 and~82), and Chapter~7 opening (p.~140) use the same local-task
-and global-task distinction. The abstract states:
+introduction in Section~4.4 (p.~77), chapter summaries in Sections~3.4 and~4.5
+(pp.~55 and~83), and Chapter~7 opening (p.~140) use the same local-task
+and global-task distinction. The abstract (p.~i) states:
 \change{It then considers two task formulations: coordination with prescribed
 local temporal tasks and synthesis from a global team specification.}
 
-Section~5.1.1 (p.~84) distinguishes task discovery from the online mission
-updates in Section~4.3 (p.~72):
+Section~5.1.1 (p.~85) distinguishes task discovery from the online mission
+updates in Section~4.3 (p.~73). The paragraph on p.~85 states:
 \change{Section~4.3 incorporates newly supplied mission formulas during execution. Here,
 collaborative tasks become known only after detection by the fleet and must
 then be shared through communication.}
@@ -1425,8 +1435,12 @@ explicit.
 
 The proposition set and automaton alphabet also have different roles:
 $AP$ contains propositions, whereas $\Sigma=2^{AP}$ contains input letters.
-A transition label is therefore an element of $\Sigma$, and the self-loop
-exclusion set is a subset of $AP$.
+A transition label is therefore an element of $\Sigma$, while a self-loop
+exclusion set is a subset of $AP$ when that set representation is valid.
+A general Boolean guard can also require positive propositions. Such guards
+remain in the full automaton and are not approximated by exclusion sets.
+The later set-based construction is restricted accordingly, and complete
+candidate schedules must pass an original-automaton trace check.
 
 We have made the following changes in the revision:
 \begin{itemize}
@@ -1445,32 +1459,36 @@ Finite completion uses the good-prefix convention of that section.}
 \change{Write $\Sigma\triangleq2^{AP}$ for its input alphabet; each input
 letter $\sigma\in\Sigma$ is a subset of $AP$.}
 Definition~4.2 (p.~58) uses input letters from that alphabet:
-\change{A transition from $q_{i}$ to $q_{j}$ in $\mathcal{B}_{\varphi}$ is called
-\emph{decomposable} if there exist a state $q_{k}$ and input letters
-$\sigma_{ik}, \sigma_{kj} \in \Sigma$ such that the following holds:
+\change{A transition from $q_i$ to $q_j$ is called \emph{decomposable} if
+there is a state $q_k\notin\{q_i,q_j\}$ and nonempty, disjoint letters
+$\sigma_{ik},\sigma_{kj}\in\Sigma$ satisfying
 \[
-q_{k} \in \delta(q_{i}, \sigma_{ik}), \quad
-q_{j} \in \delta(q_{k}, \sigma_{kj}), \quad
-q_{j} \in \delta(q_{i}, \sigma_{ik} \cup \sigma_{kj}),
+q_k\in\delta(q_i,\sigma_{ik}),\quad
+q_j\in\delta(q_k,\sigma_{kj}),\quad
+q_j\in\delta(q_i,\sigma_{ik}\cup\sigma_{kj}),
 \]
-where the direct transition and the two-step path connect the same pair of
-states.}
+where the first two transitions form a path that does not use the direct
+transition being considered for removal.}
 Definition~4.3 (p.~59) distinguishes transition labels from excluded propositions:
 \change{For each
 $\ell \in \{1,\cdots,L\}$, the label $\sigma_{\ell}\in\Sigma$
 satisfies $q_{\ell}\in\delta(q_{\ell-1},\sigma_{\ell})$ and
 $q_{\ell}\notin\delta(q_{\ell-1},\sigma_{\ell}\setminus\{z\})$ for every
 $z\in\sigma_{\ell}$.}
-\change{The set $\sigma_{\ell}^{s}\subseteq AP$ is the
-self-loop requirement at $q_{\ell-1}$ and satisfies the following
-conditions for every $\sigma\in\Sigma$: if
-$\sigma\cap\sigma_{\ell}^{s}\neq\emptyset$, then
-$q_{\ell-1}\notin\delta(q_{\ell-1},\sigma)$; if
-$\sigma\cap\sigma_{\ell}^{s}=\emptyset$, then
-$q_{\ell-1}\in\delta(q_{\ell-1},\sigma)$.}
+\change{The exclusion-set representation is used only when the relevant
+self-loop guard can be written as
+$\bigwedge_{a\in\sigma_\ell^s}\neg a$.
+For such a guard, $\sigma_\ell^s\subseteq AP$ satisfies
+$q_{\ell-1}\in\delta(q_{\ell-1},\sigma)$ exactly when
+$\sigma\cap\sigma_\ell^s=\emptyset$.
+A guard with positive requirements, such as $a\wedge\neg b$, cannot in
+general be represented by an exclusion set. Its full Boolean guard remains
+in the automaton; that seed is not expanded by the set-based procedure.}
 The accompanying pruning discussion, example, and inverse-transition explanation
 (pp.~58--60) consistently use ``labels'' or ``input letters'' for elements
-of $\Sigma$.
+of $\Sigma$. The pruning lemma now states graph-reachability preservation
+under sequential retained-path checks, without equating the original and
+replacement word languages.
 \end{itemize}
 
 We sincerely thank you again for your time, effort, and careful reading
@@ -1478,174 +1496,68 @@ of our paper. Your comments helped us clarify how the definitions, problem
 formulations, and chapter organization fit together. We appreciate your
 constructive guidance throughout the review.
 
-\newpage\section*{Bibliographic verification --- supplemental author note}
-This additional verification follows the authors' request to audit the
-references. It is not an additional reviewer comment.
 
-All 528 original bibliography records were checked, including 233 originally
-cited records. The revised paper cites 230 verified records. Seven
-unverified cited records have been replaced with sources suited to the
-surrounding claims; four new journal papers are introduced and the other
-replacements reuse verified existing works. The new works appear in
-\emph{Science Robotics}, \emph{The International Journal of Robotics
-Research}, and \emph{Proceedings of the IEEE}. Authentic books, original
-conference papers, and software references remain where appropriate.
+\newpage
+\section*{Additional technical corrections}
+The final consistency review also identified the technical points below.
+These corrections clarify the mathematical statements and the checks required
+of the algorithms. The reported numerical results are retained; no new
+experimental validation is claimed.
 
-The active database contains 450 verified records. A separate review
-bibliography preserves all 82 held original records unchanged: seven now
-replaced cited records, 74 unresolved unused records, and one confirmed
-retracted unused paper. The 74 unresolved records are not declared
-fabricated. Each has an explicit author question in
-\texttt{REFERENCE\_AUTHOR\_QUESTIONS.md}. The complete evidence and
-field-level corrections are supplied in \texttt{REFERENCE\_AUDIT.md} and
-\texttt{REFERENCE\_AUDIT.json}.
+We have made the following changes in the revision:
+\begin{itemize}
+\item \textbf{Planning and execution checks.}
+Section~4.1.2 (p.~60) distinguishes tested candidates from verified schedules:
+\change{Each complete schedule is checked on $\mathcal{B}_\varphi$ before it can
+be returned.}
+Section~4.2.2 (p.~66) distinguishes a task from its alphabet letter:
+\change{Here $\omega$ is an individual task, $\{\omega\}$ is its valuation, and
+$\Xi_\omega$ denotes its required subtask collection.}
+The same section (p.~67) limits dominance pruning:
+\change{If this continuation relation has not been established, both nodes are
+retained and the profile is used only to order their exploration.}
+Complete leaves also require a feasible disjoint team formation and feasible
+local execution plans.
+The switch test in Section~4.2.4 (p.~72) now checks both affected costs:
+\change{The first inequality prevents an increase in the global maximum, and the
+second strictly decreases the sum, while unaffected costs remain fixed.}
+Algorithm~5.2 (p.~90) initializes all robot positions and includes every
+navigation arrival time. Its explanation on p.~89 states:
+\change{The full graph and all arrival bounds are checked before an improvement
+is accepted.}
+Section~5.2.2 (p.~95) specifies the return fallback:
+\change{If even the empty uncommitted tails fail, the existing
+certified continuation is retained. Without such a continuation the routine
+reports infeasibility; appending a late return cannot repair the violation.}
+The corresponding guarantees now state their feasibility assumptions and
+avoid claiming global optimality or general search completeness.
 
-Notable corrections include the STRIPS publication year, the journal
-locator for \emph{Action Languages}, the actual IEEE publication of the
-construction-robotics paper, Swamy et al.'s actual \emph{Scaled Autonomy}
-paper, publication types, missing authors, final pagination, and registered
-DOIs. The MoRoCo citation is pinned to arXiv version~1, matching the title
-and authors used in the supplied chapter. Changed bibliography entries,
-citations with changed author/year, replacement citations, and revised
-prose are blue.
+\item \textbf{Probabilities, risk, and completion updates.}
+The proof of Theorem~6.1 (p.~113) states:
+\change{The first-hit event is counted once, including a hit at the initial state.}
+Section~6.1.1 (p.~111), Eq.~(6.6), defines recoverability by the infimum of
+return success probabilities over reachable request states; the baseline and
+option constraints use the same state-wise requirement.
+Section~6.2.4 (p.~122) defines upper-tail CVaR through its optimization form:
+\change{This definition handles probability mass at the quantile; it is not in
+general the conditional mean given $Z\ge\mathrm{VaR}_\alpha$
+(Rockafellar and Uryasev, 2002).}
+The same section states the sampling requirement:
+\change{Conformal regions alone do not define a distribution for these scenarios.}
+Lemma~6.2 (p.~123) uses a union bound rather than an independence assumption:
+\change{The union bound gives
+$\Pr(\bigcap_{m=1}^M E_m)\ge\max\{0,1-M\delta\}$ without independence.}
+It also requires a valid future target-speed bound, positive feasible closing
+speed, and valid task durations.
+Section~6.2.5 (pp.~123--125), Eq.~(6.41), reevaluates the residual plan after completion:
+\change{The subtask record $\Omega_\iota$ is used only for execution bookkeeping.
+No formula count is divided by a subtask count, and the average absolute
+completion-time objective is not decremented once per clock tick.}
+\end{itemize}
 
-The Retraction Watch screening covered a dated dataset of 73,477 records.
-The unused whale-optimization paper is confirmed retracted and excluded
-from scientific support. A title-only hit for ``Dynamic Programming'' was
-an unrelated Alan Sultan chapter, not Bellman's Science paper. No revised
-cited work matched a confirmed retraction in this screening. This result
-does not certify unindexed or future notices.
-
-The source-package audit accounts for every original project file and
-bibliography record. All original figure assets and labels are retained.
-The final compilation and integrity results are in
-\texttt{VALIDATION.md} and \texttt{SOURCE\_INTEGRITY.md}.
-
-\newpage\section*{Author questions --- remove before submission}
-\noindent These notes are for the authors. They identify decisions and technical passages
-deliberately left unchanged. They are not claims that the corresponding issues have been
-resolved.
-\par\medskip
-\noindent\textbf{AQ2 --- Quantitative recurring benchmark}\par
-\todo{Which methods could be compared on a common input from the nine-region
-service example? Such a benchmark would need a shared robot model, a common
-set of tasks and performance measures, and the corresponding code and logs.}
-\par\medskip
-\noindent\textbf{AQ3 --- Controller contract and state representation}\par
-\todo{Which admissible state sets, including heading and velocity limits, are
-supported by the navigation primitives in each implementation? Confirm that each
-primitive reaches its target's admissible set in finite time and stays within the
-allowed regions. The formal contract is stated in Definition~2.2.}
-\par\medskip
-\noindent\textbf{AQ5 --- Implementation of collaboration progress conditions}\par
-\todo{Confirm that the implementation uses the absolute completion timestamps,
-reservation and release rules, acknowledgement checks, and delayed product search
-specified in Section~3.2.3. Check the execution logs for the finite-revision
-condition in Theorem~3.3. The manuscript states these execution conditions
-explicitly; their implementation and the original simulation logs still need
-verification.}
-\par\medskip
-\noindent\textbf{AQ6 --- R-poset pruning and fleet-search guarantees}\par
-\todo{What restrictions on formulas and automata justify sequentializing a
-simultaneous transition, guarantee termination of repeated decompositions,
-and ensure that the relaxed relations accept only valid words? Individual
-swap tests alone need not establish arbitrary combinations of relaxations.
-What state-equivalence condition permits dominance pruning by the scalar
-distance/capacity profile in Section~4.2, and what bounds search depth in
-automata containing cycles? The pruning, R-poset, and fleet-search
-theorems are left unchanged until their source assumptions are fixed.
-Confirm that the automata used in the original finite-plan experiments recognize
-good prefixes through absorbing accepting states, as now required explicitly
-in the text.}
-\par\medskip
-\noindent\textbf{AQ7 --- Communication-event refinement pseudocode}\par
-\todo{In \texttt{ComOpt}, the two time variables are initialized equal, so the
-displayed while condition is false at entry. The initial common time also
-does not account for every robot's travel to the common location. What
-initial feasible schedule and convergence variable does the implementation
-use? Moving a graph articulation vertex while retaining one anchor link
-does not alone preserve connectivity: is a spanning-tree or full-connectivity
-test intended? The algorithm and connectivity lemma are left unchanged.}
-\par\medskip
-\noindent\textbf{AQ8 --- Latency invariant and infinite-horizon objective}\par
-\todo{In Section~5.2, when the earliest possible return already exceeds the
-latency deadline, how can appending that return restore the claimed bound?
-Specify the prior feasibility invariant, return-reservation rule, and the
-meaning of each time stamp. Separately, stationarity and ergodicity alone
-do not make independent per-cycle rate maximization globally optimal when
-the decisions change future states and cycle lengths. Which renewal or
-separability assumptions support the final claim in Section~5.1, or should
-it be weakened to a local approximation? These passages remain unchanged.}
-\par\medskip
-\noindent\textbf{AQ9 --- Probabilistic satisfaction and safe return}\par
-\todo{In Section~6.1, summing the indicator of an absorbing accepting set
-counts it infinitely often after entry; it does not count one hit. Is a
-first-hit reward or stopped process intended in the task and return
-equations? For a fixed arbitrary policy, merely reaching an AMEC does not
-ensure that the policy follows accepting actions thereafter. The safe-return
-expression also sums return values over all switching times rather than
-specifying a switching law or a pointwise lower bound. Which notion is
-intended? The probability definitions, dependent optimizations, and guarantees
-remain unchanged; the return formula is classified separately as general LTL.}
-\par\medskip
-\noindent\textbf{AQ10 --- Risk conventions}\par
-\todo{The displayed VaR definition in Section~6.2 uses an infimum of thresholds
-satisfying an upper-tail probability lower bound, which is unbounded below.
-Is $\alpha$ a tail probability or a confidence level, and should the standard
-quantile or optimization definition of CVaR be used? These risk conventions
-remain unchanged.}
-\par\medskip
-\noindent\textbf{AQ11 --- Prediction coverage and target-speed assumptions}\par
-\todo{What independence or dependence assumptions justify multiplying the
-per-subtask coverage probabilities in Lemma~6.3? Without independence,
-a union-bound treatment is needed, with special care when several subtasks
-share a target or time. The largest observed target speed is not a bound
-on future speed without an additional model assumption. Finally, prediction
-regions alone do not specify a sampling distribution for CVaR evaluation.
-Which sampling law and speed bound are used? The coverage, delay, and
-risk claims remain unchanged pending these choices.}
-\par\medskip
-\noindent\textbf{AQ12 --- Partial-team robustness in the simulations}\par
-\todo{Confirm whether the simulations used endpoint-conditioned prior means
-for unplanned robots when computing the local task cost. Confirm how any
-additional connectivity margin was set in the implementation.}
-\par\medskip
-\noindent\textbf{AQ13 --- Experimental provenance and remaining proof assumptions}\par
-\todo{Can the authors supply the underlying logs or scripts for the reproduced
-and hardware statistics before claiming any new numerical verification?
-Also confirm the additional assumptions needed for monotone coalition-cost
-decrease in Section~4.2 when targets move, and the constraints used to
-certify all collision and signal requirements in Section~6.3. The supplied
-archive contains source, figures, and a compiled paper, but no experiment
-code or raw logs; the reported results have therefore been preserved.}
-
-\newpage\par\medskip
-\noindent\textbf{BIBQ1 --- Unresolved unused reference records}\par
-\todo{For each of the 74 records in
-\texttt{REFERENCE\_AUTHOR\_QUESTIONS.md}, provide the exact DOI,
-publisher or proceedings record, original document, or official repository.
-The original record text is preserved unchanged outside the active
-bibliography. Which work and version was intended?}
-
-\par\medskip
-\noindent\textbf{BIBQ2 --- Replaced citation records}\par
-\todo{Confirm the seven verified replacements in the reference audit table.
-If an original record was intended to identify another actual paper,
-provide its authoritative record before restoring that citation.}
-
-\par\medskip
-\noindent\textbf{BIBQ3 --- Retracted unused paper}\par
-\todo{The unused entry \texttt{abdel2018hybrid} is confirmed retracted.
-It is preserved for provenance and excluded from scientific support.
-Confirm that it should remain excluded from future versions.}
-
-\par\medskip
-\noindent\textbf{BIBQ4 --- Consulted editions and MoRoCo version}\par
-\todo{Confirm the consulted editions for Latombe, Godsil and Royle,
-and Sontag, whose original publication dates replace later distribution
-years. Confirm that Chapter~5 is intended to follow MoRoCo arXiv version~1,
-as its title and authors indicate, or specify the technical changes needed
-before switching to version~2. No chapter has been silently changed to
-follow a different version.}
+\noindent Rockafellar, R. T. and Uryasev, S. (2002).
+Conditional value-at-risk for general loss distributions.
+\emph{Journal of Banking \& Finance}, 26(7), 1443--1471.
+\url{https://doi.org/10.1016/S0378-4266(02)00271-6}.
 
 \end{document}

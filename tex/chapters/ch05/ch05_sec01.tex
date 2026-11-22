@@ -144,7 +144,7 @@ PL\bigl(d_{ij}(t)\bigr) \triangleq
 PL(d_0) + 10 n \log_{10}\!\left(\frac{d_{ij}(t)}{d_0}\right),
 \label{ch05:eq:path-loss}
 \end{equation}
-according to which these communication constraints induce a time-varying graph
+\rev{where the path-loss threshold induces a time-varying graph}
 $G(t) \triangleq (\mathcal{N}, \mathcal{E}(t))$, where
 $\mathcal{E}(t) \triangleq
 \{e_{ij} \mid Q_{ij}(t) > \delta\}$.
@@ -180,8 +180,9 @@ $N_T(J) \triangleq
 \right|$
 be the number of tasks completed by time $T$ under $J$. The associated long-run
 average completion rate is
-\begin{equation}\label{ch05:eq:objective}
-  \eta(J) \triangleq \lim_{T \to \infty} \frac{N_T(J)}{T}
+\begin{equation}
+\color{blue}\label{ch05:eq:objective}
+  \eta(J) \triangleq \lim_{T \to \infty} \frac{N_T(J)}{T},
 \end{equation}
 where the objective is to maximize $\eta(J)$ subject to the temporal constraints in
 \eqref{ch05:eq:task-constraints} and the communication-connectivity condition
@@ -519,72 +520,46 @@ task-completion rate of the collective plan.
 \subsubsection{Optimization by iterative refinement}
 \label{ch05:subsubsec:comm-event-algorithm}
 
-\begin{algorithm}[!t]
-    \caption{Collaborative optimization of communication events $\texttt{ComOpt}(\cdot)$}
-    % AUTHOR QUESTION AQ7: Communication-event refinement pseudocode
-% In \texttt{ComOpt}, the two time variables are initialized equal, so the displayed while condition
-% is false at entry. The initial common time also does not account for every robot's travel to the
-% common location. What initial feasible schedule and convergence variable does the implementation
-% use? Moving a graph articulation vertex while retaining one anchor link does not alone preserve
-% connectivity: is a spanning-tree or full-connectivity test intended? The algorithm and connectivity
-% lemma are left unchanged.
+\begin{algorithm}[t]
+\begin{revision}
+\caption{Communication-event refinement, $\texttt{ComOpt}(\cdot)$}
 \label{ch05:alg:comopt}
-    \SetAlgoLined
-    \DontPrintSemicolon
-    \KwIn{Robot team $\mathcal{N}$, last-task data
-    $\{(t_i^{\texttt{f}}, p_i^{\texttt{f}})\}$, time budget $T'$,
-    thresholds $\delta$ and $\Delta$}
-    \KwOut{Communication event $\mathbf{C}_t$}
-
-    $i_\ell \gets \arg\max_{i \in \mathcal{N}} t_i^{\texttt{f}}$\;
-    $p_0 \gets p_{i_\ell}^{\texttt{f}}$\;
-    $t^{\texttt{c}} \gets t_{i_\ell}^{\texttt{f}}$,
-    $t^{\texttt{b}} \gets t^{\texttt{c}}$\;
-    $\mathbf{C}_t \gets \{(t^{\texttt{b}}, p_0) \mid i \in \mathcal{N}\}$\;
-    $t_{\texttt{start}} \gets \texttt{current time}$\;
-
-    \While{$\texttt{current time} - t_{\texttt{start}} < T'$
-    \textbf{and} $|t^{\texttt{c}} - t^{\texttt{b}}| \geq \Delta$}{
-        $i_{\texttt{e}} \gets
-        \arg\min_{i \in \mathcal{N}}
-        \bigl(t_i^{\texttt{f}} +
-        \texttt{A}^\star(p_i^{\texttt{f}}, p_0)\bigr)$\;
-
-        $j_n \gets
-        \arg\min_{j \neq i_{\texttt{e}}}
-        \texttt{A}^\star(p_{i_{\texttt{e}}}^{\texttt{f}}, p_j^{\texttt{c}})$\;
-
-        $p^{\texttt{c}} \gets
-        \texttt{SelCom}(p_{i_{\texttt{e}}}^{\texttt{f}}, p_{j_n}^{\texttt{c}})$\;
-
-        $t_{\texttt{a}} \gets
-        t_{i_{\texttt{e}}}^{\texttt{f}} +
-        \texttt{A}^\star(p_{i_{\texttt{e}}}^{\texttt{f}}, p^{\texttt{c}})$\;
-
-        $t_+^{\texttt{c}} \gets
-        \max \Bigl(
-        t_{\texttt{a}},
-        \max_{k \neq i_{\texttt{e}}}
-        \bigl(t_k^{\texttt{f}} +
-        \texttt{A}^\star(p_k^{\texttt{f}}, p_k^{\texttt{c}})\bigr)
-        \Bigr)$\;
-
-        \If{$Q_{i_{\texttt{e}}j_n}(t_+^{\texttt{c}}) > \delta$
-        \textbf{and} $t_+^{\texttt{c}} < t^{\texttt{b}}$}{
-            $p_{i_{\texttt{e}}}^{\texttt{c}} \gets p^{\texttt{c}}$\;
-            \If{$|t^{\texttt{b}} - t_+^{\texttt{c}}| < \Delta$}{
-                $t^{\texttt{c}} \gets t_+^{\texttt{c}}$,
-                $t^{\texttt{b}} \gets t_+^{\texttt{c}}$\;
-                \textbf{break}\;
-            }
-            $t^{\texttt{c}} \gets t_+^{\texttt{c}}$,
-            $t^{\texttt{b}} \gets t_+^{\texttt{c}}$\;
-        }
-    }
-    \Return $\mathbf{C}_t =
-    \{(t^{\texttt{b}}, p_i^{\texttt{c}}) \mid i \in \mathcal{N}\}$\;
+\SetAlgoLined
+\DontPrintSemicolon
+\KwIn{Last-task data $\{(t_i^{\texttt f},p_i^{\texttt f})\}$,
+map, budget $T'$, link threshold $\delta$, and tolerance $\Delta>0$.}
+\KwOut{A feasible communication event or failure.}
+Choose $i_\ell\in\arg\max_i t_i^{\texttt f}$ and
+$p_0\gets p_{i_\ell}^{\texttt f}$.\;
+Set $p_i^{\texttt c}\gets p_0$ for every $i\in\mathcal N$.\;
+\If{a required route to $p_0$ is infeasible or the initial graph is disconnected}{
+  \Return failure.\;
+}
+$t^{\texttt b}\gets\max_i\{t_i^{\texttt f}+
+\texttt A^\star(p_i^{\texttt f},p_i^{\texttt c})\}$.\;
+$t_{\texttt{start}}\gets\texttt{current time}$.\;
+\While{$\texttt{current time}-t_{\texttt{start}}<T'$}{
+  Select an early-arriving robot $i_{\texttt e}$ and a candidate
+  $p^{\texttt c}$ by $\texttt{SelCom}$.\;
+  Form the candidate positions by moving only $i_{\texttt e}$.\;
+  Compute $t_+^{\texttt c}$ as the maximum navigation arrival time
+  at all candidate positions.\;
+  \If{all candidate routes are feasible, the full link graph at
+  $t_+^{\texttt c}$ is connected, and $t_+^{\texttt c}<t^{\texttt b}$}{
+    $\epsilon\gets t^{\texttt b}-t_+^{\texttt c}$.\;
+    $p_{i_{\texttt e}}^{\texttt c}\gets p^{\texttt c}$,
+    $t^{\texttt b}\gets t_+^{\texttt c}$.\;
+    \If{$\epsilon<\Delta$}{\textbf{break}.\;}
+  }
+}
+\Return $\mathbf C_t=\{(t^{\texttt b},p_i^{\texttt c})\mid i\in\mathcal N\}$.\;
+\end{revision}
 \end{algorithm}
 
+\rev{The navigation planner supplies feasible routes and arrival-time
+bounds. Each accepted communication configuration is checked using the full
+link graph with the prescribed quality threshold. A failed initialization
+makes the calling search branch infeasible; it is not returned as an event.}
 Algorithm~\ref{ch05:alg:comopt} addresses the optimization problem in
 \eqref{ch05:eq:comm-opt} through iterative refinement of the communication
 configuration. Rather than enumerating all feasible communication positions,
@@ -594,83 +569,18 @@ communication-event optimization is invoked repeatedly inside the higher-level
 coordination loop. A lightweight refinement procedure is therefore preferable
 to an exhaustive global search.
 
-(I) \emph{Initialization}.
-The procedure begins with the robot that completes its last non-communication
-task the latest. Let this robot be $i_\ell$. Since no communication event can
-occur before robot $i_\ell$ finishes its assigned task, this robot determines
-the earliest feasible reference time for the next fleet-wise communication
-event. Its final task position $p_{i_\ell}^{\texttt{f}}$ is used as the
-initial communication location $p_0$, and the synchronized communication time
-is initialized by
-$t^{\texttt{c}} = t^{\texttt{b}} = t_{i_\ell}^{\texttt{f}}$. This yields an
-initial event in which all robots are directed toward the same communication
-location. Although this initialization is conservative, it provides a feasible
-baseline from which subsequent refinements can reduce the overall waiting time.
+\begin{revision}
+The initial event places all robots at $p_0$, but its time includes every
+robot's route from its last task. Each iteration selects an early-arriving
+robot under the current positions and uses $\texttt{SelCom}$ to propose a
+local relocation toward an anchor. The anchor is a candidate-generation
+heuristic, not a connectivity certificate. The full graph and all arrival
+bounds are checked before an improvement is accepted. The improvement is
+measured before overwriting the incumbent time, so the first iteration is
+not skipped. The returned incumbent remains feasible if the budget expires;
+failure is reported if no feasible initial configuration was obtained.
+\end{revision}
 
-(II) \emph{Selection of the robot to be refined}.
-Within the computation budget $T'$, the algorithm improves the initial
-configuration iteratively until either convergence is reached or the available
-time is exhausted. At each iteration, the earliest-arriving robot
-$i_{\texttt{e}}$ is selected by minimizing
-$t_i^{\texttt{f}} + \texttt{A}^\star(p_i^{\texttt{f}}, p_0)$. This robot can
-reach the current communication location sooner than the others and is thus
-the most natural candidate for relocation. Intuitively, robots that would
-otherwise arrive much earlier than the synchronized communication time are the
-ones contributing most strongly to avoidable idle waiting.
-
-(III) \emph{Construction of a candidate communication position}.
-After robot $i_{\texttt{e}}$ is selected, the algorithm identifies a
-neighboring anchor robot $j_n$ according to the shortest
-$\texttt{A}^\star$ path from $p_{i_{\texttt{e}}}^{\texttt{f}}$ to the current
-communication position $p_{j_n}^{\texttt{c}}$. This step refines the
-configuration locally while preserving the possibility of connected
-communication. A candidate communication position $p^{\texttt{c}}$ is then
-generated between $p_{i_{\texttt{e}}}^{\texttt{f}}$ and $p_{j_n}^{\texttt{c}}$
-through the routine $\texttt{SelCom}$. This candidate moves the communication
-position of robot $i_{\texttt{e}}$ toward a more balanced configuration in
-time, while remaining compatible with the underlying communication geometry.
-
-(IV) \emph{Evaluation and acceptance of the candidate}.
-Once the candidate position has been obtained, the algorithm computes the
-arrival time $t_{\texttt{a}}$ of robot $i_{\texttt{e}}$ at the new position.
-The synchronized communication time is then updated to $t_+^{\texttt{c}}$,
-which is defined as the largest arrival time among all robots under the
-current candidate configuration. Hence, $t_+^{\texttt{c}}$ is the earliest
-fleet-wise communication time compatible with the updated positions. The
-candidate is accepted only if two conditions hold. First, the communication
-quality between the updated position of robot $i_{\texttt{e}}$ and the anchor
-position of robot $j_n$ exceeds the threshold $\delta$. Second, the new
-synchronized time $t_+^{\texttt{c}}$ is strictly smaller than the current best
-time $t^{\texttt{b}}$. Therefore, an update is retained only when it improves
-temporal efficiency without violating communication feasibility.
-
-(V) \emph{Termination and output}.
-The refinement process terminates when the improvement falls below the
-tolerance $\Delta$ or when the computation budget is exhausted. The output of
-Algorithm~\ref{ch05:alg:comopt} is the communication event $\mathbf{C}_t$,
-which consists of the communication positions
-$\{p_i^{\texttt{c}}\}_{i \in \mathcal{N}}$ and the synchronized communication
-time $t^{\texttt{b}}$. By construction, this event satisfies the connectivity
-requirement in \eqref{ch05:eq:comm-graph} and reduces the maximum delay
-$\max_{i \in \mathcal{N}} (t^{\texttt{b}} - t_i^{\texttt{f}})$ in accordance
-with \eqref{ch05:eq:comm-opt}. The strength of the procedure lies in the fact
-that it replaces a global search over communication configurations by a
-sequence of inexpensive local refinements guided jointly by task-completion
-times, motion costs, and communication feasibility.
-
-
-
-
-
-
-
-
-
-
-
-
-
-% ================================
 \subsection{Overall analysis}
 \label{ch05:subsec:online}
 
@@ -686,8 +596,9 @@ assigned task or the next communication location, so planning and execution
 remain interleaved. Simple synchronization rules absorb execution uncertainty:
 robots wait at collaborative tasks until all required robots arrive, and wait at
 communication events until the full team reaches the designated communication
-configuration. These rules enforce \eqref{ch05:eq:comm-graph} despite nominal
-travel-time deviations. At each communication event, robots exchange detected
+configuration. \rev{These waits synchronize actual arrivals. The planned timing guarantee
+holds only while the navigation-time bounds used to certify the event are
+respected; larger delays require revalidation or replanning.} At each communication event, robots exchange detected
 tasks, progress information, and plan updates; a designated robot aggregates
 this information and invokes Algorithm~\ref{ch05:alg:cocoplan}. The team then
 executes the revised plan until the next communication event, where the cycle is
@@ -713,70 +624,43 @@ practice, node bounds prune large parts of the tree, especially when
 \eqref{ch05:eq:adaptive_objective} separates productive sequences from
 unproductive ones early in the search.
 
+\rev{The tree bound above counts combinatorial candidates. Each communication
+refinement also validates navigation arrival bounds and checks a full graph,
+requiring up to $\mathcal O(N^2)$ link evaluations per proposal.
+These checks are additional to candidate generation; local refinement does
+not provide an exhaustive communication-configuration search.}
+
+\begin{revision}
 \begin{lemma}
 \label{ch05:lem:alg2_graph_connect}
-Algorithm~\ref{ch05:alg:comopt} returns communication locations such that the
-communication graph $G(t^{\texttt{c}})$ is connected.
+Every successful output of Algorithm~\ref{ch05:alg:comopt} is reachable
+by the returned event time under the navigation model and has a connected
+communication graph at that time.
 \end{lemma}
-
 \begin{proof}
-The initial communication event places all robots at the same communication
-location $p_0$. Hence, the induced communication graph is connected at the
-initialization step. During each refinement step, the algorithm updates the
-communication location of only one robot. The new location is accepted only if
-it preserves a valid communication link to an already selected anchor location.
-Therefore, the updated robot remains connected to the set of robots whose
-communication locations have already been fixed. Repeating this argument over
-all accepted refinements shows inductively that connectivity is preserved
-throughout the algorithm. Consequently, the final communication graph at
-$t^{\texttt{c}}$ is connected.
+Initialization checks all required routes and the common configuration.
+The event time is the maximum arrival bound. Each accepted refinement
+rechecks these properties for the entire candidate configuration before
+updating the incumbent. Induction over accepted refinements proves the
+claim. Keeping one anchor link alone would not suffice.
 \end{proof}
 
 \begin{theorem}
-% AUTHOR QUESTION AQ8: Latency invariant and infinite-horizon objective
-% In Section~5.2, when the earliest possible return already exceeds the latency deadline, how can
-% appending that return restore the claimed bound? Specify the prior feasibility invariant, return-
-% reservation rule, and the meaning of each time stamp. Separately, stationarity and ergodicity alone
-% do not make independent per-cycle rate maximization globally optimal when the decisions change
-% future states and cycle lengths. Which renewal or separability assumptions support the final claim
-% in Section~5.1, or should it be weakened to a local approximation? These passages remain unchanged.
 \label{ch05:thm:cocoplan_opt}
-Assume that communication events recur indefinitely and that, at every
-communication time, Algorithm~\ref{ch05:alg:cocoplan} is solved to optimality
-for the adaptive objective in \eqref{ch05:eq:adaptive_objective}. Then, on each
-communication cycle $[t_k^{\texttt{c}}, t_{k+1}^{\texttt{c}})$, the returned
-plan is feasible with respect to \eqref{ch05:eq:task-constraints} and
-\eqref{ch05:eq:comm-graph}, and locally maximizes the task-completion rate over
-that cycle. Moreover, \eqref{ch05:eq:adaptive_objective} provides a local
-approximation of the global infinite-horizon objective
-\eqref{ch05:eq:objective}. Under stationary task-arrival and ergodicity
-assumptions, the two optima coincide.
+Suppose every complete candidate in Algorithm~\ref{ch05:alg:cocoplan}
+is checked for temporal feasibility and a successful communication event.
+The best returned candidate maximizes the adaptive objective among the
+verified candidates explored during that cycle. No equivalence with the
+global infinite-horizon optimum follows from stationarity and ergodicity
+alone.
 \end{theorem}
-
 \begin{proof}
-Feasibility on each communication cycle follows from the construction of the
-algorithm. Algorithm~\ref{ch05:alg:cocoplan} enforces the temporal constraints
-in \eqref{ch05:eq:task-constraints} during task expansion and bound
-computation. It also invokes Algorithm~\ref{ch05:alg:comopt} to determine the
-next communication event, and Lemma~\ref{ch05:lem:alg2_graph_connect} shows
-that this event satisfies the connectivity requirement
-\eqref{ch05:eq:comm-graph}. Therefore, every returned cycle plan is feasible
-with respect to both task ordering and team-wise communication.
-Local optimality follows from the assumption that
-Algorithm~\ref{ch05:alg:cocoplan} is solved to optimality for
-\eqref{ch05:eq:adaptive_objective} at each communication event. Under that
-assumption, the returned plan maximizes the number of tasks completed per unit
-time before the next communication event, and therefore yields the largest
-adaptive completion rate over the current cycle.
-The relation to the infinite-horizon objective
-\eqref{ch05:eq:objective} is then immediate at the approximation level. The
-adaptive objective evaluates the same performance quantity as
-\eqref{ch05:eq:objective}, but only over a single communication cycle rather
-than over the full mission horizon. If task arrivals are stationary and the
-resulting communication cycles are ergodic, then the long-run average task
-completion rate equals the time average of the per-cycle completion rates. In
-that case, optimizing each cycle separately is equivalent to optimizing the
-infinite-horizon average objective, and the local optimum induced by
-\eqref{ch05:eq:adaptive_objective} coincides with the global optimum in
-\eqref{ch05:eq:objective}.
+The feasibility checks and Lemma~\ref{ch05:lem:alg2_graph_connect} justify
+retaining each candidate. Selecting the best retained value establishes
+optimality within this candidate family. The communication refinement and
+a finite search budget need not enumerate all cycle plans. Furthermore,
+a cycle decision can alter subsequent states and opportunities, and long-run
+rates weight cycles by their durations. A global equivalence would require
+additional renewal and separability assumptions, which are not imposed here.
 \end{proof}
+\end{revision}

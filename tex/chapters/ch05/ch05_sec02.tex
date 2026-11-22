@@ -324,10 +324,11 @@ $(k_\ell, k_{\ell+1}) \in \mathcal{E}_{\texttt{r}}$ for
 $\ell = 1,\cdots,N$ with $k_{N+1} \triangleq k_1$, and
 $\mathcal{E}_{\texttt{h}} \triangleq
 \{(\texttt{h}, i) \mid i \in \mathcal{N}\}$.
-The term \emph{joint-wheel} denotes connectivity over time rather than a static
-wheel graph. At any instant, at most one rim edge is active, but over any
-interval longer than $T_{\texttt{h}}$ the activated rim edges and hub edges
-induce a wheel-like pattern. The embedded graph
+\rev{The term \emph{joint-wheel} denotes connectivity over time rather than
+a static wheel graph. A wheel-like union of edges is not by itself a latency
+certificate: their activation times and the data carried by them must also
+be feasible. The guarantee below requires committed time-respecting delivery
+routes, retained until their replacement has been certified.} The embedded graph
 $\mathcal{G}^{\texttt{w}}$ is maintained distributively through local
 coordination at intermittent events.
 
@@ -345,11 +346,11 @@ $\chi_i \in \mathbb{R}^{N}$ estimates the minimum time stamp of information
 from each robot that is guaranteed to reach the operator,
 $\widehat{p}_{\texttt{h}} \in \mathbb{R}^{3}$ is the current target location of
 the operator, and $\chi_{\texttt{h}} \in \mathbb{R}^{N}$ is the confirmed time
-stamp vector available at the operator. The initialization sets
+stamp vector available at the operator. \rev{The initialization sets
 $\Gamma_i = \varnothing$ and $\chi_i = \mathbf{0}$ for all
 $i \in \mathcal{N}$, together with
-$\widehat{p}_{\texttt{h}} = \varnothing$ and
-$\chi_{\texttt{h}} = \mathbf{0}$.
+\rev{$\widehat{p}_{\texttt h}=p_{\texttt h}(0)$} and
+$\chi_{\texttt{h}} = \mathbf{0}$.}
 The edge embedding stores the scheduled communication events:
 \begin{equation}
 \sigma_{\mathcal{E}}(i, j) \triangleq (t_{ij}^{+}, p_{ij}^{+}),
@@ -367,6 +368,10 @@ and local data of each entity, namely
 $x(i) \triangleq (p_i(t), D_i(t))$ and
 $x(\texttt{h}) \triangleq (p_{\texttt{h}}(t), D_{\texttt{h}}(t))$.
 
+\rev{For a stationary operator, continued exchange while co-located provides
+an initial fallback. A departure is admitted only after a feasible committed
+delivery continuation replaces that fallback.}
+
 (II) \emph{Pairwise coordination}.
 At a communication event $\mathbf{c}_{ij}$, robots $i$ and $j$ read their
 current geometric states $x(i)$ and $x(j)$, exchange the incident embeddings,
@@ -380,37 +385,35 @@ where the maximum is taken component-wise. The subsequent coordination
 computation proceeds in three stages, summarized in
 Algorithm~\ref{ch05:alg:coordination}.
 
-\textbf{Stage-I: determine the return event}.
-Define
-$\underline{\chi}_{ij} \triangleq \min_{k \in \mathcal{N}} \chi_{ij}(k)$,
-which is the minimum team time stamp guaranteed to reach the operator as
-inferred at $\mathbf{c}_{ij}$. Let $t_{\ell}^{L_\ell}$ and
-$p_{\ell}^{L_\ell}$ denote the terminal time and terminal location in the
-communication-aware local plan $\Gamma_\ell$ of robot $\ell \in \{i, j\}$. The earliest return
-time to the operator for a candidate return robot
-$\ell \in \{i, j\}$ is estimated by:
-\begin{equation}
-t_{\texttt{h}\ell}^{\star} \triangleq
-t_{\ell}^{L_\ell} +
-T_{\ell}^{\texttt{nav}}(p_{\ell}^{L_\ell}, \widehat{p}_{\texttt{h}}),
-\label{ch05:eq:estret}
-\end{equation}
-where $T_{\ell}^{\texttt{nav}}(\cdot,\cdot)$ is the navigation-time model.
 \begin{revision}
-A return to the operator is unnecessary if
+\textbf{Stage-I: preserve a timely return.}
+The current committed schedule must already contain a delivery continuation
+meeting each source's latency deadline. Pairwise replanning may change only
+uncommitted tails; completed events and deliveries promised to other robots
+remain fixed. Let
+$\underline\chi_{ij}\triangleq\min_k\chi_{ij}(k)$ and
+$d_{ij}\triangleq\underline\chi_{ij}+T_{\texttt h}$.
+The earliest return after a candidate tail is
 \begin{equation}
-\min_{\ell \in \{i,j\}} t_{\texttt{h}\ell}^{\star}
-\leq T_{\texttt{h}} + \underline{\chi}_{ij},
-% AUTHOR QUESTION AQ8: see response appendix and AUTHOR_QUESTIONS.md.
-\label{ch05:eq:return_cond}
+\label{ch05:eq:estret}
+t_{\texttt h\ell}^\star\triangleq
+ t_\ell^{L_\ell}+T_\ell^{\texttt{nav}}
+ (p_\ell^{L_\ell},\widehat p_{\texttt h}),
 \end{equation}
-where the minimum is over the two communicating robots. Otherwise,
-the return robot is selected as
-$n \triangleq
-\arg\min_{\ell \in \{i,j\}} t_{\texttt{h}\ell}^{\star}$.
+where $\ell\in\{i,j\}$ and the navigation time is a feasible upper bound.
+A timely return after those tails is feasible only if
+\begin{equation}
+\label{ch05:eq:return_cond}
+\min_{\ell\in\{i,j\}}t_{\texttt h\ell}^\star\le d_{ij},
+\end{equation}
+where the deadline uses the information time stamp, not the proposed return
+time. If this test fails, uncommitted tasks are deferred and the return time
+is recomputed. If even the empty uncommitted tails fail, the existing
+certified continuation is retained. Without such a continuation the routine
+reports infeasibility; appending a late return cannot repair the violation.
+When the test succeeds, reserve the earliest feasible return as a fallback.
+The next stage may replace it only after certifying another timely delivery.
 \end{revision}
-Thus, robot $n$ is the robot that returns to the operator immediately after its
-last currently planned event.
 
 \textbf{Stage-II: optimize the task sequence and the next
 communication event}.
@@ -421,14 +424,21 @@ $\tau_i^{+}$ and $\tau_j^{+}$ are the optimized task sequences and
 $\mathbf{c}_{ij}^{+}$ is the next communication event by the two robots.
 The schedule of $\mathbf{c}_{ij}^{+}$ is denoted by
 $(t_{ij}^{+}, p_{ij}^{+})$ and must satisfy the local latency condition:
+\begin{revision}
 \begin{equation}
-t_{ij}^{+} +
-T_{\ell}^{\texttt{nav}}(p_{ij}^{+}, \widehat{p}_{\texttt{h}})
-\leq T_{\texttt{h}} + \chi^{\star},
 \label{ch05:eq:pairing_cond}
+t_{ij}^++\min_{\ell\in\{i,j\}}
+T_\ell^{\texttt{nav}}(p_{ij}^+,\widehat p_{\texttt h})
+\le T_{\texttt h}+\chi^\star,
 \end{equation}
-where $\chi^{\star} \triangleq \underline{\chi}_{ij}$ if no return is scheduled
-in Stage-I, and $\chi^{\star}$ is computed from the scheduled return otherwise.
+where $\chi^\star$ is the oldest source time stamp covered by the
+candidate's committed delivery route. A proposed return time is not a new
+information time stamp. The local inequality is a necessary check; the
+candidate must also preserve all affected reserved meetings and source-wise
+delivery deadlines. Returns are either kept as explicit reservations or
+replaced by certified time-respecting routes. Predicted delivery is never
+recorded as an already confirmed operator receipt.
+\end{revision}
 Feasible outputs $(\tau_i^{+}, \tau_j^{+}, \mathbf{c}_{ij}^{+})$ are obtained
 by an iterative TSP-based procedure. At each iteration, a traveling-salesman
 problem is constructed over the remaining task locations in $\mathcal{F}^{-}$
@@ -436,10 +446,10 @@ together with the current terminal locations of robots $i$ and $j$. The edge
 weights are given by the corresponding navigation-time model. The TSP solution
 yields a joint visiting order $\mathbf{p}_{ij}$, from which
 $\tau_i^{+}$ and $\tau_j^{+}$ are extracted, and a candidate communication
-event $\mathbf{c}_{ij}^{+}$ is selected along $\mathbf{p}_{ij}$. The event is
-accepted only if the feasibility condition in
-\eqref{ch05:eq:pairing_cond} holds. Otherwise, one task in
-$\tau_i^{+}$ or $\tau_j^{+}$ is removed and the procedure is repeated.
+event $\mathbf{c}_{ij}^{+}$ is selected along $\mathbf{p}_{ij}$. \rev{The event is accepted only if \eqref{ch05:eq:pairing_cond} and the
+affected delivery reservations pass the checks above. Otherwise an
+uncommitted task is deferred. After finitely many removals the routine either
+finds a certified candidate or retains the previously certified continuation.}
 
 \textbf{Stage-III: update the embeddings}.
 After the next communication event has been determined, the current event
@@ -466,151 +476,76 @@ is then given by:
 where the second line is applied only when Stage-I schedules a return. If no
 return is scheduled, the corresponding hub-edge embedding remains
 $\varnothing$.
-Combined with the joint-wheel communication topology, this pairwise procedure
-ensures exploration with bounded latency shown below.
+\rev{The following statements concern executions that respect certified
+navigation-time bounds, reliable scheduled exchanges, and a feasible committed
+delivery continuation. Topology alone does not establish the latency bound.}
 
 
+\begin{revision}
 \begin{lemma}
 \label{ch05:prop:exist-solution}
-The iterative process in Algorithm~\ref{ch05:alg:coordination} terminates in
-finite steps and always returns a feasible plan satisfying the meeting-event
-constraint \eqref{ch05:eq:pairing_cond} during each pairwise coordination.
+With a finite set of uncommitted tasks, pairwise coordination terminates
+with a certified replacement, the retained certified continuation, or an
+explicit infeasibility report. It does not guarantee a new feasible plan
+from an arbitrary infeasible state.
 \end{lemma}
 \begin{proof}
-The claim follows from the structure of
-Algorithm~\ref{ch05:alg:coordination}. Stage-I is finite, since the
-quantities \(t^{\star}_{\texttt{h}\ell}\) are computed directly from
-\eqref{ch05:eq:estret} for \(\ell\in\{i,j\}\), and the return decision
-is made by the feasibility test \eqref{ch05:eq:return_cond}.
-Hence only finitely many operations are required before Stage-II.
-It remains to consider the iterative loop in Stage-II. At each
-iteration, the candidate next meeting event is accepted only if the
-meeting-event constraint \eqref{ch05:eq:pairing_cond} holds.
-Otherwise, one task \(f^{\star}\) is removed from the remaining set
-\(F^{-}\), and the candidate path and communication event are
-recomputed. Since \(F^{-}\) is finite and each unsuccessful iteration
-strictly decreases its cardinality, the loop can be repeated only
-finitely many times.
-
-Moreover, feasibility is preserved when tasks are removed. If
-\eqref{ch05:eq:return_cond} already holds in Stage-I, then the
-current tails admit a feasible continuation without forcing an
-immediate operator return. If \eqref{ch05:eq:return_cond} fails,
-Stage-I explicitly appends a return event for the robot
-\(n=\arg\min_{\ell\in\{i,j\}} t^{\star}_{\texttt{h}\ell}\), so that a
-hub-reaching continuation is inserted before the latency bound is
-violated. Therefore, after finitely many task removals, the remaining
-tail contains only a feasible continuation consistent with the return
-decision, and the selected event necessarily satisfies
-\eqref{ch05:eq:pairing_cond}.
-Once such an event is found, Stage-III updates the communication-aware local plans and edge
-embeddings according to \eqref{ch05:eq:embed-update}. Hence the
-algorithm terminates in finite steps and returns revised communication-aware local plans
-whose next meeting event satisfies
-\eqref{ch05:eq:pairing_cond}.
+Each failed candidate removes an uncommitted task. Once none remains, the
+routine checks the fallback and exits. The accepted replacement is feasible
+by its route and deadline checks; retaining the prior certified continuation
+preserves its commitments. No late return is declared feasible.
 \end{proof}
 
 \begin{theorem}
 \label{ch05:prop:Ts-constraint}
-Under the joint-wheel communication topology and the coordination protocol in
-Algorithm~\ref{ch05:alg:coordination}, the operator-fleet latency constraint is
-satisfied, namely
-$\delta_{\texttt{h}}(t) \leq T_{\texttt{h}}$ for all $t > 0$.
+Assume an initial committed schedule certifies source-wise operator delivery
+within $T_{\texttt h}$, all scheduled exchanges succeed, and navigation and
+operator-location predictions used in the certificate are respected.
+If every update retains that continuation or replaces it with one meeting
+all affected source-wise deadlines, then
+$\delta_{\texttt h}(t)\le T_{\texttt h}$ throughout execution.
 \end{theorem}
 \begin{proof}
-The proof is by induction over the sequence of scheduled communication
-events on the embedded joint-wheel graph.
-At initialization, the embeddings are set by
-\eqref{ch05:eq:def-vertex-embed}--\eqref{ch05:eq:def-edge-embed}. In
-particular, all robots initially communicate near the operator, so the
-operator possesses the initial information state and the latency bound
-holds at \(t=0\).
-Assume now that the bound is satisfied up to some communication event
-\(c_{ij}\). At \(c_{ij}\), robots \(i\) and \(j\) exchange their
-incident embeddings and fuse their information, producing the merged
-latency vector \(\chi_{ij}\) in \eqref{ch05:eq:chi-merge}. Since the
-maximum in \eqref{ch05:eq:chi-merge} is taken component-wise, no confirmed
-time stamp is lost in this fusion step: every piece of information that
-was guaranteed to reach the operator through either robot remains
-guaranteed after the meeting.
-Stage-I then checks whether a direct operator return is needed. If
-\eqref{ch05:eq:return_cond} holds, one of the current tails
-already implies operator delivery within the admissible horizon. If
-\eqref{ch05:eq:return_cond} fails, the algorithm appends a return
-event for the robot \(n\) with smallest \(t^{\star}_{\texttt{h}\ell}\),
-computed through \eqref{ch05:eq:estret}. Hence, after Stage-I, the
-information available at \(c_{ij}\) is guaranteed to reach the operator
-no later than \(\underline{\chi}_{ij}+T_{\texttt{h}}\).
-Stage-II then selects the next pairwise event
-\(c_{ij}^{+}=(t_{ij}^{+},p_{ij}^{+})\) subject to the local feasibility
-constraint \eqref{ch05:eq:pairing_cond}. This condition states exactly
-that, from the next meeting location \(p_{ij}^{+}\), at least one of
-the two robots can still return to the operator within the residual
-latency budget determined by the current guaranteed time stamp. Thus
-the pairwise schedule preserves the invariant that all information
-known to the communicating pair is still deliverable to the operator
-within \(T_{\texttt{h}}\) from its guaranteed time stamp. Stage-III
-records this invariant in the updated embeddings through
-\eqref{ch05:eq:embed-update}.
-Because the communication topology is a joint wheel, every robot lies on
-the ring \(E_{\texttt{r}}\), and over any interval longer than
-\(T_{\texttt{h}}\) the activated rim edges together with the hub edges
-\(E_{\texttt{h}}\) induce a time-respecting wheel-like communication
-pattern. Consequently, the above invariant propagates from each local
-pairwise coordination step to the whole operator-fleet system: any data
-generated by any robot is forwarded through successive scheduled rim
-meetings and, when required, a hub return, so that it reaches the
-operator within time \(T_{\texttt{h}}\).
-Therefore, for every \(t>0\), all information older than
-\(t-T_{\texttt{h}}\) has already reached the operator. Equivalently,
-the maximum information latency satisfies
-\(\delta_{\texttt{h}}(t)\le T_{\texttt{h}}\) for all \(t>0\).
+The initial certificate provides the deadline invariant. An accepted update
+preserves all unaffected commitments and explicitly checks the affected
+time-respecting delivery routes. A rejected update leaves the certificate
+unchanged. Induction over update events preserves the source-wise deadlines.
+Under the stated execution assumptions, the reserved deliveries occur before
+those deadlines, giving the claimed latency bound. A loss of the certificate
+is reported as infeasibility rather than covered by this theorem.
 \end{proof}
+\end{revision}
 
-
-%==============================
 \begin{algorithm}[t]
-  \caption{Latency-aware Intermittent Pairwise Coordination:
-  $\texttt{IntmCoord}(\cdot)$}
-  \label{ch05:alg:coordination}
-  \LinesNumbered
-  \SetKwInOut{Input}{Input}
-  \SetKwInOut{Output}{Output}
-\Input{Local plans $\Gamma_i$, $\Gamma_j$, stamp $\chi_{ij}$, map
-$\mathcal{M}_{ij}$, and unassigned tasks $\mathcal{F}^{-}$.}
-\Output{Revised communication-aware local plans $\widehat{\Gamma}_i$, $\widehat{\Gamma}_j$, and next
-event $\mathbf{c}_{ij}$.}
-
-\tcc{\textbf{Determine Return Event}}
-Compute $t_{\texttt{h}\ell}^{\star}$ by \eqref{ch05:eq:estret} for
-$\ell \in \{i,j\}$\;
-\If{condition \eqref{ch05:eq:return_cond} is not satisfied}{
-  Determine the return robot by
-  $n \triangleq
-  \arg\min_{\ell \in \{i,j\}} t_{\texttt{h}\ell}^{\star}$\;
-  Append a return event to $\Gamma_n$\;
+\begin{revision}
+\caption{Latency-aware intermittent pairwise coordination,
+$\texttt{IntmCoord}(\cdot)$}
+\label{ch05:alg:coordination}
+\LinesNumbered
+\KwIn{Local plans, merged stamps, map, uncommitted tasks, and committed
+source-wise delivery reservations.}
+\KwOut{Certified revised plans, the retained continuation, or failure.}
+Store the existing certified continuation as the fallback.\;
+Compute candidate return times by \eqref{ch05:eq:estret}.\;
+\While{\eqref{ch05:eq:return_cond} fails and uncommitted tasks remain}{
+  Defer an uncommitted task and recompute the return times.\;
 }
-
-\tcc{\textbf{Optimize Task Sequence and Next Pairing Event}}
-$\mathbf{p}_{ij} \leftarrow
-\texttt{TSP-Path}(p_i^{L_i}, \mathcal{F}^{-}, p_j^{L_j})$\;
-$\mathbf{c}_{ij} \leftarrow
-\texttt{SelComm}(\mathbf{c}_i^{L_i}, \mathbf{c}_j^{L_j}, \mathbf{p}_{ij})$\;
-\While{condition \eqref{ch05:eq:pairing_cond} is not satisfied}{
-  Remove $f^{\star}$ with maximum cost from $\mathcal{F}^{-}$\;
-  Recompute $\mathbf{p}_{ij}$ and $\mathbf{c}_{ij}$\;
+\If{\eqref{ch05:eq:return_cond} fails}{
+  \Return the certified fallback, or failure if none exists.\;
 }
-$\boldsymbol{\tau}_i^{+}, \boldsymbol{\tau}_j^{+} \leftarrow
-\texttt{Split}(\mathbf{p}_{ij}, \mathbf{c}_{ij})$\;
-
-\tcc{\textbf{Update Local Plans}}
-$\Gamma_{\ell}^{-} \leftarrow
-\texttt{Remove}(\Gamma_{\ell}, \mathbf{c}_{ij})$,
-for $\ell \in \{i,j\}$\;
-$\widehat{\Gamma}_{\ell} \leftarrow
-\Gamma_{\ell}^{-} + \boldsymbol{\tau}_{\ell}^{+} + \mathbf{c}_{ij}$,
-for $\ell \in \{i,j\}$\;
-Update embeddings through \eqref{ch05:eq:embed-update}\;
+Reserve the feasible return as a fallback for the pair.\;
+Generate candidate task tails and a meeting using $\texttt{TSP-Path}$
+and $\texttt{SelComm}$.\;
+\While{the local meeting inequality or an affected delivery certificate fails}{
+  \If{no uncommitted task remains}{
+    \Return the certified fallback.\;
+  }
+  Defer an uncommitted task and recompute the candidate.\;
+}
+Update plans and embeddings by \eqref{ch05:eq:embed-update}, retaining
+all required delivery reservations.\;
+\Return the certified revised plans.\;
+\end{revision}
 \end{algorithm}
 %==============================
 
@@ -618,8 +553,10 @@ Update embeddings through \eqref{ch05:eq:embed-update}\;
 \subsubsection{Distributed detach-and-rejoin mechanism}
 \label{ch05:sec:detach-join}
 
-Flexible resizing is handled by a distributed detach-and-rejoin procedure that
-preserves the wheel topology and latency constraint. Rewiring uses two
+\rev{Flexible resizing uses a distributed detach-and-rejoin procedure.
+Each proposed rewiring must preserve the affected committed delivery routes
+and deadlines before it replaces the current certificate. Topology
+preservation alone does not certify latency.} Rewiring uses two
 consecutive meetings so that successor robots receive consistent plan and
 adjacency updates before any robot leaves or rejoins the wheel.
 

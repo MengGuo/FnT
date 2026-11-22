@@ -80,10 +80,12 @@ Thus, the fleet objective is to synthesize collective plans
 $\{\tau_i\}_{i\in\mathcal{N}}$ that satisfy all missions in $\Phi$ while
 minimizing the average mission completion time, i.e.,
 \begin{equation}
+\color{blue}
 \label{ch04:eq:mission_set_objective}
 \min_{\{\tau_i\}_{i\in\mathcal{N}}}
-\frac{1}{M}\sum_{m=1}^{M} T_m.
+\frac{1}{M}\sum_{m=1}^{M} T_m,
 \end{equation}
+\rev{where the average is taken over the $M$ supplied missions.}
 
 \begin{problem}
 \label{ch04:prob:uncertain_mission_set}
@@ -174,7 +176,9 @@ contains two components: the current local plans of all teams and the sets of
 currently reachable automaton states for all missions. The root node is
 $\nu_0 \triangleq
 \bigl(\emptyset,\{\widehat{Q}_m^0\}_{m\in\mathcal{M}}\bigr)$,
-where $\widehat{Q}_m^0 \triangleq Q_0^m$. Algorithm~\ref{ch04:alg:ss-TaskAssign}
+where $\widehat{Q}_m^0 \triangleq Q_0^m$.
+\rev{Empty maxima of nonnegative completion times are zero, so the root
+has zero makespan before any team is created.} Algorithm~\ref{ch04:alg:ss-TaskAssign}
 contains four stages: selection, expansion, bounding, and termination.
 
 
@@ -210,9 +214,7 @@ capacity profile below:
 \end{equation}
 where $\mathcal{A} \triangleq \bigcup_{i\in\mathcal{N}}\mathcal{A}_i$ is the
 global action set, and $\beta_k^j$ is the minimum number of robots capable of
-action $a^j$ required by the tasks currently assigned to $\Gamma_k$. A node is
-declared infeasible if the induced team requirements exceed the fleet
-capability, that is, if
+action $a^j$ required by the tasks currently assigned to $\Gamma_k$. \rev{The necessary fleet-capacity screen is}
 \begin{equation}
 \label{ch04:eq:capacity-bound}
 \sum_{k\in\mathcal{K}} \beta_k^j
@@ -220,9 +222,9 @@ capability, that is, if
 \sum_{i\in\mathcal{N}} \mathds{1}(a^j\in\mathcal{A}_i),
 \qquad \forall a^j\in\mathcal{A},
 \end{equation}
-is violated,
-where the left-hand side is the required capacity and the right-hand side is
-the available fleet capacity.
+\rev{where the left side is required capacity and the right side is
+available capacity. A node violating this screen is discarded. Passing it
+does not guarantee a feasible disjoint team formation.}
 
 \emph{(II) Expansion.}
 Each selected node $\nu_h^\star\in\mathcal{V}_P$ is expanded by assigning one
@@ -232,13 +234,19 @@ additional task symbol to one team. The candidate task set is given by:
 \Omega^-_{\nu_h^\star} \triangleq
 \bigcup_{m\in\mathcal{M}}
 \Bigl\{
-\omega\in\Sigma^m \,\Big|\, \exists q_m\in\widehat{Q}_m :
-\delta^m(q_m,\omega)\neq\emptyset
+\omega\in\boldsymbol{\omega}_m \,\Big|\, \exists q_m\in\widehat{Q}_m :
+\delta^m(q_m,\{\omega\})\neq\emptyset
 \Bigr\},
 \end{equation}
-where $\delta^m:Q^m\times\Sigma^m\to 2^{Q^m}$ is the transition function of
+\rev{where $\delta^m:Q^m\times\Sigma^m\to 2^{Q^m}$ is the transition function of
 $\mathcal{B}_{\varphi_m}$. Therefore, a task symbol is eligible only if it
-enables at least one valid automaton transition for some mission.
+\rev{enables a singleton-letter transition for some mission.
+Here $\omega$ is an individual task, $\{\omega\}$ is its valuation, and
+$\Xi_\omega$ denotes its required subtask collection.}}
+\rev{This expansion searches singleton task-event sequences; it need not
+cover specifications requiring simultaneous distinct task events. Complete
+timed schedules are checked against the mission automata using their actual
+proposition traces before they are accepted.}
 For each $\omega\in\Omega^-_{\nu_h^\star}$ and each team index
 $k\in\mathcal{K}$, a child node is constructed as:
 \begin{equation}
@@ -249,12 +257,12 @@ $k\in\mathcal{K}$, a child node is constructed as:
 \{\widehat{Q}_m^+\}_{m\in\mathcal{M}}
 \Bigr),
 \end{equation}
-where $\Gamma_k^+$ is obtained by appending $\omega$ to $\Gamma_k$, and
+\rev{where $\Gamma_k^+$ is obtained by appending $\omega$ to $\Gamma_k$, and
 $\widehat{Q}_m^+ \triangleq
-\bigcup_{q_m\in\widehat{Q}_m}\delta^m(q_m,\omega)$
-is the updated set of reachable states for mission $\varphi_m$. The edge
+\bigcup_{q_m\in\widehat{Q}_m}\delta^m(q_m,\{\omega\}\cap\boldsymbol{\omega}_m)$
+is the updated set of reachable states for mission $\varphi_m$. If any updated set is empty, the child is discarded before scoring. The edge
 $(\nu_h^\star,\nu^+)$ is then added to the search tree $\mathfrak{T}$. If
-$\Omega^-_{\nu_h^\star}=\emptyset$, the node admits no further expansion.
+$\Omega^-_{\nu_h^\star}=\emptyset$, the node admits no further expansion.}
 
 A new team can also be created during expansion. In that case, the index set is
 enlarged to $\mathcal{K}\cup\{K+1\}$, an empty local plan is introduced for the
@@ -267,7 +275,7 @@ updated by:
 \label{ch04:eq:update-constraint}
 \beta_k^j \triangleq
 \max\{n_r \mid \exists \omega\in\Gamma_k
-\text{ such that } (n_r,a^j,s_r)\in\omega\},
+\text{ such that } (n_r,a^j,s_r)\in\Xi_\omega\},
 \qquad \forall a^j\in\mathcal{A},
 \end{equation}
 where $\beta_k^j$ is set to zero if no task in $\Gamma_k$ requires action
@@ -285,11 +293,12 @@ $\omega_k^\ell$ that have already been assigned, and
 $T_{\mathrm{nav}}(S_k^{\ell-1},S_k^\ell)$ is the estimated navigation time
 between the execution regions of two consecutive tasks.
 
-\begin{algorithm}[t!]
+\begin{algorithm}
+\color{blue}[t!]
   \caption{Simultaneous task decomposition and team assignment}
   \label{ch04:alg:ss-TaskAssign}
   \SetAlgoLined
-  \KwIn{$\Phi=\{\varphi_1,\cdots,\varphi_M\}$, automata
+  \KwIn{\rev{Finite depth bound $D_{\max}$,} $\Phi=\{\varphi_1,\cdots,\varphi_M\}$, automata
         $\{\mathcal{B}_{\varphi_m}\}$, fleet $\mathcal{N}$.}
   \KwOut{Number of teams $K$, capability profiles $\{\Lambda_k\}$, and local
          plans $\{\Gamma_k\}$.}
@@ -306,6 +315,7 @@ between the execution regions of two consecutive tasks.
 
     \tcc{Expansion}
     \ForEach{$\nu_h^\star \in \mathcal{V}_P$}{
+      \rev{Skip expansion if its depth is $D_{\max}$.}\;
       Obtain $\Omega^-_{\nu_h^\star}$ by~\eqref{ch04:eq:task-candidate}.\;
       \ForEach{$\omega \in \Omega^-_{\nu_h^\star}$}{
         \If{a new team is created}{
@@ -315,6 +325,7 @@ between the execution regions of two consecutive tasks.
         \ForEach{$k \in \mathcal{K}$}{
           Generate $\nu^+$ by~\eqref{ch04:eq:expand}.\;
           Update $\widehat{Q}_m^+$ for all $m\in\mathcal{M}$.\;
+          \rev{Discard the child if any $\widehat Q_m^+$ is empty.}\;
           Update $\Lambda_k$ by~\eqref{ch04:eq:update-constraint}.\;
           Update $t_{\mathrm{e}}(\omega_k^\ell)$ by
           \eqref{ch04:eq:estimated_time}.\;
@@ -358,8 +369,8 @@ where $T_k$ is the ending time of $\Gamma_k$, $\kappa_k$ is the estimated cost
 of $\Gamma_k$, and the last term measures the minimum distance from the current
 mission-progress set $\widehat{Q}_m$ to the accepting set $Q_F^m$. The profile
 $\zeta(\nu)$ is therefore a nonnegative vector of dimension $(2K+M)$.
-Given two nodes $\nu_1$ and $\nu_2$, node $\nu_1$ is said to dominate node
-$\nu_2$ if
+\rev{For two nodes $\nu_1$ and $\nu_2$ satisfying the continuation
+conditions below, the profile test for domination is}
 \begin{equation}
 \label{ch04:eq:dominance}
 \zeta(\nu_1)\leq \zeta(\nu_2), \qquad
@@ -377,24 +388,37 @@ defined by:
 \nexists\,\nu'\in\mathcal{V} \text{ such that } \nu' \text{ dominates } \nu
 \bigr\},
 \end{equation}
-where only nodes in $\overline{\mathcal{V}}$ are retained as candidates for
-further expansion. This pruning rule discards strictly inferior branches while
-preserving all non-dominated search directions.
+\rev{where dominance pruning is permitted only between nodes with equal
+team count, aligned team identities, and the same continuation state.
+That state includes the reachable automaton-state sets, assigned task
+occurrences, team capability profiles, and terminal team locations.
+A componentwise smaller time/cost profile must also permit every future
+continuation of the dominated node, for example by admissible waiting.
+If this continuation relation has not been established, both nodes are
+retained and the profile is used only to order their exploration.}
 
 \emph{(IV) Termination.}
-The stages above are repeated until the computational budget is exhausted or no
-new frontier nodes are generated. Among the frontier nodes, the set of complete
+\rev{A finite task-occurrence or search-depth bound $D_{\max}$ is supplied
+with the computational budget. Nodes beyond this bound are not expanded.
+The search terminates when its budget is exhausted or its finite frontier
+is empty. Cyclic automata do not by themselves imply a finite search tree.} Among the frontier nodes, the set of complete
 assignments is given by:
 \begin{equation}
+\color{blue}
 \label{ch04:eq:complete-nodes}
 \overline{\mathcal{V}}^\star \triangleq
 \bigl\{
 \nu\in\overline{\mathcal{V}} \,\big|\,
-\widehat{Q}_m\cap Q_F^m\neq\emptyset,\ \forall m\in\mathcal{M}
+\widehat{Q}_m\cap Q_F^m\neq\emptyset,\ \forall m\in\mathcal{M},\ \texttt{Verify}(\nu)
 \bigr\},
 \end{equation}
-which means that every mission has reached an accepting state. The final node is
-selected by:
+\rev{where $\texttt{Verify}(\nu)$ checks the actual timed mission traces,
+a concrete disjoint team formation, and feasible local execution plans under
+the stated motion and duration models.
+A failed formation or local execution check rejects this leaf, and the search continues with
+other nodes, including alternative team counts. The capacity count in
+\eqref{ch04:eq:capacity-bound} is only a necessary screening test.}
+The final node is selected by:
 \begin{equation}
 \label{ch04:eq:termination}
 \nu_{K^\star}^\star \triangleq
@@ -423,66 +447,27 @@ reachable-state sets $\widehat{Q}_m$ for all missions, so decomposition and
 abstract assignment are handled in one search process. Correctness and
 completeness for the fixed mission set are stated next.
 
+\begin{revision}
 \begin{theorem}
-% AUTHOR QUESTION AQ6: see response appendix and AUTHOR_QUESTIONS.md.
 \label{ch04:thm:correctness}
-Consider an instance of Problem~\ref{ch04:prob:simultaneous_assignment} with a
-fixed finite mission set $\Phi$. Suppose that the search is allowed to terminate
-on the finite tree and that feasible team plans exist. Then
-Algorithm~\ref{ch04:alg:ss-TaskAssign} returns local plans
-$\{\Gamma_k\}_{k\in\mathcal{K}}$ such that:
-\emph{(I)} all temporal constraints encoded by the automata
-$\{\mathcal{B}_{\varphi_m}\}_{m\in\mathcal{M}}$ are satisfied;
-\emph{(II)} all fleet-capacity constraints in
-\eqref{ch04:eq:capacity-team}--\eqref{ch04:eq:capacity-bound} are respected;
-\emph{(III)} among the complete frontier nodes, the returned node minimizes the
-search value in \eqref{ch04:eq:search_value}.
+For a fixed finite mission set and a finite depth bound, every successful
+output of Algorithm~\ref{ch04:alg:ss-TaskAssign} has verified mission traces
+and a feasible concrete team formation. The selected node minimizes
+\eqref{ch04:eq:search_value} among the verified complete nodes retained
+within the search budget. Failure to find such a node is not a certificate
+that the original mission is infeasible.
 \end{theorem}
-
 \begin{proof}
-Temporal correctness follows from the update of the reachable-state sets
-$\widehat{Q}_m$ along enabled automaton transitions. Every root-to-leaf path
-ending at a node in $\overline{\mathcal{V}}^\star$ satisfies
-\eqref{ch04:eq:complete-nodes}, so for each mission index $m\in\mathcal{M}$
-the corresponding task sequence induces an accepting run of
-$\mathcal{B}_{\varphi_m}$. Hence the local plans
-$\{\Gamma_k\}_{k\in\mathcal{K}}$ satisfy all temporal constraints encoded by
-the mission automata.
-Fleet-capacity feasibility follows from the expansion and pruning rules.
-Whenever a task is added to a team plan, the induced capability profile is
-updated by \eqref{ch04:eq:update-constraint}, and every node violating the fleet
-bound \eqref{ch04:eq:capacity-bound} is marked infeasible and removed from
-further consideration. Therefore, every node that remains on the frontier
-satisfies the capacity constraints.
-The search space is finite because the mission set $\Phi$, the automata
-$\mathcal{B}_{\varphi_m}$, their state sets $Q^m$, the alphabets $\Sigma^m$,
-and the admissible team-capability profiles are all finite. The frontier update
-\eqref{ch04:eq:frontier} removes only dominated nodes and therefore preserves at
-least one representative of each non-dominated feasible solution class. Hence,
-if feasible plans exist, at least one complete frontier node is generated in
-finite time. By \eqref{ch04:eq:termination}, the returned node is the minimizer
-of the value function \eqref{ch04:eq:search_value} over
-$\overline{\mathcal{V}}^\star$.
+The depth bound and finite branching make the represented search finite.
+The test in \eqref{ch04:eq:complete-nodes} excludes leaves with a failed
+mission trace or an infeasible formation MILP. Selection by
+\eqref{ch04:eq:termination} minimizes the stated value over the remaining
+leaves. This argument makes no completeness claim beyond the represented
+singleton-event and depth-bounded search. Execution correctness additionally
+requires the realized task labels and timing to respect the verified schedule.
 \end{proof}
+\end{revision}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%======================================================================================
-%======================================================================================
 \subsection{Capacity-based and redundancy-aware team formation}
 \label{ch04:subsubsec:team_formation}
 
@@ -556,7 +541,7 @@ tasks in $\Gamma_k$. The overall objective is given by:
 \label{ch04:eq:formation_objective}
 \min \max_{k\in\mathcal{K}} J_k,
 \end{equation}
-which minimizes the worst response time across all teams.
+\rev{where the objective is the largest team response time.}
 
 With standard max linearization,
 \eqref{ch04:eq:bound_form}--\eqref{ch04:eq:formation_objective} is a mixed-
@@ -762,32 +747,28 @@ and relative velocities. The instantaneous coordination cost is given by:
 where the first term captures the current makespan across subtasks, and the
 second promotes balanced workload among coalitions.
 
-The local switch rule is based on whether moving one robot from its current
-coalition to a neighboring coalition reduces the worst coalition cost. If robot
-$i$ is currently assigned to subtask $j_i$, and $j'$ is a candidate neighboring
-subtask, then the switch is accepted only if:
+\begin{revision}
+A local switch is evaluated with the target positions and coalition cost
+estimates frozen during the synchronized update. Let $c_1,c_2$ be the
+costs of the donor and recipient coalitions before the switch, and let
+$c_1^+,c_2^+$ be their proposed costs. The switch is accepted only if
 \begin{equation}
 \label{ch04:eq:switch-condition}
-\max\Bigl\{
-\chi(\mathcal{R}_{j'}\cup\{i\}),
-\chi(\mathcal{R}_{j_i}\setminus\{i\})
-\Bigr\}
-<
-\max\Bigl\{
-\chi(\mathcal{R}_{j_i}),
-\chi(\mathcal{R}_{j'})
-\Bigr\},
+\max\{c_1^+,c_2^+\}\le\max\{c_1,c_2\},\qquad
+c_1^++c_2^+<c_1+c_2,
 \end{equation}
-which is evaluated locally using the current coalition estimates. If
-\eqref{ch04:eq:switch-condition} holds, a switch intent is announced to the
-relevant neighboring robots, conflicts are resolved by a priority rule, and the
-coalition update is synchronized. The local execution plans and trajectories are
-then updated accordingly.
-The update uses local information exchange and preserves disjoint coalitions.
-Its effectiveness depends on sufficiently frequent team connectivity; persistent
-disconnection can prevent information propagation, while delays or packet losses
-mainly slow convergence and may cause temporary inconsistencies.
-
+where $c_1=\chi(\mathcal R_{j_i})$, $c_2=\chi(\mathcal R_{j'})$,
+$c_1^+=\chi(\mathcal R_{j_i}\setminus\{i\})$, and
+$c_2^+=\chi(\mathcal R_{j'}\cup\{i\})$.
+The candidate must also preserve every coalition's capability requirements.
+The first inequality prevents an increase in the global maximum, and the
+second strictly decreases the sum, while unaffected costs remain fixed.
+Thus the aggregate objective in \eqref{ch04:eq:coalition-cost} decreases.
+Switch intents are synchronized and conflicting moves are serialized.
+Connectivity and sufficiently fresh shared estimates are required to apply
+this test consistently. Moving targets can change the objective between
+updates, so online execution does not imply convergence to a fixed optimum.
+\end{revision}
 
 \begin{example}
 \label{ch04:example:DynamicKnown}
@@ -803,6 +784,10 @@ The dynamic-and-unknown case is not pursued here. Without knowing the number and
 locations of moving subtasks, task completion cannot be certified reliably; such
 settings would require combining exploration with dynamic coalition updates.
 
+\rev{The following statements assume feasible local navigation and action
+models and successful underlying optimization. A failed local problem rejects
+the abstract candidate rather than yielding an executable team plan.}
+
 \begin{theorem}
 \label{ch04:thm:local-correctness}
 For each task $\omega_k^\ell$ and assigned team $\mathcal{N}_k$, the
@@ -810,9 +795,11 @@ coordination strategies in Section~\ref{ch04:subsec:local_coordination}
 produce feasible local execution plans and trajectories. In the static and
 known case, the local makespan objective is optimized directly. In the static
 and unknown case, feasibility is preserved while the increase in execution cost
-caused by online insertions is minimized. In the dynamic and known case, the
-distributed coalition updates decrease the local coalition cost until a locally
-optimal coalition configuration is reached.
+caused by online insertions is minimized. \rev{For frozen target states and a fixed coalition cost function,
+synchronized feasible switches satisfying \eqref{ch04:eq:switch-condition}
+terminate at a partition with no improving switch under that rule.
+For moving targets, the rule provides an instantaneous improvement test,
+not convergence to a fixed locally optimal partition.}
 \end{theorem}
 
 \begin{proof}
@@ -828,14 +815,12 @@ subtask is then inserted by solving \eqref{ch04:eq:min-disruption}, which
 preserves feasibility of the current plan while minimizing the incremental cost
 of the update. Hence the resulting local execution remains feasible throughout
 the exploration process.
-In the dynamic and known case, the coalition update rule in
-\eqref{ch04:eq:switch-condition} admits a switch only when the worst affected
-coalition cost decreases. Therefore, the aggregate coalition cost in
-\eqref{ch04:eq:coalition-cost} decreases monotonically under accepted updates.
-Since the number of feasible coalition structures over the finite team
-$\mathcal{N}_k$ is finite, the update process terminates at a locally optimal
-coalition configuration. The associated local plans and trajectories are
-therefore feasible and locally consistent with the moving subtasks.
+\rev{For a fixed cost function, each accepted switch leaves the largest
+unaffected cost unchanged, does not increase the affected maximum, and
+strictly decreases the affected sum. Hence \eqref{ch04:eq:coalition-cost}
+strictly decreases. There are finitely many feasible partitions, so serialized
+switches terminate. This finite-descent argument applies only while the
+cost function is fixed; it does not extend across changing target states.}
 \end{proof}
 
 %==============================
@@ -847,10 +832,13 @@ nodes and expanding up to~$B \triangleq (K{+}1)\,|\Omega^-_{\nu_h^\star}|$
 children incurs $\mathcal{O}(PBK)$ for the automaton-state
 updates~$\widehat{Q}^+_m$, together with the capacity and timing
 updates in~\eqref{ch04:eq:update-constraint} and~\eqref{ch04:eq:estimated_time};
-maintaining the non-dominated frontier based
-on~\eqref{ch04:eq:profile}-\eqref{ch04:eq:frontier} requires
-$\mathcal{O}(|\mathcal{V}|(2K{+}M))$ to reach
-the completeness condition in \eqref{ch04:eq:complete-nodes}. The capacity-based
+\rev{A scan comparing a new node with $|\mathcal V|$ aligned profiles
+costs $\mathcal O(|\mathcal V|(2K+M))$ once their continuation conditions
+have been established. This is a bookkeeping bound, not a proof of safe
+pruning for arbitrary profiles. Each complete candidate also requires
+timed-trace verification and a team-formation MILP. A depth bound
+$D_{\max}$ makes the represented tree finite; these verification and
+formation costs must be included for every tested leaf.} The capacity-based
 team-formation MILP introduces $\mathcal{O}(N K^\star)$ binary variables $b_{ik}$,
 which is NP-hard in general but limited by the small number of teams.
 For the case of static and known tasks, the

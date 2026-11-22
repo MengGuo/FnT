@@ -94,8 +94,8 @@ with request \(\xi\), determine the topology matching procedure:
 \mathcal{G}^{\texttt{w}},\widehat{\mathcal{G}}^{\xi},\xi
 \right),
 \end{equation}
-which returns a request-consistent topology transition that minimizes
-\eqref{ch05:eq:match_objective}.
+\rev{where the returned request-consistent transition minimizes
+\eqref{ch05:eq:match_objective}.}
 \end{problem}
 
 %==============================
@@ -389,8 +389,9 @@ T_i^{\texttt{nav}}(p_{\texttt{h}},p_i^{\ell_i}),
 \qquad
 \forall i\in\mathcal{N},\ \ell_i\le L_i,
 \end{equation}
-then the embeddings are updated in place and the backbone topology is
-retained. Otherwise, the relocation is realized as a
+\rev{where the inequalities test whether all indexed robots can follow
+the relocated embedding within their navigation budgets. If they hold, the
+embeddings are updated in place and the backbone topology is retained.} Otherwise, the relocation is realized as a
 connectivity-preserving migration. In that case,
 \texttt{TopologyMatch} instantiates an embedded star subtopology centered at
 \(\texttt{h}\), and assigns robots to relative placements that

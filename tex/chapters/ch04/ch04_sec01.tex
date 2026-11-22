@@ -191,79 +191,63 @@ the required region and execute the required local action, or by a feasible
 group of robots that can jointly realize the required collaborative action.
 Second, a state is removed if it is unreachable from the initial set, or if
 it cannot reach an accepting state that is itself reachable from that state.
-Such a state cannot belong to any accepting run. Third, transitions that
-impose exact simultaneity and admit equivalent decompositions through
-intermediate states are removed. This last case is formalized next.
+Such a state cannot belong to any accepting run. \rev{Third, candidate simultaneity transitions may be replaced by paths
+through intermediate states, subject to the retained-path test below.
+This reduction preserves graph reachability, but does not assert equality
+of the accepted word languages or completeness for constrained team motion.}
 
 \begin{definition}
 \label{ch04:def:decomposable-transition}
 \begin{revision}
-A transition from $q_{i}$ to $q_{j}$ in $\mathcal{B}_{\varphi}$ is called
-\emph{decomposable} if there exist a state $q_{k}$ and input letters
-$\sigma_{ik}, \sigma_{kj} \in \Sigma$ such that the following holds:
+A transition from $q_i$ to $q_j$ is called \emph{decomposable} if
+there is a state $q_k\notin\{q_i,q_j\}$ and nonempty, disjoint letters
+$\sigma_{ik},\sigma_{kj}\in\Sigma$ satisfying
 \begin{equation}
 \label{ch04:eq:decomposable_transition}
-q_{k} \in \delta(q_{i}, \sigma_{ik}), \quad
-q_{j} \in \delta(q_{k}, \sigma_{kj}), \quad
-q_{j} \in \delta(q_{i}, \sigma_{ik} \cup \sigma_{kj}),
+q_k\in\delta(q_i,\sigma_{ik}),\quad
+q_j\in\delta(q_k,\sigma_{kj}),\quad
+q_j\in\delta(q_i,\sigma_{ik}\cup\sigma_{kj}),
 \end{equation}
-where the direct transition and the two-step path connect the same pair of
-states.
+where the first two transitions form a path that does not use the direct
+transition being considered for removal.
 \end{revision}
 \end{definition}
 
-\rev{Definition~\ref{ch04:def:decomposable-transition} identifies a transition whose
-label can be split without changing the logical effect of the run.} Such a
-transition imposes unnecessary simultaneity on distributed execution, so the
-direct edge can be replaced by the corresponding two-step path whenever
-\eqref{ch04:eq:decomposable_transition} holds. The pruned automaton is denoted
-by $\mathcal{B}_{\varphi}^{-}$; it retains the accepting behaviors needed for
-decomposition while reducing the search space.
+\begin{revision}
+Candidate deletions are processed one at a time. A direct transition is
+removed only while both replacement transitions are present in the current
+automaton after the feasibility pruning. No transition or state is added.
+Each accepted deletion reduces the finite transition set, so the procedure
+terminates without recursive decomposition. Denote its result by
+$\mathcal{B}_{\varphi}^{-}$.
+\end{revision}
 
+\begin{revision}
 \begin{lemma}
 \label{ch04:lemma:pruned_nba_equiv}
-If a feasible word $w$ is accepted by $\mathcal{B}_{\varphi}$, then there
-exists an equivalent word $w'$ that is accepted by
-$\mathcal{B}_{\varphi}^{-}$.
+Every word accepted by $\mathcal{B}_{\varphi}^{-}$ is accepted by the
+original automaton. The sequential retained-path deletions preserve
+initial-to-accepting graph reachability after feasibility pruning.
 \end{lemma}
-
 \begin{proof}
-Let $w$ be a feasible accepting word of $\mathcal{B}_{\varphi}$, and let
-$\rho = q_{0} q_{1} \cdots q_{L}$ be a corresponding accepting run. Since
-$\rho$ is accepting, every state on $\rho$ is reachable from the initial set
-and can reach an accepting state. Therefore, none of these states is removed
-during the invalid-state pruning step. Since $w$ is feasible for the team,
-none of the transitions used by $\rho$ is removed by the infeasibility test.
-If every transition in $\rho$ is retained after pruning, then $\rho$ is also
-an accepting run of $\mathcal{B}_{\varphi}^{-}$, and one may take
-$w' = w$. Assume now that $\rho$ contains a transition from $q_{i}$ to
-$q_{j}$ that is removed because it is decomposable. \rev{By
-Definition~\ref{ch04:def:decomposable-transition}, there exist a state
-$q_{k}$ and input letters $\sigma_{ik}, \sigma_{kj}$ such that
-$q_{k} \in \delta(q_{i}, \sigma_{ik})$ and
-$q_{j} \in \delta(q_{k}, \sigma_{kj})$, while the direct transition from
-$q_{i}$ to $q_{j}$ is induced by the combined label
-$\sigma_{ik} \cup \sigma_{kj}$.} Hence, the segment $q_{i} q_{j}$ in the
-accepting run can be replaced by the segment $q_{i} q_{k} q_{j}$. This
-replacement yields a new accepting run in which the direct step is realized
-by two consecutive steps.
-If one of the newly introduced transitions is itself removed as decomposable,
-the same replacement can be applied again. Since the automaton is finite,
-this process terminates after finitely many steps. The result is an
-accepting run of $\mathcal{B}_{\varphi}^{-}$ associated with a word $w'$
-that is equivalent to $w$ for the purpose of task satisfaction.
+The reduced automaton is a subautomaton, so each retained run is also an
+original run. At a deletion, the removed edge has a two-step replacement
+in the current graph. Replacing that edge in any graph path preserves its
+endpoints. Induction over the finite sequence of deletions therefore
+preserves initial-to-accepting reachability. This argument does not identify
+the original and replacement words, or establish their physical feasibility.
 \end{proof}
+\end{revision}
 
 \begin{example}
 \label{ch04:example:prune_nba}
-\rev{For the task formula in~\ref{ch04:example:subtask}, the automaton
-$\mathcal{B}_{\varphi}$ generated by the construction of~\citet{gastin2001fast} contains
-$707$ states and $16044$ transitions, together with more than
-$1.29 \times 10^{7}$ accepting words.} After the pruning procedure above, the
-automaton $\mathcal{B}_{\varphi}^{-}$ still contains $707$ states, but only
-$2423$ transitions and $174469$ accepting words. Therefore, the pruning step
-reduces the number of transitions by $84.9\%$ and the number of accepting
-words by $98.6\%$.
+\rev{For the task formula in~\ref{ch04:example:subtask}, the reported
+finite enumeration used an automaton with $707$ states and $16044$
+transitions, and counted more than $1.29\times10^7$ candidate accepting
+sequences. The reduced search used $2423$ transitions and counted $174469$
+sequences, corresponding to reductions of $84.9\%$ and $98.6\%$ in those
+reported counts. These are finite experimental enumeration counts, not the
+cardinality of the full good-prefix language, which can be infinite.}
 \end{example}
 
 \subsubsection{Task decomposition}
@@ -275,9 +259,9 @@ $\Diamond(\alpha_{1}\land\Diamond(\alpha_{2}\land\Diamond\alpha_{3}))$
 requires sequential satisfaction of $\alpha_{1}$, $\alpha_{2}$, and
 $\alpha_{3}$, whereas
 $\Diamond\alpha_{1}\land\Diamond\alpha_{2}\land\Diamond\alpha_{3}$ does not.
-The construction therefore extracts indexed subtasks from an accepting run of
-$\mathcal{B}_{\varphi}^{-}$ and relaxes the induced total order into an
-R-poset that keeps only the temporal constraints needed for correctness.
+\rev{The construction extracts indexed subtasks from an accepting run and
+proposes relaxed R-poset constraints for assignment search. Original-automaton
+verification determines whether a complete candidate is valid.}
 
 \begin{definition}
 \label{ch04:def:subtasks}
@@ -296,13 +280,15 @@ where $\ell$ is the index of subtask $\omega_{\ell}$. \rev{For each
 $\ell \in \{1,\cdots,L\}$, the label $\sigma_{\ell}\in\Sigma$
 satisfies $q_{\ell}\in\delta(q_{\ell-1},\sigma_{\ell})$ and
 $q_{\ell}\notin\delta(q_{\ell-1},\sigma_{\ell}\setminus\{z\})$ for every
-$z\in\sigma_{\ell}$.} \rev{The set $\sigma_{\ell}^{s}\subseteq AP$ is the
-self-loop requirement at $q_{\ell-1}$ and satisfies the following
-conditions for every $\sigma\in\Sigma$: if
-$\sigma\cap\sigma_{\ell}^{s}\neq\emptyset$, then
-$q_{\ell-1}\notin\delta(q_{\ell-1},\sigma)$; if
-$\sigma\cap\sigma_{\ell}^{s}=\emptyset$, then
-$q_{\ell-1}\in\delta(q_{\ell-1},\sigma)$.}
+$z\in\sigma_{\ell}$.} \rev{The exclusion-set representation is used only when the relevant
+self-loop guard can be written as
+$\bigwedge_{a\in\sigma_\ell^s}\neg a$.
+For such a guard, $\sigma_\ell^s\subseteq AP$ satisfies
+$q_{\ell-1}\in\delta(q_{\ell-1},\sigma)$ exactly when
+$\sigma\cap\sigma_\ell^s=\emptyset$.
+A guard with positive requirements, such as $a\wedge\neg b$, cannot in
+general be represented by an exclusion set. Its full Boolean guard remains
+in the automaton; that seed is not expanded by the set-based procedure.}
 \end{definition}
 
 Each subtask records its index, transition label, and self-loop label. The
@@ -327,9 +313,10 @@ $\sigma_{1}=\{\texttt{sweep}_{\texttt{p}_{21}}\}$ and
 $\sigma_{1}^{s}=\{\texttt{p}_{24}\}$. The reduced label
 $\sigma_{1}\setminus\{\texttt{sweep}_{\texttt{p}_{21}}\}=\emptyset$ does not
 enable the transition from $q_{1}$ to $q_{2}$, whereas $\sigma_{1}$ does.
-\rev{Moreover, any input letter that intersects $\sigma_{1}^{s}$ disables the
-self-loop at $q_{1}$, whereas any input letter that does not intersect
-$\sigma_{1}^{s}$ keeps that self-loop enabled.}
+\rev{In this example the self-loop guard is
+$\neg\texttt{p}_{24}$, so the exclusion set is
+$\sigma_1^s=\{\texttt{p}_{24}\}$.
+The equivalence with disjointness applies to this guard form.}
 \end{example}
 
 \begin{definition}
@@ -370,18 +357,18 @@ where the two relations are given by
 Definition~\ref{ch04:def:partial}.
 \end{definition}
 
-The relation $\preceq_{\varphi}$ is irreflexive, asymmetric, and transitive,
+\rev{The relation $\preceq_{\varphi}$ is irreflexive, asymmetric, and transitive,
 whereas $\neq_{\varphi}$ is not transitive. The number of retained relations
 determines the restrictiveness of execution: empty relations allow arbitrary
 arrangement, while the full relation recovers the original sequential order.
-For later use, let
+For later use, the full precedence relation is
 \[
 \mathbb{F}\triangleq
 \{(i,j)\mid i,j\in\{1,\cdots,L\},\,i<j\},
 \]
-denote the full precedence relation. Fewer retained relations generally allow
-more concurrency. The language of an R-poset is defined next as the set of
-timed subtask words that satisfy these partial constraints.
+\rev{where the index pairs encode the seed order. Fewer retained relations
+allow more candidate concurrency.} The language of an R-poset is defined next as the set of
+timed subtask words that satisfy these partial constraints.}
 
 \begin{definition}
 \label{ch04:def:language-poset}
@@ -409,46 +396,62 @@ $t_{\ell}+d_{\ell}<t_{\ell'}$, where $d_{\ell}$ and $d_{\ell'}$ are the
 durations of $\omega_{\ell}$ and $\omega_{\ell'}$, respectively.
 \end{definition}
 
-With a slight abuse of notation, $w_{\varphi}$ may also denote the symbolic
-sequence $\omega_{1}\omega_{2}\cdots\omega_{L}$. An R-poset is accepting if
-$L(P_{\varphi})\subseteq L_{\varphi}$, so synthesis can search for accepting
-R-posets rather than single accepting words. Since enumerating all accepting
-runs of $\mathcal{B}_{\varphi}^{-}$ has worst-case complexity
-$\mathcal{O}(|Q^{-}|!)$, an anytime construction is used. For a subtask set
-$\Omega$, let
-$2_{\ge 2}^{\Omega}\triangleq \{\widehat{\Omega}\subseteq\Omega \mid |\widehat{\Omega}|\ge 2\}$,
-which is the family of all subsets of $\Omega$ with cardinality at least
-two. \rev{Also, for any pair of automaton states $q,q'$, let
-$\delta^{-1}(q,q')\triangleq
-\{\sigma\in\Sigma \mid q'\in\delta(q,\sigma)\}$,
-which denotes the set of input letters that induce the transition from $q$ to
-$q'$.}
+\begin{revision}
+Let $\operatorname{Trace}(w)$ be the proposition word induced by a timed
+subtask schedule, including the propositions present during waiting and
+execution. The relations in $P_\varphi$ generate candidate schedules;
+satisfying those relations alone is not a general acceptance certificate.
+Each complete schedule is checked on $\mathcal{B}_\varphi$ before it can
+be returned. Write $L_{\mathrm{v}}(P)$ for the schedules in $L(P)$ whose
+induced traces pass this check.
 
-\begin{algorithm}[t!]
-\caption{Anytime computation of accepting R-posets
+The seed search uses simple initial-to-accepting paths, with a local visited
+set and termination at the first accepting state. There are finitely many
+such paths; their number is factorial in the state count in the worst case,
+with additional choices of transition letters. This restriction does not
+enumerate all accepting runs, because cycles can generate arbitrarily long
+good prefixes. The procedure therefore makes no completeness claim for
+arbitrary sc-LTL formulas or motion-constrained team executions.
+For a subtask set $\Omega$, let
+\[
+2_{\ge2}^{\Omega}\triangleq
+\{\widehat\Omega\subseteq\Omega\mid |\widehat\Omega|\ge2\},
+\]
+where the set contains the candidate groups for concurrency tests.
+For states $q,q'$, define
+$\delta^{-1}(q,q')\triangleq
+\{\sigma\in\Sigma\mid q'\in\delta(q,\sigma)\}$.
+This inverse image is a set of letters, whereas $\sigma_\ell^s$ is a set
+of propositions. Their updates must therefore preserve these types.
+\end{revision}
+
+\begin{algorithm}
+\color{blue}[t!]
+\caption{Anytime generation of candidate R-posets
 $\texttt{compute\_poset}(\cdot)$}
 \label{ch04:alg:compute-poset}
 \SetKwInOut{Input}{Input}
 \SetKwInOut{Output}{Output}
 \Input{Pruned automaton $\mathcal{B}_{\varphi}^{-}$ and time budget $t_{0}$.}
-\Output{R-posets $\mathcal{P}_{\varphi}$ and languages
-$\mathcal{L}_{\varphi}$.}
+\Output{R-posets $\mathcal{P}_{\varphi}$ and tested words
+$\mathcal{W}_{\varphi}$.}
 
 \tcc{\rev{Start from an accepting word and relax only tested temporal constraints.}}
-Initialize $\mathcal{P}_{\varphi}=\mathcal{L}_{\varphi}=\emptyset$.\;
-Begin a modified DFS that explores accepting runs over all pairs
-$(q_{0},q_{f})\in Q_{0}^{-}\times Q_{F}^{-}$.\;
+Initialize $\mathcal{P}_{\varphi}=\mathcal{W}_{\varphi}=\emptyset$.\;
+\rev{Begin DFS over simple paths from $Q_0^-$ to $Q_F^-$, stopping
+at the first accepting state.}\;
 
 \While{$\mathrm{time}<t_{0}$}{
+    \rev{Skip a seed whose self-loop guards lack the exclusion-set form.}\;
     Compute $\Omega$ and a word $w$ from $\rho$ according to
     Definition~\ref{ch04:def:subtasks}.\label{ch04:alg-line:decompose}\;
 
-    \If{$w \notin \mathcal{L}_{\varphi}$\label{ch04:alg1:inlp}}{
+    \If{$w \notin \mathcal{W}_{\varphi}$\label{ch04:alg1:inlp}}{
         Initialize
         $P=(\Omega,\preceq_{\varphi}=\mathbb{F},
         \neq_{\varphi}=2_{\ge 2}^{\Omega})$.\;
         \label{ch04:alg-line:initial}
-        Set $L(P)=\{w\}$, $Que=[w]$, and $I_{1}=I_{2}=\emptyset$.\;
+        Set $\mathcal W_P=\{w\}$, $Que=[w]$, and $I_{1}=I_{2}=\emptyset$.\;
         \label{ch04:alg-line:que}
 
         \While{$|Que|>0$ and $\mathrm{time}<t_{0}$
@@ -462,7 +465,7 @@ $(q_{0},q_{f})\in Q_{0}^{-}\times Q_{F}^{-}$.\;
 
                 \eIf{$w'$ is accepting\label{ch04:alg1:waccepting}}{
                     Add $(\omega_{1},\omega_{2})$ to $I_{1}$.\;
-                    Add $w'$ to $Que$ and $L(P)$ if $w' \notin L(P)$.\;
+                    Add $w'$ to $Que$ and $\mathcal W_P$ if $w' \notin \mathcal W_P$.\;
                     \label{ch04:alg1:add-w}
                 }{
                     Add $(\omega_{1},\omega_{2})$ to $I_{2}$.\;
@@ -488,33 +491,31 @@ $(q_{0},q_{f})\in Q_{0}^{-}\times Q_{F}^{-}$.\;
             }
         }
 
-        \For{$w\in L(P)$}{
+        \For{$w\in \mathcal W_P$}{
             Recover the associated path $\rho'$.\;
             \For{$i=1,2,\cdots,|\rho'|$}{
-                Update $\sigma^{s}_{\ell_{i}}$ by intersecting it with
-                $\delta^{-1}(\rho'[i-1],\rho'[i-1])$.\;
+                \rev{Recover the self-loop guard at $\rho'[i-1]$ and its
+                exclusion set, when that representation exists.}\;
             }
         }
         \label{ch04:alg-line:self-loop}
 
-        Add $P$ to $\mathcal{P}_{\varphi}$ and add $L(P)$ to
-        $\mathcal{L}_{\varphi}$.\;
+        Add $P$ to $\mathcal{P}_{\varphi}$ and add $\mathcal W_P$ to
+        $\mathcal{W}_{\varphi}$.\;
     }
 
     Continue the modified DFS and update $\rho$ and the elapsed time.\;
 }
 
-\Return{$\mathcal{P}_{\varphi},\mathcal{L}_{\varphi}$}.\;
+\Return{$\mathcal{P}_{\varphi},\mathcal{W}_{\varphi}$}.\;
 \end{algorithm}
 
-Algorithm~\ref{ch04:alg:compute-poset} uses a modified depth-first search with
-local visited sets~\citep{sedgewick2001algorithms}. Each accepting run is
-converted into a subtask set and seed word, from which a fully ordered R-poset
-is initialized. Adjacent switches that preserve acceptance remove unnecessary
-precedence constraints, while simultaneous-execution tests remove unnecessary
-opposition constraints. The self-loop labels are then updated from feasible
-words, producing one accepting R-poset; the search continues to return more
-R-posets as time permits.
+\rev{Algorithm~\ref{ch04:alg:compute-poset} uses a depth-first search with
+local visited sets~\citep{sedgewick2001algorithms}. Adjacent switches and
+concurrency tests propose relaxations of each seed order. The stored tested
+words are not identified with the entire language generated by the relaxed
+relations. A complete team schedule is accepted only after its actual
+proposition trace has been checked on the original automaton.}
 
 \begin{example}
 \label{ch04:example:r_poset}
@@ -523,81 +524,38 @@ $\preceq_{\varphi}=\{(1,2),(1,3)\}$ and
 $\neq_{\varphi}=\{\{2,3\}\}$.
 \end{example}
 
+\begin{revision}
 \begin{lemma}
-% AUTHOR QUESTION AQ6: R-poset pruning and fleet-search guarantees
-% What restrictions on formulas and automata justify sequentializing a simultaneous transition,
-% guarantee termination of repeated decompositions, and ensure that the relaxed relations accept only
-% valid words? Individual swap tests alone need not establish arbitrary combinations of relaxations.
-% What state-equivalence condition permits dominance pruning by the scalar distance/capacity profile
-% in Section~4.2, and what bounds search depth in automata containing cycles? The pruning, R-poset,
-% and fleet-search theorems are left unchanged until their source assumptions are fixed.
 \label{ch04:lemma:accepting-poset}
-Any R-poset in $\mathcal{P}_{\varphi}$ produced by
-Algorithm~\ref{ch04:alg:compute-poset} is accepting.
+Every complete schedule retained after the automaton check has a trace
+satisfying $\varphi$.
 \end{lemma}
-
 \begin{proof}
-By definition, it is sufficient to show that the language $L(P)$ associated
-with each returned R-poset $P$ is contained in $L_{\varphi}$. First, every
-word added to $L(P)$ is explicitly checked for acceptance in
-Line~\ref{ch04:alg1:add-w}. Hence, all stored words are accepting.
-Now consider any word $w$ that satisfies the partial relations of $P$. For
-the precedence relation, the queue process in
-Line~\ref{ch04:alg1:begin_que}--\ref{ch04:alg1:end_que} explores every word
-that can be generated from the seed word by a sequence of adjacent switches
-while remaining accepting. Therefore, any precedence constraint removed from
-$\preceq_{\varphi}$ is unnecessary for acceptance, while every constraint
-that remains is necessary. It follows that every word satisfying the final
-precedence relation can be generated through accepting switch operations and
-belongs to $L(P)$.
-For the opposition relation, every candidate relaxation is checked by
-replacing the corresponding subtasks with their union and verifying whether
-the resulting word is accepting. Therefore, every removal from
-$\neq_{\varphi}$ preserves acceptance. Hence, any word satisfying the final
-relations of $P$ is accepting, which proves $L(P)\subseteq L_{\varphi}$.
+The check requires the finite trace to reach an accepting state of the
+original good-prefix automaton. Its acceptance condition recognizes exactly
+the good prefixes of $\varphi$. The claim follows independently of which
+swap or concurrency tests produced the candidate schedule.
 \end{proof}
-
-Because Algorithm~\ref{ch04:alg:compute-poset} is anytime, a finite-time output
-may cover only part of the accepting language. With unbounded time, however, the
-complete family of accepting R-posets is obtained, and the union of their
-languages is as expressive as the pruned automaton.
 
 \begin{lemma}
 \label{ch04:lemma:complete-poset}
-The output of Algorithm~\ref{ch04:alg:compute-poset} satisfies
-$L(P_{i})\cap L(P_{j})=\emptyset$ for all $i\neq j$, and
-$L(P_{i})\subseteq L_{\varphi}$ for every
-$P_{i}\in\mathcal{P}_{\varphi}$. Moreover, if
-$t_{0}\rightarrow\infty$, then the complete set of R-posets is returned and
+The verified schedule languages satisfy
 \begin{equation}
 \label{ch04:eq:complete_poset_language}
-L_{\varphi}=
-\bigcup_{P_{i}\in\mathcal{P}_{\varphi}}L(P_{i}),
+\bigcup_{P\in\mathcal{P}_\varphi}
+\{\operatorname{Trace}(w)\mid w\in L_{\mathrm{v}}(P)\}
+\subseteq L_\varphi,
 \end{equation}
-so the union of the R-poset languages equals the accepting language of the
-task.
+where $L_\varphi$ is the good-prefix language of the original task.
+The candidate R-poset languages can overlap, and their union need not cover
+all accepting words.
 \end{lemma}
-
 \begin{proof}
-The inclusion $L(P_{i})\subseteq L_{\varphi}$ follows directly from
-Lemma~\ref{ch04:lemma:accepting-poset}. It remains to prove disjointness and
-completeness.
-For disjointness, assume that there exist two distinct R-posets
-$P_{1},P_{2}\in\mathcal{P}_{\varphi}$ and a word
-$w\in L(P_{1})\cap L(P_{2})$. Then the indexed subtask sets induced by
-$P_{1}$ and $P_{2}$ must coincide. For a fixed subtask set, the queue phase
-of Algorithm~\ref{ch04:alg:compute-poset} computes the maximal relaxation of
-the partial relations supported by accepting words. Hence two different
-R-posets cannot share the same accepting word. This contradicts the
-assumption, and therefore $L(P_{1})\cap L(P_{2})=\emptyset$.
-For completeness, observe that the underlying DFS explores all accepting
-runs of $\mathcal{B}_{\varphi}^{-}$ when the time budget is unbounded. Each
-accepting run induces a decomposition and, through the subsequent reduction
-steps, an accepting R-poset. Therefore, every accepting word of the pruned
-automaton is covered by at least one returned R-poset. Since the pruning
-step preserves the accepting behaviors relevant here, the union in
-\eqref{ch04:eq:complete_poset_language} equals $L_{\varphi}$.
+Each trace in the union passes the acceptance check in
+Lemma~\ref{ch04:lemma:accepting-poset}. Taking a union preserves inclusion.
+No disjointness or exhaustive coverage is required for this argument.
 \end{proof}
+\end{revision}
 
 \begin{definition}
 \label{ch04:def:poset-graph}
@@ -647,19 +605,20 @@ exclusion, and disconnected components indicate independent roots.
 \subsubsection{Task assignment}
 \label{ch04:subsubsec:task-assignment}
 
-The next step assigns the subtasks of each accepting R-poset to the robot team.
+\rev{The next step assigns the subtasks of each candidate R-poset to the robot team.}
 For a fixed $P_{\varphi}\in\mathcal{P}_{\varphi}$, the objective is to respect
 its temporal relations while minimizing completion time; candidate R-posets are
 then compared through the resulting assignments.
 
 \begin{problem}
+\color{blue}
 \label{ch04:prob:task_assignment}
 Given an R-poset
 $P_{\varphi}=(\Omega_{\varphi},\preceq_{\varphi},\neq_{\varphi})$ with
 $P_{\varphi}\in\mathcal{P}_{\varphi}$, determine an assignment of all subtasks
 in $\Omega_{\varphi}$ to the robot team $\mathcal{N}$ such that the relations
-$\preceq_{\varphi}$ and $\neq_{\varphi}$ are respected and the makespan of the
-resulting team execution is minimized.
+$\preceq_{\varphi}$ and $\neq_{\varphi}$ are respected and the original task automaton accepts the induced trace and the makespan of
+the resulting verified execution is minimized.
 \end{problem}
 
 Problem~\ref{ch04:prob:task_assignment} contains the multi-vehicle routing
@@ -667,9 +626,11 @@ problem~\citep{khamis2015multi} and job-shop scheduling
 \citep{morrison2016branch} as special cases, and is therefore NP-hard. A direct
 mixed-integer formulation is possible but unsuitable for large real-time
 instances because useful intermediate assignments may not be available before
-convergence. An anytime branch-and-bound procedure is therefore adopted; it
-remains complete while returning progressively better feasible solutions. Its
-main components are node expansion, branching, and upper and lower bounds.
+convergence. \rev{An anytime branch-and-bound procedure searches the finite assignments
+of a selected candidate R-poset and returns progressively better verified
+solutions. Its completeness is limited to the represented assignments and
+valid lower bounds; it is not completeness for the original mission.}
+\rev{The main components are node expansion, branching, and upper and lower bounds.}
 
 (I) \emph{Node expansion.}
 Each node of the search tree represents one partial assignment of subtasks,
@@ -748,7 +709,9 @@ $N_{\omega}$ is the number of robots participating in $\omega$. The quantity
 $T_{\nu}$ is computed under the precedence relation $\preceq_{\varphi}$, the
 opposition relation $\neq_{\varphi}$, the motion constraints induced by the
 graphs $\mathcal{G}_{n}$, and the synchronization requirements of
-collaborative subtasks. The greedy upper-bound routine expands the child node
+collaborative subtasks. \rev{An unverified completion is not a feasible upper bound and cannot
+update the incumbent used for pruning.}
+The greedy upper-bound routine expands the child node
 with the largest value of $\eta_{\nu}$ until all subtasks are assigned.
 Moreover, the lower bound is estimated from two relaxations of the original problem.
 The first retains only the temporal relations and relaxes the robot-capacity
@@ -777,6 +740,7 @@ whose lower bounds exceed the current best makespan are discarded, and the
 search stops when the queue is empty or the time budget is exhausted.
 
 \begin{algorithm}[t]
+\color{blue}
 \caption{Anytime branch-and-bound search for task assignment}
 \label{ch04:alg:BnB}
 \SetKwInOut{Input}{Input}
@@ -797,7 +761,8 @@ $T_{\Omega}^{\star}=()$.\label{ch04:algline:init-end}\;
     $\overline{J}_{\nu},\,\overline{T}_{\nu},\,\overline{T}_{\Omega}
     = \texttt{upper\_bound}(\nu,P_{\varphi})$.\label{ch04:algline:upper}\;
 
-    \If{$\overline{T}_{\nu}<T^{\star}$ \label{ch04:algline:update1}}{
+    \If{\rev{$\overline{T}_\nu<T^\star$ and the complete schedule passes
+    the original-automaton trace check}\label{ch04:algline:update1}}{
         Set $T^{\star}=\overline{T}_{\nu}$,
         $J^{\star}=\overline{J}_{\nu}$, and
         $T_{\Omega}^{\star}=\overline{T}_{\Omega}$.\;
@@ -819,6 +784,7 @@ $T_{\Omega}^{\star}=()$.\label{ch04:algline:init-end}\;
         }
     }
 }
+\rev{If $T^\star=\infty$, return failure within the budget.}\;
 \Return{$J^{\star},T^{\star},T_{\Omega}^{\star}$}.\;
 \end{algorithm}
 
