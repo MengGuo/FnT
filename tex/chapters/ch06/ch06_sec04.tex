@@ -2,6 +2,23 @@
 \section{Case Study}
 \label{ch06:sec:case}
 
+\begin{revision}
+In the uncertain-motion variant of Section~\ref{ch01:subsec:recurring-example},
+a traversal command can reach the next region or leave the robot at the
+corridor entrance. The MDP assigns probabilities to the two outcomes.
+The outbound policy uses the observed region and the task progress
+recorded by the automaton. A return
+request adds the requirement to reach and remain at the base with
+sufficient probability.
+A moving delivery location calls for prediction and reactive reassignment.
+A deadline for reaching the delivery region $D$ while maintaining formation
+can be expressed by the
+bounded-time formula
+$\mathsf{F}_{[0,h]}\mu_D\wedge\mathsf{G}_{[0,h]}\mu_{\texttt{form}}$,
+where $h$ is the arrival deadline, $\mu_D$ is true upon reaching $D$,
+and $\mu_{\texttt{form}}$ encodes the formation requirement.
+\end{revision}
+
 %==============================
 \subsection{Reactive coordination under dynamic temporal tasks}
 \label{ch06:subsec:case_dynamic_tasks}
@@ -165,20 +182,20 @@ preserve logical feasibility while exploiting parallel execution
 whenever the task structure permits it.
 
 %==============================
-\subsection{Collaborative optimal transport under signal temporal tasks}
+\subsection{\rev{Collaborative optimal transport under bounded-time LTL tasks}}
 \label{ch06:subsec:case_stl}
 
 This case study reports representative simulation results for the
 collaborative optimal transport framework developed in
-Section~\ref{ch06:sec:ch06_stl}. The aim is to illustrate how the batched
+Section~\ref{ch06:sec:ch06_stl}. \rev{The aim is to illustrate how the batched
 robustness evaluation, the
 sequential local transport update, and the hybrid search procedure
-operate together on collaborative STL
-tasks of moderate scale.
-In all simulations, the robot radius is set to
-$r = 0.1\,\mathrm{m}$, the discrete time step is
-$dt = 0.1\,\mathrm{s}$, and the planning horizon is
-$T = 48$. The workspace is defined on a
+operate together on bounded-time LTL tasks of moderate scale.}
+\rev{In both examples, the temporal intervals are in seconds, and robustness
+is evaluated at samples within those intervals. The robot radius is
+$r=0.1\,\mathrm{m}$ and the sampling period is $\Delta t=0.1\,\mathrm{s}$.
+The 48 samples are indexed from $0$ through $T=47$, so the final sample is
+at $4.7\,\mathrm{s}$.} The workspace is defined on a
 $14 \times 9$ planar domain with static obstacles. For the local
 optimal transport updates, the batch size is fixed at
 $400$ trajectories. The resulting trajectories and robustness traces are
@@ -215,8 +232,9 @@ the final target region.
 Let $\mu_{A_j}$ denote the predicate that subgroup $j$ enters its
 designated target region. Let $\mu_{\textup{chain}}^j$ denote the chain
 predicate for subgroup $j$, and let $\mu_{\textup{conn}}$ denote the
-predicate that the whole team remains connected. The corresponding STL
-task is given by:
+predicate that the whole team remains connected.
+\begin{revision}
+The corresponding bounded-time LTL task is
 \begin{equation}
 \phi_1
 =
@@ -234,6 +252,7 @@ task is given by:
 \end{equation}
 where the first two terms encode the split phase, and the last term
 imposes global connectivity during the merge-and-traverse phase.
+\end{revision}
 Figure~\ref{ch06:fig:split-merge} shows a representative execution. The
 left panel presents the planned trajectories. The three subgroups first
 separate to visit their intermediate target regions and then merge into
@@ -261,7 +280,9 @@ sufficient.
 Let $\mu_A^{i,j}$ denote the predicate that all robots simultaneously
 enter the~$j$-th candidate region of the~$i$-th visitation objective, and
 let $\mu_{\textup{chain}}$ denote the chain predicate for the whole
-team. The corresponding STL task is given by:
+team.
+\begin{revision}
+The corresponding bounded-time LTL task is
 \begin{equation}
 \phi_2
 =
@@ -276,6 +297,7 @@ team. The corresponding STL task is given by:
 where each disjunction encodes one alternative visitation objective,
 while the last term enforces the chain constraint over the entire
 horizon.
+\end{revision}
 Figure~\ref{ch06:fig:alternative-visitation} shows a representative
 solution. The left panel indicates that the team preserves the chain
 structure while navigating around the non-convex obstacles and
@@ -308,11 +330,11 @@ These two examples are consistent with the analytical development in
 Section~\ref{ch06:sec:ch06_stl}. The first emphasizes staged task logic
 together with time-dependent connectivity requirements, whereas the
 second highlights disjunctive region visitation under persistent
-coupling. In both cases, the robustness traces agree with the formal STL
+coupling. \rev{In both cases, the robustness traces agree with the bounded-time LTL
 specifications, and the resulting trajectories demonstrate that the
 combined use of batched robustness evaluation, sequential local
 transport, and hybrid search yields feasible collaborative plans in
-geometrically nontrivial environments.
+geometrically nontrivial environments.}
 
 
 
@@ -329,10 +351,10 @@ abstractions and policy synthesis.
 Section~\ref{ch06:sec:ch06_uncertain} then considered reactive
 coordination under dynamic temporal tasks, emphasizing online adaptation
 to moving targets and evolving task information.
-Finally, Section~\ref{ch06:sec:ch06_stl} developed a continuous
+\rev{Finally, Section~\ref{ch06:sec:ch06_stl} developed a continuous
 trajectory-optimization perspective based on collaborative optimal
-transport, in which STL robustness, geometric safety, and inter-robot
-couplings are incorporated into a unified planning framework.
+transport, combining bounded-time task robustness, geometric safety, and
+inter-robot coupling in a single objective.}
 Overall, these sections show that effective multi-robot planning
 under uncertainty requires the coordinated use of symbolic abstraction,
 reactive replanning, and continuous optimization, depending on whether

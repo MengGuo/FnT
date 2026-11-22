@@ -2,8 +2,20 @@
 \section{Case Study}
 \label{sec:ch04_case_study}
 
-This section illustrates the top-down coordination framework of this
-chapter through two representative studies. The first is a large-scale
+\begin{revision}
+In the team-task variant of Section~\ref{ch01:subsec:recurring-example},
+inspection at $A$ must finish before delivery at $D$ begins.
+Service at $E$ is independent of that order.
+If both robots can inspect, only robot~1 can deliver, and robot~2 can
+serve $E$, the planner may assign $A$ and $E$ to robot~2 and $D$ to
+robot~1 when the routes and service order permit. The decomposition
+records both the order and the exclusion of overlap. The assignment
+determines who executes each service. The studies below illustrate these decisions at
+a larger scale.
+\end{revision}
+
+\rev{This section illustrates synthesis and coordination under global tasks
+through two representative studies.} The first is a large-scale
 continual mission with heterogeneous robots, intended to show how
 hierarchical decomposition, abstract team assignment, team formation,
 and local coordination interact under persistent online demand. The
@@ -350,17 +362,17 @@ when resources do not conflict. The corresponding collaboration
 requirements are encoded as skill-count constraints, e.g.,
 $
 \mathcal{C}_{\mathrm{af}}
-=\{(\mathrm{inspect},2),(\mathrm{operate},1),
-(\mathrm{liquid\_spray},1),(\mathrm{monitor},2)\},
+=\{(\mathrm{inspect},\allowbreak 2),\allowbreak (\mathrm{operate},\allowbreak 1),\allowbreak 
+(\mathrm{liquid\_spray},\allowbreak 1),\allowbreak (\mathrm{monitor},\allowbreak 2)\},\allowbreak 
 \mathcal{C}_{\mathrm{tp}}
-=\{(\mathrm{inspect},2),(\mathrm{clean\_up},2),
-(\mathrm{rescue},1),(\mathrm{monitor},2)\},
+=\{(\mathrm{inspect},\allowbreak 2),\allowbreak (\mathrm{clean\_up},\allowbreak 2),\allowbreak 
+(\mathrm{rescue},\allowbreak 1),\allowbreak (\mathrm{monitor},\allowbreak 2)\},\allowbreak 
 \mathcal{C}_{\mathrm{h2s}}
-=\{(\mathrm{inspect},2),(\mathrm{ignite},1),
-(\mathrm{solid\_spray},1)$,
-$(\mathrm{monitor},2)\},\mathcal{C}_{\mathrm{tank}}
-=\{(\mathrm{liquid\_spray},1),(\mathrm{monitor},2),
-(\mathrm{fix},1)\}$,
+=\{(\mathrm{inspect},\allowbreak 2),\allowbreak (\mathrm{ignite},\allowbreak 1),\allowbreak 
+(\mathrm{solid\_spray},\allowbreak 1)$,\allowbreak 
+$(\mathrm{monitor},\allowbreak 2)\},\allowbreak \mathcal{C}_{\mathrm{tank}}
+=\{(\mathrm{liquid\_spray},\allowbreak 1),\allowbreak (\mathrm{monitor},\allowbreak 2),\allowbreak 
+(\mathrm{fix},\allowbreak 1)\}$,\allowbreak 
 where each pair gives a required skill and the number of robots that must
 provide it. A subtask is released only when the selected group satisfies
 these counts and has the required resource. The cloud layer maintains the
@@ -402,6 +414,13 @@ reallocation and physical intervention by heterogeneous robots.
 
 
 %==============================
+% AUTHOR QUESTION AQ13: Experimental provenance and remaining proof assumptions
+% Can the authors supply the underlying logs or scripts for the reproduced and hardware statistics
+% before claiming any new numerical verification? Also confirm the additional assumptions needed for
+% monotone coalition-cost decrease in Section~4.2 when targets move, and the constraints used to
+% certify all collision and signal requirements in Section~6.3. The supplied archive contains source,
+% figures, and a compiled monograph, but no experiment code or raw logs; the reported results have
+% therefore been preserved.
 \subsubsection{Experimental results}
 The hardware trial lasts approximately $11$ minutes and contains $8$
 tasks with $33$ subtasks in total. As shown in Figure~\ref{ch04:fig:hardware_validation_results},
@@ -439,8 +458,8 @@ emergency-response environment.
 \section{Summary}
 \label{ch04:sec:summary}
 
-This chapter developed a top-down framework for global temporal-task
-coordination in multi-robot systems. Section~\ref{ch04:sec:po_decomp_assignment}
+\rev{This chapter developed synthesis and coordination for multi-robot systems
+under global temporal tasks.} Section~\ref{ch04:sec:po_decomp_assignment}
 introduced automaton pruning, task decomposition, relaxed partially ordered
 sets, and branch-and-bound assignment for a fixed global mission.
 Section~\ref{ch04:subsec:task} extended this framework to large heterogeneous

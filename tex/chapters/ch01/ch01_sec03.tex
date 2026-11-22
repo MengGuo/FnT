@@ -51,11 +51,16 @@ formula is translated into a B\"uchi automaton, combined with the motion
 abstraction through a product construction, and searched for an accepting run
 that yields a discrete plan. That plan is then interpreted by a hybrid
 execution strategy that connects symbolic decisions to continuous motion.
+\rev{Section~\ref{ch02:sec:task_relaxation} then treats task relaxation and
+hard--soft specifications, and Section~\ref{ch03:sec:partial} develops online
+sensing and plan adaptation. These single-robot constructions supply the
+local planning and update routines reused in Chapter~\ref{chap:bottom-up}
+for collaborative knowledge transfer.}
 Chapter~\ref{chap:preliminaries} therefore plays a dual role. It supplies the
 technical preliminaries used throughout the book, but it also fixes the
 nominal benchmark against which the later extensions should be read.
 
-\subsection{Bottom-up coordination under local tasks}
+\subsection{\rev{Coordination under local tasks}}
 \label{sec:ch01:outline:bottomup}
 
 With that baseline in place, Chapter~\ref{chap:bottom-up} turns to multi-robot
@@ -66,8 +71,9 @@ shared resources, action dependencies, missing knowledge, or temporary needs
 for assistance. This perspective is especially natural for heterogeneous
 teams, where the task of each robot is shaped by its own capabilities and by
 the information available in its local neighborhood.
-The first part of the chapter studies task relaxation and online adaptation in
-partially known workspaces. The problem there is no longer only how to compute
+\rev{The first part of the chapter uses the local update routine of
+Section~\ref{ch03:sec:partial} for collaborative knowledge transfer in
+partially known workspaces.} The problem there is no longer only how to compute
 a satisfying plan, but how to preserve meaningful task progress when the
 workspace model changes during execution. This development follows the line of
 work on plan revision, infeasible local specifications, multi-agent plan
@@ -84,7 +90,7 @@ distinguishes the chapter as a whole is that coordination is not imposed by a
 single team-level mission. It arises from local plans whose interactions become
 visible only as execution unfolds.
 
-\subsection{Top-down synthesis for global tasks}
+\subsection{\rev{Synthesis and coordination under global tasks}}
 \label{sec:ch01:outline:topdown}
 
 A different organizational principle appears in
@@ -158,10 +164,10 @@ coordination under dynamic temporal logic tasks, where the environment
 is dynamic and can invalidate purely offline decisions
 even when the original specification is sound, partially
 based on results from~\citet{zhao2026umbrella}.
-The final section considers collaborative optimal transport under signal
-temporal logic tasks, thereby moving beyond the propositional setting that
-dominates the nominal synthesis pipeline and connecting the chapter to the
-coupled LTL/STL multi-robot framework of~\citet{lindemann2019coupled,zhang2026clot}.
+\rev{The final section combines collaborative optimal transport with
+finite-automaton evaluation of bounded-time task robustness.
+The formulation builds on work that couples abstract task reasoning
+with signal-based trajectory synthesis~\citep{lindemann2019coupled,zhang2026clot}.}
 By this stage, the monograph has moved well beyond the question of whether a
 symbolic task can be satisfied on a fixed abstraction. The problem is now how
 formal task semantics can still guide planning when the system model, the
@@ -188,3 +194,58 @@ arc of the monograph is therefore intentionally open-ended. It develops a
 coherent set of foundations and coordination frameworks, but it also makes
 clear that the broader problem of hybrid coordination under complex temporal
 tasks remains an active and expanding area of research.
+
+
+\begin{revision}
+% AUTHOR QUESTION AQ2: Quantitative recurring benchmark
+% Should the recurring nine-region service example become an experimental benchmark across the
+% applicable methods? Which code, common robot model, task instances, and logs should be used? The
+% added example is explanatory; there are no fabricated measurements or cross-method rankings.
+\subsection{A recurring service-mission example}
+\label{ch01:subsec:recurring-example}
+
+Consider the rooms and corridor of Section~\ref{ch02:subsec:case_workspace}.
+Let $A=r_3$, $D=r_5$, and $E=r_6$ be service regions, with a base at $r_1$.
+The initial visitation task is
+$\psi\triangleq\Diamond(a\wedge\Diamond d)\wedge\Diamond e$,
+where $a$, $d$, and $e$ denote visits to $A$, $D$, and $E$.
+The same layout supports an inspection at $A$ followed by delivery at $D$,
+with another service at $E$, once action-completion propositions and
+capability requirements are added. The visitation formula alone does not
+encode those action effects.
+
+For one capable robot, the nominal problem is to choose the visit route.
+The two-robot variants share the service requirements and differ in how
+they are assigned. In the local-task variant, robot~1 is assigned
+inspection at $A$ followed by delivery at $D$, and robot~2 is assigned
+service at $E$. In the team-task variant, the planner receives the
+requirement that inspection finish before delivery begins and chooses
+the assignments.
+The communication variant asks when a blocked-route update reaches a peer.
+
+The uncertain-motion variant uses the same regions and labels. The labeled
+transition system specifies feasible edges between regions. The MDP adds
+probabilities for the outcomes of each action. The outbound policy uses
+the observed region and the task progress recorded by the automaton.
+Moving service locations and bounded-time
+formation constraints illustrate two further changes to the planning problem.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{p{0.12\textwidth}XX}
+\toprule
+Chapter & Added modeling feature & Planning object \\
+\midrule
+\ref{chap:preliminaries} & Known map; one capable robot & Symbolic accepting run and edge controllers \\
+\ref{chap:bottom-up} & Local tasks with edge updates, label updates, or assistance & Local product runs and request--reply decisions \\
+\ref{chap:top-down} & Team tasks with service order and heterogeneous capabilities & R-posets, assignments, and team plans \\
+\ref{chap:communication} & Delayed knowledge and limited communication & Task plans with explicit exchange events \\
+\ref{chap:uncertainty} & Stochastic outcomes, moving targets, or timed signal constraints & Policies, reactive assignments, or sampled trajectories \\
+\bottomrule
+\end{tabularx}
+\end{center}
+These small variants illustrate how the inputs, planning decisions, and
+outputs change across chapters. A quantitative comparison requires matching
+the inputs, execution assumptions, and performance measures for the
+methods being compared.
+\end{revision}

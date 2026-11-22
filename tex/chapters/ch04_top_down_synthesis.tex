@@ -1,14 +1,14 @@
-\chapter{Top-Down Synthesis for Global Temporal Logic Tasks}
+\chapter{\rev{Synthesis and Coordination under Global Temporal Logic Tasks}}
 \label{chap:top-down}
 
-The previous Chapter~\ref{chap:bottom-up} developed a bottom-up coordination
-framework in which temporal tasks are assigned locally and execution-time
-couplings are resolved as they arise. In contrast, many missions are specified
-from the outset at the level of the whole team. The central problem is then to
-decompose, distribute, and refine a global temporal specification while
-preserving its logical structure and keeping the resulting planning problem
-tractable for heterogeneous teams and large workspaces.
-This chapter develops a top-down synthesis framework for such global tasks.
+\rev{Chapter~\ref{chap:bottom-up} takes prescribed local temporal tasks as
+inputs and coordinates their execution. Here the input is a temporal
+specification for the whole team. The planning problem is to derive subtasks,
+their temporal dependencies, and feasible robot assignments while preserving
+the team-level specification. The construction must also remain tractable
+for heterogeneous teams and large workspaces.}
+\rev{The resulting framework combines global-task synthesis with
+multi-robot coordination.}
 Section~\ref{ch04:sec:po_decomp_assignment} converts accepted automaton
 behaviors into subtask occurrences and compact temporal-dependence structures
 for assignment. Section~\ref{ch04:subsec:task} extends the construction to

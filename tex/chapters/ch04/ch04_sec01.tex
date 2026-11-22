@@ -1,7 +1,8 @@
 \section{Partial-Order-Based Task Decomposition and Assignment}
 \label{ch04:sec:po_decomp_assignment}
 
-This section develops the first component of the top-down synthesis framework.
+\rev{This section develops synthesis and assignment for a supplied global
+temporal task.}
 It introduces the team model and global task specification, prunes the task
 automaton, extracts a relaxed partial-order representation, and assigns the
 resulting subtasks to feasible robots or coalitions. The outcome is an
@@ -18,8 +19,8 @@ allowing concurrency whenever the temporal structure permits it.
 \label{ch04:subsec:problem_statement}
 
 This subsection introduces the team-level model, the global task specification,
-and the optimization objective. Unlike the bottom-up setting of
-Chapter~\ref{chap:bottom-up}, the task is specified directly at the team level.
+and the optimization objective. \rev{The input is a team-level task, whereas
+Chapter~\ref{chap:bottom-up} starts with tasks supplied to individual robots.}
 The model therefore retains only the motion capabilities, action capabilities,
 and collaborative requirements needed for global-task synthesis.
 
@@ -55,9 +56,9 @@ $d_{c}(C_{k}) \in \mathbb{R}_{>0}$.
 
 A collaborative behavior is characterized by required action capabilities rather
 than fixed robot identities, so any feasible robot or coalition can be selected
-later. Representative examples include formation, herding, consensus, and
+later. \rev{Representative examples include formation, herding, consensus, and
 coverage behaviors
-\citep{chen2005formation,pan2007multi,li2009consensus,mesbahi2010graph}.
+\citep{chen2005formation, pan2007multi, li2009consensus, mesbahi2010graph}.}
 Compared with Chapter~\ref{chap:bottom-up}, this abstraction omits the detailed
 execution logic of local and assisting actions and describes collaboration only
 through capability requirements and execution durations, which is sufficient for
@@ -84,8 +85,14 @@ The global task is given by:
 \label{ch04:eq:global_task}
 \varphi \in \mathrm{sc\mbox{-}LTL}(\mathbf{p} \cup \mathbf{a} \cup \mathbf{c}),
 \end{equation}
-where the syntax and semantics of sc-LTL follow
-Chapter~\ref{chap:preliminaries}.
+\begin{revision}
+where $\mathrm{sc\mbox{-}LTL}(AP)$ is the syntactically co-safe fragment
+of $\mathrm{LTL}(AP)$ defined in Section~\ref{ch02:subsec:syntax},
+here with $AP=\mathbf{p}\cup\mathbf{a}\cup\mathbf{c}$.
+The set $AP$ contains the location, local-action, and collaborative-behavior
+propositions defined above.
+Finite completion uses the good-prefix convention of that section.
+\end{revision}
 To state the synthesis problem precisely, the output object is introduced next.
 
 \begin{definition}
@@ -109,8 +116,11 @@ the global task is defined by:
 \label{ch04:eq:completion_time}
 T_{\varphi} \triangleq t_{f} - t_{0},
 \end{equation}
-where $T_{\varphi}$ is finite because sc-LTL formulas admit satisfaction by a
-finite prefix. The objective is to minimize the team completion time in
+\begin{revision}
+where $T_{\varphi}$ is finite for a feasible satisfying team execution,
+because sc-LTL satisfaction has a finite good-prefix witness. Membership
+in the fragment alone does not guarantee feasibility for the given fleet.
+\end{revision} The objective is to minimize the team completion time in
 \eqref{ch04:eq:completion_time}. This criterion differs from minimizing the sum
 of all robot execution times, which does not capture the benefit of concurrent
 task execution.
@@ -125,10 +135,10 @@ satisfies $\varphi$ and the completion time $T_{\varphi}$ in
 \eqref{ch04:eq:completion_time} is minimized.
 \end{problem}
 
-Problem~\ref{ch04:prob:global_task_assignment} is computationally difficult: it
+\rev{Problem~\ref{ch04:prob:global_task_assignment} is computationally difficult: it
 already contains NP-hard makespan minimization for multi-stage scheduling
-\citep{hochba1997approximation,bovet1994introduction}, with additional mobility,
-temporal-logic, and collaboration constraints. Approximate multi-robot
+\citep{hochba1997approximation, bovet1994introduction}, with additional mobility,
+temporal-logic, and collaboration constraints.} Approximate multi-robot
 allocation and scheduling methods address related aspects of this difficulty
 \citep{khamis2015multi,hoos2004stochastic}.
 
@@ -160,16 +170,22 @@ that later allocation can exploit admissible parallelism.
 \subsubsection{B\"{u}chi automaton pruning}
 \label{ch04:subsubsec:NBA-pruning}
 
-The construction starts from the NBA $\mathcal{B}_{\varphi}$ associated with
+\rev{The construction starts from the NBA $\mathcal{B}_{\varphi}$ associated with
 $\varphi$, obtained by standard translation tools such as those of~\citet{gastin2001fast}
-and having the structure of Definition~\ref{ch02:def:NBA}. In the multi-robot
-setting, this automaton may contain infeasible alphabets, states outside all
+and having the structure of Definition~\ref{ch02:def:NBA}.}
+\rev{Write $\Sigma\triangleq2^{AP}$ for its input alphabet; each input
+letter $\sigma\in\Sigma$ is a subset of $AP$.}
+\rev{For the sc-LTL finite-plan search, $\mathcal{B}_{\varphi}$ uses the
+good-prefix construction of Section~\ref{ch02:subsec:syntax}, with absorbing
+accepting states. Here an accepting run means a finite prefix ending at
+such a state.} \rev{In the multi-robot
+setting, this automaton may contain infeasible labels, states outside all
 accepting runs, and simultaneity constraints that admit equivalent sequential
-realizations. Pruning these elements reduces the automaton used for later
+realizations.} Pruning these elements reduces the automaton used for later
 decomposition and assignment.
-The pruning procedure contains three parts. First, a transition
-$q_{j} \in \delta(q_{i}, \sigma)$ is removed if the alphabet $\sigma$ is
-infeasible for the team. This can be checked by verifying whether the
+The pruning procedure contains three parts. \rev{First, a transition
+$q_{j} \in \delta(q_{i}, \sigma)$ is removed if the label $\sigma$ is
+infeasible for the team.} This can be checked by verifying whether the
 propositions in $\sigma$ can be generated either by one robot that can reach
 the required region and execute the required local action, or by a feasible
 group of robots that can jointly realize the required collaborative action.
@@ -181,9 +197,10 @@ intermediate states are removed. This last case is formalized next.
 
 \begin{definition}
 \label{ch04:def:decomposable-transition}
+\begin{revision}
 A transition from $q_{i}$ to $q_{j}$ in $\mathcal{B}_{\varphi}$ is called
-\emph{decomposable} if there exist a state $q_{k}$ and alphabets
-$\sigma_{ik}, \sigma_{kj} \subseteq \Sigma$ such that the following holds:
+\emph{decomposable} if there exist a state $q_{k}$ and input letters
+$\sigma_{ik}, \sigma_{kj} \in \Sigma$ such that the following holds:
 \begin{equation}
 \label{ch04:eq:decomposable_transition}
 q_{k} \in \delta(q_{i}, \sigma_{ik}), \quad
@@ -192,10 +209,11 @@ q_{j} \in \delta(q_{i}, \sigma_{ik} \cup \sigma_{kj}),
 \end{equation}
 where the direct transition and the two-step path connect the same pair of
 states.
+\end{revision}
 \end{definition}
 
-Definition~\ref{ch04:def:decomposable-transition} identifies a transition whose
-alphabet can be split without changing the logical effect of the run. Such a
+\rev{Definition~\ref{ch04:def:decomposable-transition} identifies a transition whose
+label can be split without changing the logical effect of the run.} Such a
 transition imposes unnecessary simultaneity on distributed execution, so the
 direct edge can be replaced by the corresponding two-step path whenever
 \eqref{ch04:eq:decomposable_transition} holds. The pruned automaton is denoted
@@ -219,13 +237,13 @@ none of the transitions used by $\rho$ is removed by the infeasibility test.
 If every transition in $\rho$ is retained after pruning, then $\rho$ is also
 an accepting run of $\mathcal{B}_{\varphi}^{-}$, and one may take
 $w' = w$. Assume now that $\rho$ contains a transition from $q_{i}$ to
-$q_{j}$ that is removed because it is decomposable. By
+$q_{j}$ that is removed because it is decomposable. \rev{By
 Definition~\ref{ch04:def:decomposable-transition}, there exist a state
-$q_{k}$ and alphabets $\sigma_{ik}, \sigma_{kj}$ such that
+$q_{k}$ and input letters $\sigma_{ik}, \sigma_{kj}$ such that
 $q_{k} \in \delta(q_{i}, \sigma_{ik})$ and
 $q_{j} \in \delta(q_{k}, \sigma_{kj})$, while the direct transition from
-$q_{i}$ to $q_{j}$ is induced by the combined alphabet
-$\sigma_{ik} \cup \sigma_{kj}$. Hence, the segment $q_{i} q_{j}$ in the
+$q_{i}$ to $q_{j}$ is induced by the combined label
+$\sigma_{ik} \cup \sigma_{kj}$.} Hence, the segment $q_{i} q_{j}$ in the
 accepting run can be replaced by the segment $q_{i} q_{k} q_{j}$. This
 replacement yields a new accepting run in which the direct step is realized
 by two consecutive steps.
@@ -238,10 +256,10 @@ that is equivalent to $w$ for the purpose of task satisfaction.
 
 \begin{example}
 \label{ch04:example:prune_nba}
-For the task formula in~\ref{ch04:example:subtask}, the automaton
+\rev{For the task formula in~\ref{ch04:example:subtask}, the automaton
 $\mathcal{B}_{\varphi}$ generated by the construction of~\citet{gastin2001fast} contains
 $707$ states and $16044$ transitions, together with more than
-$1.29 \times 10^{7}$ accepting words. After the pruning procedure above, the
+$1.29 \times 10^{7}$ accepting words.} After the pruning procedure above, the
 automaton $\mathcal{B}_{\varphi}^{-}$ still contains $707$ states, but only
 $2423$ transitions and $174469$ accepting words. Therefore, the pruning step
 reduces the number of transitions by $84.9\%$ and the number of accepting
@@ -274,16 +292,17 @@ is the set below:
 \bigl\{\omega_{\ell}=(\ell,\sigma_{\ell},\sigma_{\ell}^{s})
 \mid \ell=1,\cdots,L\bigr\},
 \end{equation}
-where $\ell$ is the index of subtask $\omega_{\ell}$. For each
-$\ell \in \{1,\cdots,L\}$, the label $\sigma_{\ell}\subseteq\Sigma$
+where $\ell$ is the index of subtask $\omega_{\ell}$. \rev{For each
+$\ell \in \{1,\cdots,L\}$, the label $\sigma_{\ell}\in\Sigma$
 satisfies $q_{\ell}\in\delta(q_{\ell-1},\sigma_{\ell})$ and
 $q_{\ell}\notin\delta(q_{\ell-1},\sigma_{\ell}\setminus\{z\})$ for every
-$z\in\sigma_{\ell}$. The set $\sigma_{\ell}^{s}\subseteq\Sigma$ is the
+$z\in\sigma_{\ell}$.} \rev{The set $\sigma_{\ell}^{s}\subseteq AP$ is the
 self-loop requirement at $q_{\ell-1}$ and satisfies the following
-conditions: if $\sigma\cap\sigma_{\ell}^{s}\neq\emptyset$, then
+conditions for every $\sigma\in\Sigma$: if
+$\sigma\cap\sigma_{\ell}^{s}\neq\emptyset$, then
 $q_{\ell-1}\notin\delta(q_{\ell-1},\sigma)$; if
 $\sigma\cap\sigma_{\ell}^{s}=\emptyset$, then
-$q_{\ell-1}\in\delta(q_{\ell-1},\sigma)$.
+$q_{\ell-1}\in\delta(q_{\ell-1},\sigma)$.}
 \end{definition}
 
 Each subtask records its index, transition label, and self-loop label. The
@@ -308,9 +327,9 @@ $\sigma_{1}=\{\texttt{sweep}_{\texttt{p}_{21}}\}$ and
 $\sigma_{1}^{s}=\{\texttt{p}_{24}\}$. The reduced label
 $\sigma_{1}\setminus\{\texttt{sweep}_{\texttt{p}_{21}}\}=\emptyset$ does not
 enable the transition from $q_{1}$ to $q_{2}$, whereas $\sigma_{1}$ does.
-Moreover, any alphabet that intersects $\sigma_{1}^{s}$ disables the
-self-loop at $q_{1}$, whereas any alphabet that does not intersect
-$\sigma_{1}^{s}$ keeps that self-loop enabled.
+\rev{Moreover, any input letter that intersects $\sigma_{1}^{s}$ disables the
+self-loop at $q_{1}$, whereas any input letter that does not intersect
+$\sigma_{1}^{s}$ keeps that self-loop enabled.}
 \end{example}
 
 \begin{definition}
@@ -329,13 +348,11 @@ $\widehat{\Omega}$ cannot all be executed simultaneously.
 \end{definition}
 
 The pair $(\preceq_{\varphi},\neq_{\varphi})$ is needed because action
-propositions remain true over nonzero intervals. Unlike models with
+propositions remain true over nonzero intervals. \rev{Unlike models with
 instantaneous action satisfaction, where a single precedence relation often
 suffices
-\citep{kantaros2020stylus,guo2015multi,tumova2016multi,
-luo2021abstraction,luo2022temporal,sahin2019multirobot,
-jones2019scratchs}, the present model must distinguish start-order constraints,
-finish-before-start constraints, mutual exclusion, and full parallelism. The
+\citep{kantaros2020stylus, guo2015multi, tumova2016multi, luo2021abstraction, luo2022temporal, sahin2019multirobot, jones2019scratchs}, the present model must distinguish start-order constraints,
+finish-before-start constraints, mutual exclusion, and full parallelism.} The
 construction contains the decomposable-state abstraction of
 \citet{schillinger2018simultaneous} as a special case, while allowing independent
 subtasks within the same accepting-run segment.
@@ -401,11 +418,11 @@ $\mathcal{O}(|Q^{-}|!)$, an anytime construction is used. For a subtask set
 $\Omega$, let
 $2_{\ge 2}^{\Omega}\triangleq \{\widehat{\Omega}\subseteq\Omega \mid |\widehat{\Omega}|\ge 2\}$,
 which is the family of all subsets of $\Omega$ with cardinality at least
-two. Also, for any pair of automaton states $q,q'$, let
+two. \rev{Also, for any pair of automaton states $q,q'$, let
 $\delta^{-1}(q,q')\triangleq
 \{\sigma\in\Sigma \mid q'\in\delta(q,\sigma)\}$,
-which denotes the set of alphabets that induce the transition from $q$ to
-$q'$.
+which denotes the set of input letters that induce the transition from $q$ to
+$q'$.}
 
 \begin{algorithm}[t!]
 \caption{Anytime computation of accepting R-posets
@@ -417,6 +434,7 @@ $\texttt{compute\_poset}(\cdot)$}
 \Output{R-posets $\mathcal{P}_{\varphi}$ and languages
 $\mathcal{L}_{\varphi}$.}
 
+\tcc{\rev{Start from an accepting word and relax only tested temporal constraints.}}
 Initialize $\mathcal{P}_{\varphi}=\mathcal{L}_{\varphi}=\emptyset$.\;
 Begin a modified DFS that explores accepting runs over all pairs
 $(q_{0},q_{f})\in Q_{0}^{-}\times Q_{F}^{-}$.\;
@@ -456,6 +474,7 @@ $(q_{0},q_{f})\in Q_{0}^{-}\times Q_{F}^{-}$.\;
             \label{ch04:alg-line:remove}
         }
 
+\tcc{\rev{Test which groups of subtasks may execute concurrently.}}
         \ForEach{$\widehat{\omega}\in\neq_{\varphi}$
         \label{ch04:alg-line:calculate_neq}}{
             Obtain $w'$ by replacing every
@@ -505,6 +524,13 @@ $\neq_{\varphi}=\{\{2,3\}\}$.
 \end{example}
 
 \begin{lemma}
+% AUTHOR QUESTION AQ6: R-poset pruning and fleet-search guarantees
+% What restrictions on formulas and automata justify sequentializing a simultaneous transition,
+% guarantee termination of repeated decompositions, and ensure that the relaxed relations accept only
+% valid words? Individual swap tests alone need not establish arbitrary combinations of relaxations.
+% What state-equivalence condition permits dominance pruning by the scalar distance/capacity profile
+% in Section~4.2, and what bounds search depth in automata containing cycles? The pruning, R-poset,
+% and fleet-search theorems are left unchanged until their source assumptions are fixed.
 \label{ch04:lemma:accepting-poset}
 Any R-poset in $\mathcal{P}_{\varphi}$ produced by
 Algorithm~\ref{ch04:alg:compute-poset} is accepting.
@@ -767,6 +793,7 @@ $T_{\Omega}^{\star}=()$.\label{ch04:algline:init-end}\;
 \While{$Q\neq\emptyset$ and $\mathrm{time}<t_{0}$}{
     Remove from $Q$ the node $\nu$ with smallest lower-bound key.\;
 
+\tcc{\rev{Complete the partial assignment to update the incumbent.}}
     $\overline{J}_{\nu},\,\overline{T}_{\nu},\,\overline{T}_{\Omega}
     = \texttt{upper\_bound}(\nu,P_{\varphi})$.\label{ch04:algline:upper}\;
 
@@ -777,6 +804,7 @@ $T_{\Omega}^{\star}=()$.\label{ch04:algline:init-end}\;
         \label{ch04:algline:update2}
     }
 
+\tcc{\rev{Keep only branches whose lower bounds can improve the incumbent.}}
     Expand the child nodes $\{\nu^{+}\}$ of $\nu$.\;
 
     \ForEach{$\nu^{+}\in\{\nu^{+}\}$}{

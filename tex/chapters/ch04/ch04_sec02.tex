@@ -64,13 +64,13 @@ least $n_{m,k}^{j}$ robots are required to perform action
 $a_{m,k}^{j}$ at location $s_{m,k}^{j}$. Accordingly,
 $\omega_{m,k}$ is written as
 $\omega_{m,k}\triangleq(S_{m,k},\eta_{m,k},\Xi_{m,k})$.
-The uncertainty lies in the internal subtask structure: the number of subtasks,
+\rev{The uncertainty lies in the internal subtask structure: the number of subtasks,
 their precise locations, or their effective durations may be unspecified when
 the mission formula is issued, unlike models with fixed deterministic task
-alphabets~\citep{sahin2019multirobot}. The estimator
+alphabets~\citep{sahin2019multirobot}.} \rev{The estimator
 $\eta_{m,k}(n,a,\mathcal{N}')$ depends on the assigned subset and captures
 composition-dependent duration and saturation effects
-\citep{ferreira2021survey,krizmancic2022cooperative_ag,apt2009generic,liu2024time}.
+\citep{krizmancic2022cooperative_ag,apt2009generic,liu2024time}.}
 
 Let $t_0$ denote the initial planning time, and let $t_m^{\mathrm{f}}$ denote
 the first time at which mission $\varphi_m$ is satisfied. The completion time
@@ -131,13 +131,18 @@ trees~\citep{chen2025realtime}, distributed sampling~\citep{kantaros2020stylus},
 hierarchical decoupling~\citep{luo2025simultaneous}, and partial-order reasoning
 \citep{liu2024time}. Here, decomposition and team assignment are performed
 simultaneously within one automaton-guided search.
+\begin{revision}
 For each mission $\varphi_m \in \Phi$, let
 \[
 \mathcal{B}_{\varphi_m} \triangleq
-(Q^m,Q_0^m,\Sigma^m,\delta^m,Q_F^m)
+(Q^m,\Sigma^m,\delta^m,Q_0^m,Q_F^m),
 \]
-be the B\"uchi automaton associated with $\varphi_m$, defined as in
-Definition~\ref{ch02:def:NBA}. Let
+where $\Sigma^m\triangleq 2^{\boldsymbol{\omega}_m}$ and the component order
+follows Definition~\ref{ch02:def:NBA}. The finite mission search uses the
+good-prefix construction of Section~\ref{ch02:subsec:syntax}, with absorbing
+accepting states $Q_F^m$.
+\end{revision}
+Let
 $\mathcal{M} \triangleq \{1,\cdots,M\}$ be the mission index set. The fleet is
 partitioned into $K$ abstract teams indexed by
 $\mathcal{K} \triangleq \{1,\cdots,K\}$, where the value of $K$ is not fixed in
@@ -419,6 +424,7 @@ abstract assignment are handled in one search process. Correctness and
 completeness for the fixed mission set are stated next.
 
 \begin{theorem}
+% AUTHOR QUESTION AQ6: see response appendix and AUTHOR_QUESTIONS.md.
 \label{ch04:thm:correctness}
 Consider an instance of Problem~\ref{ch04:prob:simultaneous_assignment} with a
 fixed finite mission set $\Phi$. Suppose that the search is allowed to terminate
@@ -555,10 +561,10 @@ which minimizes the worst response time across all teams.
 With standard max linearization,
 \eqref{ch04:eq:bound_form}--\eqref{ch04:eq:formation_objective} is a mixed-
 integer linear program with $\mathcal{O}(|\mathcal{N}|K^\star)$ binary variables
-and $\mathcal{O}(|\mathcal{A}|K^\star)$ capacity constraints. Although NP-hard,
+and $\mathcal{O}(|\mathcal{A}|K^\star)$ capacity constraints. \rev{Although NP-hard,
 it remains smaller than direct robot-to-subtask assignment because the number of
 abstract teams is limited by the hierarchy
-\citep{sahin2019multirobot,kurtz2021more}. Once $\{b_{ik}\}$ is obtained, the
+\citep{sahin2019multirobot, kurtz2021more}.} Once $\{b_{ik}\}$ is obtained, the
 concrete team formation is recovered by
 $\mathcal{N}_k \triangleq
 \{i\in\mathcal{N}\mid b_{ik}=1\},
@@ -676,11 +682,11 @@ J_k^\ell \triangleq
 where $\mathbb{K}(x_u,x_v)$ is the set of feasible motion primitives
 connecting the states $x_u$ and $x_v$. The cost in
 \eqref{ch04:eq:augmented-cost} therefore combines subtask sequencing and
-dynamically feasible motion. Practical implementations can employ motion
-primitives such as Dubins curves~\citep{ny2011dubins,vavna2015dubins}, together
+dynamically feasible motion. \rev{Practical implementations can employ motion
+primitives such as Dubins curves~\citep{ny2011dubins, vavna2015dubins}, together
 with hybrid-A$^\star$ type search~\citep{erke2020improved}, to obtain the plans
 $\widetilde{\tau}_k^\ell$ and trajectories
-$\{x_i^\ell\}_{i\in\mathcal{N}_k}$.
+$\{x_i^\ell\}_{i\in\mathcal{N}_k}$.}
 
 \begin{example}
 \label{ch04:example:StaticKnown}

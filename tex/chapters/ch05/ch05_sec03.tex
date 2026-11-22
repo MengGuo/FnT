@@ -44,13 +44,18 @@ topology \(\mathcal{G}^{\xi}\in\widehat{\mathcal{G}}^{\xi}\), a
 detachment schedule \(\widehat{\pi}^{\xi}\), and a role assignment
 \(\Pi^{\xi}\). The purpose of this topology-matching step is to convert
 a temporal request into an executable topology transition whose cost
-balances backbone reconfiguration and request-realization time. Define
-\(\widehat{\pi}^{\xi}\triangleq
+balances backbone reconfiguration and request-realization time.
+\begin{revision}
+The detachment schedule is \(\widehat{\pi}^{\xi}\triangleq
 \{\pi_r^{\xi}\}_{r\in\mathcal{N}^{\xi}}\),
 where \(\mathcal{N}^{\xi}\) is the set of robots detached from
-\(\mathcal{G}^{\texttt{w}}\) to realize \(\mathcal{G}^{\xi}\),
-and \(\pi_r^{\xi}\triangleq(r,t_r,p_r)\) is the detach event
-assigned to robot \(r\). The realization cost is defined by:
+\(\mathcal{G}^{\texttt{w}}\) to realize \(\mathcal{G}^{\xi}\).
+The event \(\pi_r^{\xi}\triangleq(r,t_r,p_r)\) gives the time \(t_r\) and
+location \(p_r\) at which robot \(r\) leaves the backbone.
+The assignment \(\Pi^{\xi}\) maps each detached robot to its role location
+in \(\mathcal{G}^{\xi}\).
+\end{revision}
+The realization cost is defined by:
 \begin{equation}
 \label{ch05:eq:match_objective}
 J^{\xi}\triangleq
@@ -550,7 +555,10 @@ on \(\mathcal{G}^{\texttt{w},\ell-1}\), then it follows that:
 where \(\mathcal{G}^{\ell}\) is the instantiated subtopology for
 \(\xi^{\ell}\), \(\widehat{\pi}^{\ell}\) is the associated
 detachment schedule, and \(\Pi^{\ell}\) is the resulting role
-assignment, consistently with \eqref{ch05:eq:single_topologymatch}. If no
+assignment, consistently with \eqref{ch05:eq:single_topologymatch}.
+\rev{For an admitted request, each assigned robot uses its detachment event from
+\(\widehat{\pi}^{\ell}\) and then moves to its role location under
+\(\Pi^{\ell}\).} If no
 executable instantiation exists on the remaining wheel backbone, the
 request is deferred and the procedure moves to the next request in the
 priority order. After all new requests have been processed, the
@@ -614,7 +622,8 @@ found admissible.
             \widetilde{\mathcal{G}}^{\texttt{w}}\)\;
             Add \(\widetilde{\mathcal{G}}^{\ell}\) to
             \(\mathcal{G}\)\;
-            Store \(\widetilde{\pi}^{\ell}\) for execution\;
+            \rev{Store \((\widetilde{\pi}^{\ell},\widetilde{\Pi}^{\ell})\)
+            for request \(\xi^{\ell}\).}\;
           }
         }
 
@@ -623,8 +632,8 @@ found admissible.
         }
       }
 
-      Execute the stored detachment schedules and update
-      \(\mathcal{G}\)\;
+      \rev{Execute the stored detachment schedules, route each detached robot
+      to its stored role location, and update \(\mathcal{G}\).}\;
     }
 
     \tcc{\textbf{Active-request execution}}
@@ -707,12 +716,13 @@ is topology-preserving, only the embeddings of the current backbone are
 updated, so the decomposition is unchanged. If an admitted request is
 topology-changing, admissibility under \eqref{ch05:eq:compat} ensures
 that its robot set is disjoint from those of the active requests and is
-drawn from the current backbone. By the assumption on
+drawn from the current backbone. \rev{By the assumption on
 \eqref{ch05:eq:topologymatch_trs} and
 Lemma~\ref{ch05:thm:topologymatch-exec-short},
+the call to Algorithm~\ref{ch05:alg:topologymatch} in
 Algorithm~\ref{ch05:alg:moroco} returns an executable tuple
 \((\mathcal{G}^{\texttt{w}'},\mathcal{G}^{\xi^{\ell}},
-\widehat{\pi}^{\ell},\Pi^{\ell})\). Replacing the current backbone by
+\widehat{\pi}^{\ell},\Pi^{\ell})\).} Replacing the current backbone by
 \(\mathcal{G}^{\texttt{w}'}\) and adding
 \(\mathcal{G}^{\xi^{\ell}}\) preserves an executable decomposition of
 the form \eqref{ch05:eq:decomposition}. Completion of a request removes

@@ -84,12 +84,13 @@ $\textbf{c} \triangleq
 \{c_k^m \mid m \in \mathcal{M},\, C_k \in \mathcal{C}\}$. The complete
 set of atomic propositions is
 $AP \triangleq \textbf{p} \cup \textbf{c}$.
-Each team-level task is represented as a syntactically co-safe LTL
-sc-LTL formula over $AP$. The overall task specification is defined by
-\eqref{ch06:eq:reactive-task}:
+\begin{revision}
+The static task and each response task are sc-LTL formulas over $AP$, as
+defined in Section~\ref{ch02:subsec:syntax}. The persistent mission rule is
+general LTL:
 \begin{equation}
 \label{ch06:eq:reactive-task}
-\varphi \triangleq \varphi_{\texttt{static}}
+\varphi_{\texttt{rule}} \triangleq \varphi_{\texttt{static}}
 \wedge
 \bigwedge_{\bar{e} \in \bar{E}}
 \Box\bigl(
@@ -98,20 +99,16 @@ sc-LTL formula over $AP$. The overall task specification is defined by
 \Diamond \varphi_{\texttt{rep}}^{\bar{e}}
 \bigr),
 \end{equation}
-where $\varphi_{\texttt{static}}$ denotes the offline-specified
-sc-LTL task component, $\bar{E}$ is the set of events triggered by
-online observations, $\varphi_{\texttt{obs}}^{\bar{e}}$ is the
-propositional condition associated with event $\bar{e} \in \bar{E}$,
-and $\varphi_{\texttt{rep}}^{\bar{e}}$ is the corresponding response
-task, also expressed as an sc-LTL formula. According to
-\eqref{ch06:eq:reactive-task}, whenever
-$\varphi_{\texttt{obs}}^{\bar{e}}$ holds, the response task
-$\varphi_{\texttt{rep}}^{\bar{e}}$ must eventually be satisfied.
-The standard LTL syntax and semantics from
-Chapter~\ref{chap:preliminaries} are adopted here
-\citep{baier2008principles}. The fragment is sc-LTL, which admits finite-trace
-satisfaction and is written in positive normal form using $\bigcirc$,
-$\textsf{U}$, and $\Diamond$ \citep{belta2017formal}.
+where $\varphi_{\texttt{static}}$ is the offline task, $\bar E$ is the set
+of event types, $\varphi_{\texttt{obs}}^{\bar e}$ is the trigger condition,
+and $\varphi_{\texttt{rep}}^{\bar e}$ is the corresponding response task.
+Let $\bar E_t\subseteq\bar E$ contain the triggers observed at time $t$.
+Each trigger releases the finite obligation
+$\Diamond\varphi_{\texttt{rep}}^{\bar e}$, evaluated from its release time.
+The recurring rule in \eqref{ch06:eq:reactive-task} generally has no finite
+good prefix, even though each released obligation is sc-LTL
+\citep{baier2008principles,belta2017formal}.
+\end{revision}
 
 Thus, given the robot model and the task specification,
 the task plan for the robot team is defined by:
@@ -126,37 +123,46 @@ $\tau_n \triangleq
 is the timed sequence of actions and corresponding targets for robot
 $n \in \mathcal{N}$. Here, each action $a_n^k \in \mathcal{A}_n$ is
 executed on target $m_n^k \in \mathcal{M}$ at time $t_n^k > 0$, for
-$k \in \mathcal{K}_n \triangleq \{1,\cdots,K_n\}$. The plan
-\eqref{ch06:plan} induces the trace
-$w_{\tau} \triangleq \sigma_1 \sigma_2 \cdots \sigma_L$, where
-$\sigma_{\ell} \in 2^{AP}$ for every $\ell \in \{1,\cdots,L\}$. The
-language of $\varphi$ is
-$\mathcal{L}_{\varphi} \triangleq \{w \mid w \models \varphi\}$, where
-$\models$ is the satisfaction relation. Since sc-LTL formulas admit
-satisfaction by finite traces
-\citep{belta2017formal,baier2008principles}, the plan satisfies
-$\varphi$ if $w_{\tau} \in \mathcal{L}_{\varphi}$, which is denoted by
-$\boldsymbol{\tau}_{\mathcal{N}} \models \varphi$.
-The makespan $T_{\varphi}$ is the minimum time required to generate a
-trace satisfying $\varphi$. Let
-$\varphi(t) \triangleq \{\varphi_1,\cdots,\varphi_L\}$ denote the set of
-tasks released up to time $t$. The average makespan is then defined by:
+$k \in \mathcal{K}_n \triangleq \{1,\cdots,K_n\}$. \rev{The plan in \eqref{ch06:plan} induces a finite word
+$w_\tau\in(2^{AP})^*$ of future proposition sets, beginning after the
+history already consumed by the task monitor.} \begin{revision}
+At time $t$, $\varphi(t)$ is the conjunction of the residual sc-LTL
+obligations still pending; $\varphi(0)$ includes the static task and any
+initial releases. Each residual retains the progress observed since its
+instance's release. Within a finite planning call, the unindexed
+$\varphi$ denotes this current formula. Its language
+$\mathcal L_{\varphi}\triangleq\{w\in(2^{AP})^*\mid
+w\text{ is a good prefix for }\varphi\}$ gives the finite satisfaction
+convention $\boldsymbol{\tau}_{\mathcal N}\models\varphi$ when
+$w_\tau\in\mathcal L_\varphi$.
+Let $\varphi_1,\cdots,\varphi_L$ be the indexed task instances released by
+$t$, including completed instances. For each instance, $T_{\varphi_\ell}$
+is the first mission time at which its trace since release is a good prefix.
+The notation $|\varphi(t)|\triangleq L$ in the counting expressions below
+records this number of released instances, rather than formula length.
+The average completion time is
 \begin{equation}
 \label{ch06:eq:avg-makespan}
 \overline{T}_{\varphi} \triangleq
 \frac{1}{L}\sum_{\ell=1}^{L} T_{\varphi_{\ell}},
 \end{equation}
-which is the performance metric used in the sequel.
+where $L\geq1$ includes the static task. Finite completion concerns these
+individual instances. An empty pending set yields an empty assignment while
+monitoring continues. Overall termination requires that task releases end
+and all pending instances are completed.
+\end{revision}
 
 %==============================
 \subsubsection{Problem statement}
 \label{ch06:subsec:prob-statement}
 
-Given the task formulas $\varphi(t)$ and the observations
-$\{Y_{0:t},V_{0:t}\}$, the objective is to synthesize the team plan
-$\boldsymbol{\tau}_{\mathcal{N}}$ such that
-$\boldsymbol{\tau}_{\mathcal{N}} \models \varphi(t)$
-and the average makespan in \eqref{ch06:eq:avg-makespan} is minimized.
+\rev{Given the current finite obligation formula $\varphi(t)$ and the
+observations $\{Y_{0:t},V_{0:t}\}$, synthesize the team plan
+$\boldsymbol{\tau}_{\mathcal N}$ satisfying $\varphi(t)$ under the
+finite good-prefix convention, while minimizing the average completion time
+in \eqref{ch06:eq:avg-makespan}. New triggers update the planning instance
+online; completing one instance does not certify the persistent rule
+\eqref{ch06:eq:reactive-task} for all future observations.}
 
 %==============================
 \begin{example}
@@ -354,16 +360,20 @@ R-posets were introduced in Chapter~\ref{chap:top-down}, especially
 Section~\ref{ch04:subsec:task-decompose-posets}, as compact abstractions of
 team-level temporal constraints. The construction is reused here, so only the
 needed ingredients are recalled.
-Given the sc-LTL formula $\varphi$, first translate it into the
-Nondeterministic B\"uchi Automaton
+\begin{revision}
+Here $\varphi$ denotes the current finite obligation formula $\varphi(t)$.
+Given this sc-LTL task, use the good-prefix construction of
+Section~\ref{ch02:subsec:syntax} to obtain the Nondeterministic B\"uchi automaton
 $\mathcal{A}_{\varphi} \triangleq (S,\Sigma,\delta,S_0,S_F)$, where
 $S$ is the state set, $\Sigma \triangleq 2^{AP}$ is the alphabet,
 $\delta : S \times \Sigma \rightarrow 2^{S}$ is the transition
 relation, and $S_0, S_F \subseteq S$ are the initial and accepting
-state sets. Along any satisfying run of $\mathcal{A}_{\varphi}$, the
-decomposition procedure in Definition~\ref{ch04:def:subtasks} extracts a
-finite set of indexed subtasks $\Omega_{\varphi}$ together with the
-relevant temporal relations. The subsequent relaxation step retains only
+state sets. Accepting states are absorbing, and finite acceptance recognizes
+exactly the good prefixes of $\varphi$. From a finite prefix ending in $S_F$,
+the decomposition procedure in Definition~\ref{ch04:def:subtasks} extracts
+the indexed subtasks $\Omega_{\varphi}$ and their temporal relations.
+\end{revision}
+The subsequent relaxation step retains only
 those constraints that are essential for correctness, rather than the
 full sequential order of the automaton run.
 Recall that an R-poset associated with $\varphi$ is the triple:
@@ -539,6 +549,7 @@ $(\widehat{Y}_{\mathcal{H}_t},G_{\mathcal{H}_t})$.
 
 For a complete plan $\Pi_{\texttt{c}}$ and a risk level
 $\alpha \in (0,1]$, the value at risk is defined by
+% AUTHOR QUESTION AQ10: see response appendix and AUTHOR_QUESTIONS.md.
 $\mathrm{VaR}_{\alpha}(\Pi_{\texttt{c}}) \triangleq
 \inf\bigl\{
 \rho \in \mathbb{R}
@@ -609,6 +620,13 @@ criterion captures both motion forecasts and uncertainty growth.
 
 
 \begin{lemma}
+% AUTHOR QUESTION AQ11: Prediction coverage and target-speed assumptions
+% What independence or dependence assumptions justify multiplying the per-subtask coverage
+% probabilities in Lemma~6.3? Without independence, a union-bound treatment is needed, with special
+% care when several subtasks share a target or time. The largest observed target speed is not a bound
+% on future speed without an additional model assumption. Finally, prediction regions alone do not
+% specify a sampling distribution for CVaR evaluation. Which sampling law and speed bound are used?
+% The coverage, delay, and risk claims remain unchanged pending these choices.
 \label{ch06:lemma:key-bound}
 Given an expanded node $\nu^{+}$, the completion times of the key
 subtasks in $\Omega_{\nu^{+}}^{\texttt{s}}$ satisfy:
@@ -673,22 +691,35 @@ $G_{\widehat{T}_{\omega},m}/
     regions $G_{\mathcal{H}_t}$, initial team state $x_0$, and
     observations $\{Y_{0:t},V_{0:t}\}$.}
     \Output{Assignment $\Pi^{\star}$.}
-    Initialize $t \leftarrow 0$,
-    $P_{\varphi} \leftarrow \texttt{compute\_poset}(\varphi(0))$,
-    and $\Omega_{\iota} \leftarrow \emptyset$\;
-    Initialize
-    $\Pi^{\star},\eta^{\star} \leftarrow
-    \texttt{CP-MCTS}(P_{\varphi},\rho,
-    \widehat{Y}_{\mathcal{H}_0},G_{\mathcal{H}_0},x_0)$\;
+    \rev{Initialize $t\leftarrow0$ and $\Omega_\iota\leftarrow\emptyset$.}\;
+    \rev{Progress the static task and initial releases using the initial
+    propositions to obtain $\varphi(0)$.}\;
+    \If{\rev{no obligation is pending}}{
+        \rev{Set $\Pi^\star=\emptyset$ and $\eta^\star=0$.}\;
+    }
+    \Else{
+        \rev{$P_\varphi\leftarrow\texttt{compute\_poset}(\varphi(0))$.}\;
+        Initialize
+        $\Pi^{\star},\eta^{\star} \leftarrow
+        \texttt{CP-MCTS}(P_{\varphi},\rho,
+        \widehat{Y}_{\mathcal{H}_0},G_{\mathcal{H}_0},x_0)$\;
+    }
     \While{the execution is not terminated}{
-        Each robot $n \in \mathcal{N}$ applies its local plan $\tau_n$\;
+        \rev{Advance $t\leftarrow t+1$.}\;
+        \rev{Each robot $n\in\mathcal N$ follows its assigned local plan,
+        or waits if its assignment is empty.}\;
         Sense the team state $x_t$ and the target observation $Y_t$\;
         Obtain the updated prediction
         $\widehat{Y}_{\mathcal{H}_t}$\;
+        \rev{Progress earlier obligations and new releases using the observed propositions.}\;
         Update $\varphi(t)$ by \eqref{ch06:eq:task-update}\;
+        \If{\rev{no obligation is pending}}{
+            \rev{Set $\Pi^\star=\emptyset$ and $\eta^\star=0$; continue monitoring.}\;
+            \rev{\textbf{continue}}\;
+        }
         Update $P_{\varphi}$ by
         $\texttt{compute\_poset}(\varphi(t))$\;
-        \If{$\varphi_{\texttt{r}}(t) \neq \emptyset$}{
+        \If{\rev{$\bar E_t \neq \emptyset$}}{
             $\Pi^{\star},\eta^{\star} \leftarrow
             \texttt{CP-MCTS}(P_{\varphi},\rho,
             \widehat{Y}_{\mathcal{H}_t},G_{\mathcal{H}_t},x_t)$\;
@@ -714,7 +745,6 @@ $G_{\widehat{T}_{\omega},m}/
                 }
             }
         }
-        $t \leftarrow t+1$\;
     }
 \end{algorithm}
 %=======================================
@@ -737,22 +767,24 @@ for all collaborators, while non-collaborative actions proceed independently.
 At each time step $t>0$, the team state $x_t$ and the target
 observations $Y_t$ are updated, and new target predictions
 $\widehat{Y}_{\mathcal{H}_t}$ are generated from $Y_{0:t}$ by the
-predictors $\mathbf{\Upsilon}$. The task formula is updated whenever new
-reactive tasks are released:
+predictors $\mathbf{\Upsilon}$.
+\begin{revision}
+The finite obligation formula is updated whenever new reactive tasks are released:
 \begin{equation}
 \label{ch06:eq:task-update}
 \varphi(t) \triangleq \varphi(t^{-}) \wedge \varphi_{\texttt{r}}(t),
 \end{equation}
-where $\varphi(t^{-})$ is the formula immediately before time $t$, and
-$\varphi_{\texttt{r}}(t) \triangleq
-\bigwedge_{\bar{e}\in\bar{E}}
-\Diamond \varphi_{\texttt{rep}}^{\bar{e}}(t)$ is the conjunction of the
-reactive tasks released at time $t$. The R-poset $P_{\varphi}$ is then
-updated accordingly.
+where $\varphi(t^-)$ is the progressed residual of earlier obligations.
+The formula $\varphi_{\texttt r}(t)$ is the residual of
+$\bigwedge_{\bar e\in\bar E_t}\Diamond\varphi_{\texttt{rep}}^{\bar e}$
+after reading the propositions observed at release time $t$.
+The empty conjunction is $\top$.
+Each new obligation is evaluated from its release time; the recorded progress
+of earlier instances is retained when $P_\varphi$ is updated.
+\end{revision}
 
-Replanning is triggered in either of two situations. The first is the
-release of a new reactive task, namely
-$\varphi_{\texttt{r}}(t) \neq \emptyset$. The second is a significant
+Replanning is triggered in either of two situations. \rev{The first is the
+release of a new reactive task, namely $\bar E_t\neq\emptyset$.} The second is a significant
 degradation in the quality of the current plan, namely
 $\eta_t^{\star} > (1+\gamma)\eta^{\star}$, where
 $\gamma \in (0,1)$ is the replanning threshold. The quantity

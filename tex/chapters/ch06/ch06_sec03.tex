@@ -1,30 +1,43 @@
 %==============================
-\section{Collaborative Optimal Transport under Signal Temporal Logic Tasks}
+\section{\rev{Collaborative Optimal Transport under Bounded-Time LTL Tasks}}
 \label{ch06:sec:ch06_stl}
 
+\begin{revision}
+Sections~\ref{ch06:sec:ch06_safe_plan} and~\ref{ch06:sec:ch06_uncertain}
+address uncertain transition outcomes and moving-target forecasts,
+respectively. Here the task and sampled motion model are given, and the
+team must find trajectories that meet deadlines and geometric constraints
+on visitation, formation, and connectivity.
 
-The preceding sections addressed uncertainty mainly at the task-planning and
-coordination levels. This section considers a complementary problem: the task
-specification is fixed, but the collective motion must be synthesized in a
-continuous workspace under nonlinear dynamics, obstacles, inter-robot coupling,
-and signal temporal logic (STL) constraints. The challenge is to compute
-feasible, high-quality trajectories in a high-dimensional non-convex search
-space. Mixed-integer encodings and analytical planners can model parts of this
-problem, but their scalability degrades with horizon length, team size, and
-formula complexity; sampling-based methods may not exploit quantitative STL
-robustness efficiently.
-This section formulates multi-robot STL motion planning as collaborative
-trajectory optimization. Candidate trajectories are represented through
-Gaussian-process priors, while control effort, geometric safety, and STL
-robustness are combined in a unified cost. The method uses batched perturbed
-robustness evaluation, sequential local optimal transport, and a hybrid search
-over planning orders.
+Bounded-time LTL here denotes the fragment of metric temporal logic
+with bounded future operators evaluated on a uniform sampling grid
+\citep{koymans1990specifying}. As in Chapter~\ref{chap:preliminaries},
+atomic propositions have Boolean truth values. Here those values come
+from state predicates at each sample. For example, $\Diamond a$ expresses
+eventual visitation, while $\mathsf{F}_{[0,h]}a$ requires a visit within
+$h$ seconds. On the fixed grid, the latter is a disjunction of
+$\bigcirc^j a$ over the sample offsets $j$ with $0\le j\Delta t\le h$.
+In this expansion each next operator advances one sample
+\citep{alsmann2025metric}.
+
+\citet{maity2015motion} augment the spatial abstraction with time so
+that standard LTL planning can express bounded-time requirements.
+Here the optimizer uses real-valued predicate margins to compute the
+robustness surrogate that guides the search. For final verification, a
+finite automaton tests whether exact task robustness is strictly positive.
+The robustness recursion
+follows quantitative metric and signal temporal logic
+\citep{fainekos2009robustness,donze2010robust}.
+The method combines Gaussian-process trajectory priors, batched
+robustness evaluation, sequential local optimal transport, and a hybrid
+search over planning orders.
+\end{revision}
 
 
 %==============================
 %==============================
 %==============================
-\subsection{Multi-robot motion planning under STL Tasks}
+\subsection{\rev{Multi-robot motion planning under bounded-time LTL tasks}}
 \label{ch06:subsec:problem_formulation}
 
 %==============================
@@ -52,9 +65,9 @@ $\mathbf{u}(t)\triangleq [\mathbf{v}_1(t),\cdots,\mathbf{v}_N(t)]$
 be the stacked position and control vectors, respectively.
 The collective state is then
 $\mathbf{z}(t)\triangleq (\mathbf{x}(t),\mathbf{u}(t))$.
-Over a horizon of length $T$, the system trajectory is defined by
+\rev{With terminal sample index $T$, the system trajectory has $T+1$ samples
 $\mathbf{Z}(T)\triangleq [\mathbf{z}(0),\cdots,\mathbf{z}(T)]^\intercal$,
-and $\mathbf{Z}_i(T)$ denotes the corresponding trajectory of robot $i$.
+and $\mathbf{Z}_i(T)$ denotes the corresponding trajectory of robot $i$.}
 The workspace also contains static obstacles represented by
 $\mathcal{O}\subset\mathcal{W}$.
 
@@ -73,12 +86,12 @@ heterogeneous motion characteristics.
 In addition to \eqref{ch06:eq:control-cost}, the collective trajectory is
 penalized by state-dependent costs associated with obstacle avoidance,
 inter-robot separation, and task satisfaction.
-For obstacle avoidance, define
+\rev{For obstacle avoidance, define
 $g_{\texttt{obs}}\big(\mathbf{p}_i(t)\big)\triangleq
 \max\{0,r_{\texttt{o}}-\texttt{MSD}(\mathcal{A}_i(t),\mathcal{O})\}$,
 where $r_{\texttt{o}}>0$ is a safety margin and
 $\texttt{MSD}(\cdot,\cdot)$ is the minimum signed distance between two
-manifolds~\citep{schulman2014motion}.
+manifolds~\citep{schulman2014motion}.}
 For inter-robot collision avoidance, define
 $g_{\texttt{int}}\big(\mathbf{p}_i(t),\mathbf{p}_j(t)\big)\triangleq
 \max\{0,r_{\texttt{s}}-
@@ -88,34 +101,37 @@ Both penalties vanish when the corresponding clearance requirement is met.
 
 
 %==============================
-\subsubsection{Signal temporal logic tasks and robustness}
+\subsubsection{\rev{Bounded-time LTL and trajectory robustness}}
 \label{ch06:subsubsec:stl_robustness}
 
-Let $\mathbf{s}:\mathbb{N}\rightarrow\mathcal{X}$ be a discrete-time signal,
-where $\mathcal{X}$ denotes the signal space.
-A predicate is an expression of the form $f(\mathbf{s})>0$, where
-$f:\mathcal{X}\rightarrow\mathbb{R}$.
-An STL formula $\phi$ is generated recursively as
-$\phi ::= \mu \mid \lnot \phi \mid \phi_1 \wedge \phi_2
+\begin{revision}
+Let $\mathbf{s}:\{0,\cdots,T\}\rightarrow\mathcal{X}$ be a sampled state
+signal with sampling period $\Delta t$. Each atom $\mu$ is a Boolean
+predicate on $\mathcal{X}$ with an associated real-valued margin
+$f_\mu:\mathcal{X}\rightarrow\mathbb{R}$. Its truth value is obtained by
+testing that margin against zero, using the predicate's specified strict
+or non-strict inequality. The bounded-time LTL formulas are generated by
+$\phi ::= \top \mid \mu \mid \lnot \phi \mid \phi_1 \wedge \phi_2
 \mid \phi_1 \vee \phi_2 \mid \phi_1 \mathsf{U}_I \phi_2$,
-where $\mu$ is a predicate and
-$I \triangleq [t_1,t_2]$ is a bounded time interval satisfying
-$0 \leq t_1 \leq t_2$.
-The operator $\mathsf{U}_I$ requires $\phi_1$ to hold until $\phi_2$
-becomes true within $I$.
-The operators $\mathsf{F}_I$ and $\mathsf{G}_I$ are derived from
-$\mathsf{U}_I$ in the usual way.
-Only bounded-time STL formulas are considered here.
-The satisfaction of $\phi$ by $\mathbf{s}$ at time $t$ is denoted by
-$(\mathbf{s},t)\models \phi$.
-To quantify the degree of satisfaction, the space robustness
-$\rho^\phi(\mathbf{s},t)\in\mathbb{R}$ is adopted.
-Its recursive definition is given in \eqref{ch06:eq:stl-robustness} below:
+where $I$ is a closed bounded interval of nonnegative offsets in seconds.
+For a sample index $t$, define $t\oplus I\triangleq
+\{j\ge t\mid (j-t)\Delta t\in I\}$, with integer $j$.
+The horizon is chosen to contain the samples required by the formula,
+including nested time windows.
+The formula $\phi_1\mathsf{U}_I\phi_2$ holds at $t$ if $\phi_2$ holds
+at some $j\in t\oplus I$ and $\phi_1$ holds at every sample from $t$
+through $j-1$. The operators $\mathsf{F}_I$ and $\mathsf{G}_I$ are
+derived from $\mathsf{U}_I$ as in the untimed case.
+Satisfaction at sample $t$ is denoted by $(\mathbf{s},t)\models\phi$.
+The trajectory objective uses the spatial robustness
+$\rho^\phi(\mathbf{s},t)$ with the recursion
 \begin{equation}
 \label{ch06:eq:stl-robustness}
 \begin{aligned}
+\rho^\top(\mathbf{s},t)
+&\triangleq +\infty, \\
 \rho^\mu(\mathbf{s},t)
-&\triangleq f(\mathbf{s}(t)), \\
+&\triangleq f_\mu(\mathbf{s}(t)), \\
 \rho^{\lnot\phi}(\mathbf{s},t)
 &\triangleq -\rho^\phi(\mathbf{s},t), \\
 \rho^{\phi_1\wedge\phi_2}(\mathbf{s},t)
@@ -131,17 +147,18 @@ Its recursive definition is given in \eqref{ch06:eq:stl-robustness} below:
 \rho^{\phi_1\mathsf{U}_I\phi_2}(\mathbf{s},t)
 &\triangleq \max_{t'\in t\oplus I}
 \min\Big\{\rho^{\phi_2}(\mathbf{s},t'),
-\min_{t''\in (t,t')}\rho^{\phi_1}(\mathbf{s},t'')\Big\},
+\min_{t''\in [t,t')}\rho^{\phi_1}(\mathbf{s},t'')\Big\},
 \end{aligned}
 \end{equation}
-where $t\oplus I$ denotes the translation of the interval $I$ by $t$.
-A positive value of $\rho^\phi(\mathbf{s},t)$ implies that
-$(\mathbf{s},t)\models \phi$ holds
-under the standard quantitative semantics of STL
-\citep{fainekos2009robustness,deshmukh2017robust,lindemann2025formal}.
+where all extrema range over integer indices and
+$\min\varnothing=+\infty$ and $\max\varnothing=-\infty$.
+Positive robustness implies Boolean satisfaction, and negative robustness
+implies violation. At zero robustness, the Boolean predicate conventions
+determine satisfaction~\citep{fainekos2009robustness,donze2010robust}.
+\end{revision}
 
 
-The task-related term is defined through STL robustness.
+\rev{The task-related term is defined through trajectory robustness.}
 Two classes of atomic predicates are used.
 (I) \emph{Regional predicates}.
 Given a region $\mathcal{W}_k\subset\mathcal{W}$, let
@@ -152,14 +169,15 @@ where $r$ is the robot radius.
 The predicate $\mu_A^k$ is satisfied when all robots lie inside
 $\mathcal{W}_k$ at time $t$.
 (II) \emph{Collaborative predicates}.
-Let $\mu_B^k\triangleq \mathcal{F}(\mathbf{z}(t))\geq 0$, where
-$\mathcal{F}$ captures a coupled team-level requirement.
+\rev{The predicate $\mu_B^k$ thresholds the margin
+$\mathcal{F}(\mathbf{z}(t))$ at zero according to the team-level requirement.}
 Two representative collaborative constraints are considered.
 (I) The first is \emph{relative formation}, described by
 $\mathcal{F}_{\texttt{form}}\big(\mathbf{z}(t)\big)\triangleq
 \epsilon_{\texttt{f}}-\sum_{(i,j)\in\mathcal{E}}
 f_{ij}(\mathbf{q}_i,\mathbf{q}_j)$,
 where $\epsilon_{\texttt{f}}>0$ is the maximum admissible formation error.
+\rev{The formation predicate holds when this margin is nonnegative.}
 The term $f_{ij}$ quantifies the formation mismatch between neighboring
 robots $(i,j)\in\mathcal{E}$.
 Typical choices include
@@ -173,14 +191,13 @@ $\mathcal{F}_{\texttt{con}}\big(\mathbf{z}(t)\big)\triangleq
 \lambda_2\big(L(t)\big)$,
 where $L(t)\in\mathbb{R}^{N\times N}$ is the Laplacian matrix of the
 communication graph $\mathcal{G}_{\texttt{c}}(t)$.
-The graph $\mathcal{G}_{\texttt{c}}(t)$ is connected if and only if
-$\lambda_2\big(L(t)\big)>0$~\citep{sabattini2013distributed}.
+\rev{The connectivity predicate holds exactly when
+$\lambda_2\big(L(t)\big)>0$~\citep{sabattini2013distributed}.}
 Unlike pairwise spacing constraints, this condition is a system-level
 property.
 
-Using the STL syntax introduced above, a collaborative task is specified by
-a bounded-time formula $\phi$ over predicates in
-$\mu\triangleq \{\mu_A^k,\mu_B^k\}$.
+\rev{A collaborative task is a bounded-time LTL formula $\phi$ over the
+regional and collaborative predicates in $\mu\triangleq \{\mu_A^k,\mu_B^k\}$.}
 Its trajectory-level penalty is evaluated through the robustness
 $\rho^\phi(\mathbf{Z}(T),0)$ together with the geometric costs defined
 above.
@@ -198,18 +215,25 @@ g_{\texttt{int}}\big(\mathbf{p}_i(t),\mathbf{p}_j(t)\big)
 \Bigg),
 \end{aligned}
 \end{equation}
-where the first term promotes STL satisfaction, while the remaining terms
-penalize obstacle proximity and inter-robot collisions.
+\rev{The first term promotes timed task satisfaction, while the remaining
+terms penalize obstacle proximity and inter-robot collisions.}
+\begin{revision}
+Before optimization, constants and empty reductions are folded into the
+expanded formula tree using the exact min and max rules. If the root reduces
+to true, the task robustness term contributes zero to every optimization cost.
+If it reduces to false, the sampled task is infeasible and the search returns
+failure. All remaining numerical leaf margins and Sinkhorn costs are finite.
+\end{revision}
 Hence, minimizing \eqref{ch06:eq:state-cost} encourages both safety and
 task fulfillment.
 
 %==============================
 \subsubsection{Collaborative motion planning problem}
 
-Given initial and target states
+\rev{Given initial and target states
 $\mathbf{x}_{\texttt{s}},\mathbf{x}_{\texttt{g}}\in\mathbb{R}^{DN}$ and an
-STL task $\phi$, the collaborative motion planning problem is formulated as
-follows.
+associated bounded-time LTL task $\phi$, the collaborative motion planning
+problem is formulated as follows.}
 
 \begin{problem}
 \label{ch06:prob:multi-robot-control}
@@ -233,33 +257,39 @@ where the optimization variable is the collective trajectory
 $\mathbf{Z}(T)$ over the horizon $T$.
 \end{problem}
 
-Problem~\ref{ch06:prob:multi-robot-control} is constrained and highly
-non-convex. STL satisfaction introduces time-indexed conjunctions and
-disjunctions, often handled through mixed-integer encodings. Thus, direct
-gradient-based nonlinear programming is not straightforward, while MILP and
-MICP formulations typically grow exponentially or combinatorially with formula
-size, horizon length, and team size
-\citep{fainekos2009robustness,lindemann2025formal,liu2022stlq,kurtz2022mixed}.
+\begin{revision}
+Bounded temporal operators introduce time-indexed conjunctions and
+disjunctions into Problem~\ref{ch06:prob:multi-robot-control}.
+\citet{wolff2014control} shows how LTL constraints can be encoded
+with mixed-integer linear constraints on trajectory variables.
+Related mixed-integer formulations for timed specifications use logical
+variables to represent choices among samples and subformulas
+\citep{sun2022multiagent,kurtz2022mixed}. The transport updates use a
+robustness surrogate to generate candidate trajectories. In final verification,
+the finite automaton checks whether a complete candidate has strictly positive
+exact task robustness.
+\end{revision}
 
 
 %==============================
 %==============================
 %==============================
 %==============================
-\subsection{Batch computation of STL perturbed robustness}
+\subsection{\rev{Batched evaluation of perturbed robustness}}
 \label{ch06:subsec:batch-stl}
 
 The Sinkhorn update requires efficient batch evaluation of robustness changes
 caused by perturbing one waypoint along multiple probing directions.
 
 %%===================
-\subsubsection{STL tree representation}
+\subsubsection{\rev{Formula tree}}
 \label{ch06:subsec:stl-tree}
 
-An STL formula $\phi$ can be decomposed recursively into subformulas and
-Boolean operators
+\begin{revision}
+A bounded-time LTL formula $\phi$ can be decomposed recursively into
+subformulas with Boolean and temporal operators
 \citep{fainekos2009robustness,kurtz2022mixed,leung2023backpropagation}.
-This recursive structure is represented by the STL tree below:
+The formula tree represents this structure as
 \begin{equation}
 \label{ch06:eq:stl-tree}
 \mathcal{T}^{\phi}\triangleq
@@ -273,23 +303,61 @@ $\mathcal{I}\triangleq [I^{\phi_1},\cdots,I^{\phi_K}]$
 collects the associated time intervals, and
 $\circ\in\{\wedge,\vee\}$ specifies the Boolean composition at the
 current node.
+\end{revision}
 Leaf nodes correspond to predicates evaluated at particular time
 instants, whereas internal nodes aggregate the child robustness values.
 In particular, the temporal operators $\mathsf{F}_I$ and
 $\mathsf{G}_I$ are realized through disjunctive and conjunctive
 compositions, respectively, while $\mathsf{U}_I$ induces a recursive
 combination of both.
+\rev{After expanding the bounded temporal operators over the samples,
+negations are pushed to the leaves using De Morgan's laws and evaluated
+by reversing the sign of the corresponding margins.}
 The representation in \eqref{ch06:eq:stl-tree} enables bottom-up
 robustness evaluation over the formula tree.
 
+\subsubsection{\rev{Finite automaton for exact robustness}}
+\label{ch06:subsubsec:robustness-automaton}
+\begin{revision}
+Expand $\phi$ at the initial sample using the windows $t\oplus I$,
+push negations to the leaves, and fold constants. Each remaining leaf
+is a time-tagged literal. A literal $\ell$ is a predicate $\mu$ or its
+negation, with margin $m_\ell(j)=f_\mu(\mathbf{s}(j))$ or
+$m_\ell(j)=-f_\mu(\mathbf{s}(j))$, respectively. Let $\mathcal{L}_\phi$
+contain these signed literals. At threshold $\lambda$, the letter
+at sample $j$ is $\{\ell\in\mathcal{L}_\phi\mid m_\ell(j)\geq\lambda\}$.
+
+The automaton $\mathcal{A}_\phi$ reads one letter per sample. Its state
+records the next sample index and the remaining Boolean formula.
+At sample $j$, it replaces the leaves tagged with $j$ by their truth
+values from the letter and simplifies the result. The finite grid and
+the finite set of literal valuations give finitely many reachable
+residual formulas. It accepts if the
+residual is true after all $T+1$ samples. The formula and sample grid
+fix the transitions, so the same automaton can be reused at different
+thresholds and across candidate trajectories.
+
+Thresholding a minimum gives a conjunction, and thresholding a maximum
+gives a disjunction. Applying these identities to the expanded tree shows
+that the automaton accepts exactly when $\rho^\phi(\mathbf{s},0)\geq\lambda$.
+For a nonconstant tree this robustness is the largest accepted threshold
+among its distinct leaf margins, which can be found by binary search.
+Under \eqref{ch06:eq:stl-robustness}, a tree that reduces to true has
+robustness $+\infty$, and one that reduces to false has robustness $-\infty$.
+In the optimization, the task robustness term is set to zero for a true root,
+and a false root causes the search to return failure, as specified after
+\eqref{ch06:eq:state-cost}.
+A single pass with strictly positive margins in the letters tests
+$\rho^\phi(\mathbf{s},0)>0$ for final verification.
+\end{revision}
 
 %%===================
 \subsubsection{Batched evaluation of perturbed robustness}
 \label{ch06:subsec:stl-robustness}
 
-Standard STL robustness evaluates predicates at the leaves of
+\rev{The robustness recursion evaluates predicate margins at the leaves of
 $\mathcal{T}^{\phi}$ and propagates $\min$ and $\max$ through conjunction and
-disjunction nodes. For perturbation-based optimization, this rule can be
+disjunction nodes.} For perturbation-based optimization, this rule can be
 locally insensitive: if the perturbed child of a conjunction is not the
 minimizer, its effect is masked. A surrogate perturbed robustness is therefore
 used to retain sensitivity while preserving the formula tree.
@@ -304,19 +372,16 @@ directions used by the local transport step.
 The predicate values at the leaf nodes are first computed in parallel
 for all elements of
 $\widehat{\boldsymbol{\mathcal{Z}}}_{t^\star}$.
-The internal-node values are then propagated upward by masked reductions
-over the intervals in $\mathcal{I}$.
-
-To reduce the masking effect of hard conjunctions, the recursive
-evaluation is modified as follows.
-At the leaf level, the pointwise predicate robustness values
-$f_i^k\big(\widehat{\mathbf{z}}(t)\big)$ are computed in the usual way.
-At the first conjunction level above the leaves, the value
-$f_i^k\big(\widehat{\mathbf{z}}(t^\star)\big)$ is passed upward whenever
-$t^\star\in I^{\phi_i}$.
-At higher conjunction levels, the child values are aggregated by their
-mean.
-Disjunction nodes continue to use the standard maximum operator.
+\begin{revision}
+The perturbation mask uses the same sample indices as the exact semantics.
+At a parent sample $t$, a window $I$ contributes the indices $t\oplus I$.
+Nested windows use the sample of their own enclosing operator. Thus a
+leaf is affected precisely when its assigned sample index equals $t^\star$.
+At a conjunction directly above the leaves, the surrogate takes the minimum
+over the affected children, or over all children if none are affected.
+Other conjunctions use the mean of their child values, and disjunctions
+use the maximum.
+\end{revision}
 Accordingly, the perturbed robustness of a single perturbed trajectory is
 defined as:
 \begin{equation}
@@ -337,9 +402,9 @@ $\widehat{\boldsymbol{\mathcal{Z}}}_{t^\star}$, so that the perturbed
 robustness values for all probing directions are obtained in a single
 bottom-up traversal.
 The construction preserves the tree-based formula interpretation, improves
-local sensitivity, and supports batched computation. The surrogate in
-\eqref{ch06:eq:perturbed-robustness} guides local updates, while final
-satisfaction is verified using the standard STL robustness.
+local sensitivity, and supports batched computation. \rev{The surrogate in
+\eqref{ch06:eq:perturbed-robustness} guides local updates, and
+$\mathcal{A}_\phi$ checks positive exact robustness for the final trajectories.}
 
 
 %==============================
@@ -379,9 +444,9 @@ The planning sequence is written as below:
 \end{equation}
 where $i_\ell\in\mathcal{N}$ for each
 $\ell\in\{1,\cdots,N\}$.
-For every stage $\ell>1$, let
+\rev{For every stage $\ell\geq 1$, let
 $\mathcal{N}_\ell^-\triangleq \{i_1,\cdots,i_{\ell-1}\}$ denote the set
-of robots planned before $i_\ell$.
+of robots planned before $i_\ell$, with $\mathcal{N}_1^-=\varnothing$.}
 The sequence $\kappa$ is called valid if every robot $i_\ell$ with
 $\ell>1$ is constrained by at least one preceding robot, namely,
 \[
@@ -419,24 +484,23 @@ Fix a valid planning sequence
 $\kappa=[i_1,\cdots,i_N]$.
 The sequential procedure solves one local trajectory optimization problem
 for each robot in the order prescribed by \eqref{ch06:eq:order}.
-For the first robot $i_1$, no previously planned trajectory is
-available.
-Its local task cost therefore consists only of the obstacle-avoidance
-term together with the STL robustness term, and the corresponding
-solution is denoted by $\mathbf{Z}_{i_1}^\star(T)$.
-For each later stage $\ell\in\{2,\cdots,N\}$, define the previously
-planned trajectory set as:
+\begin{revision}
+For each stage $\ell\in\{1,\cdots,N\}$, the previously planned trajectory set is
 \[
 \Gamma_\ell^-\triangleq
 \{\mathbf{Z}_{i_1}^\star(T),\cdots,
 \mathbf{Z}_{i_{\ell-1}}^\star(T)\},
 \]
-and let
+where these trajectories remain fixed while optimizing robot $i_\ell$. Let
 $\Gamma_\ell\triangleq
 \Gamma_\ell^-\cup\{\mathbf{Z}_{i_\ell}(T)\}$
-be the collective trajectory obtained after adding the candidate
-trajectory of robot $i_\ell$.
-The local state-dependent cost for robot $i_\ell$ is then defined by:
+be the partial plan after adding the candidate trajectory of robot $i_\ell$.
+During local optimization, each robot outside this partial plan is
+represented by the mean trajectory of its Gaussian-process prior
+conditioned on its endpoints. These means are fixed across the probes.
+The resulting full team signal, denoted by $\mathbf{Z}^{\mathrm{p}}_\ell(T)$,
+is used to evaluate surrogate task robustness during the search. The local
+state-dependent cost for robot $i_\ell$ is
 \begin{equation}
 \label{ch06:eq:state-cost-sequential}
 \begin{aligned}
@@ -448,15 +512,14 @@ c_{\texttt{tsk}}^{i_\ell}\big(\mathbf{Z}_{i_\ell}(T)\big)
 g_{\texttt{int}}
 \big(\mathbf{p}_{i_\ell}(t),\mathbf{p}_{j}(t)\big)
 + g_{\texttt{obs}}\big(\mathbf{p}_{i_\ell}(t)\big)
-\Bigg)-\widehat{\rho}^{\phi}(\Gamma_\ell),
+\Bigg)-\widehat{\rho}^{\phi}\big(\mathbf{Z}^{\mathrm{p}}_\ell(T)\big),
 \end{aligned}
 \end{equation}
-where $\widehat{\rho}^{\phi}(\Gamma_\ell)$ denotes the perturbed
-robustness surrogate in \eqref{ch06:eq:perturbed-robustness}, evaluated
-on the collective trajectory represented by $\Gamma_\ell$.
-The first term in \eqref{ch06:eq:state-cost-sequential} penalizes
-collisions with the preceding robots and with obstacles, while the last
-term promotes collective task satisfaction.
+where the clearance terms use the preceding trajectories and the obstacles,
+and the last term scores the full team signal. At the first stage the sum
+over preceding robots is empty. At the last stage every robot trajectory
+in the signal comes from the partial plan enlarged by the current candidate.
+\end{revision}
 Combining \eqref{ch06:eq:state-cost-sequential} with the control cost in
 \eqref{ch06:eq:control-cost}, the local optimization problem for robot
 $i_\ell$ is written as:
@@ -486,9 +549,9 @@ used in the optimization of the subsequent robots.
   $c_{\texttt{ctr}}(\cdot)$.}
   \KwOut{Optimized trajectory $\mathbf{Z}_{i_\ell}^\star(T)$.}
   Initialize $\alpha_0$, $\lambda$, and $\mathbf{Z}_{i_\ell}^{0}(T)$\;
-  Set histograms
-  $\boldsymbol{n}=\boldsymbol{1}_{T}/T$ and
-  $\boldsymbol{m}=\boldsymbol{1}_{M}/M$\;
+  \rev{Set histograms
+  $\boldsymbol{n}=\boldsymbol{1}_{T+1}/(T+1)$ and
+  $\boldsymbol{m}=\boldsymbol{1}_{M}/M$.}\;
   \While{($k\leq K$) and
     ($\|\mathbf{Z}_{i_\ell}^{k+1}(T)-\mathbf{Z}_{i_\ell}^{k}(T)\|
     > \epsilon$)}{
@@ -526,11 +589,13 @@ Each waypoint is perturbed along $M$ directions collected in
 $\boldsymbol{D}_{\mathcal{P}}\in\mathbb{R}^{M\times 2D}$, where the
 directions are generated from a polytope
 $\mathcal{P}\subset\mathbb{R}^{2D}$.
-Evaluating the local objective along these perturbations produces the
-cost matrix $\boldsymbol{C}\in\mathbb{R}^{T\times M}$.
+\rev{Evaluating the local objective along these perturbations produces the
+cost matrix $\boldsymbol{C}\in\mathbb{R}^{(T+1)\times M}$, with one row for
+each sample from $0$ through $T$.}
 (III) \emph{Weight optimization}.
+\begin{revision}
 The transport weights are obtained by solving the regularized \emph{optimal
-transport problem} below:
+transport problem}
 \begin{equation}
 \label{ch06:eq:OT}
 OT_{\lambda}(\boldsymbol{n},\boldsymbol{m})\triangleq
@@ -542,7 +607,7 @@ OT_{\lambda}(\boldsymbol{n},\boldsymbol{m})\triangleq
 \Big\},
 \end{equation}
 where
-$\boldsymbol{n}\in\Sigma_T$ and $\boldsymbol{m}\in\Sigma_M$ are the
+$\boldsymbol{n}\in\Sigma_{T+1}$ and $\boldsymbol{m}\in\Sigma_M$ are the
 histograms over time indices and probing directions, respectively,
 $\Sigma_q\triangleq
 \{\mathbf{a}\in\mathbb{R}_{\geq 0}^{q}\mid
@@ -551,6 +616,7 @@ $U(\boldsymbol{n},\boldsymbol{m})$ is the set of transport plans with
 marginals $\boldsymbol{n}$ and $\boldsymbol{m}$,
 $H(\boldsymbol{W})$ is the entropy of the plan, and $\lambda>0$
 controls the regularization strength.
+\end{revision}
 (IV) \emph{Trajectory update}.
 Using the optimizer $\boldsymbol{W}_\lambda^\star$ of
 \eqref{ch06:eq:OT}, the trajectory is updated by:
@@ -586,11 +652,11 @@ motivates the hybrid search scheme introduced in the next subsection.
 Several heuristics improve the numerical behavior of
 Algorithm~\ref{ch06:alg:sinkhorn}. First, randomly rotating the probing
 directions in $\boldsymbol{D}_{\mathcal{P}}$ reduces correlation among
-waypoint updates. Second, directional cost averaging uses
+waypoint updates. \rev{Second, directional cost averaging uses
 $N_{\texttt{s}}>0$ auxiliary samples per direction, producing
 $\widetilde{\boldsymbol{D}}_{\mathcal{P}}
-\in \mathbb{R}^{T\times M\times N_{\texttt{s}}\times 2D}$ and reducing
-cost-evaluation variance. Third, annealing $\alpha_k$ and the exploration
+\in \mathbb{R}^{(T+1)\times M\times N_{\texttt{s}}\times 2D}$ and reducing
+cost-evaluation variance.} Third, annealing $\alpha_k$ and the exploration
 radius $\beta_k$ shifts the iteration from exploration to local refinement
 \citep{altschuler2017near,le2023accelerating}.
 
@@ -651,7 +717,8 @@ the same local cost model used in the sequential stage, and
 $\psi(\nu)$ is initialized at zero and updated during the search.
 Nodes are therefore favored when they correspond to deeper progress,
 lower estimated cost, and stronger positive evidence from their
-descendants.
+descendants. \rev{The task term in $\xi$ uses the same completion by prior
+means as \eqref{ch06:eq:state-cost-sequential}, and $\xi(\varnothing)=0$.}
 
 (II) \emph{Expansion}.
 For each selected node $\nu_h^\star$, the robots that are eligible to be
@@ -667,17 +734,18 @@ current partial plan.
 At the root node, the initialization
 $\mathcal{N}_{\nu_0}^{\texttt{ext}}\triangleq \mathcal{N}$ is used so
 that the search can start from any robot.
+\begin{revision}
 Once a robot
 $i^\star\in\mathcal{N}_{\nu_h^\star}^{\texttt{ext}}$ is chosen, the
-local Sinkhorn step in Algorithm~\ref{ch06:alg:sinkhorn} generates a set of
-candidate trajectories denoted by:
+local Sinkhorn step in Algorithm~\ref{ch06:alg:sinkhorn} is run from
+multiple initial trajectories sampled from the prior, giving the set
 \[
 \Pi_{i^\star}\triangleq
 \{\boldsymbol{\tau}_{i^\star}^1,\cdots,
 \boldsymbol{\tau}_{i^\star}^K\},
 \]
-where the notation $\Pi_{i^\star}$ is used to avoid confusion with a
-single trajectory variable.
+where $\boldsymbol{\tau}_{i^\star}^k$ is the candidate from initialization $k$.
+\end{revision}
 Each candidate defines a child node.
 This expansion is written below as:
 \begin{equation}
@@ -691,6 +759,9 @@ This expansion is written below as:
 where an edge
 $(\nu_h^\star,\nu_k^+)\in\rightarrow$
 is added for each admissible candidate.
+\rev{During expansion, admissibility is checked using the candidate's
+endpoints, sampled dynamics, obstacle clearance, and pairwise clearance
+against the already planned robots.}
 If no feasible candidate trajectory is produced, then the corresponding
 branch is not expanded further.
 
@@ -716,16 +787,25 @@ lead to successful continuations.
 (IV) \emph{Termination}.
 The cycle of selection, expansion, and back-propagation is repeated
 until the prescribed search budget is exhausted.
-Complete solutions correspond to leaf nodes satisfying
-$\overline{\mathcal{V}}^\star\triangleq
-\{\nu\in\mathcal{V}\mid \mathcal{N}_\nu=\mathcal{N}\}$,
-and the final solution is selected by:
+\begin{revision}
+The final ranking includes only nodes with a trajectory for every robot
+that pass the verification in Section~\ref{ch06:subsubsec:execute}.
+The set of such nodes is
+\[
+\overline{\mathcal{V}}^\star\triangleq
+\{\nu\in\mathcal{V}\mid
+\mathcal{N}_\nu=\mathcal{N},\ \texttt{Verify}(\Gamma_\nu)\},
+\]
+where $\texttt{Verify}$ checks the complete team trajectory.
+If this set is empty, the search reports that no verified trajectory was
+found within the budget. Otherwise, it selects
 \[
 \overline{\nu}^\star\triangleq
 \operatorname*{argmax}_{\nu\in\overline{\mathcal{V}}^\star}\chi(\nu),
 \]
-with associated collective trajectory
-$\Gamma_{\overline{\nu}^\star}$.
+where $\chi$ is the node score in \eqref{ch06:eq:value}, and
+$\Gamma_{\overline{\nu}^\star}$ is the associated collective trajectory.
+\end{revision}
 In this way, the search layer evaluates multiple candidate planning
 orders while preserving the continuous local refinement of the
 trajectories at each expansion step.
@@ -758,17 +838,24 @@ cascading failures, and accelerate convergence.
 
 %==========
 \begin{algorithm}[t!]
-  \caption{Hybrid search with collaborative optimal transport under STL tasks}
+  \caption{\rev{Hybrid search with collaborative optimal transport under bounded-time LTL tasks}}
   \label{ch06:alg:ss-MPOT}
   \SetAlgoLined
   \KwIn{
     Initial state $\mathbf{x}_{\texttt{s}}$,
     goal state $\mathbf{x}_{\texttt{g}}$,
+    \rev{task formula $\phi$},
     cost functions $c_{\texttt{ctr}}(\cdot)$ and
     $c_{\texttt{tsk}}(\cdot)$.
   }
-  \KwOut{Feasible collective trajectory $\Gamma_{\overline{\nu}^\star}$.}
+  \KwOut{\rev{Verified collective trajectory $\Gamma_{\overline{\nu}^\star}$
+  or a failure report.}}
 
+  \rev{Expand $\phi$ on the sample grid and fold constants.}\;
+  \If{\rev{the root reduces to false}}{
+    \rev{\textbf{return} failure.}\;
+  }
+  \rev{Construct the finite automaton $\mathcal{A}_\phi$ for verification.}\;
   Initialize $\mathfrak{T}=(\{\nu_0\},\emptyset)$\;
 
   \While{termination condition is not met \textup{(in parallel)}}{
@@ -792,22 +879,28 @@ cascading failures, and accelerate convergence.
       \If{$\mathcal{N}_{\nu_h^\star}^{\texttt{ext}}\neq\emptyset$}{
         Choose $i^\star\in
         \mathcal{N}_{\nu_h^\star}^{\texttt{ext}}$\;
-        $\Pi_{i^\star}\gets \texttt{SinkhornStep}(\cdot)$ by
-        Algorithm~\ref{ch06:alg:sinkhorn}\;
+        \rev{Generate $\Pi_{i^\star}$ by running Algorithm~\ref{ch06:alg:sinkhorn}
+        from the sampled initializations.}\;
         \ForEach{$\boldsymbol{\tau}_{i^\star}^k\in \Pi_{i^\star}$}{
-          Generate $\nu_k^+$ using \eqref{ch06:eq:expand}\;
-          Update $\mathcal{V}$ and $\rightarrow$\;
+          \If{\rev{the local motion and clearance checks pass}}{
+            Generate $\nu_k^+$ using \eqref{ch06:eq:expand}\;
+            Update $\mathcal{V}$ and $\rightarrow$\;
+          }
         }
       }
     }
 
     \tcc{Back-propagation}
     Update $\psi(\nu)$ using \eqref{ch06:eq:propagation}\;
-    $\overline{\mathcal{V}}^\star\gets
-    \{\nu\in\mathcal{V}\mid \mathcal{N}_\nu=\mathcal{N}\}$\;
   }
 
   \tcc{Termination}
+  \rev{$\overline{\mathcal{V}}^\star\gets
+  \{\nu\in\mathcal{V}\mid
+  \mathcal{N}_\nu=\mathcal{N},\ \texttt{Verify}(\Gamma_\nu)\}$}\;
+  \If{\rev{$\overline{\mathcal{V}}^\star=\varnothing$}}{
+    \rev{\textbf{return} failure.}\;
+  }
   $\overline{\nu}^\star\gets
   \operatorname*{argmax}_{\nu\in\overline{\mathcal{V}}^\star}\chi(\nu)$\;
   \Return $\Gamma_{\overline{\nu}^\star}$\;
@@ -830,18 +923,31 @@ execution, and dominant computational costs.
 \subsubsection{Verification and execution}
 \label{ch06:subsubsec:execute}
 
-After each local optimization step, a candidate trajectory is retained only
-after explicit verification of collision avoidance, inter-robot constraints,
-and positive robustness under standard STL semantics. Thus, the surrogate
-robustness guides optimization, while standard robustness certifies accepted
-trajectories. For execution, the optimized trajectories
+\begin{revision}
+For a complete plan $\Gamma_\nu$, $\texttt{Verify}$ checks the endpoints
+and sampled dynamics in \eqref{ch06:eq:prob} and the prescribed obstacle and
+pairwise clearances at each sample. It then runs $\mathcal{A}_\phi$ with
+letters formed from strictly positive signed margins to check positive
+exact robustness under \eqref{ch06:eq:stl-robustness}. Every check uses
+the optimized trajectories of all robots. The surrogate robustness guides the search and the exact
+checks determine which complete plans can be returned.
+\end{revision}
+For execution, the optimized trajectories
 $\{\mathbf{Z}_i^\star(T)\}_{i\in\mathcal{N}}$ can be refined into denser
 waypoint sequences, rechecked if needed, and tracked by onboard controllers or
 model predictive control.
-The framework extends to larger fleets and dynamic obstacles. For large
+
+\begin{revision}
+The verification certifies Boolean satisfaction on the sampled trajectory
+over the specified finite horizon.
+Continuous-time safety between samples and robustness to tracking error
+require additional interpolation and error bounds, or direct checks of
+the realized trajectory.
+\end{revision}
+The framework extends to larger fleets and dynamic obstacles. \rev{For large
 fleets, robots can be partitioned into subgroups
 $\{\mathcal{N}_1,\cdots,\mathcal{N}_G\}$ with local formation constraints,
-while a higher-level STL formula is imposed over the groups. For known or
+while a higher-level bounded-time LTL formula is imposed over the groups.} For known or
 predictable dynamic obstacles, their motion is incorporated into
 \eqref{ch06:eq:state-cost-sequential}; under uncertain motion, conservative
 reachable sets or safety buffers can be used instead.
@@ -853,23 +959,25 @@ reachable sets or safety buffers can be used instead.
 The dominant computational cost of
 Algorithm~\ref{ch06:alg:ss-MPOT} arises from the repeated Sinkhorn updates
 performed during node expansion.
+\begin{revision}
 Using the complexity estimate for the entropy-regularized optimal
 transport step, the cost of one such update is
 $\widetilde{O}\!\left(
 \tfrac{2D}{\epsilon^2}\cdot
-\tfrac{(HN_pT)^2}{\varepsilon^3}
+\tfrac{(HN_p(T+1))^2}{\varepsilon^3}
 \right)$,
 where $D$ is the spatial dimension, $\epsilon>0$ is the convergence
 precision of the local transport update, $H$ is the number of parallel
-expansions, $N_p$ is the number of trajectory samples, $T$ is the
-trajectory length, and $\varepsilon>0$ is the tolerance used in the
+expansions, $N_p$ is the number of sampled trajectories, $T+1$ is the
+number of samples per trajectory, and $\varepsilon>0$ is the tolerance used in the
 Sinkhorn--Knopp scaling
 \citep{cuturi2013sinkhorn,peyre2019computational,le2023accelerating}.
-In addition, evaluating the task-related constraints through the STL
+Evaluating the task-related constraints through the expanded formula
 tree contributes a cost of
 $O\big(M|\mathcal{T}^\phi|\big)$ per robot, where $M$ is the number of
 probing directions and $|\mathcal{T}^\phi|$ is the number of nodes in
-the STL tree.
+the expanded formula tree.
+\end{revision}
 The remaining bookkeeping operations of the search tree are of lower
 order compared with the repeated transport updates and robustness
 evaluations.

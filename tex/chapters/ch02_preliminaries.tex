@@ -7,6 +7,9 @@ system, temporal specifications are interpreted over the resulting symbolic
 states, and automata-based synthesis computes a cost-aware plan. The plan is
 then refined into a hybrid controller that realizes the prescribed task in the
 continuous workspace.
+\rev{Section~\ref{ch02:sec:task_relaxation} extends this framework to infeasible
+tasks through relaxation and the separation of hard and soft requirements.
+Section~\ref{ch03:sec:partial} then treats online sensing and plan adaptation.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -14,12 +17,12 @@ continuous workspace.
 \section{Abstraction of Robot Motion}
 \label{ch02:sec:system_abstraction_task_specification}
 
-This section constructs the discrete motion abstraction used for formal task
-specification and plan synthesis. The workspace is first partitioned into
-finitely many regions; the robot dynamics and available navigation laws then
-determine which inter-region motions are feasible; and the resulting motion
-capability is encoded as a weighted finite-state transition system. This model
-serves as the nominal substrate for the temporal-logic framework used below.
+\begin{revision}
+The planner represents robot motion by a weighted transition system whose
+states are workspace regions and whose edges are feasible motions between regions.
+Each edge is realized by a local navigation controller. The robot dynamics enter
+through the construction and execution of these controllers.
+\end{revision}
 
 \subsection{Workspace model}
 \label{ch02:subsec:workspacemodel}
@@ -59,14 +62,24 @@ availability of a resource, or the designation of a service location. The full
 set of atomic propositions is then defined by
 $AP \triangleq AP_r \cup AP_p$.
 
+\begin{revision}
+The set $AP_r$ contains $N$ propositions. Its Boolean alphabet $2^{AP_r}$
+contains $2^N$ valuations, of which the partition admits only the $N$
+singletons $\{a_{r,i}\}$. The motion abstraction has $N$ region states,
+each with an assigned label; constructing it does not require enumerating
+the full Boolean alphabet. Location propositions let LTL tasks name
+individual regions. Workspace-property propositions may hold together
+with the location proposition. A fixed ownership convention assigns each
+shared geometric boundary point to one region.
+\end{revision}
+
 \begin{definition}
 \label{ch02:def:labeling}
 A labeling function is a map
 $L : \Pi \to 2^{AP}$
 that assigns to each region $\pi_i \in \Pi$ the set of atomic propositions that
-hold in that region. In particular,
-$a_{r,i} \in L(\pi_i)$
-for every $i \in \{1,\cdots,N\}$.
+hold in that region. \rev{For every $i\in\{1,\cdots,N\}$, the location
+propositions satisfy $L(\pi_i)\cap AP_r=\{a_{r,i}\}$.}
 \end{definition}
 
 Definition~\ref{ch02:def:labeling} attaches semantic information to each
@@ -81,50 +94,53 @@ decomposition~\citep{lavalle2006planning}, may generate such partitions, but
 this purely geometric step does not yet encode dynamics or controllers.
 
 
-\subsection{Robot dynamics and navigation controller}
+\subsection{\rev{Continuous realization of transitions}}
 \label{ch02:subsec:robotdynamics}
 
-The robot is modeled by the continuous-time control system below:
+\begin{revision}
+A local navigation controller realizes an edge by steering the robot from
+its source region to its target region. To describe this motion, consider
+the continuous-time model
 \begin{equation}
 \dot{x}(t) = f\bigl(x(t),u(t)\bigr),
 \label{ch02:eq:dynamic}
 \end{equation}
-where $x(t) \in \mathbb{R}^{n}$ is the system state,
-$u(t) \in \mathbb{R}^{m}$ is the control input, and
-$f : \mathbb{R}^{n} \times \mathbb{R}^{m} \to \mathbb{R}^{n}$
-is assumed to be Lipschitz continuous~\citep{khalil2002nonlinear}.
-The Lipschitz condition ensures deterministic trajectories for admissible
-initial states and controls. The construction is stated for a general nonlinear
-model, although the examples mainly use single-integrator and unicycle
-dynamics. Given the partition in Section~\ref{ch02:subsec:workspacemodel}, the
-relevant question is not mere geometric adjacency, but whether the robot can be
-steered between regions under \eqref{ch02:eq:dynamic}. The transition relation
-is therefore defined in a control-driven manner.
+where $x(t)\in\mathbb{R}^{n_x}$ is the robot state, $u(t)\in\mathbb{R}^m$ is the
+control input, and $f$ is assumed Lipschitz continuous~\citep{khalil2002nonlinear}.
+Write $p(x)$ for the robot position, with $p(x)=x$ for a position-only state.
+For each region $\pi$, let $X_\pi\subseteq\{x\mid p(x)\in\pi\}$ be the
+nonempty set of admissible states from which every outgoing controller can start.
+\end{revision}
 
 \begin{definition}
+% AUTHOR QUESTION AQ3: Controller contract and state representation
+% Confirm the admissible state sets and transition guarantees of the platform primitives.
 \label{ch02:def:transition}
+\begin{revision}
 Let $\pi_i,\pi_j \in \Pi$. A control-driven transition from $\pi_i$ to $\pi_j$
 exists if there is an admissible navigation controller
-$\mathcal{U} : \mathbb{R}^{n} \times \Pi \times \Pi \to \mathbb{R}^{m}$ such
-that the control input is given by:
+$\mathcal{U} : \mathbb{R}^{n_x} \times \Pi \times \Pi \to \mathbb{R}^{m}$
+with the following property. For any given starting time $t_s\geq 0$ and
+any admissible initial state $x_s\in X_{\pi_i}$, there exists a finite
+arrival time $t_f>t_s$ such that, with $x(t_s)=x_s$, the control input is
+given by
 \begin{equation}
 u(t) \triangleq \mathcal{U}\bigl(x(t),\pi_i,\pi_j\bigr),
 \quad t \in [t_s,t_f],
 \label{ch02:eq:control}
 \end{equation}
-where the corresponding closed-loop trajectory of
-\eqref{ch02:eq:dynamic} satisfies
-$x(t_s) \in \pi_i$,
-$x(t_f) \in \pi_j$,
-and
-$x(t) \in \pi_i \cup \pi_j$
-for all $t \in [t_s,t_f]$.
+where the input respects its limits and the closed-loop trajectory of
+\eqref{ch02:eq:dynamic} reaches $x(t_f)\in X_{\pi_j}$, with
+$p(x(t))\in\pi_i\cup\pi_j$ for all $t\in[t_s,t_f]$.
+\end{revision}
 \end{definition}
 
+\begin{revision}
 Definition~\ref{ch02:def:transition} requires both controller realizability and
-confinement to the source--target region pair. The latter prevents a symbolic
-transition from implicitly using intermediate regions absent from the discrete
-plan. Thus the abstraction is not purely geometric: a symbolic transition is
+confinement to the source and target regions. The confinement condition
+$p(x(t))\in\pi_i\cup\pi_j$ for all $t\in[t_s,t_f]$ prevents a symbolic
+transition from visiting other regions absent from the discrete plan.
+\end{revision} Thus the abstraction is not purely geometric: a symbolic transition is
 included only when a concrete controller can implement it in the continuous
 domain.
 The existence of a suitable navigation law depends on both the robot model and
@@ -138,6 +154,39 @@ dimarogonas2005decentralized}. Since a controller is rarely compatible with an
 arbitrary partition, the geometry may require refinement or reshaping, yielding
 an over- or under-approximation~\citep{saidi1999abstract} before the
 abstraction is complete.
+
+\begin{revision}
+No connectedness or convexity assumption alone guarantees a transition.
+The regions are taken to be measurable and to have well-defined membership
+tests and uniform labels. Connected, geometrically simple cells are useful
+for constructing navigation laws, but Definition~\ref{ch02:def:transition}
+requires the stronger control property stated there. If a disconnected
+region contains an unreachable component, an edge cannot be justified by a
+controller that works only from another component. The abstraction must
+then split the region or retain the relevant entry-state information.
+The admissible state sets may restrict orientation or velocity. If a common
+set cannot support the intended outgoing edges, the abstraction must retain
+the relevant state information through a finer partition of the state space.
+
+For the nominal model, candidate region pairs are tested against a library
+of admissible local controllers before task planning. An edge is retained only
+when its controller reaches the admissible target set in finite time,
+respects the input limits, and remains inside the source--target pair from
+every admissible source state. A single successful simulation or
+geometric adjacency is insufficient to establish it.
+For example, consider $\dot{x}=u$ on two adjacent rectangular cells whose
+union is convex, with $X_\pi=\pi$ for each cell. Choose a point $y$ in the
+target interior and apply $u=k(y-x)$, with $k>0$ selected to satisfy the input bound on the
+bounded cell pair. The trajectory
+$x(t)=y+\exp(-k(t-t_s))(x_s-y)$ stays in that union and enters the target
+cell in finite time. This gives a local controller for this particular
+geometry and dynamics; other models require their own reachability
+construction or a refined partition.
+The weight attached to a retained edge is obtained from the corresponding
+motion primitive, or from an explicitly identified cost estimate. In
+particular, center-to-center distance is a planning surrogate and need not
+equal the duration or cost of every continuous realization.
+\end{revision}
 
 
 \subsection{Control-driven weighted transition system}
@@ -166,6 +215,16 @@ $w_c : \longrightarrow_c \to \mathbb{R}_{\geq 0}$ assigns a nonnegative cost to
 each enabled transition.
 \end{definition}
 
+\begin{revision}
+A weighted transition system for mobility uses the ordered tuple
+$(S,\longrightarrow,S_0,AP,L,w)$, where the entries give the states,
+transition relation, initial states, propositions, labeling map, and edge weights.
+Equation~\eqref{ch02:eq:fts} uses the workspace regions as states, so $S=\Pi$.
+The mobility models in Chapter~\ref{chap:bottom-up} use this order for both
+fixed and time-varying abstractions. A time superscript on a component
+indicates that its value can change as the robot updates the model.
+\end{revision}
+
 The weighted transition system in \eqref{ch02:eq:fts} is the discrete model on
 which tasks are interpreted. The weight $w_c$ may represent travel time, path
 length, control effort, energy, or another metric, enabling synthesis to account
@@ -182,13 +241,18 @@ $\pi_0 \in \Pi_0$
 and
 $\pi_{k+1} \in \texttt{Post}(\pi_k)$
 for all $k \geq 0$.
-Every path induces a label sequence. The trace generated by
-$\tau$ is
+\begin{revision}
+An infinite word over an alphabet is an infinite sequence of its symbols.
+Here the alphabet is $2^{AP}$, whose symbols are sets of atomic propositions.
+The labels along an infinite path form such a word: each label records
+the propositions true at one symbolic step.
+The trace generated by $\tau$ is
 $\texttt{trace}(\tau) \triangleq
 L_c(\pi_0)L_c(\pi_1)L_c(\pi_2)\cdots$, and the trace language is
 $\texttt{Trace}(\mathcal{T}_c) \triangleq
 \{\texttt{trace}(\tau) \mid
 \tau \text{ is an infinite path of } \mathcal{T}_c\}$.
+\end{revision}
 Temporal logic formulas are evaluated over these infinite words rather than
 directly over continuous trajectories. Ultimately periodic paths may be written
 compactly using the $\omega$-operator~\citep{baier2008principles}. The
@@ -286,11 +350,33 @@ LTL expresses common robotic tasks in a unified form: safety as
 $\square \neg \psi$, ordered visitation as
 $\Diamond(\psi_1 \wedge \Diamond(\psi_2 \wedge \Diamond \psi_3))$, response as
 $\square(\psi_1 \Rightarrow \Diamond \psi_2)$, and persistent surveillance as
-$\square \Diamond \psi$. A useful subclass is syntactically co-safe LTL, or
-sc-LTL~\citep{kupferman2001model}, whose satisfaction can be certified from a
-finite prefix. This property is useful for goal-reaching and sequencing tasks;
-the standard syntactic characterization follows
-\citep{kupferman2001model,fainekos2009robustness}.
+$\square \Diamond \psi$. \begin{revision}
+The set of LTL formulas over $AP$ is denoted by $\mathrm{LTL}(AP)$.
+The syntactically co-safe fragment, denoted by $\mathrm{sc\mbox{-}LTL}(AP)$,
+is generated in positive normal form by
+\[
+\psi ::= \top\mid\bot\mid a\mid\neg a
+\mid\psi_1\wedge\psi_2\mid\psi_1\vee\psi_2
+\mid\bigcirc\psi\mid\psi_1\mathsf{U}\psi_2,
+\]
+where $a\in AP$; $\Diamond\psi$ is shorthand for
+$\top\,\mathsf{U}\,\psi$. Negation is restricted to atomic propositions.
+Every sc-LTL formula is an LTL formula and retains the infinite-word
+semantics of Definition~\ref{ch02:def:word_semantics}.
+Its distinguishing property is that every satisfying infinite word has a
+finite good prefix: a finite word $u$ such that $uv\models\psi$ for
+every infinite continuation $v$. The notation $u\models\psi$ for a finite
+execution in later chapters means that $u$ is such a good prefix; it does
+not introduce a separate finite-trace logic~\citep{kupferman2001model}.
+For $\Diamond(a\wedge\Diamond b)$, the finite word
+$u=\{a\}\,\emptyset\,\{b\}$ is a good prefix: every infinite continuation
+preserves the witnessed visits. In contrast, no finite prefix certifies
+persistent surveillance $\square\Diamond a$.
+For finite-plan synthesis of sc-LTL tasks, the automaton is chosen so that
+a finite word reaches an accepting state exactly when it is a good prefix,
+and every accepting state is absorbing. Under B\"uchi acceptance, this
+construction recognizes the same infinite-word language as the task.
+\end{revision}
 
 \subsection{Problem formulation}
 \label{ch02:sec:single-problem}
@@ -353,14 +439,17 @@ prefix-suffix run, and finally executed by a hybrid controller.
 \subsection{B\"uchi automaton associated with the task formula}
 \label{ch02:subsec:NBA}
 
-Given an LTL formula $\varphi$ over $AP$, a Nondeterministic B\"uchi automaton
-accepts exactly the infinite words satisfying $\varphi$, thereby linking
-temporal logic to graph-based synthesis.
+\rev{An LTL formula $\varphi$ over $AP$ can be translated into a
+Nondeterministic B\"uchi automaton recognizing its satisfying infinite words,
+thereby linking temporal logic to graph-based synthesis.}
 
 \begin{definition}
 \label{ch02:def:NBA}
-The Nondeterministic B\"uchi automaton associated with $\varphi$ is denoted by
-$\mathcal{A}_{\varphi}$ and defined by:
+\begin{revision}
+For an LTL formula $\varphi$ over $AP$, an associated Nondeterministic
+B\"uchi automaton is required to accept exactly the infinite words
+satisfying $\varphi$.
+Its tuple is
 \begin{equation}
 \mathcal{A}_{\varphi} \triangleq
 \left(Q,\,2^{AP},\,\delta,\,Q_0,\,\mathcal{F}\right),
@@ -370,6 +459,7 @@ where $Q$ is a finite set of automaton states, $2^{AP}$ is the input alphabet,
 $\delta : Q \times 2^{AP} \to 2^{Q}$ is the transition map,
 $Q_0 \subseteq Q$ is the set of initial states, and
 $\mathcal{F} \subseteq Q$ is the set of accepting states.
+\end{revision}
 \end{definition}
 
 The automaton in \eqref{ch02:eq:NBA} evolves over infinite words on
@@ -408,21 +498,31 @@ $\text{ of $\sigma$ in $\mathcal{A}_{\varphi}$ is accepting}\}$.
 
 \begin{lemma}
 \label{ch02:lem:LTL-BA}
-The accepted language of $\mathcal{A}_{\varphi}$ coincides with the language of
-$\varphi$, namely
+\begin{revision}
+For every LTL formula $\varphi$ over $AP$, a Nondeterministic B\"uchi
+automaton $\mathcal{A}_{\varphi}$ with the structure of
+Definition~\ref{ch02:def:NBA} can be constructed such that
 $\mathcal{L}_{\omega}(\mathcal{A}_{\varphi})
-= \textup{\texttt{Words}}(\varphi)$.
+=\textup{\texttt{Words}}(\varphi)$.
+\end{revision}
 \end{lemma}
 
 \begin{proof}
-The statement follows from the standard translation theorem from LTL to
-B\"uchi automata. A proof is given in Theorem~5.37 of
-\citet{baier2008principles}.
+\rev{By Theorem~5.41 of \citet{baier2008principles}, every LTL formula
+$\varphi$ admits a Nondeterministic B\"uchi automaton whose accepted
+language is $\texttt{Words}(\varphi)$.}
 \end{proof}
+
+\begin{revision}
+The original task automaton $\mathcal{A}_{\varphi}$ satisfies the language
+equivalence in Lemma~\ref{ch02:lem:LTL-BA}. Primed and tilde automata
+defined as relaxations in Section~\ref{ch02:sec:task_relaxation} use the language
+guarantees established for those constructions.
+\end{revision}
 
 The LTL-to-B\"uchi translation is worst-case exponential in formula size
 \citep{baier2008principles}, although optimized procedures often yield much
-smaller automata. A common construction is given by~\citet{gastin2001fast}.
+smaller automata. \rev{A common construction is given by~\citet{gastin2001fast}.}
 Implementations usually label transitions by Boolean formulas over $AP$ rather
 than explicit symbols in $2^{AP}$, with binary decision diagrams providing an
 efficient representation~\citep{akers1978binary}.
@@ -551,12 +651,14 @@ Since $\tau \models \varphi$, the word
 $\sigma \triangleq \texttt{trace}(\tau)$ belongs to
 $\texttt{Words}(\varphi)$. By Lemma~\ref{ch02:lem:LTL-BA},
 $\sigma \in \mathcal{L}_{\omega}(\mathcal{A}_{\varphi})$. Therefore,
-$\sigma$ induces an accepting run of $\mathcal{A}_{\varphi}$. Pairing the path
-$\tau$ with such a resulting automaton run through
-\eqref{ch02:eq:product_transition} yields a run of $\mathcal{A}_p$. Since both
-components are ultimately periodic, the product run is also ultimately
-periodic. Because the run is accepting, some accepting product state is visited
-infinitely often and can be selected as the root of the suffix cycle.
+$\sigma$ induces an accepting run of $\mathcal{A}_{\varphi}$. \begin{revision}
+Pairing $\tau$ with an accepting automaton run through
+\eqref{ch02:eq:product_transition} yields an accepting run of the finite
+product graph. Some accepting product state is therefore reachable and
+lies on a nonempty cycle. A finite path to that state followed by infinite
+repetition of the cycle gives the required accepting prefix-suffix run.
+The original nondeterministic run need not itself be ultimately periodic.
+\end{revision}
 \end{proof}
 
 Accordingly, the search is restricted to accepting runs of the form below:
@@ -611,8 +713,10 @@ Dijkstra-type search applies. The product may be constructed fully, by
 generating all states and transitions in advance, or on the fly, by generating
 adjacency only when a state is visited. The latter is useful when much of the
 product graph is irrelevant to the optimal accepting run.
-Let $S' \subseteq Q_0'$ denote the set of initial product states considered
-by the search. For each starting state $q_s' \in S'$ and each accepting state
+\rev{Let $S' \subseteq Q'$ be the allowed start set. Initial synthesis uses
+$S' \subseteq Q_0'$, and online continuation uses product states compatible
+with the executed history.}
+For each starting state $q_s' \in S'$ and each accepting state
 $q_f' \in \mathcal{F}'$, let
 $d_{\textup{pre}}(q_s',q_f')$
 denote the cost of a shortest path from $q_s'$ to $q_f'$ in $\mathcal{A}_p$.
@@ -649,7 +753,7 @@ $\tau_{\textup{opt}} \triangleq R_{\textup{opt}}|_{\Pi}$.
 \caption{Optimal accepting run search, \texttt{OptRun}().}
 \label{ch02:alg:optimal}
 \DontPrintSemicolon
-\KwIn{$\mathcal{A}_p$, $S' \subseteq Q_0'$, $\gamma \geq 0$}
+\KwIn{\rev{$\mathcal{A}_p$ with nonnegative weights, $S'\subseteq Q'$, $\gamma\geq 0$}}
 \KwOut{$R_{\textup{opt}}$ or failure}
 
 \If{$S'=\emptyset$ or $\mathcal{F}'=\emptyset$}{
@@ -729,12 +833,27 @@ $\tau_{\textup{opt}} \triangleq R_{\textup{opt}}|_{\Pi}$. Execution follows the
 prefix once, then switches to the suffix and repeats it indefinitely, realizing
 the structure required in \eqref{ch02:eq:prefix-suffix}.
 For implementation, a segment variable and an index locate the current position
-within $R_{\textup{opt}}$. The helper function $\texttt{NextGoal}(\cdot)$
-returns the next product state; projection onto $\Pi$ gives the next region;
-and \eqref{ch02:eq:control} generates the active controller.
-Algorithm~\ref{ch02:alg:hybrid} runs indefinitely because the suffix repeats
-infinitely often. Once $x(t) \in \pi_{\textup{next}}$ is confirmed by the
-localization mechanism, the controller advances to the next symbolic goal.
+within $R_{\textup{opt}}$. \rev{The helper function $\texttt{NextGoal}(\cdot)$
+returns the next product state, whose projection gives the next region.
+Equation~\eqref{ch02:eq:control} evaluates the input of the controller
+associated with the resulting edge.}
+
+\begin{revision}
+Execution starts once the estimated state is confirmed in $X_{\pi_0}$.
+At the $k$th decision event, the supervisor activates the controller stored
+with the edge $(\pi_k,\pi_{k+1})$. The supervisor advances when the active
+controller completes and the estimated state is confirmed in
+$X_{\pi_{k+1}}$. This target set is also the admissible start set for
+the next edge, which makes consecutive controllers composable.
+The logical trace is recorded at these decision events. In particular,
+$\bigcirc$ refers to the next symbolic step, not the next sensor sample;
+arbitrary insertion of repeated labels need not preserve formulas using
+$\bigcirc$. Infinite execution additionally requires a non-Zeno event
+schedule, for example through a positive minimum dwell time for repeated
+holding transitions. Tracking errors or failed reachability tests require
+monitoring and model revision rather than an unconditional transfer of the
+symbolic guarantee to physical execution.
+\end{revision}
 
 %==============================
 %==============================
@@ -750,8 +869,9 @@ $\pi_{\textup{cur}} = q_{\textup{cur}}'|_{\Pi}$,
 $\pi_{\textup{next}} = q_{\textup{next}}'|_{\Pi}$,
 $R_{\textup{past}} = [\;]$,
 $\tau_{\textup{past}} = [\;]$\;
+\rev{Wait for confirmation of the initial state in $X_{\pi_{\textup{next}}}$.}\;
 \While{\textup{\texttt{True}}}{
-  \If{$x(t) \in \pi_{\textup{next}}$ is confirmed}{
+  \If{\rev{initial entry or controller completion in $X_{\pi_{\textup{next}}}$ is confirmed}}{
     $q_{\textup{cur}}' = q_{\textup{next}}'$\;
     append $q_{\textup{cur}}'$ to $R_{\textup{past}}$\;
     append $\pi_{\textup{next}}$ to $\tau_{\textup{past}}$\;
@@ -770,6 +890,15 @@ $\tau_{\textup{past}} = [\;]$\;
 
 \subsection{Complexity discussion}
 \label{ch02:sssec:complexity_on_the_fly}
+
+\begin{revision}
+The task-automaton size bounds quantify the effect of translating the LTL
+formula. The search-time and memory bounds below take the task automaton
+and finite motion abstraction as inputs. The reported product-construction
+times likewise concern the symbolic product. Workspace decomposition,
+continuous reachability analysis, controller synthesis, localization, and
+low-level tracking are outside these bounds.
+\end{revision}
 
 The computational burden is determined mainly by the task automaton and product
 automaton sizes. Let $n_{\varphi} \triangleq |\varphi|$ denote the size of the
@@ -921,6 +1050,14 @@ Example~\ref{ch02:exam:complexity}.
 %==============================
 \section{Case Study}
 \label{ch02:sec:case_study}
+
+\begin{revision}
+In the recurring example of Section~\ref{ch01:subsec:recurring-example},
+one robot visits $A$ before $D$ and also visits $E$. The automaton records
+which visit obligations remain, while $\mathcal{T}_c$ determines feasible
+corridor routes. A blocked passage is outside this nominal, fixed-model
+case and motivates the model updates in Chapter~\ref{chap:bottom-up}.
+\end{revision}
 
 This case study instantiates the nominal synthesis pipeline on a concrete
 single-robot problem, showing how workspace abstraction, temporal-task
@@ -1177,15 +1314,21 @@ execution stack; see \citep{guo_tiago_ltl_flexbe} for implementation details.
 
 
  %==============================
+\input{chapters/ch02/ch02_task_relaxation}
+\input{chapters/ch02/ch02_online_adaptation}
+
 \section{Summary}
 \label{ch02:sec:ch02_summary}
 
 
-This chapter established the nominal single-robot framework used
-throughout the rest of the monograph. Robot motion was abstracted as a
-control-driven weighted transition system, tasks were specified in LTL,
-and the resulting synthesis problem was solved through B\"uchi-automaton
-construction, product search, and hybrid execution. The scalability
-discussion also highlighted why these foundations must later be extended
-through decentralized, compositional, and reactive coordination
-mechanisms in the multi-robot setting.
+\begin{revision}
+This chapter established nominal and relaxed single-robot planning methods.
+Robot motion was abstracted as a control-driven weighted transition system,
+and LTL tasks were synthesized through automaton construction, product search,
+and hybrid execution. Task relaxation then extended the nominal construction
+to infeasible specifications, with hard requirements retained separately from
+soft preferences. Online sensing and history-compatible plan revision then
+adapted these methods to changing workspace information. The resulting local
+routines support the collaborative knowledge transfer developed in
+Chapter~\ref{chap:bottom-up}.
+\end{revision}

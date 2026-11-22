@@ -12,10 +12,19 @@ The chapter is organized around three problem classes.
 Section~\ref{ch06:sec:ch06_safe_plan} studies probabilistic temporal tasks with
 safe-return requirements. Section~\ref{ch06:sec:ch06_uncertain} considers
 reactive coordination under dynamic temporal tasks with prediction, online
-reassignment, and moving targets. Section~\ref{ch06:sec:ch06_stl} addresses
-continuous multi-robot motion planning under STL specifications using
-collaborative optimal transport. The resulting methods are illustrated in
+reassignment, and moving targets. \rev{Section~\ref{ch06:sec:ch06_stl} addresses
+continuous multi-robot motion planning under bounded-time LTL specifications
+using collaborative optimal transport.} The resulting methods are illustrated in
 Section~\ref{ch06:sec:case}.
+
+\begin{revision}
+The first two sections address uncertainty in transition outcomes and
+target forecasts, respectively. The third section addresses the timing
+and geometry of collective motion under a given task and nominal model.
+Time intervals specify deadlines and when the team must maintain
+formation or connectivity. Gaussian-process trajectory priors guide the
+numerical search, and the verification concerns the sampled trajectories.
+\end{revision}
 
 %==============================
 %==============================

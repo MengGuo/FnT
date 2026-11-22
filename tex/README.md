@@ -1,39 +1,9 @@
-# LaTeX scaffold for the Foundations and Trends monograph
+# Revised monograph LaTeX source
 
-This project is a clean, compileable monograph scaffold organized chapter-by-chapter.
-It mirrors the accepted proposal structure for:
+Master file: `root.tex`.
 
-**Task Coordination for Multi-Agent Systems under Complex Temporal Tasks**  
-**Authors:** Meng Guo, Zhongkui Li
+Compile with `latexmk -pdf root.tex`, or run `pdflatex root.tex`, `bibtex root`, and `pdflatex root.tex` twice. Required packages include `dsfont`, `siunitx`, and `algorithm2e`.
 
-## Build
+Substantive revision text is blue through `\rev{...}` and the `revision` environment in `preamble/macros.tex`. The bibliography hook in `backmatter/references.tex` marks corrected and replacement entries. The active database contains verified records; unchanged records requiring author review are preserved separately in `backmatter/references_author_review.bib` and are not loaded. See the package-level reference audit and author questions. Nonprinting author-question comments identify unresolved passages.
 
-Recommended:
-```bash
-latexmk -pdf main.tex
-```
-
-Fallback:
-```bash
-pdflatex main.tex
-pdflatex main.tex
-```
-
-## Structure
-
-- `main.tex` — master file
-- `preamble/packages.tex` — package imports
-- `preamble/macros.tex` — reusable commands
-- `frontmatter/` — title page, abstract, preface
-- `chapters/` — one file per chapter
-- `backmatter/` — list of symbols and references placeholders
-- `figures/`, `tables/` — asset folders
-- `notes/` — scratch notes
-
-## Notes
-
-- The files currently contain outline-only placeholders (`TODO`).
-- Each chapter is separated into its own `.tex` file.
-- Section headings follow the accepted proposal so we can expand the manuscript incrementally.
-- A neutral `book`-class scaffold is used so the project compiles cleanly while content is being drafted.
-- `backmatter/references.bib` is included as a starter BibTeX database for later population.
+See `../README_REVISION.md` for scope and `../AUTHOR_QUESTIONS.md` for pending decisions.

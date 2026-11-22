@@ -10,3 +10,9 @@
 \newcommand{\MDP}{\mathrm{MDP}}
 
 \usepackage{xspace}
+
+
+% Revision markup: all substantive additions and replacements are blue.
+\DeclareRobustCommand{\rev}[1]{\textcolor{blue}{#1}}
+\newenvironment{revision}{\par\begingroup\color{blue}}{\par\endgroup}
+\pdfstringdefDisableCommands{\def\rev#1{#1}}

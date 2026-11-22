@@ -395,16 +395,20 @@ t_{\ell}^{L_\ell} +
 T_{\ell}^{\texttt{nav}}(p_{\ell}^{L_\ell}, \widehat{p}_{\texttt{h}}),
 \label{ch05:eq:estret}
 \end{equation}
-where $T_{\ell}^{\texttt{nav}}(\cdot,\cdot)$ is the navigation-time model. A
-return to the operator is unnecessary if
+where $T_{\ell}^{\texttt{nav}}(\cdot,\cdot)$ is the navigation-time model.
+\begin{revision}
+A return to the operator is unnecessary if
 \begin{equation}
 \min_{\ell \in \{i,j\}} t_{\texttt{h}\ell}^{\star}
 \leq T_{\texttt{h}} + \underline{\chi}_{ij},
+% AUTHOR QUESTION AQ8: see response appendix and AUTHOR_QUESTIONS.md.
 \label{ch05:eq:return_cond}
 \end{equation}
-and otherwise the return robot is selected as
+where the minimum is over the two communicating robots. Otherwise,
+the return robot is selected as
 $n \triangleq
 \arg\min_{\ell \in \{i,j\}} t_{\texttt{h}\ell}^{\star}$.
+\end{revision}
 Thus, robot $n$ is the robot that returns to the operator immediately after its
 last currently planned event.
 

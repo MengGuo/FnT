@@ -1,0 +1,299 @@
+% Existing labels are retained to preserve all manuscript cross-references.
+% The relocated single-robot routine is highlighted in full.
+\begingroup\color{blue}
+\section{\rev{Online Sensing and Plan Adaptation}}
+\label{ch03:sec:partial}
+
+\begin{revision}
+The following single-robot routine applies the hard--soft synthesis of
+Section~\ref{ch03:sec:soft-hard} after new sensing changes the workspace
+abstraction. A revised continuation must remain compatible with the executed
+history. Section~\ref{ch03:sec:multi-partial} reuses this routine after robots
+exchange task-relevant region labels.
+\end{revision}
+
+In practice, the transition-system model may become inconsistent with the
+actual workspace during execution. A plan synthesized off-line can therefore
+become invalid, unsafe, or suboptimal after new information is acquired. This
+motivates an online framework in which the robot monitors execution, updates the
+workspace model, and revises the current plan while preserving validity and
+safety. The transition system available at time $t \geq 0$ is
+\begin{equation}\label{ch03:eq:t-FTS}
+\mathcal{T}_c^t\triangleq (\Pi,\, \longrightarrow_c^t,\, \Pi_0,\,AP,\, L_c^t,\, w_c^t),
+\end{equation}
+where the region set $\Pi$, the initial-state set $\Pi_0$, and the
+proposition set $AP$ are taken to be fixed. Only the transition relation, the
+labeling function, and the transition weights are updated over time. The task specification is also fixed
+during execution and retains the decomposition
+$\varphi \triangleq
+\varphi^{\textup{soft}} \wedge \varphi^{\textup{hard}}$
+introduced in \eqref{ch03:eq:spec}. Let
+$\tilde{\mathcal{A}}_{\varphi}$ denote the relaxed intersection automaton from
+Definition~\ref{ch03:def:conj}.
+
+\begin{problem}
+Assume that the workspace is only partially known. The following questions
+arise: (I) how should the robot's sensing information be modeled;
+(II) how should the transition system be updated accordingly;
+and (III) how can the motion and task plan be kept valid and safe throughout execution?
+\end{problem}
+
+\subsection{\rev{Initial plan synthesis}}
+
+At $t=0$, the initial plan is synthesized by
+Section~\ref{ch03:sec:soft-hard} from $\mathcal{T}_c^0$ and~$\varphi$. For
+$t \geq 0$, let $R^t$ be the current safe accepting run,
+$\tau^t \triangleq R^t|_{\Pi}$ the corresponding plan, and
+$\tilde{\mathcal{A}}_r^t$ the associated product automaton, generated on the
+fly. Even if the soft component is initially infeasible,
+Theorem~\ref{ch03:theo:safety} guarantees that $\tau^0$ is valid and safe with
+respect to $\mathcal{T}_c^0$.
+
+\subsection{\rev{Real-time knowledge update}}
+\label{ch03:subsec:knowledge-update}
+
+The robot acquires workspace information through sensing during execution.
+Only locally observed information is used here. Inter-robot information
+exchange is introduced in Section~\ref{ch03:sec:multi-partial}.
+\begin{revision}
+Let $\textbf{Sense}^t$ denote the sensing information obtained
+at time $t \geq 0$, either upon reaching a region or while traversing a
+transition:
+\begin{equation}
+\textbf{Sense}^t \triangleq
+\{\, ((\pi,\, S,\, S_{\neg}),\, E,\, E_{\neg}) \,\},
+\label{ch03:eq:sense-info}
+\end{equation}
+where $\pi \in \Pi$ is an observed region, $S$ and $S_{\neg}$ contain
+propositions confirmed true and false at~$\pi$, respectively,
+$(\pi_i,\, \pi_j,\, w) \in E$ proposes a transition or a weight update, and
+$(\pi_i,\, \pi_j) \in E_{\neg}$ identifies a transition to remove.
+\end{revision}
+Thus $\textbf{Sense}^t$ encodes
+the symbolic workspace information revealed at time~$t$. The extraction of
+\eqref{ch03:eq:sense-info} from raw sensor data depends on the sensing modality
+and is not needed here.
+
+\subsection{\rev{Transition system update}}\label{ch03:subsubsec:updateT}
+
+At time~$t$, the robot may receive new information through
+$\textbf{Sense}^t$. This information is used to update the current
+transition-system model. Let $\mathcal{T}_c^{t^-}$ and
+$\mathcal{T}_c^{t^+}$ denote the transition systems immediately before and
+after the update at time~$t$, respectively.
+If $(\pi,\, S,\, S_{\neg})$ is obtained from \eqref{ch03:eq:sense-info}, then
+the labeling function is updated according to
+$L_c^{t^+}(\pi) \triangleq
+\big(L_c^{t^-}(\pi) \cup S\big) \setminus S_{\neg}$.
+\begin{revision}
+An online update adds an edge only after identifying a local controller
+that satisfies Definition~\ref{ch02:def:transition} under the updated
+workspace information. The controller is stored with the edge. An
+existing edge can be reweighted while its controller remains feasible.
+The update removes the edges in $E_{\neg}$ and signals an interruption
+if it removes the active edge or invalidates its controller.
+\end{revision}
+For convenience, the set of regions whose outgoing adjacency information
+must be reconstructed is defined by
+\begin{equation}
+\widehat{\Pi} \triangleq
+\widetilde{\Pi} \cup
+\{\, \pi_i \mid (\pi_i,\, \pi_j,\, w) \in E
+\text{ or } (\pi_i,\, \pi_j) \in E_{\neg} \,\},
+\label{ch03:eq:widehat}
+\end{equation}
+where $\widetilde{\Pi} \subseteq \Pi$ denotes the set of regions whose labeling
+function changes during the update. If $\textbf{Sense}^t$ is empty, then
+$\mathcal{T}_c^{t^+} = \mathcal{T}_c^{t^-}$.
+
+\subsection{\rev{Safety-ensured plan revision}}\label{ch03:subsec:realtime}
+
+Because $\mathcal{T}_c^t$ may change during execution, the current plan must
+be re-evaluated for validity, safety, and optimality. The update first modifies
+the product automaton representation and then decides whether the current run
+can be retained, locally repaired, or replaced.
+
+(I) \emph{Product automaton update}.
+Let $\tilde{\mathcal{A}}_r^{t^-}$ and $\tilde{\mathcal{A}}_r^{t^+}$ denote the
+product automata before and after the update. Reconstructing
+$\tilde{\mathcal{A}}_r^{t^+}$ globally, or re-evaluating every affected
+transition as in~\citep{guo2013revising}, is often unnecessary. Instead, update
+information is incorporated lazily into the adjacency routine: product states
+whose workspace component lies in $\widehat{\Pi}$ have their outgoing
+transitions rebuilt only when revisited. The remaining questions are whether
+$\tau^t$ is still valid and safe, and how it should be revised if not.
+
+(II) \emph{Verifying validity and safety}.
+The prefix-suffix representation of $R^t$ contains finitely many distinct
+transitions. Let $\texttt{Edge}(R^t)$ be the set of transitions appearing in
+that representation. Scanning this set determines whether the current plan
+remains valid and safe.
+
+\begin{definition}\label{ch03:def:vsTS}
+Given the updated transition system $\mathcal{T}_c^{t^+}$, a transition
+$(\langle \pi_i,\, q_m \rangle,\,
+\langle \pi_j,\, q_n \rangle) \in \textup{\texttt{Edge}}(R^t)$ is called
+\emph{invalid} if $(\pi_i,\, \pi_j) \notin \longrightarrow_c^{t^+}$, and
+\emph{unsafe} if
+$L_c^{t^+}(\pi_i) \notin \chi_1(q_m|_{Q_1},\, q_n|_{Q_1})$.
+\end{definition}
+
+Let $\Xi$ and $\aleph$ denote the sets of invalid and unsafe transitions of
+$R^t$, respectively. These sets are obtained by scanning the transitions in
+$\texttt{Edge}(R^t)$ and checking whether a transition has been removed from
+$\mathcal{T}_c^{t^+}$ or whether an updated label violates the hard-automaton
+constraint.
+
+\begin{theorem}\label{ch03:theo:validity}
+Assume that $R^t$ is an accepting run of $\tilde{\mathcal{A}}_r^{t^-}$ and that
+$\mathcal{T}_c^{t^-}$ is updated to $\mathcal{T}_c^{t^+}$. Let $\Xi$ and
+$\aleph$ be the invalid and unsafe transitions above. Then the
+following statements hold:
+(I) $\tau^t$ remains valid if and only if $\Xi = \emptyset$;
+(II) $\tau^t$ remains safe if $\Xi = \emptyset$ and $\aleph = \emptyset$.
+\end{theorem}
+
+\begin{proof}
+Since $R^t$ is an accepting run of $\tilde{\mathcal{A}}_r^{t^-}$,
+Theorem~\ref{ch03:theo:safety} implies that $\tau^t$ is valid and safe for
+$\mathcal{T}_c^{t^-}$. Statement~(i) follows directly from the definition of
+$\Xi$: the plan remains valid precisely when none of its transitions has been
+removed from the updated transition relation.
+For statement~(ii), assume that $\Xi = \emptyset$ and $\aleph = \emptyset$.
+Then every transition of $R^t$ remains valid in $\mathcal{T}_c^{t^+}$ and
+still satisfies the hard-automaton constraint under the updated labeling
+function. Hence $R^t$ remains an accepting run of
+$\tilde{\mathcal{A}}_r^{t^+}$, and Theorem~\ref{ch03:theo:safety} yields that
+$\tau^t$ remains safe.
+\end{proof}
+
+(III) \emph{Plan revision}:
+If either $\Xi$ or $\aleph$ is nonempty, the current plan may no longer be
+executable or safe. Replanning from the current region alone can yield a valid
+future plan, but it may be incompatible with the product-state history induced
+by the executed trajectory. Let $\tau_{\textup{past}}$ and
+$R_{\textup{past}}$ denote the executed trajectory and its recorded product run,
+and let
+$\tau_{\textup{comp}} \triangleq
+\tau_{\textup{past}} + \tau_{\textup{new}}$. Since the B\"uchi automaton is
+nondeterministic, several product states may correspond to the same current
+workspace region, which leads to the following compatibility problem.
+
+\begin{problem}\label{ch03:prob:concatenate}
+Assume that $\Xi$ or $\aleph$ is nonempty. Given the executed past trajectory
+$\tau_{\textup{past}}$, find a new plan $\tau_{\textup{new}}$ such that the
+complete trajectory
+$\tau_{\textup{comp}} = \tau_{\textup{past}} + \tau_{\textup{new}}$
+is valid and safe.
+\end{problem}
+
+To formalize the compatibility constraint, let
+$\bar{\tau}_{\textup{past}} \triangleq
+\tau_{\textup{past}}[1:(|\tau_{\textup{past}}|-1)]$, that is, the executed
+trajectory without its last state. Because $\tilde{\mathcal{A}}_{\varphi}$ is
+nondeterministic, the trace of $\bar{\tau}_{\textup{past}}$ may induce several
+finite runs in $\tilde{\mathcal{A}}_{\varphi}$. Denote this set by
+$r_{\tau_{\textup{past}}} \triangleq
+\{\, r_{\bar{\sigma}}
+\mid \bar{\sigma} = \texttt{trace}(\bar{\tau}_{\textup{past}}) \,\}$.
+The corresponding set of finite runs in the updated product
+automaton is
+$R_{\tau_{\textup{past}}} \triangleq
+\{\, R \mid R|_{\Pi} = \tau_{\textup{past}},\;
+R|_{Q} \in r_{\tau_{\textup{past}}} \,\}$.
+Accordingly, the product states consistent with the executed past is
+\begin{equation}
+Q'_{\tau_{\textup{past}}} \triangleq
+\{\, \texttt{last}(R) \mid R \in R_{\tau_{\textup{past}}} \,\},
+\label{ch03:eq:set-past}
+\end{equation}
+where $\texttt{last}(R)$ is the last state of the finite run~$R$. By
+construction, $R_{\textup{past}} \in R_{\tau_{\textup{past}}}$ and the recorded
+current product state belongs to $Q'_{\tau_{\textup{past}}}$. The revision
+algorithm first attempts to repair the current run by inserting a bridging
+segment around each invalid or unsafe transition, following the spirit of
+\citet{guo2013revising}. \rev{If no bridge exists, the revision calls
+\texttt{OptRun} with start set $Q'_{\tau_{\textup{past}}}$ and the same suffix
+weight $\gamma$ used in the original synthesis.}
+\rev{To apply the penalty bound in \eqref{ch03:underalpha} to exact
+resynthesis after an update, compute the feasible continuation in the
+updated unrelaxed hard--soft product from a state reachable along the
+executed history in that product. Evaluate its motion cost with the
+same $\gamma$ used in the relaxed continuation search.}
+
+\begin{algorithm}[t]
+\caption{Revise the current plan, \texttt{Revise}()}
+\label{ch03:alg:revise}
+\DontPrintSemicolon
+\KwIn{\rev{$\Xi$, $\aleph$, $R^{t^-}$, $\tilde{\mathcal{A}}_{r}^{t^+}$,
+      $Q'_{\tau_{\textup{past}}}$, $\gamma>0$}}
+\KwOut{$R^{t^+}$}
+
+\tcc{\rev{Try a local bridge; fall back to synthesis consistent with the executed past.}}
+\ForAll{$(q'_s,\, q'_{s+1}) \in (\Xi \cup \aleph)$}{
+  \If{$(q'_s,\, q'_{s+1}) \in R^{t^-}_{\textup{pre}}$}{
+    $bridge = \texttt{DijksTarget}(
+    \tilde{\mathcal{A}}_{r}^{t^+},\, q'_{s-1},\,
+    \texttt{tail}(q'_s,\, R^{t^-}_{\textup{pre}}))$\;
+
+    \If{$bridge \neq \emptyset$}{
+      $R^{t^-}_{\textup{pre}} =
+      \texttt{head}(q'_{s-1},\, R^{t^-}_{\textup{pre}})
+      + bridge
+      + \texttt{tail}(\texttt{last}(bridge),\, R^{t^-}_{\textup{pre}})$\;
+    }
+    \Else{
+      \rev{$R^{t^+} =
+      \texttt{OptRun}(\tilde{\mathcal{A}}_{r}^{t^+},
+      Q'_{\tau_{\textup{past}}},\gamma)$}\;
+      \textbf{return} $R^{t^+}$\;
+    }
+  }
+
+  \If{$(q'_s,\, q'_{s+1}) \in R^{t^-}_{\textup{suf}}$}{
+    Apply the same procedure to $R^{t^-}_{\textup{suf}}$\;
+  }
+}
+\textbf{return}
+$R^{t^+} = \langle R^{t^-}_{\textup{pre}},\, R^{t^-}_{\textup{suf}} \rangle$\;
+\end{algorithm}
+
+\begin{theorem}\label{ch03:theo:new-safe}
+Assume that there exists an accepting run of
+$\tilde{\mathcal{A}}_{r}^{t^+}$ whose projection onto $\Pi$ extends the
+executed past trajectory $\tau_{\textup{past}}$. Then
+Algorithm~\ref{ch03:alg:revise} returns a continuation
+$\tau_{\textup{new}}$ such that
+$\tau_{\textup{comp}} = \tau_{\textup{past}} + \tau_{\textup{new}}$
+is valid and safe.
+\end{theorem}
+
+\begin{proof}
+If a compatible accepting continuation exists, then there is an accepting run
+of $\tilde{\mathcal{A}}_{r}^{t^+}$ whose initial state belongs to
+$Q'_{\tau_{\textup{past}}}$. Algorithm~\ref{ch03:alg:revise} first attempts to
+repair the current run locally by inserting bridging segments around the
+transitions in $\Xi \cup \aleph$. Whenever such a bridge is found, the modified
+run remains consistent with the unchanged portion of the original accepting
+run.
+\rev{If no bridge can be found for some transition, the algorithm calls
+\texttt{OptRun} on the updated product with start set
+$Q'_{\tau_{\textup{past}}}$ and suffix weight $\gamma$.}
+By assumption, a compatible accepting run exists,
+so this search succeeds and returns one such run. In either case, the resulting
+run is an accepting run of $\tilde{\mathcal{A}}_{r}^{t^+}$ whose projection
+extends $\tau_{\textup{past}}$. Theorem~\ref{ch03:theo:safety} then implies
+that the complete trajectory $\tau_{\textup{comp}}$ is valid and safe.
+\end{proof}
+
+Algorithm~\ref{ch03:alg:scheme} later combines the revision procedure of
+Algorithm~\ref{ch03:alg:revise} with the optimal search routine of
+Algorithm~\ref{ch02:alg:optimal}; additional implementation details appear
+in~\citep{guo2014cooperative}. \rev{At a confirmed admissible state, the
+supervisor uses the revised run to select the next target. If an update
+invalidates the active controller, the supervisor handles the interruption
+before further symbolic execution.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\endgroup

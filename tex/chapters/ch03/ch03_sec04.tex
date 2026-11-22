@@ -2,6 +2,21 @@
 \section{Case Study}
 \label{sec:ch03_case_study}
 
+\begin{revision}
+In the local-task variant of Section~\ref{ch01:subsec:recurring-example},
+robot~1 is assigned inspection at $A$ followed by delivery at $D$, and
+robot~2 is assigned service at $E$. If robot~1 detects a blockage on a
+planned corridor before entering it, the method in
+Section~\ref{ch03:sec:partial} checks whether the task
+still admits a feasible continuation. If a blockage invalidates the active
+edge, Algorithm~\ref{ch03:alg:scheme} cancels the command and reports an
+execution interruption. When
+delivery requires a helper, robot~1 requests assistance at $D$ under
+Section~\ref{ch03:sec:dep-local-collab}. Robot~2 evaluates the request
+against its own task at $E$. The simulation below illustrates this
+request--reply mechanism at a larger scale.
+\end{revision}
+
 This section illustrates the local-task formulation and the distributed
 coordination mechanism developed in this chapter through a representative
 heterogeneous multi-robot simulation. The objective is to show how
@@ -25,9 +40,9 @@ three storage areas, four base locations, and obstacles, as shown in
 Figures~\ref{ch03:fig:case_two_layer}
 and~\ref{ch03:fig:case_execution_snapshots}. The workspace is discretized into
 $1.5\,\mathrm{m}$ grid cells, yielding a motion abstraction with $1600$ states
-and $6400$ directed edges. The team contains $N=20$ robots partitioned into four
-groups $g_k=\{a_{k,i}\mid i=1,\ldots,5\}$, $k=1,\ldots,4$: one UAV group
-$g_1$ and three UGV groups $g_2$, $g_3$, and $g_4$. Each robot has a motion
+and $6400$ directed edges. \rev{The team contains $N=20$ robots partitioned into four
+groups $g_k=\{a_{k,i}\mid i=1,\cdots,5\}$, $k=1,\cdots,4$: one UAV group
+$g_1$ and three UGV groups $g_2$, $g_3$, and $g_4$.} Each robot has a motion
 model $\mathcal{M}_i$, an action model $\mathcal{B}_i$, and a complete
 motion--action model $\mathcal{R}_i$ with states
 $\langle\pi,\sigma\rangle\in\Pi\times\Sigma_i$, as in
@@ -222,10 +237,11 @@ the finite planning horizon of individual robots.
 \section{Summary}
 \label{sec:ch03_summary}
 
-This chapter developed a bottom-up view of multi-robot coordination
-under local temporal tasks. Section~\ref{ch03:sec:task_relaxation_adaptation}
-addressed task relaxation, safety-aware plan revision, online sensing,
-and collaborative knowledge transfer in partially known workspaces.
+\rev{This chapter developed multi-robot coordination under prescribed local
+temporal tasks.}
+\rev{Section~\ref{ch03:sec:task_relaxation_adaptation} combined the local
+sensing and plan revision routine of Section~\ref{ch03:sec:partial} with
+task-relevant information exchange between robots.}
 Section~\ref{ch03:sec:dep-local-collab} then introduced dependent local
 tasks with collaborative actions and a distributed execution-time
 coordination mechanism for request, reply, assignment, and adaptation.

@@ -17,16 +17,16 @@ connected physical systems, in which perception, decision making, and actuation
 are increasingly coupled through communication and shared data
 streams.
 Within this broader landscape, multi-robot systems have become an important
-class of autonomous systems. A team of robots can distribute mobility, sensing,
+class of autonomous systems. \rev{A team of robots can distribute mobility, sensing,
 and manipulation capabilities over a large workspace, while preserving the
-ability to act locally when conditions change~\citep{arai2002advances,parker2008multiple}.
+ability to act locally when conditions change~\citep{arai2002advances, parker2008multiple}.}
 Such systems are not merely
 scaled versions of single-robot platforms. Their collective behavior depends on
 how local decisions interact through shared space, shared resources,
-communication constraints, and task dependencies. Consequently, the system-level
+communication constraints, and task dependencies. \rev{Consequently, the system-level
 question is not only how an individual robot moves or acts, but how multiple
 robots coordinate their decisions in a coherent and reliable
-way~\citep{arai2002advances,parker2008multiple,torreno2017cooperative}.
+way~\citep{arai2002advances, parker2008multiple, torreno2017cooperative}.}
 
 
 The need for coordinated autonomy is evident in several representative
@@ -42,9 +42,9 @@ operations. In hazardous environments, robot teams can extend sensing reach,
 reduce human exposure to danger, and maintain activity in areas that are
 difficult or unsafe for direct human access~\citep{murphy2014disaster}. Such scenarios often involve
 uncertain terrain, incomplete maps, intermittent communication, and rapidly
-changing operational priorities. They therefore provide a natural setting for
+changing operational priorities. \rev{They therefore provide a natural setting for
 coordination methods that must combine autonomy, robustness, and online
-adaptation~\citep{macaluso2020multi}.
+adaptation~\citep{tranzatto2022cerberus}.}
 Related coordination demands also appear in logistics, field robotics,
 infrastructure inspection, and environmental monitoring. Although these domains
 differ in their physical details, they share a common systems feature~\citep{parker2008multiple}.
@@ -57,10 +57,9 @@ efficiency~\citep{torreno2017cooperative}.
 
 
 Multi-robot systems are attractive because many large-scale tasks are naturally
-parallel, geographically distributed, and heterogeneous. A team can provide
+parallel, geographically distributed, and heterogeneous. \rev{A team can provide
 wider coverage than a single robot, reduce completion time through concurrent
-execution, and improve resilience through redundancy~\citep{arai2002advances,
-parker2008multiple}. Heterogeneous teams offer
+execution, and improve resilience through redundancy~\citep{arai2002advances, parker2008multiple}.} Heterogeneous teams offer
 an additional advantage, since sensing, mobility, communication, and
 manipulation capabilities need not be concentrated on one platform. Different
 robots can specialize and cooperate so that the team accomplishes tasks beyond

@@ -56,10 +56,10 @@ accommodate future communication decisions and online collaborative tasks.
 \label{ch05:subsec:task-spec}
 
 The model retains collaborative activities and temporal relations, but the task
-set is not fixed in advance. Unlike the local-task and global-mission settings
-of Chapters~\ref{chap:bottom-up} and~\ref{chap:top-down}, collaborative tasks
-are released online and become known only after detection by the fleet. Each
-task is represented by
+set is not fixed in advance. \rev{Section~\ref{ch04:sec:online_continual_tasks}
+incorporates newly supplied mission formulas during execution. Here,
+collaborative tasks become known only after detection by the fleet and must
+then be shared through communication.} Each task is represented by
 $
 \omega_m \triangleq
 \bigl(S_m, \eta_m, \{(n_j, a_j)\}_{j=1}^{J_m}\bigr),
@@ -521,7 +521,14 @@ task-completion rate of the collective plan.
 
 \begin{algorithm}[!t]
     \caption{Collaborative optimization of communication events $\texttt{ComOpt}(\cdot)$}
-    \label{ch05:alg:comopt}
+    % AUTHOR QUESTION AQ7: Communication-event refinement pseudocode
+% In \texttt{ComOpt}, the two time variables are initialized equal, so the displayed while condition
+% is false at entry. The initial common time also does not account for every robot's travel to the
+% common location. What initial feasible schedule and convergence variable does the implementation
+% use? Moving a graph articulation vertex while retaining one anchor link does not alone preserve
+% connectivity: is a spanning-tree or full-connectivity test intended? The algorithm and connectivity
+% lemma are left unchanged.
+\label{ch05:alg:comopt}
     \SetAlgoLined
     \DontPrintSemicolon
     \KwIn{Robot team $\mathcal{N}$, last-task data
@@ -726,6 +733,13 @@ $t^{\texttt{c}}$ is connected.
 \end{proof}
 
 \begin{theorem}
+% AUTHOR QUESTION AQ8: Latency invariant and infinite-horizon objective
+% In Section~5.2, when the earliest possible return already exceeds the latency deadline, how can
+% appending that return restore the claimed bound? Specify the prior feasibility invariant, return-
+% reservation rule, and the meaning of each time stamp. Separately, stationarity and ergodicity alone
+% do not make independent per-cycle rate maximization globally optimal when the decisions change
+% future states and cycle lengths. Which renewal or separability assumptions support the final claim
+% in Section~5.1, or should it be weakened to a local approximation? These passages remain unchanged.
 \label{ch05:thm:cocoplan_opt}
 Assume that communication events recur indefinitely and that, at every
 communication time, Algorithm~\ref{ch05:alg:cocoplan} is solved to optimality

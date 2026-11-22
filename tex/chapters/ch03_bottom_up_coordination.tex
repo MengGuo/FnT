@@ -1,22 +1,26 @@
-\chapter{Bottom-Up Coordination under Local Temporal Logic Tasks}
+\chapter{\rev{Coordination under Local Temporal Logic Tasks}}
 \label{chap:bottom-up}
 
-Centralized automata-based planning scales poorly when a global temporal
-specification is synchronized with the joint transition system of all robots.
-The resulting product construction grows with both team size and task
-complexity, and becomes especially restrictive under incomplete information,
-inter-robot dependence, and online model changes. This chapter therefore adopts
-a bottom-up perspective: each robot is assigned a local temporal task, and
-coordination is induced by relations among these local tasks rather than by a
-single monolithic team specification.
-The central question is how local temporal tasks can be planned, coordinated,
-and revised while preserving the logical structure needed for correct team
-behavior. Section~\ref{ch03:sec:task_relaxation_adaptation} studies task
-relaxation and plan adaptation under incomplete workspace information.
+\rev{This chapter starts from temporal tasks supplied to individual robots.
+The local formulas are prescribed inputs, rather than the result of
+decomposing a team-level specification. Coordination is needed when robots
+share task-relevant observations or require assistance to execute
+collaborative actions. The central question is how to plan, coordinate,
+and revise local executions under incomplete workspace knowledge and
+dependencies among robots.}
+\rev{Section~\ref{ch03:sec:task_relaxation_adaptation} uses the single-robot
+update routine of Section~\ref{ch03:sec:partial} to coordinate the exchange
+of task-relevant workspace information and revise local plans online.}
 Section~\ref{ch03:sec:dep-local-collab} then introduces dependent local tasks
 with collaborative actions, where one robot's execution may require functional
-support from others. Together, these developments extend discrete planning from
-isolated local execution to structured bottom-up coordination.
+support from others. \rev{Together, these developments extend local planning
+with information exchange and execution-time collaboration.}
+
+\begin{revision}
+The guarantees concern the supplied local tasks, or their explicitly stated
+relaxations, under the assumptions of each method. Coordination does not
+by itself establish satisfaction of a separate team-level specification.
+\end{revision}
 
 %==============================
 %==============================

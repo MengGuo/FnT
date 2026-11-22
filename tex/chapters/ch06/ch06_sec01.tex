@@ -7,10 +7,10 @@ labeled Markov decision process, abbreviated as MDP. The nominal mission is
 specified by an LTL formula, while safety is represented by a separate
 safe-return requirement. This separation is needed because productive operation
 and permanent residence in a safe set are generally incompatible on the same
-infinite execution. The temporal-logic background follows
+infinite execution. \rev{The temporal-logic background follows
 Chapter~\ref{chap:preliminaries}, and remains
 consistent with probabilistic temporal-planning models
-\citep{guo2018probabilistic,belta2017formal,ding2014ltl}.
+\citep{guo2018probabilistic, belta2017formal, ding2014ltl}.}
 
 %==============================================================
 \subsection{Uncertain system and probabilistic temporal task}
@@ -56,11 +56,11 @@ labels may mark exits, victims, charging stations, or hazards.
 
 
 The nominal mission is an LTL formula $\varphi$ over the proposition set
-$AP$ from \eqref{ch06:eq:mdp}. The syntax and semantics follow
+$AP$ from \eqref{ch06:eq:mdp}. \rev{The syntax and semantics follow
 Section~\ref{ch02:sec:LTL}; the automata-based construction follows
 Sections~\ref{ch02:subsec:NBA}--\ref{ch02:subsec:product}, using
 deterministic automata for probabilistic planning
-\citep{baier2008principles,belta2017formal}.
+\citep{baier2008principles, belta2017formal}.}
 Typical tasks include persistent surveillance,
 $\varphi = (\Box \Diamond r_1) \wedge (\Box \Diamond r_2)
 \wedge (\Box \Diamond r_3)$, ordered service,
@@ -239,10 +239,9 @@ if it preserves a return policy satisfying the safety constraint in~\eqref{ch06:
 This subsection reformulates the two constraints in
 Problem~\ref{ch06:prob:main} on product automata. The return policy is computed
 first, and the outbound policy is then synthesized under the induced
-safe-return values. The construction follows the standard automata-based
+safe-return values. \rev{The construction follows the standard automata-based
 treatment of MDPs under temporal logic specifications
-\citep{klein2007ltl2dstar,baier2008principles,belta2017formal,
-guo2018probabilistic}.
+\citep{klein2007ltl2dstar, baier2008principles, belta2017formal, guo2018probabilistic}.}
 
 \subsubsection{Product automata and accepting components}
 \label{ch06:subsec:product}
@@ -407,6 +406,14 @@ state. Theorems~\ref{ch06:theorem:task-bound} and
 Problem~\ref{ch06:prob:main} into product-automaton quantities.
 
 \begin{theorem}
+% AUTHOR QUESTION AQ9: Probabilistic satisfaction and safe return
+% In Section~6.1, summing the indicator of an absorbing accepting set counts it infinitely often after
+% entry; it does not count one hit. Is a first-hit reward or stopped process intended in the task and
+% return equations? For a fixed arbitrary policy, merely reaching an AMEC does not ensure that the
+% policy follows accepting actions thereafter. The safe-return expression also sums return values over
+% all switching times rather than specifying a switching law or a pointwise lower bound. Which notion
+% is intended? The probability definitions, dependent optimizations, and guarantees remain
+% unchanged; the return formula is classified separately as general LTL.
 \label{ch06:theorem:task-bound}
 For any outbound policy
 \(\boldsymbol{\mu}_{\textup{\texttt{o}}}\) and its corresponding product
@@ -729,9 +736,13 @@ Definition~\ref{ch06:def:product-o}. The transition probability
 The abstract return policy
 \(\boldsymbol{\pi}'_{\textup{\texttt{r}}}\) and value function
 \(v'^{\star}_{\textup{\texttt{r}}}\) are computed from
-\(\mathcal{P}'_{\textup{\texttt{r}}}\). Since the safe-return specification is
-sc-LTL, satisfaction reduces to reaching the union of AMECs, denoted by
-\(S'_{\textup{\texttt{r}},\Xi}\).
+\(\mathcal{P}'_{\textup{\texttt{r}}}\).
+\rev{The complete safe-return specification in \eqref{ch06:eq:safe-task} is
+general LTL: the eventual-permanence requirement is not, in general, certified
+by a finite good prefix. The transient requirement remains sc-LTL. The set
+\(S'_{\textup{\texttt{r}},\Xi}\) is the union of return-product AMECs;
+reaching it must be followed by an accepting policy within the reached
+component to satisfy the full return specification.}
 
 \subsubsection{Hierarchical synthesis of the nominal task}
 \label{ch06:subsec:task-plan}
